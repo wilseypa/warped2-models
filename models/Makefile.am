@@ -1,1 +1,1 @@
-SUBDIRS = ping_pong
+SUBDIRS = ping_pong iscas

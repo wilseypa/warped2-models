@@ -40,7 +40,10 @@ fi
 CXXFLAGS="$CXXFLAGS -Wall -Wextra -pedantic -Werror"
 
 AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([deps/Makefile])
+AC_CONFIG_FILES([deps/re2/Makefile])
 AC_CONFIG_FILES([models/Makefile])
+AC_CONFIG_FILES([models/iscas/Makefile])
 AC_CONFIG_FILES([models/ping_pong/Makefile])
 
 AC_OUTPUT
