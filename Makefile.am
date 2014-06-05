@@ -1,1 +1,1 @@
-SUBDIRS = models
+SUBDIRS = deps models
