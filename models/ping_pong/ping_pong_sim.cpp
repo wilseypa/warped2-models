@@ -26,7 +26,7 @@ public:
     std::string receiver_name_;
     unsigned int timestamp_;
 
-    WARPED_REGISTER_SERIALIZABLE_MEMBERS(receiver_name_, timestamp_)
+    WARPED_REGISTER_SERIALIZABLE_MEMBERS(creator_name_, receiver_name_, timestamp_)
 };
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(PingPongEvent)
 
