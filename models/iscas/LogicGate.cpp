@@ -84,5 +84,6 @@ bool LogicGate::computeOutput() {
             }
         }
         return true;
+    default: return false;
     }
 }
