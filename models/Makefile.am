@@ -1,1 +1,1 @@
-SUBDIRS = ping_pong iscas
+SUBDIRS = ping_pong iscas phold
