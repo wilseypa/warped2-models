@@ -5,6 +5,8 @@
 #include <vector>
 #include <memory>
 #include <iostream>
+#include <algorithm>
+#include <cstdlib>
 
 #include "warped.hpp"
 #include "tclap/ValueArg.h"
@@ -20,7 +22,11 @@
 enum distribution_t {UNIFORM, POISSON, EXPONENTIAL, NORMAL, BINOMIAL, FIXED,
                      ALTERNATE, ROUNDROBIN, CONDITIONAL, ALL};
 
-WARPED_DEFINE_OBJECT_STATE_STRUCT(PholdState) { };
+WARPED_DEFINE_OBJECT_STATE_STRUCT(PholdState)
+{
+  unsigned int messages_sent;
+  unsigned int messages_received;
+};
 
 class PholdEvent : public warped::Event {
 public:
@@ -55,25 +61,29 @@ public:
   std::vector<std::unique_ptr<warped::Event> > createInitialEvents() {
     std::vector<std::unique_ptr<warped::Event> > events;
     for (unsigned int i = 0; i < this->initial_events; i++) {
+      ++this->state.messages_sent;
       events.emplace_back(new PholdEvent { this->get_destination(), this->get_timestamp_delay(),
-            this->name });
+            this->name_ });
     }
     return events;
   }
 
   std::vector<std::unique_ptr<warped::Event> > receiveEvent(const warped::Event& event) {
+    ++this->state.messages_received;
     std::vector<std::unique_ptr<warped::Event> > response_events;
     auto received_event = static_cast<const PholdEvent&>(event);
 
     response_events.emplace_back(new PholdEvent { this->get_destination(),
-          event.timestamp() + this->get_timestamp_delay(), this->name });
+          event.timestamp() + this->get_timestamp_delay(), this->name_ });
+
+    ++this->state.messages_sent;
 
     return response_events;
   }
 
-protected:
-  std::string name;
   PholdState state;
+
+protected:
   const unsigned int initial_events;
   const unsigned int num_objects;
   std::unique_ptr<MLCG> rng;
@@ -137,7 +147,7 @@ int main(int argc, const char** argv) {
   double distribution_mean = 1.0;
   unsigned int num_initial_events = 10;
   unsigned int num_objects = 10;
-  distribution_t distribution = EXPONENTIAL;
+  std::string distribution = "EXPONENTIAL";
 
   TCLAP::ValueArg<double> distribution_mean_arg("m", "mean", "mean delay for events", false,
                                                 distribution_mean, "double");
@@ -145,20 +155,58 @@ int main(int argc, const char** argv) {
                                                        false, num_initial_events, "unsigned int");
   TCLAP::ValueArg<unsigned int> num_objects_arg("n", "num_objects", "number of simulation objects",
                                                 false, num_objects, "unsigned int");
+  TCLAP::ValueArg<std::string> distribution_arg("d", "distribution", "Statistical distribution for timestamp increment\nUNIFORM, POISSON, EXPONENTIAL, NORMAL, BINOMIAL, or FIXED" ,
+                                                false, distribution, "string");
 
-  std::vector<TCLAP::Arg*> args = {&distribution_mean_arg, &num_initial_events_arg, &num_objects_arg};
+  std::vector<TCLAP::Arg*> args = {&distribution_mean_arg, &num_initial_events_arg, &num_objects_arg,
+                                   &distribution_arg};
 
   warped::Simulation phold_sim {"PHOLD Simulation", argc, argv, args};
 
   distribution_mean = distribution_mean_arg.getValue();
   num_initial_events = num_initial_events_arg.getValue();
   num_objects = num_objects_arg.getValue();
+  distribution = distribution_arg.getValue();
+
+  std::transform(distribution.begin(), distribution.end(), distribution.begin(), toupper);
+  distribution_t dist;
+
+  if ( distribution == "UNIFORM" ) {
+    dist = UNIFORM;
+    if ( distribution_mean <= 1.0 ) {
+      std::cerr << "Warning: Uniform distribution should have a mean greater than 1.0 for simulation to advance."
+                << std::endl;
+    }
+  }
+  else if ( distribution == "NORMAL" ) {
+    dist = NORMAL;
+  }
+  else if ( distribution == "BINOMIAL" ) {
+    dist = BINOMIAL;
+    std::cerr << "Warning: binomial distribution may not advance simulation." << std::endl;
+  }
+  else if ( distribution == "POISSON" ) {
+    dist = POISSON;
+  }
+  else if ( distribution == "EXPONENTIAL"  ) {
+    dist = EXPONENTIAL;
+  }
+  else if ( distribution == "FIXED" ) {
+    dist = FIXED;
+    if ( distribution_mean < 1.0 ) {
+      std::cerr << "Warning: Fixed timestamp increment less than 1.0 will not advance simulation." << std::endl;
+    }
+  }
+  else {
+    std::cerr << "Invalid distribution argument. It must be UNIFORM, POISSON, EXPONENTIAL, NORMAL, BINOMIAL, or FIXED." << std::endl;
+    exit(1);
+  }
 
   std::vector<PholdObject> objects;
 
   for (unsigned int i = 0; i < num_objects; i++) {
     std::string name = std::string("Object ") + std::to_string(i);
-    objects.emplace_back(name, num_initial_events, num_objects, distribution, distribution_mean);
+    objects.emplace_back(name, num_initial_events, num_objects, dist, distribution_mean);
   }
 
   std::vector<warped::SimulationObject*> object_pointers;
@@ -167,6 +215,11 @@ int main(int argc, const char** argv) {
   }
 
   phold_sim.simulate(object_pointers);
+
+  for (auto& o : objects) {
+    std::cout << o.name_ << " sent " << o.state.messages_sent << " and received "
+              << o.state.messages_received << " messages." << std::endl;
+  }
 
   return 0;
 }
