@@ -10,6 +10,9 @@
 
 #include "warped.hpp"
 
+#include "MLCG.h"
+#include "NegExp.h"
+
 // These may be moved to config file or command line later
 #define NUM_CELLS_X 1024     //256
 #define NUM_CELLS_Y 1024     //256
@@ -71,6 +74,13 @@ enum min_t {
   MOVECALL
 };
 
+enum direction_t {
+  LEFT,
+  RIGHT,
+  DOWN,
+  UP
+};
+
 class PcsEvent : public warped::Event {
 public:
   PcsEvent();
@@ -99,19 +109,24 @@ class PcsCell : public warped::SimulationObject {
 public:
   PcsCell(const std::string& name, const unsigned int num_cells, const unsigned int num_portables,
           const unsigned int num_normal_channels, const unsigned int num_reserve_channels)
-    : name(name), num_cells(num_cells), num_portables(num_portables),
+    : SimulationObject(name), num_cells(num_cells), num_portables(num_portables),
       num_normal_channels(num_normal_channels), num_reserve_channels(num_reserve_channels),
-      portables_in(0), portables_out(0), call_attempts(0), channel_blocks(0), busy_lines(0),
-      handoff_blocks(0), call_attempts(0) {}
+      // portables_in(0), portables_out(0), call_attempts(0), channel_blocks(0), busy_lines(0),
+      // handoff_blocks(0), call_attempts(0)
+      rng(new MLCG)
+  {
+    move_expo(MOVE_CALL_MEAN, this->rng.get());
+    next_expo(NEXT_CALL_MEAN, this->rng.get());
+  }
 
   // Statistics tracking variables
-  unsigned int portables_in;
-  unsigned int portables_out;
-  unsigned int call_attempts;
-  unsigned int channel_blocks;
-  unsigned int busy_lines;
-  unsigned int handoff_blocks;
-  unsigned int call_attempts;
+  // unsigned int portables_in;
+  // unsigned int portables_out;
+  // unsigned int call_attempts;
+  // unsigned int channel_blocks;
+  // unsigned int busy_lines;
+  // unsigned int handoff_blocks;
+  // unsigned int call_attempts;
   double blocking_probability() {
     return ((double)(channel_blocks + handoff_blocks)) / ((double) (call_attempts - busy_lines));
   }
@@ -125,6 +140,9 @@ protected:
   unsigned int num_portables;
   unsigned int num_normal_channels;
   unsigned int num_reserve_channels;
+  std::unique_ptr<MLCG> rng;
+  NegativeExpntl move_expo;
+  NegativeExpntl next_expo;
 
 };
 
