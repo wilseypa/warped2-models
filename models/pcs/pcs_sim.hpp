@@ -43,8 +43,8 @@
 WARPED_DEFINE_OBJECT_STATE_STRUCT(PcsState) {
   double          const_state_1;
   int             const_state_2;
-  int             normal_channels;
-  int             reserve_channels;
+  // int             normal_channels;
+  // int             reserve_channels;
   int             portables_in;
   int             portables_out;
   int             call_attempts;
@@ -87,10 +87,15 @@ public:
   PcsEvent(const std::string& receiver_name, const unsigned int completion_timestamp,
            const unsigned int next_timestamp, const unsigned int move_timestamp,
            const std::string& creator_name, channel_t channel, method_name_t method_name)
-    : receiver_name(receiver_name), timestamp(timestamp), creator_name(creator_name),
-      channel(channel), method_name(method_name) {}
-
-  min_t min_timestamp();
+    : receiver_name(receiver_name), next_timestamp(next_timestamp),
+      move_timestamp(move_timestamp), completion_timestamp(completion_timestamp),
+      creator_name(creator_name), channel(channel), method_name(method_name) {}
+  PcsEvent(const PcsEvent& other)
+    : Event((const warped::Event&)other),
+      receiver_name(other.receiver_name), next_timestamp(other.next_timestamp),
+      move_timestamp(other.move_timestamp), completion_timestamp(other.completion_timestamp),
+      creator_name(other.creator_name), channel(other.channel),
+      method_name(other.method_name) {}
 
 protected:
   std::string receiver_name;
@@ -108,42 +113,42 @@ protected:
 class PcsCell : public warped::SimulationObject {
 public:
   PcsCell(const std::string& name, const unsigned int num_cells, const unsigned int num_portables,
-          const unsigned int num_normal_channels, const unsigned int num_reserve_channels)
+          const unsigned int normal_channels, const unsigned int reserve_channels,
+          const bool reserve_cell = false)
     : SimulationObject(name), num_cells(num_cells), num_portables(num_portables),
-      num_normal_channels(num_normal_channels), num_reserve_channels(num_reserve_channels),
+      normal_channels(normal_channels), reserve_channels(reserve_channels),
       // portables_in(0), portables_out(0), call_attempts(0), channel_blocks(0), busy_lines(0),
       // handoff_blocks(0), call_attempts(0)
-      rng(new MLCG)
+      rng(new MLCG), reserve_cell(reserve_cell), state()
   {
     move_expo(MOVE_CALL_MEAN, this->rng.get());
     next_expo(NEXT_CALL_MEAN, this->rng.get());
+    time_expo(CALL_TIME_MEAN, this->rng.get());
   }
 
-  // Statistics tracking variables
-  // unsigned int portables_in;
-  // unsigned int portables_out;
-  // unsigned int call_attempts;
-  // unsigned int channel_blocks;
-  // unsigned int busy_lines;
-  // unsigned int handoff_blocks;
-  // unsigned int call_attempts;
   double blocking_probability() {
-    return ((double)(channel_blocks + handoff_blocks)) / ((double) (call_attempts - busy_lines));
+    return ((double)(state.channel_blocks + statehandoff_blocks)) / ((double) (state.call_attempts - state.busy_lines));
   }
 
   std::vector<std::unique_ptr<warped::Event> > createInitialEvents();
   std::vector<std::unique_ptr<warped::Event> > receieveEvent(const warped::Event&);
 
+  warped::ObjectState& getState() { return this->state; }
+
 protected:
   std::string name;
   unsigned int num_cells;
   unsigned int num_portables;
-  unsigned int num_normal_channels;
-  unsigned int num_reserve_channels;
+  unsigned int normal_channels;
+  unsigned int reserve_channels;
   std::unique_ptr<MLCG> rng;
   NegativeExpntl move_expo;
   NegativeExpntl next_expo;
+  NegativeExpntl time_expo;
+  bool reserve_cell;
 
+private:
+  PcsState state;
 };
 
 #endif
