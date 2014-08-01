@@ -107,6 +107,7 @@ std::vector<std::unique_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
         // Randomize the call move time and end time
         unsigned int completion_timestamp = event.next_timestamp + (unsigned int) time_expo();
         unsigned int next_timestamp = event.next_timestamp + (unsigned int) next_expo();
+      retry_call:
         if ( next_timestamp < event.move_timestamp ) {
           if ( completion_timestamp < next_timestamp ) {
             // The call will be completed in this cell
@@ -115,8 +116,27 @@ std::vector<std::unique_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
                   COMPLETIONCALL_METHOD });
           }
           else {
+            // Busy line; a call will be made from this cell afterward
             state.call_attempts++;
-            state.
+            state.busy_lines++;
+            next_timestamp += (unsigned int) next_expo();
+            goto retry_call;
+          }
+        }
+        else {
+          if ( completion_timestamp < event.move_timestamp ) {
+            // The call will be completed in this cell
+            response_events.emplace_back(new PcsEvent { this->name, completion_timestamp,
+                  next_timestamp, event.move_timestamp, this->name, NORMAL,
+                  COMPLETIONCALL_METHOD });
+          }
+          else {
+            // The call was successful, but it will move cells before completion
+            response_events.emplace_back(new PcsEvent { this->name, completion_timestamp,
+                  next_timestamp, event.move_timestamp, this->name, NORMAL,
+                  MOVECALLOUT_METHOD });
+          }
+        }
       break;
     case COMPLETIONCALL_METHOD:
       break;
