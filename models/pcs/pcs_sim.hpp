@@ -124,6 +124,7 @@ public:
     move_expo(MOVE_CALL_MEAN, this->rng.get());
     next_expo(NEXT_CALL_MEAN, this->rng.get());
     time_expo(CALL_TIME_MEAN, this->rng.get());
+    rand_direction(0,3);
   }
 
   double blocking_probability() {
@@ -149,6 +150,10 @@ protected:
 
 private:
   PcsState state;
+  std::string compute_move(const direction_t);
+  static std::default_random_engine gen;
+  static std::uniform_int_distribution<unsigned int> rand_direction;
+  static std::string random_move();
 };
 
 #endif

@@ -54,11 +54,9 @@ std::vector<std::unique_ptr<warped::Event> > PcsCell::createInitialEvents()
       // The event will be sent elsewhere
       std::string current_cell = this->name;
       std::string new_cell = this->name;
-      std::default_random_engine gen;
-      std::uniform_int_distribution<unsigned int> rand_direction(0,3);
       while ( move_timestamp > next_timestamp ) {
         current_cell = new_cell;
-        new_cell = this->compute_move(rand_direction(gen));
+        new_cell = this->random_move();
         move_timestamp += (unsigned int) next_expo();
       }
       events.emplace_back(new PcsEvent {current_cell, completion_timestamp, next_timestamp,
@@ -92,11 +90,9 @@ std::vector<std::unique_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
         else {
           std::string current_cell = this->name;
           std::string new_cell = this->name;
-          std::default_random_engine gen;
-          std::uniform_int_distribution<unsigned int> rand_direction(0,3);
           while ( event.move_timestamp > event.next_timestamp ) {
             current_cell = new_cell;
-            new_cell = this->compute_move(rand_direction(gen));
+            new_cell = this->random_move();
             event.move_timestamp += (unsigned int) move_expo();
           }
           response_events.emplace_back(new PcsEvent { event });
@@ -108,7 +104,7 @@ std::vector<std::unique_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
         // Randomize the call move time and end time
         unsigned int completion_timestamp = event.next_timestamp + (unsigned int) time_expo();
         unsigned int next_timestamp = event.next_timestamp + (unsigned int) next_expo();
-      retry_call:
+      busy_line_nextcall:
         if ( next_timestamp < event.move_timestamp ) {
           if ( completion_timestamp < next_timestamp ) {
             // The call will be completed in this cell
@@ -121,7 +117,7 @@ std::vector<std::unique_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
             state.call_attempts++;
             state.busy_lines++;
             next_timestamp += (unsigned int) next_expo();
-            goto retry_call;
+            goto busy_line_nextcall;
           }
         }
         else {
@@ -161,15 +157,13 @@ std::vector<std::unique_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
       else {
         // The portable will move to a different cell while not on a call
         // Find out where the next call will take place
-        std::default_random_engine gen;
-        std::uniform_int_distribution<unsigned int> rand_direction(0,3);
         std::string new_cell = this->name;
         std::string current_cell = this->name;
         unsigned int move_timestamp = event.move_timestamp;
         unsigned int next_timestamp = event.next_timestamp;
         while ( move_timestamp > next_timestamp ) {
           current_cell = new_cell;
-          new_cell = this->compute_move(rand_direction(gen));
+          new_cell = this->random_move();
           move_timestamp += (unsigned int) move_expo();
         }
         response_events.emplace_back(new PcsEvent { this->name, (unsigned int) -1,
@@ -177,6 +171,75 @@ std::vector<std::unique_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
       }
       break;
     case MOVECALLIN_METHOD:
+      unsigned int move_timestamp = event.move_timestamp + (unsigned int) move_expo();
+      if ( !this->normal_channels && !this->reserve_channels ) {
+        // No normal or reserve channels are available; the call is dropped
+        state.handoff_blocks++;
+        if ( event.next_timestamp < event.move_timestamp ) {
+          // The portable will attempt a new call in this cell
+          response_events.emplace_back(new PcsEvent { this->name, (unsigned int) -1,
+                event.next_timestamp, event.move_timestamp, this->name, NONE, NEXTCALL_METHOD });
+        }
+        else {
+          // The portable will move to a different cell while not on a call
+          // Find out where the next call will take place
+          std::string new_cell = this->name;
+          std::string current_cell = this->name;
+          unsigned int move_timestamp = event.move_timestamp;
+          unsigned int next_timestamp = event.next_timestamp;
+          while ( move_timestamp > next_timestamp ) {
+            current_cell = new_cell;
+            new_cell = this->random_move();
+            move_timestamp += (unsigned int) move_expo();
+          }
+          response_events.emplace_back(new PcsEvent { this->name, (unsigned int) -1,
+                next_timestamp, move_timestamp, current_cell, NONE, NEXTCALL_METHOD });
+        }
+      }
+      else {
+        channel_t channel;
+        if ( this->normal_channels ) {
+          // A normal channel is available for the call; allocate it
+          this->normal_channels--;
+          channel = NORMAL;
+        }
+        else {
+          // No normal channels are available; allocate a reserve channel
+          this->reserve_channels--;
+          channel = RESERVE;
+        }
+        unsigned int next_timestamp = event.next_timestamp;
+      busy_line_movecallin:
+        if ( next_timestamp < event.move_timestamp ) {
+          if ( event.completion_timestamp < next_timestamp ) {
+            // The call will end in this cell
+            response_events.emplace_back(new PcsEvent { this->name, event.completion_timestamp,
+                  next_timestamp, event.move_timestamp, this->name, channel,
+                  COMPLETIONCALL_METHOD });
+          }
+          else {
+            // A call will be attempted while the line is busy
+            state.busy_lines++;
+            state.call_attempts++;
+            next_timestamp += next_expo();
+            goto busy_line_movecallin;
+          }
+        }
+        else {
+          if ( event.completion_timestamp < event.move_timestamp ) {
+            // The call will end in this cell
+            response_events.emplace_back(new PcsEvent { this->name, event.completion_timestamp,
+                  next_timestamp, event.move_timestamp, this->name, channel,
+                  COMPLETIONCALL_METHOD });
+          }
+          else {
+            // The call will be moved out of this cell before it ends
+            response_events.emplace_back(new PcsEvent { this->name, event.completion_timestamp,
+                  next_timestamp, event.move_timestamp, this->name, channel,
+                  MOVECALLOUT_METHOD });
+          }
+        }
+      }
       break;
     case MOVECALLOUT_METHOD:
       break;
@@ -216,4 +279,8 @@ std::string PcsCell::compute_move(const direction_t direction) {
   }
 
   return std::string("Object ") + std::to_string(new_x + (new_y * NUM_CELLS_X));
+}
+
+static std::string PcsCell::random_move() {
+  return this->compute_move(this->rand_direction(this->gen));
 }
