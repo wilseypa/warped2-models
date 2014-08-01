@@ -242,6 +242,21 @@ std::vector<std::unique_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
       }
       break;
     case MOVECALLOUT_METHOD:
+      // Free a channel of whatever type this call is on
+      if ( event.channel == NORMAL ) {
+        this->normal_channels++;
+      }
+      else if ( event.channel == RESERVE ) {
+        this->reserve_channels++;
+      }
+      else {
+        std::cerr << "Invalid channel type when transferring call to new cell" << std::endl;
+        exit(1);
+      }
+      // Move call to random adjacent cell
+      response_events.emplace_back(new PcsEvent { this->name, event.completion_timestamp,
+            event.next_timestamp, event.move_timestamp, this->random_move(), NONE,
+            MOVECALLIN_METHOD });
       break;
     default:
       std::cerr << "Invalid method name in event" << std::endl;
@@ -251,7 +266,7 @@ std::vector<std::unique_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
   return response_events;
 }
 
-std::string PcsCell::compute_move(const direction_t direction) {
+std::string PcsCell::compute_move(const direction_t direction) const {
   int current_x, current_y, new_x, new_y;
   current_y = ((int)this->index) / NUM_CELLS_X;
   current_x = ((int)this->index) - (current_y * NUM_CELLS_X);
@@ -281,6 +296,6 @@ std::string PcsCell::compute_move(const direction_t direction) {
   return std::string("Object ") + std::to_string(new_x + (new_y * NUM_CELLS_X));
 }
 
-static std::string PcsCell::random_move() {
+std::string PcsCell::random_move() const {
   return this->compute_move(this->rand_direction(this->gen));
 }

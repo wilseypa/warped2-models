@@ -150,10 +150,10 @@ protected:
 
 private:
   PcsState state;
-  std::string compute_move(const direction_t);
+  std::string compute_move(const direction_t) const;
   static std::default_random_engine gen;
-  static std::uniform_int_distribution<unsigned int> rand_direction;
-  static std::string random_move();
+  std::uniform_int_distribution<unsigned int> rand_direction;
+  std::string random_move() const;
 };
 
 #endif
