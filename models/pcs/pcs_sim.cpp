@@ -79,6 +79,7 @@ std::vector<std::unique_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
   else {
     switch ( event.method_name ) {
     case NEXTCALL_METHOD:
+      // Attempt to place a call
       this->state.call_attempts++;
       if ( !this->normal_channels ) {
         // All normal channels are in use; call is blocked
@@ -96,7 +97,7 @@ std::vector<std::unique_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
           while ( event.move_timestamp > event.next_timestamp ) {
             current_cell = new_cell;
             new_cell = this->compute_move(rand_direction(gen));
-            event.move_timestamp += (unsigned int) next_expo();
+            event.move_timestamp += (unsigned int) move_expo();
           }
           response_events.emplace_back(new PcsEvent { event });
         }
@@ -139,6 +140,41 @@ std::vector<std::unique_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
         }
       break;
     case COMPLETIONCALL_METHOD:
+      // End of a call
+      // Deallocate the channel
+      if ( event.channel == NORMAL ) {
+        this->normal_channels++;
+      }
+      else if ( event.channel == RESERVE ) {
+        this->reserve_channels++;
+      }
+      else {
+        std::cerr << "Invalid channel type when completing call" << std::endl;
+        exit(1);
+      }
+
+      if ( event.next_timestamp < event.move_timestamp ) {
+        // The portable will attempt a new call in this cell
+        response_events.emplace_back(new PcsEvent { this->name, (unsigned int) -1,
+              event.next_timestamp, event.move_timestamp, this->name, NONE, NEXTCALL_METHOD });
+      }
+      else {
+        // The portable will move to a different cell while not on a call
+        // Find out where the next call will take place
+        std::default_random_engine gen;
+        std::uniform_int_distribution<unsigned int> rand_direction(0,3);
+        std::string new_cell = this->name;
+        std::string current_cell = this->name;
+        unsigned int move_timestamp = event.move_timestamp;
+        unsigned int next_timestamp = event.next_timestamp;
+        while ( move_timestamp > next_timestamp ) {
+          current_cell = new_cell;
+          new_cell = this->compute_move(rand_direction(gen));
+          move_timestamp += (unsigned int) move_expo();
+        }
+        response_events.emplace_back(new PcsEvent { this->name, (unsigned int) -1,
+              next_timestamp, move_timestamp, current_cell, NONE, NEXTCALL_METHOD });
+      }
       break;
     case MOVECALLIN_METHOD:
       break;
