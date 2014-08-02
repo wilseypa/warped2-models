@@ -84,9 +84,9 @@ enum direction_t {
 class PcsEvent : public warped::Event {
 public:
   PcsEvent() = default;
-  PcsEvent(const std::string& receiver_name, const unsigned int completion_timestamp,
+  PcsEvent(const std::string receiver_name, const unsigned int completion_timestamp,
            const unsigned int next_timestamp, const unsigned int move_timestamp,
-           const std::string& creator_name, channel_t channel, method_name_t method_name)
+           const std::string creator_name, channel_t channel, method_name_t method_name)
     : receiver_name(receiver_name), creator_name(creator_name),
       completion_timestamp(completion_timestamp),
       next_timestamp(next_timestamp), move_timestamp(move_timestamp), 
@@ -130,7 +130,6 @@ public:
   PcsState state;
 
 protected:
-  std::string name;
   unsigned int num_cells;
   unsigned int num_portables;
   unsigned int normal_channels;
