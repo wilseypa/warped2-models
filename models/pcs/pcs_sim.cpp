@@ -317,3 +317,35 @@ std::string PcsCell::random_move() const {
   std::uniform_int_distribution<unsigned int> rand_direction(0,3);
   return this->compute_move((direction_t)rand_direction(gen));
 }
+
+int main(int argc, const char** argv) {
+
+  // TCLAP::ValueArg<double> distribution_mean_arg("m", "mean", "mean delay for events", false,
+  //                                               distribution_mean, "double");
+
+  std::vector<TCLAP::Arg*> args = {};
+
+  warped::Simulation pcs_sim {"PCS Simulation", argc, argv, args};
+
+  std::vector<PcsCell> objects;
+  unsigned int index = 0;
+
+  for (unsigned int i = 0; i < NUM_CELLS_X * NUM_CELLS_Y; i++) {
+    std::string name = std::string("Object ") + std::to_string(i);
+    objects.emplace_back(name, NUM_CELLS_X * NUM_CELLS_Y, 1, 2, 1, index++);
+  }
+
+  std::vector<warped::SimulationObject*> object_pointers;
+  for (auto& o : objects) {
+    std::cout << &o << std::endl;
+    object_pointers.push_back(&o);
+  }
+
+  pcs_sim.simulate(object_pointers);
+
+  for (auto& o : objects) {
+    std::cout << o.name_ << " dropped" << o.state.handoff_blocks << " calls" << std::endl;
+  }
+
+  return 0;
+}

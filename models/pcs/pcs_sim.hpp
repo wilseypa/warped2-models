@@ -83,7 +83,7 @@ enum direction_t {
 
 class PcsEvent : public warped::Event {
 public:
-  PcsEvent();
+  PcsEvent() = default;
   PcsEvent(const std::string& receiver_name, const unsigned int completion_timestamp,
            const unsigned int next_timestamp, const unsigned int move_timestamp,
            const std::string& creator_name, channel_t channel, method_name_t method_name)
@@ -110,12 +110,13 @@ public:
 class PcsCell : public warped::SimulationObject {
 public:
   PcsCell(const std::string& name, const unsigned int num_cells, const unsigned int num_portables,
-          const unsigned int normal_channels, const unsigned int reserve_channels)
-    : SimulationObject(name), num_cells(num_cells), num_portables(num_portables),
+          const unsigned int normal_channels, const unsigned int reserve_channels,
+          const unsigned int index)
+    : SimulationObject(name), state(), num_cells(num_cells), num_portables(num_portables),
       normal_channels(normal_channels), reserve_channels(reserve_channels),
       // portables_in(0), portables_out(0), call_attempts(0), channel_blocks(0), busy_lines(0),
       // handoff_blocks(0), call_attempts(0)
-      rng(new MLCG), state(), index(PcsCell::next_index++) { }
+      rng(new MLCG), index(index) { }
 
   double blocking_probability() {
     return ((double)(state.channel_blocks + state.handoff_blocks)) / ((double) (state.call_attempts - state.busy_lines));
@@ -126,6 +127,8 @@ public:
 
   virtual warped::ObjectState& getState() { return this->state; }
 
+  PcsState state;
+
 protected:
   std::string name;
   unsigned int num_cells;
@@ -135,11 +138,9 @@ protected:
   std::unique_ptr<MLCG> rng;
 
 private:
-  PcsState state;
   std::string compute_move(const direction_t) const;
   std::string random_move() const;
-  static unsigned int next_index;
-  const unsigned int index;
+  unsigned int index;
 };
 
 #endif
