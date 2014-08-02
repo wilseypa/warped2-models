@@ -84,7 +84,7 @@ std::vector<std::unique_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
     {
       // Attempt to place a call
       this->state.call_attempts++;
-      if ( !this->normal_channels ) {
+      if ( !state.normal_channels ) {
         // All normal channels are in use; call is blocked
         this->state.channel_blocks++;
         // Reschedule the call
@@ -107,7 +107,7 @@ std::vector<std::unique_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
       }
       else {
         // The call can be connected; allocate a channel
-        this->normal_channels--;
+        state.normal_channels--;
         // Randomize the call move time and end time
         unsigned int completion_timestamp = received_event.next_timestamp + (unsigned int) time_expo();
         unsigned int next_timestamp = received_event.next_timestamp + (unsigned int) next_expo();
@@ -149,10 +149,10 @@ std::vector<std::unique_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
       // End of a call
       // Deallocate the channel
       if ( received_event.channel == NORMAL ) {
-        this->normal_channels++;
+        state.normal_channels++;
       }
       else if ( received_event.channel == RESERVE ) {
-        this->reserve_channels++;
+        state.reserve_channels++;
       }
       else {
         std::cerr << "Invalid channel type when completing call" << std::endl;
@@ -184,7 +184,7 @@ std::vector<std::unique_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
   case MOVECALLIN_METHOD:
     {
       unsigned int move_timestamp = received_event.move_timestamp + (unsigned int) move_expo();
-      if ( !this->normal_channels && !this->reserve_channels ) {
+      if ( !state.normal_channels && !state.reserve_channels ) {
         // No normal or reserve channels are available; the call is dropped
         state.handoff_blocks++;
         if ( received_event.next_timestamp < move_timestamp ) {
@@ -209,14 +209,14 @@ std::vector<std::unique_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
       }
       else {
         channel_t channel;
-        if ( this->normal_channels ) {
+        if ( state.normal_channels ) {
           // A normal channel is available for the call; allocate it
-          this->normal_channels--;
+          state.normal_channels--;
           channel = NORMAL;
         }
         else {
           // No normal channels are available; allocate a reserve channel
-          this->reserve_channels--;
+          state.reserve_channels--;
           channel = RESERVE;
         }
         unsigned int next_timestamp = received_event.next_timestamp;
@@ -257,10 +257,10 @@ std::vector<std::unique_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
     {
       // Free a channel of whatever type this call is on
       if ( received_event.channel == NORMAL ) {
-        this->normal_channels++;
+        state.normal_channels++;
       }
       else if ( received_event.channel == RESERVE ) {
-        this->reserve_channels++;
+        state.reserve_channels++;
       }
       else {
         std::cerr << "Invalid channel type when transferring call to new cell" << std::endl;
@@ -332,7 +332,7 @@ int main(int argc, const char** argv) {
 
   for (unsigned int i = 0; i < NUM_CELLS_X * NUM_CELLS_Y; i++) {
     std::string name = std::string("Object ") + std::to_string(i);
-    objects.emplace_back(name, NUM_CELLS_X * NUM_CELLS_Y, 1, 2, 1, index++);
+    objects.emplace_back(name, NUM_CELLS_X * NUM_CELLS_Y, 3, 2, 0, index++);
   }
 
   std::vector<warped::SimulationObject*> object_pointers;
@@ -342,9 +342,22 @@ int main(int argc, const char** argv) {
 
   pcs_sim.simulate(object_pointers);
 
+  unsigned int handoff_blocks = 0;
+  unsigned int busy_lines = 0;
+  unsigned int call_attempts = 0;
+  unsigned int channel_blocks = 0;
+
   for (auto& o : objects) {
-    std::cout << o.name_ << " dropped" << o.state.handoff_blocks << " calls" << std::endl;
+    handoff_blocks += o.state.handoff_blocks;
+    busy_lines += o.state.busy_lines;
+    call_attempts += o.state.call_attempts;
+    channel_blocks += o.state.channel_blocks;
   }
+
+  std::cout << call_attempts << " calls attempted" << std::endl;
+  std::cout << busy_lines << " busy lines" << std::endl;
+  std::cout << channel_blocks << " blocked calls" << std::endl;
+  std::cout << handoff_blocks << " dropped calls" << std::endl;
 
   return 0;
 }

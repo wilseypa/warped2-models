@@ -17,42 +17,17 @@
 #define NUM_CELLS_X 1024     //256
 #define NUM_CELLS_Y 1024     //256
 
-#define NUM_VP_X 512 
-#define NUM_VP_Y 512
-
-#define MAX_NORMAL_CHANNELS 10
-#define MAX_RESERVE_CHANNELS 0
-
-/*
- * This is in Mins 
- */
 #define MOVE_CALL_MEAN 4500.0
 #define NEXT_CALL_MEAN 360.0
 #define CALL_TIME_MEAN 180.0
 
-/*
- * When Normal_Channels == 0, then all have been used 
- */
-#define NORM_CH_BUSY ( !( SV->Normal_Channels & 0xffffffff ) )
-
-/*
- * When Reserve_Channels == 0, then all have been used 
- */
-#define RESERVE_CH_BUSY ( !( SV->Reserve_Channels & 0xffffffff ) )
-
 WARPED_DEFINE_OBJECT_STATE_STRUCT(PcsState) {
-  double          const_state_1;
-  int             const_state_2;
-  // int             normal_channels;
-  // int             reserve_channels;
-  int             portables_in;
-  int             portables_out;
-  int             call_attempts;
-  int             channel_blocks;
-  int             busy_lines;
-  int             handoff_blocks;
-  int             cell_location_x;
-  int             cell_location_y;
+  unsigned int normal_channels;
+  unsigned int reserve_channels;
+  unsigned int call_attempts;
+  unsigned int channel_blocks;
+  unsigned int busy_lines;
+  unsigned int handoff_blocks;
 };
 
 enum method_name_t {
@@ -66,12 +41,6 @@ enum channel_t {
   NONE,
   NORMAL,
   RESERVE
-};
-
-enum min_t {
-  COMPLETECALL,
-  NEXTCALL,
-  MOVECALL
 };
 
 enum direction_t {
@@ -113,10 +82,11 @@ public:
           const unsigned int normal_channels, const unsigned int reserve_channels,
           const unsigned int index)
     : SimulationObject(name), state(), num_cells(num_cells), num_portables(num_portables),
-      normal_channels(normal_channels), reserve_channels(reserve_channels),
-      // portables_in(0), portables_out(0), call_attempts(0), channel_blocks(0), busy_lines(0),
-      // handoff_blocks(0), call_attempts(0)
-      rng(new MLCG), index(index) { }
+      rng(new MLCG), index(index)
+  {
+    state.normal_channels = normal_channels;
+    state.reserve_channels = reserve_channels;
+  }
 
   double blocking_probability() {
     return ((double)(state.channel_blocks + state.handoff_blocks)) / ((double) (state.call_attempts - state.busy_lines));
@@ -130,10 +100,8 @@ public:
   PcsState state;
 
 protected:
-  unsigned int num_cells;
-  unsigned int num_portables;
-  unsigned int normal_channels;
-  unsigned int reserve_channels;
+  const unsigned int num_cells;
+  const unsigned int num_portables;
   std::unique_ptr<MLCG> rng;
 
 private:
