@@ -337,7 +337,6 @@ int main(int argc, const char** argv) {
 
   std::vector<warped::SimulationObject*> object_pointers;
   for (auto& o : objects) {
-    std::cout << &o << std::endl;
     object_pointers.push_back(&o);
   }
 
