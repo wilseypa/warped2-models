@@ -370,7 +370,7 @@ int main(int argc, const char** argv) {
 
   std::vector<PcsCell> objects;
 
-  for (unsigned int i = 0; i < num_cells_x * num_cells_y - 1; i++) {
+  for (unsigned int i = 0; i < num_cells_x * num_cells_y; i++) {
     std::string name = std::string("Object ") + std::to_string(i);
     objects.emplace_back(name, num_cells_x, num_cells_y, num_portables, normal_channels,
                          reserve_channels, call_time_mean, next_call_mean, move_call_mean, i);
