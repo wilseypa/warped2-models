@@ -1,5 +1,6 @@
 // This model was ported from the ROSS pcs model. See https://github.com/carothersc/ROSS
 // Also see "Distributed Simulation of Large-Scale PCS Networks" by Carothers et al.
+// Author: Eric Carver carverer@mail.uc.edu
 
 #ifndef PCS_SIM_HPP_DEFINED
 #define PCS_SIM_HPP_DEFINED
@@ -12,14 +13,6 @@
 
 #include "MLCG.h"
 #include "NegExp.h"
-
-// These may be moved to config file or command line later
-#define NUM_CELLS_X 1024     //256
-#define NUM_CELLS_Y 1024     //256
-
-#define MOVE_CALL_MEAN 4500.0
-#define NEXT_CALL_MEAN 360.0
-#define CALL_TIME_MEAN 180.0
 
 WARPED_DEFINE_OBJECT_STATE_STRUCT(PcsState) {
   unsigned int normal_channels;
@@ -78,11 +71,15 @@ public:
 
 class PcsCell : public warped::SimulationObject {
 public:
-  PcsCell(const std::string& name, const unsigned int num_cells, const unsigned int num_portables,
+  PcsCell(const std::string& name, const unsigned int num_cells_x,
+          const unsigned int num_cells_y, const unsigned int num_portables,
           const unsigned int normal_channels, const unsigned int reserve_channels,
-          const unsigned int index)
-    : SimulationObject(name), state(), num_cells(num_cells), num_portables(num_portables),
-      rng(new MLCG), index(index)
+          const double call_time_mean, const double next_call_mean,
+          const double move_call_mean, const unsigned int index)
+    : SimulationObject(name), state(), num_cells_x(num_cells_x), num_cells_y(num_cells_y),
+      num_portables(num_portables), call_time_mean(call_time_mean),
+      next_call_mean(next_call_mean), move_call_mean(move_call_mean), index(index),
+      rng(new MLCG)
   {
     state.normal_channels = normal_channels;
     state.reserve_channels = reserve_channels;
@@ -100,14 +97,18 @@ public:
   PcsState state;
 
 protected:
-  const unsigned int num_cells;
+  const unsigned int num_cells_x;
+  const unsigned int num_cells_y;
   const unsigned int num_portables;
-  std::unique_ptr<MLCG> rng;
+  const double call_time_mean;
+  const double next_call_mean;
+  const double move_call_mean;
 
 private:
   std::string compute_move(const direction_t) const;
   std::string random_move() const;
-  unsigned int index;
+  const unsigned int index;
+  std::unique_ptr<MLCG> rng;
 };
 
 #endif
