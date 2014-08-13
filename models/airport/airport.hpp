@@ -2,6 +2,9 @@
 // Ported from the ROSS airport model (https://github.com/carothersc/ROSS/blob/master/ross/models/airport)
 // Author: Eric Carver (carverer@mail.uc.edu)
 
+#ifndef AIRPORT_HPP_DEFINED
+#define AIRPORT_HPP_DEFINED
+
 #include <string>
 #include <vector>
 #include <memory>
@@ -48,8 +51,10 @@ public:
 
 class Airport : public warped::SimulationObject {
 public:
-  Airport(const std::string& name, const unsigned int num_airports, const unsigned int num_planes)
-    : SimulationObject(name), state(), num_airports(num_airports), num_planes(num_planes) {}
+  Airport(const std::string& name, const unsigned int num_airports, const unsigned int num_planes,
+          const unsigned int land_mean, const unsigned int depart_mean)
+    : SimulationObject(name), state(), num_airports(num_airports), num_planes(num_planes),
+      land_mean(land_mean), depart_mean(depart_mean) {}
 
   virtual std::vector<std::unique_ptr<warped::Event> > createInitialEvents();
   virtual std::vector<std::unique_ptr<warped::Event> > receiveEvent(const warped::Event&);
@@ -58,7 +63,11 @@ public:
   AirportState state;
 
 protected:
+  std::default_random_engine rng_engine;
   const unsigned int num_airports;
   const unsigned int num_planes;
+  const unsigned int land_mean;
+  const unsigned int depart_mean;
+};
 
-  
+#endif
