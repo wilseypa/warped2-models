@@ -72,3 +72,57 @@ virtual std::vector<std::unique_ptr<warped::Event> > Airport::receiveEvent(const
   }
   return response_events;
 }
+
+int main(int argc, const char** argv)
+{
+  unsigned int num_airports = 1024;
+  unsigned int mean_ground_time = 10;
+  unsigned int mean_flight_time = 30;
+  unsigned int num_planes = 1;
+
+  TCLAP::ValueArg<unsigned int> num_airports_arg("n", "num-airports", "Number of airports",
+                                                 false, num_airports, "unsigned int");
+  TCLAP::ValueArg<unsigned int> mean_ground_time_arg("g", "ground-time", "Mean time of planes waiting to depart",
+                                                     false, mean_ground_time, "unsigned int");
+  TCLAP::ValueArg<unsigned int> mean_flight_time_arg("f", "flight-time", "Mean flight time",
+                                                     false, mean_flight_time, "unsigned int");
+  TCLAP::ValueArg<unsigned int> num_planes_arg("p", "num-planes", "Number of planes per airport",
+                                               false, num_planes, "unsigned int");
+
+  std::vector<TCLAP::Arg*> args = {&num_airports_arg, &mean_ground_time_arg, &mean_flight_time_arg
+                                   &num_planes_arg};
+
+  warped::Simulation airport_sim {"Airport Simulation", argc, argv, args};
+
+  num_airports = num_airports_arg.getValue();
+  mean_ground_time = mean_ground_time_arg.getValue();
+  mean_flight_time = mean_flight_time_arg.getValue();
+  num_planes = num_planes_arg.getValue();
+
+  std::vector<Airport> objects;
+
+  for (unsigned int i = 0; i < num_airports;, i++) {
+    std::string name = Airport::object_name(i);
+    objects.emplace_back(name, num_airports, num_planes, mean_flight_time, mean_ground_time, i);
+  }
+
+  std::vector<warped::SimulationObject*> object_pointers;
+  for (auto& o : objects) {
+    object_pointers.push_back(&o);
+  }
+
+  airport_sim.simulate(object_pointers);
+
+  unsigned int landings = 0;
+  unsigned int departures = 0;
+
+  for (auto& o : objects) {
+    landings += o.state.landings;
+    departures += o.state.departures;
+  }
+
+  std::cout << departures << " total departures" << std::endl;
+  std::cout << landings << " total landings" << std::endl;
+
+  return 0;
+}
