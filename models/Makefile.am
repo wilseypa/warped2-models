@@ -1,1 +1,1 @@
-SUBDIRS = ping_pong iscas phold pcs
+SUBDIRS = ping_pong iscas phold pcs airport

@@ -48,5 +48,6 @@ AC_CONFIG_FILES([models/iscas/Makefile])
 AC_CONFIG_FILES([models/ping_pong/Makefile])
 AC_CONFIG_FILES([models/phold/Makefile])
 AC_CONFIG_FILES([models/pcs/Makefile])
+AC_CONFIG_FILES([models/airport/makefile])
 
 AC_OUTPUT
