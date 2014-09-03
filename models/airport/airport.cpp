@@ -9,33 +9,39 @@
 #include "warped.hpp"
 #include "airport.hpp"
 
+#include "MLCG.h"
+#include "NegExp.h"
+
+#include "tclap/ValueArg.h"
+
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(AirportEvent)
 
-virtual std::vector<std::unique_ptr<warped::Event> > Airport::createInitialEvents()
+std::vector<std::unique_ptr<warped::Event> > Airport::createInitialEvents()
 {
   std::vector<std::unique_ptr<warped::Event> > events;
 
-  std::exponential_distribution<unsigned int> depart_expo(this->depart_mean);
+  NegativeExpntl depart_expo((double)this->depart_mean, this->rng.get());
 
-  for (int i = 0; i < this->num_planes; i++) {
-    events.emplace_back(new AirportEvent {this->name, this->name, DEPARTURE, depart_expo(rng_engine), 0, 0});
+  for (unsigned int i = 0; i < this->num_planes; i++) {
+    events.emplace_back(new AirportEvent {this->name_, this->name_, DEPARTURE, (unsigned int)depart_expo()});
   }
 
   return events;
 }
 
-static inline std::string Airport::object_name(const unsigned int object_index)
+inline std::string Airport::object_name(const unsigned int object_index)
 {
   return std::string("Object ") + std::to_string(object_index);
 }
 
-virtual std::vector<std::unique_ptr<warped::Event> > Airport::receiveEvent(const warped::Event& event)
+std::vector<std::unique_ptr<warped::Event> > Airport::receiveEvent(const warped::Event& event)
 {
   std::vector<std::unique_ptr<warped::Event> > response_events;
   auto received_event = static_cast<const AirportEvent&>(event);
 
-  std::exponential_distribution<unsigned int> depart_expo(this->depart_mean);
-  std::exponential_distribution<unsigned int> land_expo(this->land_mean);
+  NegativeExpntl depart_expo((double)this->depart_mean, this->rng.get());
+  NegativeExpntl land_expo((double)this->land_mean, this->rng.get());
+
   // std::uniform_int_distribution<unsigned int> rand_direction(0,3);
   std::uniform_int_distribution<unsigned int> rand_airport(0,this->num_airports-1);
 
@@ -46,17 +52,17 @@ virtual std::vector<std::unique_ptr<warped::Event> > Airport::receiveEvent(const
       this->state.planes_flying++;
       this->state.departures++;
       // Schedule an arrival at a random airport
-      unsigned int landing_time = received_event.ts + land_expo(this->rng_engine);
+      unsigned int landing_time = received_event.ts + (unsigned int)land_expo();
       // direction_t direction = (direction_t) rand_direction(this->rng_engine);
       unsigned int destination_index = rand_airport(this->rng_engine);
-      response_events.emplace_back(new AirportEvent {Airport::object_name(destination_index), this->name,
+      response_events.emplace_back(new AirportEvent {Airport::object_name(destination_index), this->name_,
             ARRIVAL, landing_time });
       break;
     }
   case ARRIVAL:
     {
       // Schedule a landing
-      response_events.emplace_back(new AirportEvent { this->name, this->name, LANDING, received_event.ts });
+      response_events.emplace_back(new AirportEvent { this->name_, this->name_, LANDING, received_event.ts });
       break;
     }
   case LANDING:
@@ -65,8 +71,8 @@ virtual std::vector<std::unique_ptr<warped::Event> > Airport::receiveEvent(const
       this->state.planes_flying--;
       this->state.planes_grounded++;
       // Schedule a departure
-      response_events.emplace_back(new AirportEvent { this->name, this->name, DEPARTURE,
-            received_event.ts + depart_expo(this->rng_engine) });
+      response_events.emplace_back(new AirportEvent { this->name_, this->name_, DEPARTURE,
+            received_event.ts + (unsigned int)depart_expo() });
       break;
     }
   }
@@ -89,7 +95,7 @@ int main(int argc, const char** argv)
   TCLAP::ValueArg<unsigned int> num_planes_arg("p", "num-planes", "Number of planes per airport",
                                                false, num_planes, "unsigned int");
 
-  std::vector<TCLAP::Arg*> args = {&num_airports_arg, &mean_ground_time_arg, &mean_flight_time_arg
+  std::vector<TCLAP::Arg*> args = {&num_airports_arg, &mean_ground_time_arg, &mean_flight_time_arg,
                                    &num_planes_arg};
 
   warped::Simulation airport_sim {"Airport Simulation", argc, argv, args};
@@ -101,7 +107,7 @@ int main(int argc, const char** argv)
 
   std::vector<Airport> objects;
 
-  for (unsigned int i = 0; i < num_airports;, i++) {
+  for (unsigned int i = 0; i < num_airports; i++) {
     std::string name = Airport::object_name(i);
     objects.emplace_back(name, num_airports, num_planes, mean_flight_time, mean_ground_time, i);
   }

@@ -11,6 +11,8 @@
 
 #include "warped.hpp"
 
+#include "MLCG.h"
+
 WARPED_DEFINE_OBJECT_STATE_STRUCT(AirportState) {
   unsigned int landings;
   unsigned int departures;
@@ -46,14 +48,14 @@ public:
   airport_event_t type;
   unsigned int ts;
 
-  WARPED_REGISTER_SERIALIZABLE_MEMBERS(receiver_name, creator_name, type, ts);
+  WARPED_REGISTER_SERIALIZABLE_MEMBERS(receiver_name, creator_name, type, ts)
 };
 
 class Airport : public warped::SimulationObject {
 public:
   Airport(const std::string& name, const unsigned int num_airports, const unsigned int num_planes,
           const unsigned int land_mean, const unsigned int depart_mean, const unsigned int index)
-    : SimulationObject(name), state(), num_airports(num_airports), num_planes(num_planes),
+    : SimulationObject(name), state(), rng(new MLCG), num_airports(num_airports), num_planes(num_planes),
       land_mean(land_mean), depart_mean(depart_mean), index(index) {}
 
   virtual std::vector<std::unique_ptr<warped::Event> > createInitialEvents();
@@ -65,6 +67,7 @@ public:
   static inline std::string object_name(const unsigned int);
 
 protected:
+  std::unique_ptr<MLCG> rng;
   std::default_random_engine rng_engine;
   const unsigned int num_airports;
   const unsigned int num_planes;
