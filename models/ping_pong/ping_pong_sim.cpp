@@ -26,7 +26,7 @@ public:
     std::string receiver_name_;
     unsigned int timestamp_;
 
-    WARPED_REGISTER_SERIALIZABLE_MEMBERS(creator_name_, receiver_name_, timestamp_)
+    WARPED_REGISTER_SERIALIZABLE_MEMBERS(cereal::base_class<warped::Event>(this), creator_name_, receiver_name_, timestamp_)
 };
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(PingPongEvent)
 
@@ -40,8 +40,8 @@ public:
 
     warped::ObjectState& getState() { return state_; }
 
-    std::vector<std::unique_ptr<warped::Event>> createInitialEvents()  {
-        std::vector<std::unique_ptr<warped::Event>> v;
+    std::vector<std::shared_ptr<warped::Event>> createInitialEvents()  {
+        std::vector<std::shared_ptr<warped::Event>> v;
         if (balls_to_create_ > 0) {
             state_.balls_created_++;
             state_.balls_sent_++;
@@ -51,8 +51,8 @@ public:
     }
 
 
-    std::vector<std::unique_ptr<warped::Event>> receiveEvent(const warped::Event& event) {
-        std::vector<std::unique_ptr<warped::Event>> v;
+    std::vector<std::shared_ptr<warped::Event>> receiveEvent(const warped::Event& event) {
+        std::vector<std::shared_ptr<warped::Event>> v;
         state_.balls_received_++;
         auto ping_event = static_cast<const PingPongEvent&>(event);
         std::string creator_name;
