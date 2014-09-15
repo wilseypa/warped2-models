@@ -24,25 +24,23 @@ enum distribution_t {UNIFORM, POISSON, EXPONENTIAL, NORMAL, BINOMIAL, FIXED,
 
 WARPED_DEFINE_OBJECT_STATE_STRUCT(PholdState)
 {
-  unsigned int messages_sent;
-  unsigned int messages_received;
+  unsigned int messages_sent_;
+  unsigned int messages_received_;
 };
 
 class PholdEvent : public warped::Event {
 public:
   PholdEvent() = default;
-  PholdEvent(const std::string& receiver_name, const unsigned int timestamp,
-             const std::string& creator_name)
-    : creator_name(creator_name), receiver_name(receiver_name), time_stamp(timestamp) {}
+  PholdEvent(const std::string& receiver_name, const unsigned int timestamp)
+    : receiver_name_(receiver_name), time_stamp_(timestamp) {}
 
-  const std::string& receiverName() const { return receiver_name; }
-  unsigned int timestamp() const { return time_stamp; }
+  const std::string& receiverName() const { return receiver_name_; }
+  unsigned int timestamp() const { return time_stamp_; }
 
-  std::string creator_name;
-  std::string receiver_name;
-  unsigned int time_stamp;
+  std::string receiver_name_;
+  unsigned int time_stamp_;
 
-  WARPED_REGISTER_SERIALIZABLE_MEMBERS(creator_name, receiver_name, time_stamp)
+  WARPED_REGISTER_SERIALIZABLE_MEMBERS(cereal::base_class<warped::Event>(this), receiver_name_, time_stamp_)
 };
 
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(PholdEvent)
@@ -52,46 +50,46 @@ public:
   PholdObject(const std::string& name, const unsigned int initial_events,
               const unsigned int num_objects, const distribution_t distribution,
               const double distribution_mean = 1.0)
-    : SimulationObject(name), state(), initial_events(initial_events),
-      num_objects(num_objects), rng(new MLCG), distribution(distribution),
-      distribution_mean(distribution_mean) {}
+    : SimulationObject(name), state_(), initial_events_(initial_events),
+      num_objects_(num_objects), rng_(new MLCG), distribution_(distribution),
+      distribution_mean_(distribution_mean) {}
 
-  warped::ObjectState& getState() { return this->state; }
+  warped::ObjectState& getState() { return this->state_; }
 
-  std::vector<std::unique_ptr<warped::Event> > createInitialEvents() {
-    std::vector<std::unique_ptr<warped::Event> > events;
-    for (unsigned int i = 0; i < this->initial_events; i++) {
-      ++this->state.messages_sent;
-      events.emplace_back(new PholdEvent { this->get_destination(), this->get_timestamp_delay(),
-            this->name_ });
+  std::vector<std::shared_ptr<warped::Event> > createInitialEvents() {
+    std::vector<std::shared_ptr<warped::Event> > events;
+    for (unsigned int i = 0; i < this->initial_events_; i++) {
+      ++this->state_.messages_sent_;
+      events.emplace_back(new PholdEvent { this->get_destination(), 
+                                            this->get_timestamp_delay() });
     }
     return events;
   }
 
-  std::vector<std::unique_ptr<warped::Event> > receiveEvent(const warped::Event& event) {
-    ++this->state.messages_received;
-    std::vector<std::unique_ptr<warped::Event> > response_events;
+  std::vector<std::shared_ptr<warped::Event> > receiveEvent(const warped::Event& event) {
+    ++this->state_.messages_received_;
+    std::vector<std::shared_ptr<warped::Event> > response_events;
     auto received_event = static_cast<const PholdEvent&>(event);
 
     response_events.emplace_back(new PholdEvent { this->get_destination(),
-          event.timestamp() + this->get_timestamp_delay(), this->name_ });
+                                    event.timestamp() + this->get_timestamp_delay() });
 
-    ++this->state.messages_sent;
+    ++this->state_.messages_sent_;
 
     return response_events;
   }
 
-  PholdState state;
+  PholdState state_;
 
 protected:
-  const unsigned int initial_events;
-  const unsigned int num_objects;
-  std::unique_ptr<MLCG> rng;
-  const distribution_t distribution;
-  const double distribution_mean;
+  const unsigned int initial_events_;
+  const unsigned int num_objects_;
+  std::unique_ptr<MLCG> rng_;
+  const distribution_t distribution_;
+  const double distribution_mean_;
 
   std::string get_destination() const {
-    DiscreteUniform Dest(0, ((int)(num_objects))-1, this->rng.get());
+    DiscreteUniform Dest(0, ((int)(num_objects_))-1, this->rng_.get());
     unsigned int destination_number = (unsigned int) Dest();
     return std::string("Object ") + std::to_string(destination_number);
   }
@@ -100,39 +98,39 @@ protected:
 
     double delay;
 
-    switch ( this->distribution ) {
+    switch ( this->distribution_ ) {
     case UNIFORM :
       {
-        Uniform uniform(this->distribution_mean, 0.0, this->rng.get());
+        Uniform uniform(this->distribution_mean_, 0.0, this->rng_.get());
         delay = uniform();
         break;
       }
     case NORMAL :
       {
-        Normal normal(this->distribution_mean, 0.0, this->rng.get());
+        Normal normal(this->distribution_mean_, 0.0, this->rng_.get());
         delay = normal();
         break;
       }
     case BINOMIAL :
       {
-        Binomial binomial((int)this->distribution_mean, 0.0, this->rng.get());
+        Binomial binomial((int)this->distribution_mean_, 0.0, this->rng_.get());
         delay = binomial();
         break;
       }
     case POISSON :
       {
-        Poisson poisson(this->distribution_mean, this->rng.get());
+        Poisson poisson(this->distribution_mean_, this->rng_.get());
         delay = poisson();
         break;
       }
     case EXPONENTIAL :
       {
-        NegativeExpntl expo(this->distribution_mean, this->rng.get());
+        NegativeExpntl expo(this->distribution_mean_, this->rng_.get());
         delay = expo();
         break;
       }
     case FIXED :
-      delay = (unsigned int)this->distribution_mean ;
+      delay = (unsigned int)this->distribution_mean_ ;
       break;
     default :
       delay = 0;
