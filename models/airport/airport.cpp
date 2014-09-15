@@ -16,14 +16,15 @@
 
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(AirportEvent)
 
-std::vector<std::unique_ptr<warped::Event> > Airport::createInitialEvents()
+std::vector<std::shared_ptr<warped::Event> > Airport::createInitialEvents()
 {
-  std::vector<std::unique_ptr<warped::Event> > events;
+  std::vector<std::shared_ptr<warped::Event> > events;
 
-  NegativeExpntl depart_expo((double)this->depart_mean, this->rng.get());
+  NegativeExpntl depart_expo((double)this->depart_mean_, this->rng_.get());
 
-  for (unsigned int i = 0; i < this->num_planes; i++) {
-    events.emplace_back(new AirportEvent {this->name_, this->name_, DEPARTURE, (unsigned int)depart_expo()});
+  for (unsigned int i = 0; i < this->num_planes_; i++) {
+    events.emplace_back(new AirportEvent {this->name_, DEPARTURE, 
+                                            (unsigned int)depart_expo()});
   }
 
   return events;
@@ -34,45 +35,45 @@ inline std::string Airport::object_name(const unsigned int object_index)
   return std::string("Object ") + std::to_string(object_index);
 }
 
-std::vector<std::unique_ptr<warped::Event> > Airport::receiveEvent(const warped::Event& event)
+std::vector<std::shared_ptr<warped::Event> > Airport::receiveEvent(const warped::Event& event)
 {
-  std::vector<std::unique_ptr<warped::Event> > response_events;
+  std::vector<std::shared_ptr<warped::Event> > response_events;
   auto received_event = static_cast<const AirportEvent&>(event);
 
-  NegativeExpntl depart_expo((double)this->depart_mean, this->rng.get());
-  NegativeExpntl land_expo((double)this->land_mean, this->rng.get());
+  NegativeExpntl depart_expo((double)this->depart_mean_, this->rng_.get());
+  NegativeExpntl land_expo((double)this->land_mean_, this->rng_.get());
 
   // std::uniform_int_distribution<unsigned int> rand_direction(0,3);
-  std::uniform_int_distribution<unsigned int> rand_airport(0,this->num_airports-1);
+  std::uniform_int_distribution<unsigned int> rand_airport(0,this->num_airports_-1);
 
-  switch ( received_event.type ) {
+  switch ( received_event.type_ ) {
   case DEPARTURE:
     {
-      this->state.planes_grounded--;
-      this->state.planes_flying++;
-      this->state.departures++;
+      this->state_.planes_grounded_--;
+      this->state_.planes_flying_++;
+      this->state_.departures_++;
       // Schedule an arrival at a random airport
-      unsigned int landing_time = received_event.ts + (unsigned int)land_expo();
-      // direction_t direction = (direction_t) rand_direction(this->rng_engine);
-      unsigned int destination_index = rand_airport(this->rng_engine);
-      response_events.emplace_back(new AirportEvent {Airport::object_name(destination_index), this->name_,
-            ARRIVAL, landing_time });
+      unsigned int landing_time = received_event.ts_ + (unsigned int)land_expo();
+      // direction_t direction = (direction_t) rand_direction(this->rng_engine_);
+      unsigned int destination_index = rand_airport(this->rng_engine_);
+      response_events.emplace_back(new AirportEvent {Airport::object_name(destination_index),
+                                                            ARRIVAL, landing_time });
       break;
     }
   case ARRIVAL:
     {
       // Schedule a landing
-      response_events.emplace_back(new AirportEvent { this->name_, this->name_, LANDING, received_event.ts });
+      response_events.emplace_back(new AirportEvent { this->name_, LANDING, received_event.ts_ });
       break;
     }
   case LANDING:
     {
-      this->state.landings++;
-      this->state.planes_flying--;
-      this->state.planes_grounded++;
+      this->state_.landings_++;
+      this->state_.planes_flying_--;
+      this->state_.planes_grounded_++;
       // Schedule a departure
-      response_events.emplace_back(new AirportEvent { this->name_, this->name_, DEPARTURE,
-            received_event.ts + (unsigned int)depart_expo() });
+      response_events.emplace_back(new AirportEvent { this->name_, DEPARTURE,
+                                            received_event.ts_ + (unsigned int)depart_expo() });
       break;
     }
   }
@@ -123,8 +124,8 @@ int main(int argc, const char** argv)
   unsigned int departures = 0;
 
   for (auto& o : objects) {
-    landings += o.state.landings;
-    departures += o.state.departures;
+    landings += o.state_.landings_;
+    departures += o.state_.departures_;
   }
 
   std::cout << departures << " total departures" << std::endl;

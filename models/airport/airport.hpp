@@ -14,10 +14,10 @@
 #include "MLCG.h"
 
 WARPED_DEFINE_OBJECT_STATE_STRUCT(AirportState) {
-  unsigned int landings;
-  unsigned int departures;
-  unsigned int planes_flying;
-  unsigned int planes_grounded;
+  unsigned int landings_;
+  unsigned int departures_;
+  unsigned int planes_flying_;
+  unsigned int planes_grounded_;
 };
 
 enum airport_event_t {
@@ -36,44 +36,43 @@ enum direction_t {
 class AirportEvent : public warped::Event {
 public:
   AirportEvent() = default;
-  AirportEvent(const std::string& receiver_name, const std::string& creator_name,
-               const airport_event_t type, const unsigned int timestamp)
-    : receiver_name(receiver_name), creator_name(creator_name), type(type), ts(timestamp) {}
+  AirportEvent(const std::string& receiver_name, const airport_event_t type, 
+                const unsigned int timestamp)
+    : receiver_name_(receiver_name), type_(type), ts_(timestamp) {}
 
-  const std::string& receiverName() const { return receiver_name; }
-  unsigned int timestamp() const { return ts; }
+  const std::string& receiverName() const { return receiver_name_; }
+  unsigned int timestamp() const { return ts_; }
 
-  std::string receiver_name;
-  std::string creator_name;
-  airport_event_t type;
-  unsigned int ts;
+  std::string receiver_name_;
+  airport_event_t type_;
+  unsigned int ts_;
 
-  WARPED_REGISTER_SERIALIZABLE_MEMBERS(receiver_name, creator_name, type, ts)
+  WARPED_REGISTER_SERIALIZABLE_MEMBERS(cereal::base_class<warped::Event>(this), receiver_name_, type_, ts_)
 };
 
 class Airport : public warped::SimulationObject {
 public:
   Airport(const std::string& name, const unsigned int num_airports, const unsigned int num_planes,
           const unsigned int land_mean, const unsigned int depart_mean, const unsigned int index)
-    : SimulationObject(name), state(), rng(new MLCG), num_airports(num_airports), num_planes(num_planes),
-      land_mean(land_mean), depart_mean(depart_mean), index(index) {}
+    : SimulationObject(name), state_(), rng_(new MLCG), num_airports_(num_airports), num_planes_(num_planes),
+      land_mean_(land_mean), depart_mean_(depart_mean), index_(index) {}
 
-  virtual std::vector<std::unique_ptr<warped::Event> > createInitialEvents();
-  virtual std::vector<std::unique_ptr<warped::Event> > receiveEvent(const warped::Event&);
-  virtual warped::ObjectState& getState() { return this->state; }
+  virtual std::vector<std::shared_ptr<warped::Event> > createInitialEvents();
+  virtual std::vector<std::shared_ptr<warped::Event> > receiveEvent(const warped::Event&);
+  virtual warped::ObjectState& getState() { return this->state_; }
 
-  AirportState state;
+  AirportState state_;
 
   static inline std::string object_name(const unsigned int);
 
 protected:
-  std::unique_ptr<MLCG> rng;
-  std::default_random_engine rng_engine;
-  const unsigned int num_airports;
-  const unsigned int num_planes;
-  const unsigned int land_mean;
-  const unsigned int depart_mean;
-  const unsigned int index;
+  std::shared_ptr<MLCG> rng_;
+  std::default_random_engine rng_engine_;
+  const unsigned int num_airports_;
+  const unsigned int num_planes_;
+  const unsigned int land_mean_;
+  const unsigned int depart_mean_;
+  const unsigned int index_;
 };
 
 #endif
