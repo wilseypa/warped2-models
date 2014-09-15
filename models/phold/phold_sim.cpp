@@ -47,9 +47,9 @@ WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(PholdEvent)
 
 class PholdObject : public warped::SimulationObject {
 public:
-  PholdObject(const std::string& name, const unsigned int initial_events,
-              const unsigned int num_objects, const distribution_t distribution,
-              const double distribution_mean = 1.0)
+  PholdObject(const std::string& name, unsigned int initial_events,
+              unsigned int num_objects, distribution_t distribution,
+              double distribution_mean = 1.0)
     : SimulationObject(name), state_(), initial_events_(initial_events),
       num_objects_(num_objects), rng_(new MLCG), distribution_(distribution),
       distribution_mean_(distribution_mean) {}
@@ -84,7 +84,7 @@ public:
 protected:
   const unsigned int initial_events_;
   const unsigned int num_objects_;
-  std::unique_ptr<MLCG> rng_;
+  std::shared_ptr<MLCG> rng_;
   const distribution_t distribution_;
   const double distribution_mean_;
 
