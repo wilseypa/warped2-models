@@ -21,43 +21,42 @@ WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(PcsEvent)
 
 unsigned int PcsEvent::timestamp() const
 {
-  if ( this->move_timestamp < this->completion_timestamp ) {
-    if ( this->next_timestamp < this->move_timestamp ) {
-      return this->next_timestamp;
+  if ( this->move_timestamp_ < this->completion_timestamp_ ) {
+    if ( this->next_timestamp_ < this->move_timestamp_ ) {
+      return this->next_timestamp_;
     }
     else {
-      return this->move_timestamp;
+      return this->move_timestamp_;
     }
   }
   else {
-    if ( this->next_timestamp < this->completion_timestamp ) {
-      return this->next_timestamp;
+    if ( this->next_timestamp_ < this->completion_timestamp_ ) {
+      return this->next_timestamp_;
     }
     else {
-      return this->completion_timestamp;
+      return this->completion_timestamp_;
     }
   }
 }
 
-std::vector<std::unique_ptr<warped::Event> > PcsCell::createInitialEvents()
+std::vector<std::shared_ptr<warped::Event> > PcsCell::createInitialEvents()
 {
-  std::vector<std::unique_ptr<warped::Event> > events;
+  std::vector<std::shared_ptr<warped::Event> > events;
 
-  NegativeExpntl move_expo(move_call_mean, this->rng.get());
-  NegativeExpntl next_expo(next_call_mean, this->rng.get());
-  NegativeExpntl time_expo(call_time_mean, this->rng.get());
+  NegativeExpntl move_expo(move_call_mean_, this->rng_.get());
+  NegativeExpntl next_expo(next_call_mean_, this->rng_.get());
+  NegativeExpntl time_expo(call_time_mean_, this->rng_.get());
 
-  for (unsigned int i = 0; i < this->num_portables; i++) {
+  for (unsigned int i = 0; i < this->num_portables_; i++) {
     unsigned int completion_timestamp = (unsigned int) -1;
     unsigned int move_timestamp = (unsigned int) move_expo();
     unsigned int next_timestamp = (unsigned int) next_expo();
 
     if ( next_timestamp < move_timestamp ) {
       // The event will be processed here
-      events.emplace_back(new PcsEvent {this->name_, completion_timestamp, next_timestamp,
-            move_timestamp, this->name_, NORMAL, NEXTCALL_METHOD });
-    }
-    else {
+      events.emplace_back(new PcsEvent {this->name_, completion_timestamp, 
+                        next_timestamp, move_timestamp, NORMAL, NEXTCALL_METHOD });
+    } else {
       // The event will be sent elsewhere
       std::string current_cell = this->name_;
       std::string new_cell = this->name_;
@@ -66,82 +65,74 @@ std::vector<std::unique_ptr<warped::Event> > PcsCell::createInitialEvents()
         new_cell = this->random_move();
         move_timestamp += (unsigned int) next_expo();
       }
-      events.emplace_back(new PcsEvent {current_cell, completion_timestamp, next_timestamp,
-            move_timestamp, new_cell, NORMAL, NEXTCALL_METHOD });
+      events.emplace_back(new PcsEvent {current_cell, completion_timestamp, 
+                        next_timestamp, move_timestamp, NORMAL, NEXTCALL_METHOD });
     }
   }
   return events;
 }
 
-std::vector<std::unique_ptr<warped::Event> > PcsCell::receiveEvent(const warped::Event& event)
+std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped::Event& event)
 {
-  std::vector<std::unique_ptr<warped::Event> > response_events;
+  std::vector<std::shared_ptr<warped::Event> > response_events;
   auto received_event = static_cast<const PcsEvent&>(event);
 
-  NegativeExpntl move_expo(move_call_mean, this->rng.get());
-  NegativeExpntl next_expo(next_call_mean, this->rng.get());
-  NegativeExpntl time_expo(call_time_mean, this->rng.get());
+  NegativeExpntl move_expo(move_call_mean_, this->rng_.get());
+  NegativeExpntl next_expo(next_call_mean_, this->rng_.get());
+  NegativeExpntl time_expo(call_time_mean_, this->rng_.get());
 
-  switch ( received_event.method_name ) {
+  switch ( received_event.method_name_ ) {
   case NEXTCALL_METHOD:
     {
       // Attempt to place a call
-      this->state.call_attempts++;
-      if ( !state.normal_channels ) {
+      this->state_.call_attempts_++;
+      if ( !state_.normal_channels_ ) {
         // All normal channels are in use; call is blocked
-        this->state.channel_blocks++;
+        this->state_.channel_blocks_++;
         // Reschedule the call
-        unsigned int next_timestamp = received_event.next_timestamp + (unsigned int) next_expo();
-        if ( next_timestamp < received_event.move_timestamp ) {
-          response_events.emplace_back(new PcsEvent { this->name_, received_event.completion_timestamp,
-                next_timestamp, received_event.move_timestamp, this->name_, NORMAL, NEXTCALL_METHOD });
-        }
-        else {
+        unsigned int next_timestamp = received_event.next_timestamp_ + (unsigned int) next_expo();
+        if ( next_timestamp < received_event.move_timestamp_ ) {
+          response_events.emplace_back(new PcsEvent { this->name_, received_event.completion_timestamp_,
+                                next_timestamp, received_event.move_timestamp_, NORMAL, NEXTCALL_METHOD });
+        } else {
           std::string current_cell = this->name_;
           std::string new_cell = this->name_;
-          while ( received_event.move_timestamp < next_timestamp ) {
+          while ( received_event.move_timestamp_ < next_timestamp ) {
             current_cell = new_cell;
             new_cell = this->random_move();
-            received_event.move_timestamp += (unsigned int) move_expo();
+            received_event.move_timestamp_ += (unsigned int) move_expo();
           }
-          response_events.emplace_back(new PcsEvent { this->name_, received_event.completion_timestamp,
-                next_timestamp, received_event.move_timestamp, this->name_, NORMAL, NEXTCALL_METHOD });
+          response_events.emplace_back(new PcsEvent { this->name_, received_event.completion_timestamp_,
+                                next_timestamp, received_event.move_timestamp_, NORMAL, NEXTCALL_METHOD });
         }
-      }
-      else {
+      } else {
         // The call can be connected; allocate a channel
-        state.normal_channels--;
+        state_.normal_channels_--;
         // Randomize the call move time and end time
-        unsigned int completion_timestamp = received_event.next_timestamp + (unsigned int) time_expo();
-        unsigned int next_timestamp = received_event.next_timestamp + (unsigned int) next_expo();
+        unsigned int completion_timestamp = received_event.next_timestamp_ + (unsigned int) time_expo();
+        unsigned int next_timestamp = received_event.next_timestamp_ + (unsigned int) next_expo();
       busy_line_nextcall:
-        if ( next_timestamp < received_event.move_timestamp ) {
+        if ( next_timestamp < received_event.move_timestamp_ ) {
           if ( completion_timestamp < next_timestamp ) {
             // The call will be completed in this cell
             response_events.emplace_back(new PcsEvent { this->name_, completion_timestamp,
-                  next_timestamp, received_event.move_timestamp, this->name_, NORMAL,
-                  COMPLETIONCALL_METHOD });
-          }
-          else {
+                            next_timestamp, received_event.move_timestamp_, NORMAL, COMPLETIONCALL_METHOD });
+          } else {
             // Busy line; a call will be made from this cell afterward
-            state.call_attempts++;
-            state.busy_lines++;
+            state_.call_attempts_++;
+            state_.busy_lines_++;
             next_timestamp += (unsigned int) next_expo();
             goto busy_line_nextcall;
           }
-        }
-        else {
-          if ( completion_timestamp < received_event.move_timestamp ) {
+        } else {
+          if ( completion_timestamp < received_event.move_timestamp_ ) {
             // The call will be completed in this cell
             response_events.emplace_back(new PcsEvent { this->name_, completion_timestamp,
-                  next_timestamp, received_event.move_timestamp, this->name_, NORMAL,
-                  COMPLETIONCALL_METHOD });
-          }
-          else {
+                  next_timestamp, received_event.move_timestamp_, NORMAL, COMPLETIONCALL_METHOD });
+          } else {
             // The call was successful, but it will move cells before completion
             response_events.emplace_back(new PcsEvent { this->name_, completion_timestamp,
-                  next_timestamp, received_event.move_timestamp, this->name_, NORMAL,
-                  MOVECALLOUT_METHOD });
+                  next_timestamp, received_event.move_timestamp_, NORMAL, MOVECALLOUT_METHOD });
           }
         }
       }
@@ -151,106 +142,94 @@ std::vector<std::unique_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
     {
       // End of a call
       // Deallocate the channel
-      if ( received_event.channel == NORMAL ) {
-        state.normal_channels++;
-      }
-      else if ( received_event.channel == RESERVE ) {
-        state.reserve_channels++;
-      }
-      else {
+      if ( received_event.channel_ == NORMAL ) {
+        state_.normal_channels_++;
+      } else if ( received_event.channel_ == RESERVE ) {
+        state_.reserve_channels_++;
+      } else {
         std::cerr << "Invalid channel type when completing call" << std::endl;
         exit(1);
       }
 
-      if ( received_event.next_timestamp < received_event.move_timestamp ) {
+      if ( received_event.next_timestamp_ < received_event.move_timestamp_ ) {
         // The portable will attempt a new call in this cell
         response_events.emplace_back(new PcsEvent { this->name_, (unsigned int) -1,
-              received_event.next_timestamp, received_event.move_timestamp, this->name_, NONE, NEXTCALL_METHOD });
-      }
-      else {
+              received_event.next_timestamp_, received_event.move_timestamp_, NONE, NEXTCALL_METHOD });
+      } else {
         // The portable will move to a different cell while not on a call
         // Find out where the next call will take place
         std::string new_cell = this->name_;
         std::string current_cell = this->name_;
-        unsigned int move_timestamp = received_event.move_timestamp;
-        unsigned int next_timestamp = received_event.next_timestamp;
+        unsigned int move_timestamp = received_event.move_timestamp_;
+        unsigned int next_timestamp = received_event.next_timestamp_;
         while ( move_timestamp < next_timestamp ) {
           current_cell = new_cell;
           new_cell = this->random_move();
           move_timestamp += (unsigned int) move_expo();
         }
         response_events.emplace_back(new PcsEvent { this->name_, (unsigned int) -1,
-              next_timestamp, move_timestamp, current_cell, NONE, NEXTCALL_METHOD });
+                                            next_timestamp, move_timestamp, NONE, NEXTCALL_METHOD });
       }
       break;
     }
   case MOVECALLIN_METHOD:
     {
-      unsigned int move_timestamp = received_event.move_timestamp + (unsigned int) move_expo();
-      if ( !state.normal_channels && !state.reserve_channels ) {
+      unsigned int move_timestamp = received_event.move_timestamp_ + (unsigned int) move_expo();
+      if ( !state_.normal_channels_ && !state_.reserve_channels_ ) {
         // No normal or reserve channels are available; the call is dropped
-        state.handoff_blocks++;
-        if ( received_event.next_timestamp < move_timestamp ) {
+        state_.handoff_blocks_++;
+        if ( received_event.next_timestamp_ < move_timestamp ) {
           // The portable will attempt a new call in this cell
           response_events.emplace_back(new PcsEvent { this->name_, (unsigned int) -1,
-                received_event.next_timestamp, move_timestamp, this->name_, NONE, NEXTCALL_METHOD });
-        }
-        else {
+                        received_event.next_timestamp_, move_timestamp, NONE, NEXTCALL_METHOD });
+        } else {
           // The portable will move to a different cell while not on a call
           // Find out where the next call will take place
           std::string new_cell = this->name_;
           std::string current_cell = this->name_;
-          unsigned int next_timestamp = received_event.next_timestamp;
+          unsigned int next_timestamp = received_event.next_timestamp_;
           while ( move_timestamp < next_timestamp ) {
             current_cell = new_cell;
             new_cell = this->random_move();
             move_timestamp += (unsigned int) move_expo();
           }
           response_events.emplace_back(new PcsEvent { this->name_, (unsigned int) -1,
-                next_timestamp, move_timestamp, current_cell, NONE, NEXTCALL_METHOD });
+                                        next_timestamp, move_timestamp, NONE, NEXTCALL_METHOD });
         }
-      }
-      else {
+      } else {
         channel_t channel;
-        if ( state.normal_channels ) {
+        if ( state_.normal_channels_ ) {
           // A normal channel is available for the call; allocate it
-          state.normal_channels--;
+          state_.normal_channels_--;
           channel = NORMAL;
-        }
-        else {
+        } else {
           // No normal channels are available; allocate a reserve channel
-          state.reserve_channels--;
+          state_.reserve_channels_--;
           channel = RESERVE;
         }
-        unsigned int next_timestamp = received_event.next_timestamp;
+        unsigned int next_timestamp = received_event.next_timestamp_;
       busy_line_movecallin:
         if ( next_timestamp < move_timestamp ) {
-          if ( received_event.completion_timestamp < next_timestamp ) {
+          if ( received_event.completion_timestamp_ < next_timestamp ) {
             // The call will end in this cell
-            response_events.emplace_back(new PcsEvent { this->name_, received_event.completion_timestamp,
-                  next_timestamp, move_timestamp, this->name_, channel,
-                  COMPLETIONCALL_METHOD });
-          }
-          else {
+            response_events.emplace_back(new PcsEvent { this->name_, received_event.completion_timestamp_,
+                                next_timestamp, move_timestamp, channel, COMPLETIONCALL_METHOD });
+          } else {
             // A call will be attempted while the line is busy
-            state.busy_lines++;
-            state.call_attempts++;
+            state_.busy_lines_++;
+            state_.call_attempts_++;
             next_timestamp += next_expo();
             goto busy_line_movecallin;
           }
-        }
-        else {
-          if ( received_event.completion_timestamp < move_timestamp ) {
+        } else {
+          if ( received_event.completion_timestamp_ < move_timestamp ) {
             // The call will end in this cell
-            response_events.emplace_back(new PcsEvent { this->name_, received_event.completion_timestamp,
-                  next_timestamp, move_timestamp, this->name_, channel,
-                  COMPLETIONCALL_METHOD });
-          }
-          else {
+            response_events.emplace_back(new PcsEvent { this->name_, received_event.completion_timestamp_,
+                                        next_timestamp, move_timestamp, channel, COMPLETIONCALL_METHOD });
+          } else {
             // The call will be moved out of this cell before it ends
-            response_events.emplace_back(new PcsEvent { this->name_, received_event.completion_timestamp,
-                  next_timestamp, move_timestamp, this->name_, channel,
-                  MOVECALLOUT_METHOD });
+            response_events.emplace_back(new PcsEvent { this->name_, received_event.completion_timestamp_,
+                                        next_timestamp, move_timestamp, channel, MOVECALLOUT_METHOD });
           }
         }
       }
@@ -259,20 +238,17 @@ std::vector<std::unique_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
   case MOVECALLOUT_METHOD:
     {
       // Free a channel of whatever type this call is on
-      if ( received_event.channel == NORMAL ) {
-        state.normal_channels++;
-      }
-      else if ( received_event.channel == RESERVE ) {
-        state.reserve_channels++;
-      }
-      else {
+      if ( received_event.channel_ == NORMAL ) {
+        state_.normal_channels_++;
+      } else if ( received_event.channel_ == RESERVE ) {
+        state_.reserve_channels_++;
+      } else {
         std::cerr << "Invalid channel type when transferring call to new cell" << std::endl;
         exit(1);
       }
       // Move call to random adjacent cell
-      response_events.emplace_back(new PcsEvent { this->name_, received_event.completion_timestamp,
-            received_event.next_timestamp, received_event.move_timestamp, this->random_move(), NONE,
-            MOVECALLIN_METHOD });
+      response_events.emplace_back(new PcsEvent { this->name_, received_event.completion_timestamp_,
+            received_event.next_timestamp_, received_event.move_timestamp_, NONE, MOVECALLIN_METHOD });
       break;
     }
   default:
@@ -287,32 +263,32 @@ std::vector<std::unique_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
 
 std::string PcsCell::compute_move(const direction_t direction) const {
   int current_x, current_y, new_x, new_y;
-  current_y = ((int)this->index) / num_cells_x;
-  current_x = ((int)this->index) - (current_y * num_cells_x);
+  current_y = ((int)this->index_) / num_cells_x_;
+  current_x = ((int)this->index_) - (current_y * num_cells_x_);
 
   switch ( direction ) {
   case LEFT:
-    new_x = ((current_x - 1) + num_cells_x) % num_cells_x;
+    new_x = ((current_x - 1) + num_cells_x_) % num_cells_x_;
     new_y = current_y;
     break;
   case RIGHT:
-    new_x = (current_x + 1) % num_cells_x;
+    new_x = (current_x + 1) % num_cells_x_;
     new_y = current_y;
     break;
   case DOWN:
     new_x = current_x;
-    new_y = ((current_y - 1) + num_cells_y) % num_cells_y;
+    new_y = ((current_y - 1) + num_cells_y_) % num_cells_y_;
     break;
   case UP:
     new_x = current_x;
-    new_y = (current_y + 1) % num_cells_y;
+    new_y = (current_y + 1) % num_cells_y_;
     break;
   default:
     std::cerr << "Invalid move direction " << direction << std::endl;
     exit(1);
   }
 
-  return std::string("Object ") + std::to_string(new_x + (new_y * num_cells_x));
+  return std::string("Object ") + std::to_string(new_x + (new_y * num_cells_x_));
 }
 
 std::string PcsCell::random_move() const {
@@ -389,10 +365,10 @@ int main(int argc, const char** argv) {
   unsigned int channel_blocks = 0;
 
   for (auto& o : objects) {
-    handoff_blocks += o.state.handoff_blocks;
-    busy_lines += o.state.busy_lines;
-    call_attempts += o.state.call_attempts;
-    channel_blocks += o.state.channel_blocks;
+    handoff_blocks += o.state_.handoff_blocks_;
+    busy_lines += o.state_.busy_lines_;
+    call_attempts += o.state_.call_attempts_;
+    channel_blocks += o.state_.channel_blocks_;
   }
 
   std::cout << call_attempts << " calls attempted" << std::endl;
