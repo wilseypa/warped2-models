@@ -15,8 +15,8 @@ LogicGate::LogicGate(std::string name, unsigned int propagation_delay,
                      unsigned int clock_period, Type type)
     : Component(name, propagation_delay, clock_period), type_(type), state_() {}
 
-std::vector<std::unique_ptr<warped::Event>> LogicGate::receiveEvent(const warped::Event& event) {
-    std::vector<std::unique_ptr<warped::Event>> v;
+std::vector<std::shared_ptr<warped::Event>> LogicGate::receiveEvent(const warped::Event& event) {
+    std::vector<std::shared_ptr<warped::Event>> v;
 
     auto signal_event = dynamic_cast<const SignalEvent*>(&event);
     if (!signal_event) {

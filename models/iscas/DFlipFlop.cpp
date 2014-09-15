@@ -14,8 +14,8 @@
 DFlipFlop::DFlipFlop(std::string name, unsigned int propagation_delay, unsigned int clock_period)
     : Component(name, propagation_delay, clock_period), state_() {}
 
-std::vector<std::unique_ptr<warped::Event>> DFlipFlop::receiveEvent(const warped::Event& event) {
-    std::vector<std::unique_ptr<warped::Event>> v;
+std::vector<std::shared_ptr<warped::Event>> DFlipFlop::receiveEvent(const warped::Event& event) {
+    std::vector<std::shared_ptr<warped::Event>> v;
 
     if (auto signal_event = dynamic_cast<const SignalEvent*>(&event)) {
         state_.input = signal_event->input_value_;

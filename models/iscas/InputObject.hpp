@@ -27,7 +27,7 @@ public:
     virtual bool needsClock() const { return true; }
     warped::ObjectState& getState() { return state_; }
 
-    std::vector<std::unique_ptr<warped::Event>> receiveEvent(const warped::Event& event);
+    std::vector<std::shared_ptr<warped::Event>> receiveEvent(const warped::Event& event);
 
 private:
     std::uniform_int_distribution<int> distribution_;

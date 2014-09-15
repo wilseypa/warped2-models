@@ -26,7 +26,7 @@ public:
     bool needsClock() const { return false; }
     warped::ObjectState& getState() { return state_; }
 
-    std::vector<std::unique_ptr<warped::Event>> receiveEvent(const warped::Event& event);
+    std::vector<std::shared_ptr<warped::Event>> receiveEvent(const warped::Event& event);
 
     // Add a new input and return its index
     input_index_t addInput();

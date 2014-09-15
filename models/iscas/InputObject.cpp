@@ -18,8 +18,8 @@ InputObject::InputObject(std::string name, unsigned int propagation_delay,
                          unsigned int clock_period)
     :  Component(name, propagation_delay, clock_period), distribution_(0, 1), state_(name) {}
 
-std::vector<std::unique_ptr<warped::Event>> InputObject::receiveEvent(const warped::Event& event) {
-    std::vector<std::unique_ptr<warped::Event>> v;
+std::vector<std::shared_ptr<warped::Event>> InputObject::receiveEvent(const warped::Event& event) {
+    std::vector<std::shared_ptr<warped::Event>> v;
 
     if (dynamic_cast<const ClockEvent*>(&event)) {
         auto current_time = event.timestamp();

@@ -22,7 +22,8 @@ public:
     unsigned int input_index_;
     bool input_value_;
 
-    WARPED_REGISTER_SERIALIZABLE_MEMBERS(receiver_name_, timestamp_, input_index_, input_value_)
+    WARPED_REGISTER_SERIALIZABLE_MEMBERS(cereal::base_class<warped::Event>(this), 
+                                    receiver_name_, timestamp_, input_index_, input_value_)
 };
 
 class ClockEvent : public warped::Event {
@@ -37,7 +38,7 @@ public:
     std::string receiver_name_;
     unsigned int timestamp_;
 
-    WARPED_REGISTER_SERIALIZABLE_MEMBERS(receiver_name_, timestamp_)
+    WARPED_REGISTER_SERIALIZABLE_MEMBERS(cereal::base_class<warped::Event>(this), receiver_name_, timestamp_)
 };
 
 #endif

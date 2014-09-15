@@ -25,8 +25,8 @@ public:
         outputs_.emplace_back(receiver, receiver_input);
     }
 
-    std::vector<std::unique_ptr<warped::Event>> createInitialEvents()  {
-        std::vector<std::unique_ptr<warped::Event>> v;
+    std::vector<std::shared_ptr<warped::Event>> createInitialEvents()  {
+        std::vector<std::shared_ptr<warped::Event>> v;
 
         // If necessary, start the clock ticks
         if (needsClock()) {
