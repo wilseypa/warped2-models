@@ -215,8 +215,8 @@ int main(int argc, const char** argv) {
   phold_sim.simulate(object_pointers);
 
   for (auto& o : objects) {
-    std::cout << o.name_ << " sent " << o.state.messages_sent << " and received "
-              << o.state.messages_received << " messages." << std::endl;
+    std::cout << o.name_ << " sent " << o.state_.messages_sent_ << " and received "
+              << o.state_.messages_received_ << " messages." << std::endl;
   }
 
   return 0;
