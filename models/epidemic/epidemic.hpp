@@ -50,9 +50,8 @@ class EpidemicEvent : public warped::Event {
     event_type_t event_type_;
 
     WARPED_REGISTER_SERIALIZABLE_MEMBERS(cereal::base_class<warped::Event>(this), 
-                                    receiver_name_, pid_, susceptibility_, 
-                                    vaccination_status_, infection_state_,
-                                    loc_arrival_timestamp_, prev_state_change_timestamp_)
+                receiver_name_, pid_, susceptibility_, vaccination_status_, infection_state_, 
+                loc_arrival_timestamp_, prev_state_change_timestamp_, event_type_)
 };
 
 class Location : public warped::SimulationObject {
@@ -67,9 +66,24 @@ public:
                 unsigned int loc_diffusion_trig_interval, 
                 std::vector<std::shared_ptr<Person>> population, unsigned int travel_time_to_hub, 
                 unsigned int disease_seed, unsigned int diffusion_seed)
-        : SimulationObject(name), state_(), location_name_(name) {
-        
-        // TODO
+            : SimulationObject(name), state_(), location_name_(name), 
+                location_state_refresh_interval_(loc_state_refresh_interval), 
+                location_diffusion_trigger_interval_(loc_diffusion_trig_interval) {
+
+        disease_model_ = 
+            std::make_unique<DiseaseModel>(
+                    transmissibility, latent_dwell_interval, incubating_dwell_interval, 
+                    infectious_dwell_interval, asympt_dwell_interval, latent_infectivity, 
+                    incubating_infectivity, infectious_infectivity, asympt_infectivity, 
+                    prob_ulu, probULV, prob_urv, prob_uiv, prob_uiu, disease_seed);
+
+        diffusion_network_ = 
+            std::make_unique<DiffusionNetwork>(diffusion_seed, travel_time_to_hub);
+
+        for (auto& person : population) {
+            state_.current_population_.insert( 
+                std::pair <unsigned int, std::shared_ptr<Person>> (person->pid_, person));
+        }
     }
 
     virtual warped::ObjectState& getState() { return state_; }

@@ -6,12 +6,10 @@ WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(EpidemicEvent)
 std::vector<std::shared_ptr<warped::Event> > Location::createInitialEvents() {
 
     std::vector<std::shared_ptr<warped::Event> > events;
-
     events.emplace_back(new EpidemicEvent {this->location_name_, 
                     this->location_state_refresh_interval_, nullptr, DISEASE_UPDATE_TRIGGER});
     events.emplace_back(new EpidemicEvent {this->location_name_, 
                     this->location_diffusion_trigger_interval_, nullptr, DIFFUSION_TRIGGER});
-
     return events;
 }
 
@@ -31,7 +29,18 @@ std::vector<std::shared_ptr<warped::Event> > Location::receiveEvent(const warped
         } break;
 
         case event_type_t::DIFFUSION_TRIGGER: {
-            // TODO: add the diffusion selection
+            std::string selected_location = diffusion_network_->pickLocation();
+            if (selected_location != "") {
+                auto travel_time = diffusionNetwork->travelTimeToLocation(selected_location);
+                std::shared_ptr<Person> person = 
+                    diffusion_network_->pickPerson(state_.current_population_);
+
+                if (person) {
+                    events.emplace_back(new EpidemicEvent {selected_location, 
+                                            timestamp + travel_time, person, DIFFUSION});
+                    state_.current_population_.erase(person->pid_);
+                }
+            }
             events.emplace_back(new EpidemicEvent {location_name_, 
                                 timestamp + location_diffusion_trigger_interval_, 
                                 nullptr, DIFFUSION_TRIGGER});
@@ -48,13 +57,7 @@ std::vector<std::shared_ptr<warped::Event> > Location::receiveEvent(const warped
 
         default: {}
     }
-    return response_events;
-}
-
-void Location::updateIntraLocDiseaseSpread(
-                std::map<unsigned int, std::shared_ptr<Person>> population, 
-                unsigned int current_time) {
-
+    return events;
 }
 
 int main(int argc, const char** argv) {
