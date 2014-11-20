@@ -49,5 +49,6 @@ AC_CONFIG_FILES([models/ping_pong/Makefile])
 AC_CONFIG_FILES([models/phold/Makefile])
 AC_CONFIG_FILES([models/pcs/Makefile])
 AC_CONFIG_FILES([models/airport/Makefile])
+AC_CONFIG_FILES([models/epidemic/Makefile])
 
 AC_OUTPUT
