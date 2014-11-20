@@ -48,6 +48,9 @@ stamp-h1
 libtool
 ltmain.*
 
+# re2
+.dirstamp
+
 # ctags
 tags*
 .tags*
