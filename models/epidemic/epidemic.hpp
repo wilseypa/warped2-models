@@ -1,6 +1,9 @@
 #ifndef EPIDEMIC_HPP
 #define EPIDEMIC_HPP
 
+#include <string>
+#include <vector>
+#include "memory.hpp"
 #include "warped.hpp"
 #include "Person.hpp"
 #include "RandomNumGenerator.hpp"
@@ -20,12 +23,14 @@ enum event_type_t {
 };
 
 class EpidemicEvent : public warped::Event {
+public:
 
     EpidemicEvent() = default;
 
-    EpidemicEvent(const std::string receiver_name, const unsigned int timestamp, 
+    EpidemicEvent(const std::string receiver_name, unsigned int timestamp, 
                             std::shared_ptr<Person> person, event_type_t event_type)
-            : receiver_name_(receiver_name), timestamp_(timestamp), event_type_(event_type) {
+            : receiver_name_(receiver_name), loc_arrival_timestamp_(timestamp), 
+                event_type_(event_type) {
 
         if (person != nullptr) {
             pid_ = person->pid_;
@@ -71,14 +76,14 @@ public:
                 location_diffusion_trigger_interval_(loc_diffusion_trig_interval) {
 
         disease_model_ = 
-            std::make_unique<DiseaseModel>(
+            warped::make_unique<DiseaseModel>(
                     transmissibility, latent_dwell_interval, incubating_dwell_interval, 
                     infectious_dwell_interval, asympt_dwell_interval, latent_infectivity, 
                     incubating_infectivity, infectious_infectivity, asympt_infectivity, 
-                    prob_ulu, probULV, prob_urv, prob_uiv, prob_uiu, disease_seed);
+                    prob_ulu, prob_ulv, prob_urv, prob_uiv, prob_uiu, disease_seed);
 
         diffusion_network_ = 
-            std::make_unique<DiffusionNetwork>(diffusion_seed, travel_time_to_hub);
+            warped::make_unique<DiffusionNetwork>(diffusion_seed, travel_time_to_hub);
 
         for (auto& person : population) {
             state_.current_population_.insert( 

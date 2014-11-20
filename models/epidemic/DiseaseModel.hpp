@@ -2,6 +2,7 @@
 #define DISEASE_MODEL_HPP
 
 #include <cmath>
+#include "memory.hpp"
 #include "Person.hpp"
 #include "RandomNumGenerator.hpp"
 
@@ -28,7 +29,7 @@ public:
                 incubating_dwell_interval_(incubating_dwell_interval), 
                 infectious_dwell_interval_(infectious_dwell_interval), 
                 asympt_dwell_interval_(asympt_dwell_interval), 
-                latent_infectivity_(latentInfectivity), 
+                latent_infectivity_(latent_infectivity), 
                 incubating_infectivity_(incubating_infectivity), 
                 infectious_infectivity_(infectious_infectivity), 
                 asympt_infectivity_(asympt_infectivity), 
@@ -36,7 +37,7 @@ public:
                 prob_urv_(prob_urv), prob_uiv_(prob_uiv), 
                 prob_uiu_(prob_uiu) {
 
-        rand_num_gen_ = make_unique<RandomNumGenerator>(seed);
+        rand_num_gen_ = warped::make_unique<RandomNumGenerator>(seed);
     }
 
     void reaction(std::map<unsigned int, std::shared_ptr<Person>> population, 
@@ -148,7 +149,7 @@ private:
         if (person->infection_state_ == infection_state_t::ASYMPT) {
             if ((current_time - person->prev_state_change_timestamp_) 
                                             >= asympt_dwell_interval_) {
-                person->infectionState = infection_state_t::RECOVERED;
+                person->infection_state_ = infection_state_t::RECOVERED;
                 person->prev_state_change_timestamp_ += asympt_dwell_interval_;
             }
         }

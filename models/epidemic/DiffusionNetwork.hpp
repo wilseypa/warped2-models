@@ -1,6 +1,7 @@
 #ifndef DIFFUSION_NETWORK_HPP
 #define DIFFUSION_NETWORK_HPP
 
+#include "memory.hpp"
 #include "Person.hpp"
 #include "RandomNumGenerator.hpp"
 
@@ -12,10 +13,10 @@ public:
     DiffusionNetwork(unsigned int seed, unsigned int travel_time_to_hub) 
         : travel_time_to_hub_(travel_time_to_hub) {
     
-        rand_num_gen_ = make_unique<RandomNumGenerator>(seed);
+        rand_num_gen_ = warped::make_unique<RandomNumGenerator>(seed);
     }
 
-    std::string& pickLocation() {
+    std::string pickLocation() {
 
         std::string location_name = "";
         unsigned int location_num = travel_time_chart_.size();
