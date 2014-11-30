@@ -8,8 +8,6 @@
 class DiffusionNetwork {
 public:
 
-    DiffusionNetwork() = default;
-
     DiffusionNetwork(unsigned int seed, unsigned int travel_time_to_hub) 
         : travel_time_to_hub_(travel_time_to_hub) {
     

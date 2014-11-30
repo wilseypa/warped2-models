@@ -76,14 +76,14 @@ public:
                 location_diffusion_trigger_interval_(loc_diffusion_trig_interval) {
 
         disease_model_ = 
-            warped::make_unique<DiseaseModel>(
+            std::make_shared<DiseaseModel>(
                     transmissibility, latent_dwell_interval, incubating_dwell_interval, 
                     infectious_dwell_interval, asympt_dwell_interval, latent_infectivity, 
                     incubating_infectivity, infectious_infectivity, asympt_infectivity, 
                     prob_ulu, prob_ulv, prob_urv, prob_uiv, prob_uiu, disease_seed);
 
         diffusion_network_ = 
-            warped::make_unique<DiffusionNetwork>(diffusion_seed, travel_time_to_hub);
+            std::make_shared<DiffusionNetwork>(diffusion_seed, travel_time_to_hub);
 
         for (auto& person : population) {
             state_.current_population_.insert( 
@@ -106,8 +106,8 @@ protected:
 
     LocationState state_;
     std::string location_name_;
-    std::unique_ptr<DiseaseModel> disease_model_;
-    std::unique_ptr<DiffusionNetwork> diffusion_network_;
+    std::shared_ptr<DiseaseModel> disease_model_;
+    std::shared_ptr<DiffusionNetwork> diffusion_network_;
     unsigned int location_state_refresh_interval_;
     unsigned int location_diffusion_trigger_interval_;
 };

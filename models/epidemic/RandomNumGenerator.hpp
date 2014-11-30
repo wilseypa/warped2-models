@@ -7,8 +7,6 @@
 class RandomNumGenerator {
 public:
 
-    RandomNumGenerator() = default;
-
     RandomNumGenerator(unsigned int seed_val) : seed_(seed_val) {}
 
     unsigned int generateRandNum(unsigned int upper_limit) {

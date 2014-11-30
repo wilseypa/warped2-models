@@ -14,8 +14,6 @@ enum infection_state_t {
 class Person {
 public:
 
-    Person() = default;
-
     Person(unsigned int pid, double susceptibility, bool vacc_status, 
                 infection_state_t infection_state, unsigned int arrival_timestamp, 
                 unsigned int prev_state_change_timestamp)

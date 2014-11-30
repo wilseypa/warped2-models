@@ -13,8 +13,6 @@ using namespace std;
 class DiseaseModel {
 public:
 
-    DiseaseModel() = default;
-
     DiseaseModel(float transmissibility, 
                     unsigned int latent_dwell_interval, 
                     unsigned int incubating_dwell_interval, 

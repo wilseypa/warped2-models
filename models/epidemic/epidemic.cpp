@@ -1,5 +1,10 @@
 #include "epidemic.hpp"
 #include "tclap/ValueArg.h"
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/xml_parser.hpp>
+#include <boost/foreach.hpp>
+
+using namespace boost::property_tree;
 
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(EpidemicEvent)
 
@@ -63,121 +68,124 @@ std::vector<std::shared_ptr<warped::Event> > Location::receiveEvent(const warped
 int main(int argc, const char** argv) {
 
     std::string configuration_filename = "";
-    TCLAP::ValueArg<std::string> configuration_arg("c", "config", 
+    TCLAP::ValueArg<std::string> configuration_arg("m", "model", 
             "Epidemic model configuration", false, configuration_filename, "string");
     std::vector<TCLAP::Arg*> cmd_line_args = {&configuration_arg};
     warped::Simulation simulation {"Epidemic Simulation", argc, argv, cmd_line_args};
     configuration_filename = configuration_arg.getValue();
 
-#if 0
-    unsigned int num_regions = 0, num_locations = 0, num_persons = 0, pid = 0, 
-                travel_time_to_hub = 0, latent_dwell_time = 0, incubating_dwell_time = 0, 
-                infectious_dwell_time = 0, asympt_dwell_time = 0, loc_state_refresh_interval = 0, 
-                loc_diffusion_trig_interval = 0, disease_seed = 0, diffusion_seed = 0;
+    unsigned int num_regions = 0, num_locations = 0, pid = 0, travel_time_to_hub = 0, 
+                latent_dwell_time = 0, incubating_dwell_time = 0, infectious_dwell_time = 0, 
+                asympt_dwell_time = 0, loc_state_refresh_interval = 0, 
+                loc_diffusion_trig_interval = 0, disease_seed = 0, diffusion_seed = 0, k = 0;
     double susceptibility = 0.0;
     float transmissibility = 0.0, prob_ulu = 0.0, prob_ulv = 0.0, prob_urv = 0.0, 
                 prob_uiv = 0.0, prob_uiu = 0.0, latent_infectivity = 0.0, 
                 incubating_infectivity = 0.0, infectious_infectivity = 0.0, 
-                asympt_infectivity = 0.0;
-    std::string location_name = "", infection_state = "", vaccination_status = "", 
-                region_name = "", model = "";
+                asympt_infectivity = 0.0, beta = 0.0;
+    std::string infection_state = "", vaccination_status = "", model = "";
+    std::map<std::string, unsigned int> travel_map;
+    std::vector<Location> objects;
 
-    std::vector<std::shared_ptr<Person>> population;
-    std::map <std::string, unsigned int> travel_map;
+    ptree tree;
+    xml_parser::read_xml(configuration_filename, tree);
 
-    XMLDocument epidemic_config;
-    int error_id = epidemic_config.LoadFile(configuration_filename.c_str());
-    if (error_id) {
-        abort();
-    }
-
-    std::unique_ptr<XMLElement> diffusion = nullptr, disease = nullptr, 
-        num_regions = nullptr, region = nullptr, location = nullptr, people = nullptr;
-
-    diffusion = EpidemicConfig.FirstChildElement()->FirstChildElement("diffusion");
-    model.assign(diffusion->FirstChildElement("model")->GetText());
-    diffusion->FirstChildElement("seed")->QueryUnsignedText(&diffusion_seed);
-
-    disease = EpidemicConfig.FirstChildElement()->FirstChildElement("disease");
-    disease->FirstChildElement("transmissibility")->QueryFloatText(&transmissibility);
-    disease->FirstChildElement("latent_dwell_time")->QueryUnsignedText(&latent_dwell_time);
-    disease->FirstChildElement("latent_infectivity")->QueryFloatText(&latent_infectivity);
-    disease->FirstChildElement("incubating_dwell_time")->QueryUnsignedText(&incubating_dwell_time);
-    disease->FirstChildElement("incubating_infectivity")->QueryFloatText(&incubating_infectivity);
-    disease->FirstChildElement("infectious_dwell_time")->QueryUnsignedText(&infectious_dwell_time);
-    disease->FirstChildElement("infectious_infectivity")->QueryFloatText(&infectious_infectivity);
-    disease->FirstChildElement("asympt_dwell_time")->QueryUnsignedText(&asympt_dwell_time);
-    disease->FirstChildElement("asympt_infectivity")->QueryFloatText(&asympt_infectivity);
-    disease->FirstChildElement("prob_ul_u")->QueryFloatText(&prob_ulu);
-    disease->FirstChildElement("prob_ul_v")->QueryFloatText(&prob_ulv);
-    disease->FirstChildElement("prob_ur_v")->QueryFloatText(&prob_urv);
-    disease->FirstChildElement("prob_ui_v")->QueryFloatText(&prob_uiv);
-    disease->FirstChildElement("prob_ui_u")->QueryFloatText(&prob_uiu);
-    disease->FirstChildElement("location_state_refresh_interval")->QueryUnsignedText(
-                                                                    &loc_state_refresh_interval);
-    disease->FirstChildElement("seed")->QueryUnsignedText(&disease_seed);
-
-    num_of_regions = EpidemicConfig.FirstChildElement()->FirstChildElement("number_of_regions");
-    num_of_regions->QueryIntText(&num_regions);
-    region = num_of_regions;
-
-    /* For each region in the simulation, initialize the locations */
-    for( int regIndex = 0; regIndex < numRegions; regIndex++ ) {
-        region =region->NextSiblingElement();
-        regionName.assign( region->FirstChildElement("region_name")->GetText() );
-
-        numLocations = 0;
-        region->FirstChildElement("number_of_locations")->QueryIntText(&numLocations);
-        location = region->FirstChildElement("number_of_locations");
-        locObjs = new vector<SimulationObject*>;
-
-        for( int locIndex = 0; locIndex < numLocations; locIndex++ ) {
-            personVec = new vector <Person *>;
-
-            location = location->NextSiblingElement();
-            locationName.assign( location->FirstChildElement("location_name")->GetText() );          
-            location->FirstChildElement("number_of_persons")->QueryIntText(&numPersons);            
-            location->FirstChildElement("travel_time_to_central_hub")->QueryUnsignedText(&travelTimeToHub);         
-            location->FirstChildElement("diffusion_trigger_interval")->QueryUnsignedText(&locDiffusionTrigInterval);            
-            people = location->FirstChildElement("diffusion_trigger_interval");
-
-            locationName += ",";
-            locationName += regionName;
-
-            travelMap.insert( pair <string, unsigned int>(locationName, travelTimeToHub) );
-
-            /* Read each person's details */
-            for(int perIndex = 0; perIndex < numPersons; perIndex++) {
-                people= people->NextSiblingElement();
-                people->FirstChildElement("pid")->QueryUnsignedText(&pid);
-                people->FirstChildElement("susceptibility")->QueryDoubleText(&susceptibility);
-                vaccinationStatus.assign( people->FirstChildElement("is_vaccinated")->GetText() );
-                infectionState.assign( people->FirstChildElement("infection_state")->GetText() );
-
-                person = new Person( pid, susceptibility, vaccinationStatus, infectionState, INIT_VTIME, INIT_VTIME );
-                personVec->push_back( person );
+    BOOST_FOREACH (ptree::value_type const& v, tree.get_child("epidemic_configuration")) {
+        if (v.first == "diffusion") {
+            model = v.second.get<std::string>("model");
+            diffusion_seed = v.second.get<unsigned int>("seed");
+            if (model == "WattsStrogatz") {
+                k = v.second.get<unsigned int>("watts_strogatz.k");
+                beta = v.second.get<float>("watts_strogatz.beta");
             }
+        } else if (v.first == "disease") {
+            transmissibility = v.second.get<float>("transmissibility");
+            latent_dwell_time = v.second.get<unsigned int>("latent_dwell_time");
+            latent_infectivity = v.second.get<float>("latent_infectivity");
+            incubating_dwell_time = v.second.get<unsigned int>("incubating_dwell_time");
+            incubating_infectivity = v.second.get<float>("incubating_infectivity");
+            infectious_dwell_time = v.second.get<unsigned int>("infectious_dwell_time");
+            infectious_infectivity = v.second.get<float>("infectious_infectivity");
+            asympt_dwell_time = v.second.get<unsigned int>("asympt_dwell_time");
+            asympt_infectivity = v.second.get<float>("asympt_infectivity");
+            prob_ulu = v.second.get<float>("prob_ul_u");
+            prob_ulv = v.second.get<float>("prob_ul_v");
+            prob_urv = v.second.get<float>("prob_ur_v");
+            prob_uiv = v.second.get<float>("prob_ui_v");
+            prob_uiu = v.second.get<float>("prob_ui_u");
+            loc_state_refresh_interval = 
+                v.second.get<unsigned int>("location_state_refresh_interval");
+            disease_seed = v.second.get<unsigned int>("seed");
 
-            LocationObject *locObject = new LocationObject( locationName, transmissibility,
-                                                            latentDwellTime, incubatingDwellTime,
-                                                            infectiousDwellTime, asymptDwellTime,
-                                                            latentInfectivity, incubatingInfectivity,
-                                                            infectiousInfectivity, asymptInfectivity,
-                                                            probULU, probULV, probURV, probUIV, probUIU,
-                                                            (dataCaptureStatus == "yes") ? true : false, 
-                                                            locStateRefreshInterval, locDiffusionTrigInterval, 
-                                                            personVec, travelTimeToHub, diseaseSeed, diffusionSeed );
-            locObjs->push_back(locObject);
-            simulationObjMap.insert( pair <string, SimulationObject *>(locationName, locObject) );
-            simulationObjVec->push_back(locObject);
+        } else if (v.first == "population") {
+            BOOST_FOREACH (ptree::value_type const& w, tree.get_child("population", v.second)) {
+                std::string region_name = std::string("region_") + std::to_string(num_regions);
+                num_locations = 0;
+                BOOST_FOREACH (ptree::value_type const& x, tree.get_child(region_name, w.second)) {
+                    std::string location_name = std::string("location_") + std::to_string(num_locations);
+                    std::string location = region_name + std::string("-") + location_name;
+                    std::vector<std::shared_ptr<Person>> population;
+                    BOOST_FOREACH (ptree::value_type const& y, tree.get_child(location_name, x.second)) {
+                        if (y.first == "travel_time_to_central_hub") {
+                            travel_time_to_hub = 
+                                (unsigned int) std::stoi(std::string(y.second.data()));
+                            travel_map.insert(std::pair<std::string, unsigned int>(location, travel_time_to_hub));
+                        } else if (y.first == "diffusion_trigger_interval") {
+                            loc_diffusion_trig_interval = 
+                                (unsigned int) std::stoi(std::string(y.second.data()));
+                        } else {
+                            pid++;
+                            std::string person_pid = std::string("person_") +std::to_string(pid);
+                            BOOST_FOREACH (ptree::value_type const& z, tree.get_child(person_pid, y.second)) {
+                                if (z.first == "susceptibility") {
+                                    susceptibility = std::stod(std::string(z.second.data()));
+                                } else if (z.first == "is_vaccinated") {
+                                    vaccination_status = std::string(z.second.data());
+                                } else {
+                                    infection_state = std::string(z.second.data());
+                                }
+                            }
+
+                            infection_state_t state;
+                            if (infection_state == "uninfected") {
+                                state = UNINFECTED;
+                            } else if (infection_state == "latent") {
+                                state = LATENT;
+                            } else if (infection_state == "incubating") {
+                                state = INCUBATING;
+                            } else if (infection_state == "infectious") {
+                                state = INFECTIOUS;
+                            } else if (infection_state == "asympt") {
+                                state = ASYMPT;
+                            } else {
+                                state = RECOVERED;
+                            }
+
+                            auto person = 
+                                std::make_shared<Person>(pid, susceptibility, 
+                                        (vaccination_status == "yes") ? true : false, state, 0, 0);
+                            population.push_back(person);
+                        }
+                    }
+                    objects.emplace_back(location, transmissibility, latent_dwell_time, 
+                            incubating_dwell_time, infectious_dwell_time, asympt_dwell_time, 
+                            latent_infectivity, incubating_infectivity, infectious_infectivity, 
+                            asympt_infectivity, prob_ulu, prob_ulv, prob_urv, prob_uiv, prob_uiu, 
+                            loc_state_refresh_interval, loc_diffusion_trig_interval, 
+                            population, travel_time_to_hub, disease_seed, diffusion_seed);
+
+                    num_locations++;
+                }
+                num_regions++;
+            }
         }
-
-        /* Add the group of objects to the partition information */
-        myPartitioner->addObjectGroup(locObjs);
     }
 
+    std::cout << k << "," << beta << std::endl;
+
+#if 0
     if (model == "FullyConnected") {
-        for( map <string, SimulationObject*>::iterator mapIter = simulationObjMap.begin();
+        for(std::map <string, SimulationObject*>::iterator mapIter = simulationObjMap.begin();
                                             mapIter != simulationObjMap.end(); mapIter++ ) {
 
             LocationObject *locObj = static_cast <LocationObject *> (mapIter->second);
@@ -187,31 +195,22 @@ int main(int argc, const char** argv) {
         }
 
     } else if( model == "WattsStrogatz" ) {
-        /* Refer to README for more details */
-        unsigned int k = 0;
-        float beta = 0.0;
-        XMLElement *wattsStrogatz = NULL;
+        std::unique_ptr<WattsStrogatzModel> ws = 
+            warped::make_unique<WattsStrogatzModel>(k, beta, diffusion_seed);
 
-        wattsStrogatz = diffusion->FirstChildElement("watts_strogatz");
-        wattsStrogatz->FirstChildElement("k")->QueryUnsignedText(&k);
-        wattsStrogatz->FirstChildElement("beta")->QueryFloatText(&beta);
-
-        WattsStrogatzModel *wsModel = new WattsStrogatzModel(k, beta, diffusionSeed);
-
-        vector <string> nodeVec;
-        for( map <string, unsigned int>::iterator mapIter = travelMap.begin();
-                                            mapIter != travelMap.end(); mapIter++ ) {
-            string location = static_cast <string> (mapIter->first);
-            nodeVec.push_back(location);
+        std::vector<std::string> nodes;
+        for (auto map_iter = travel_map.begin(); map_iter != travel_map.end(); map_iter++) {
+            std::string location = static_cast<std::string>(map_iter->first);
+            nodes.push_back(location);
         }
-        wsModel->populateNodes(nodeVec);
-        wsModel->mapNodes();
+        ws->populateNodes(nodes);
+        ws->mapNodes();
 
-        for( map <string, SimulationObject*>::iterator mapIter = simulationObjMap.begin();
+        for (map <string, SimulationObject*>::iterator mapIter = simulationObjMap.begin();
                                             mapIter != simulationObjMap.end(); mapIter++ ) {
 
             LocationObject *locObj = static_cast <LocationObject *> (mapIter->second);
-            vector <string> connVec = wsModel->fetchNodeLinks(mapIter->first);
+            std::vector<std::string> connVec = ws->fetchNodeLinks(map_iter->first);
             map <string, unsigned int> tempTravelMap;
             for( vector <string>::iterator connVecIter = connVec.begin(); 
                                     connVecIter != connVec.end(); connVecIter++ ) {
@@ -222,20 +221,13 @@ int main(int argc, const char** argv) {
             }
             locObj->populateTravelMap(tempTravelMap);
         }
-        delete wsModel;
     }
-
-    std::vector<Location> objects;
-    for (unsigned int i = 0; i < num_objects; ++i) {
-        objects.emplace_back();
-    }
-
+#endif
     std::vector<warped::SimulationObject*> object_pointers;
     for (auto& o : objects) {
         object_pointers.push_back(&o);
     }
     simulation.simulate(object_pointers);
-#endif
 
     return 0;
 }

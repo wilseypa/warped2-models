@@ -8,8 +8,6 @@
 class WattsStrogatzModel {
 public:
 
-    WattsStrogatzModel() = default;
-
     WattsStrogatzModel(unsigned int k, float beta, unsigned int seed) 
             : k_(k), beta_(beta) {
 
