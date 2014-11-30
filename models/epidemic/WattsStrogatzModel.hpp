@@ -19,8 +19,12 @@ public:
 
         nodes_ = nodes;
         unsigned int num_nodes = nodes.size();
-        for (unsigned int index = 0; index < num_nodes; index++) {
-            connections_[index].assign(num_nodes, false);
+        connections_ = new bool*[num_nodes];
+        for (unsigned int index_x = 0; index_x < num_nodes; index_x++) {
+            connections_[index_x] = new bool[num_nodes];
+            for (unsigned int index_y = 0; index_y < num_nodes; index_y++) {
+                connections_[index_x][index_y] = false;
+            }
         }
     }
 
@@ -95,7 +99,7 @@ private:
     unsigned int k_;
     float beta_;
     std::unique_ptr<RandomNumGenerator> rand_num_generator_;
-    std::vector<std::vector<bool>> connections_;
+    bool **connections_;
 };
 
 #endif
