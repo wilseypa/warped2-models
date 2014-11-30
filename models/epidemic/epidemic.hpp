@@ -102,6 +102,11 @@ public:
         diffusion_network_->populateTravelChart(travel_chart);
     }
 
+    std::string getLocationName() {
+
+        return location_name_;
+    }
+
 protected:
 
     LocationState state_;

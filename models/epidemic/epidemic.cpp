@@ -1,4 +1,5 @@
 #include "epidemic.hpp"
+#include "WattsStrogatzModel.hpp"
 #include "tclap/ValueArg.h"
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
@@ -181,48 +182,33 @@ int main(int argc, const char** argv) {
         }
     }
 
-    std::cout << k << "," << beta << std::endl;
-
-#if 0
     if (model == "FullyConnected") {
-        for(std::map <string, SimulationObject*>::iterator mapIter = simulationObjMap.begin();
-                                            mapIter != simulationObjMap.end(); mapIter++ ) {
-
-            LocationObject *locObj = static_cast <LocationObject *> (mapIter->second);
-            map <string, unsigned int> tempTravelMap = travelMap;
-            tempTravelMap.erase(mapIter->first);
-            locObj->populateTravelMap(tempTravelMap);
+        for (auto &o : objects) {
+            auto temp_travel_map = travel_map;
+            temp_travel_map.erase(o.getLocationName());
+            o.populateTravelDistances(temp_travel_map);
         }
-
-    } else if( model == "WattsStrogatz" ) {
-        std::unique_ptr<WattsStrogatzModel> ws = 
-            warped::make_unique<WattsStrogatzModel>(k, beta, diffusion_seed);
-
+    } else if (model == "WattsStrogatz") {
+        auto ws = std::make_shared<WattsStrogatzModel>(k, beta, diffusion_seed);
         std::vector<std::string> nodes;
-        for (auto map_iter = travel_map.begin(); map_iter != travel_map.end(); map_iter++) {
-            std::string location = static_cast<std::string>(map_iter->first);
-            nodes.push_back(location);
+        for (auto& o : objects) {
+            nodes.push_back(o.getLocationName());
         }
         ws->populateNodes(nodes);
         ws->mapNodes();
 
-        for (map <string, SimulationObject*>::iterator mapIter = simulationObjMap.begin();
-                                            mapIter != simulationObjMap.end(); mapIter++ ) {
-
-            LocationObject *locObj = static_cast <LocationObject *> (mapIter->second);
-            std::vector<std::string> connVec = ws->fetchNodeLinks(map_iter->first);
-            map <string, unsigned int> tempTravelMap;
-            for( vector <string>::iterator connVecIter = connVec.begin(); 
-                                    connVecIter != connVec.end(); connVecIter++ ) {
-
-                map <string, unsigned int>::iterator travelMapIter = travelMap.find(*connVecIter);
-                tempTravelMap.insert( 
-                    pair <string, unsigned int>(travelMapIter->first, travelMapIter->second) );
+        for (auto& o : objects) {
+            std::vector<std::string> connections = ws->fetchNodeLinks(o.getLocationName());
+            std::map<std::string, unsigned int> temp_travel_map;
+            for (auto& link : connections) {
+                auto travel_map_iter = travel_map.find(link);
+                temp_travel_map.insert(std::pair<std::string, unsigned int>
+                                (travel_map_iter->first, travel_map_iter->second));
             }
-            locObj->populateTravelMap(tempTravelMap);
+            o.populateTravelDistances(temp_travel_map);
         }
     }
-#endif
+
     std::vector<warped::SimulationObject*> object_pointers;
     for (auto& o : objects) {
         object_pointers.push_back(&o);
