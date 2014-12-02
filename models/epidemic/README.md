@@ -38,9 +38,8 @@ has been done to reduce  complexity in management of the inter-location
 distances.
 
 Travel time from location 1 to location 2 = <br>
-                     Travel time from location 1 to central hub + 
-                     Travel time from central hub to location 2
-<br>
+..Travel time from location 1 to central hub + Travel time from central 
+hub to location 2 <br>
 
 ###Important Information :
 
@@ -64,14 +63,15 @@ before writing out the model:
                 prob_ulu, prob_ulv, prob_urv, prob_uiv, prob_uiu, 
                 location state refresh interval, seed
 
-3. Population : * For each region
-                    * For each location 
-                        * Travel time to central hub
-                        * Diffusion trigger interval
-                        * For each person
-                            * Susceptibility
-                            * Is Vaccinated
-                            * Infection State
+3. Population : <br>
+For each region
+..For each location 
+....Travel time to central hub
+....Diffusion trigger interval
+....For each person
+......Susceptibility
+......Is Vaccinated
+......Infection State <br>
 
 ###Legend :
 
