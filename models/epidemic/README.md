@@ -61,13 +61,17 @@ before writing out the model:
                 incubating dwell time, incubating infectivity, 
                 infectious dwell time, infectious infectivity, 
                 asympt dwell time, asympt infectivity, 
-                prob_ul_u, prob_ul_v, prob_ur_v, prob_ui_v, prob_ui_u, 
+                prob_ulu, prob_ulv, prob_urv, prob_uiv, prob_uiu, 
                 location state refresh interval, seed
 
-3. Population : For each region => For each location 
-                (Travel time to central hub, Diffusion trigger interval, 
-                For each person => Susceptibility, Is Vaccinated, 
-                Infection State)
+3. Population : * For each region
+                    * For each location 
+                        * Travel time to central hub
+                        * Diffusion trigger interval
+                        * For each person
+                            * Susceptibility
+                            * Is Vaccinated
+                            * Infection State
 
 ###Legend :
 
