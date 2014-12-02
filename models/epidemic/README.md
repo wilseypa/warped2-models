@@ -20,16 +20,16 @@ entities.
 
 This model contains four parts[1]:
 
-(1) a set of interacting entities.
++ A set of interacting entities.
 
-(2) a network graph that shows the interaction structure of entities. 
-    Currently "FullyConnected" and WattsStrogatz" models are supported.
++ A network graph that shows the interaction structure of entities. 
+  Currently 'FullyConnected' and 'WattsStrogatz' models are supported.
 
-(3) a reaction process, called  within-host  progression  which  models 
-    the progress of the disease in an individual entity.
++ A reaction process, called within-host progression, which models the 
+  progress of the disease in an individual entity.
 
-(4) a  diffusion  process,  called   between-host  transmission,  which 
-    models the transmission of the disease among individual entities.
++ A diffusion process, called between-host transmission, which models 
+  the transmission of the disease among individual entities.
 
 NOTE: Network graph design is diffusion model-specific. But to simplify 
 distance  calculation  between  locations,  it  has  been  assumed that 
@@ -45,8 +45,8 @@ Travel time from location 1 to location 2 =
 ###Important Information :
 
 The  config  file can  be auto-generated  with  random  region  details 
-using  the 'configCreation.py'  script.  Type 'python configCreation.py 
-<config_file_name>' to create the config file.
+using the 'createXmlConfig.py'  script. Type ***python createXmlConfig.py 
+<config_file_name>*** to create the config file.
 
 
 ##Configuration File :
@@ -54,34 +54,30 @@ using  the 'configCreation.py'  script.  Type 'python configCreation.py
 The model generator program lets the user adjust the following parameters
 before writing out the model:
 
-1. Diffusion : model, seed, model parameters
+1. Diffusion  : model, seed, model parameters
     a. Model Parameters for Watts-Strogatz: K, Beta
 
-2. Disease   : transmissiblity, latent dwell time, latent infectivity, 
-               incubating dwell time, incubating infectivity, 
-               infectious dwell time, infectious infectivity, 
-               asympt dwell time, asympt infectivity, 
-               prob_ul_u, prob_ul_v, prob_ur_v, prob_ui_v, prob_ui_u, 
-               location state refresh interval, seed
+2. Disease    : transmissiblity, latent dwell time, latent infectivity, 
+                incubating dwell time, incubating infectivity, 
+                infectious dwell time, infectious infectivity, 
+                asympt dwell time, asympt infectivity, 
+                prob_ul_u, prob_ul_v, prob_ur_v, prob_ui_v, prob_ui_u, 
+                location state refresh interval, seed
 
-3. Data Capture : needed (yes/no), capture csv file name
-
-4. Region    : number of regions
-               For each region : region name, number of locations
-	           (a) For each location : location name, number of persons, 
-                   travel time to central hub, diffusion trigger interval
-		           (a.1) For each person : pid, susceptibility, 
-                                         is vaccinated, infection state
+3. Population : For each region -> For each location 
+                (Travel time to central hub, Diffusion trigger interval, 
+                For each person -> Susceptibility, Is Vaccinated, 
+                Infection State)
 
 ###Legend :
 
 	Refer to Figure 2 of ref[2] for the disease model
 	Transition Probabilities:
-		prob_ul_u : uninfected->latent (untreated)
-		prob_ul_v : uninfected->latent (vaccinated)
-		prob_ur_v : uninfected->recovered (vaccinated)
-		prob_ui_v : uninfected->incubating (vaccinated)
-		prob_ui_u : uninfected->incubating (untreated)
+		prob_ulu : uninfected->latent (untreated)
+		prob_ulv : uninfected->latent (vaccinated)
+		prob_urv : uninfected->recovered (vaccinated)
+		prob_uiv : uninfected->incubating (vaccinated)
+		prob_uiu : uninfected->incubating (untreated)
 
 	Location state refresh interval:
 		Intervals at which the disease spread at any location is re-computed

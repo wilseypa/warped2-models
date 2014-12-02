@@ -36,10 +36,6 @@ PROB_UI_U                       = 0.3
 LOCATION_STATE_REFRESH_INTERVAL = 50
 DISEASE_SEED                    = 90
 
-# Data capture
-IS_DATA_CAPTURE_NEEDED          = "no"
-DATA_CAPTURE_FILENAME           = "epidemic_data.csv"
-
 # Regions
 NUMBER_OF_REGIONS               = 50
 MIN_NUM_OF_LOCS_PER_REGION      = 100
