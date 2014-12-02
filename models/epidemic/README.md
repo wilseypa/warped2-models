@@ -1,9 +1,9 @@
 #EPIDEMIC: A WARPED simulation kernel application
 
-Author: Sounak Gupta
-Experimental Computing Laboratory
-Dept of ECECS, PO Box 210030
-Cincinnati, OH  45221--0030
+Author: Sounak Gupta <br>
+Experimental Computing Laboratory <br>
+Dept of ECECS, PO Box 210030 <br>
+Cincinnati, OH  45221--0030 <br>
 
 ##Introduction :
 
@@ -18,7 +18,7 @@ and  other co-located  activities). Geographical diffusion  of entities
 provides  chances for  interactions  among  different  sample  sets  of 
 entities.
 
-This model contains four parts[1]:
+This model contains four parts [1]:
 
 + A set of interacting entities.
 
@@ -37,16 +37,16 @@ locations are  connected to each  other via a virtual central hub. This
 has been done to reduce  complexity in management of the inter-location 
 distances.
 
-Travel time from location 1 to location 2 = 
-                     Travel time from location 1 to central hub +
+Travel time from location 1 to location 2 = <br>
+                     Travel time from location 1 to central hub + 
                      Travel time from central hub to location 2
-
+<br>
 
 ###Important Information :
 
 The  config  file can  be auto-generated  with  random  region  details 
 using the 'createXmlConfig.py'  script. Type ***python createXmlConfig.py 
-<config_file_name>*** to create the config file.
+'config file name'*** to create the config file.
 
 
 ##Configuration File :
@@ -64,9 +64,9 @@ before writing out the model:
                 prob_ul_u, prob_ul_v, prob_ur_v, prob_ui_v, prob_ui_u, 
                 location state refresh interval, seed
 
-3. Population : For each region -> For each location 
+3. Population : For each region => For each location 
                 (Travel time to central hub, Diffusion trigger interval, 
-                For each person -> Susceptibility, Is Vaccinated, 
+                For each person => Susceptibility, Is Vaccinated, 
                 Infection State)
 
 ###Legend :
