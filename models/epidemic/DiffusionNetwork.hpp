@@ -35,16 +35,13 @@ public:
         return (travel_time_chart_[location_name] + travel_time_to_hub_);
     }
 
-    std::shared_ptr<Person> pickPerson(
-            std::map<unsigned int, std::shared_ptr<Person>> population) {
+    unsigned int pickPerson(unsigned int person_count) {
 
-        std::shared_ptr<Person> person = nullptr;
-        unsigned int person_count = population.size();
+        unsigned int person_id = 0;
         if(person_count) {
-            unsigned int person_id = rand_num_gen_->generateRandNum(person_count);   
-            person = population[person_id];
+            person_id = rand_num_gen_->generateRandNum(person_count); 
         }
-        return person;
+        return person_id;
     }
 
     void populateTravelChart(std::map<std::string, unsigned int> travel_chart) {

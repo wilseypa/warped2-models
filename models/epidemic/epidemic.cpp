@@ -38,13 +38,13 @@ std::vector<std::shared_ptr<warped::Event> > Location::receiveEvent(const warped
             std::string selected_location = diffusion_network_->pickLocation();
             if (selected_location != "") {
                 auto travel_time = diffusion_network_->travelTimeToLocation(selected_location);
-                std::shared_ptr<Person> person = 
-                    diffusion_network_->pickPerson(state_.current_population_);
-
-                if (person) {
+                unsigned int person_count = state_.current_population_.size();
+                unsigned int person_id = diffusion_network_->pickPerson(person_count);
+                if (person_count) {
+                    std::shared_ptr<Person> person = state_.current_population_[person_id];
                     events.emplace_back(new EpidemicEvent {selected_location, 
                                             timestamp + travel_time, person, DIFFUSION});
-                    state_.current_population_.erase(person->pid_);
+                    state_.current_population_.erase(person_id);
                 }
             }
             events.emplace_back(new EpidemicEvent {location_name_, 
