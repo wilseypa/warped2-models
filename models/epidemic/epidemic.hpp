@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 #include "memory.hpp"
 #include "warped.hpp"
 #include "Person.hpp"
@@ -86,7 +87,7 @@ public:
             std::make_shared<DiffusionNetwork>(diffusion_seed, travel_time_to_hub);
 
         for (auto& person : population) {
-            state_.current_population_.insert( 
+            state_.current_population_.insert(state_.current_population_.begin(), 
                 std::pair <unsigned int, std::shared_ptr<Person>> (person->pid_, person));
         }
     }

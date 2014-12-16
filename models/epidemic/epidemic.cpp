@@ -39,12 +39,18 @@ std::vector<std::shared_ptr<warped::Event> > Location::receiveEvent(const warped
             if (selected_location != "") {
                 auto travel_time = diffusion_network_->travelTimeToLocation(selected_location);
                 unsigned int person_count = state_.current_population_.size();
-                unsigned int person_id = diffusion_network_->pickPerson(person_count);
                 if (person_count) {
-                    std::shared_ptr<Person> person = state_.current_population_[person_id];
+                    unsigned int person_id = diffusion_network_->pickPerson(person_count);
+                    auto map_iter = state_.current_population_.begin();
+                    unsigned int temp_cnt = 0;
+                    while (temp_cnt < person_id) {
+                        map_iter++;
+                        temp_cnt++;
+                    }
+                    std::shared_ptr<Person> person = map_iter->second;
                     events.emplace_back(new EpidemicEvent {selected_location, 
                                             timestamp + travel_time, person, DIFFUSION});
-                    state_.current_population_.erase(person_id);
+                    state_.current_population_.erase(map_iter);
                 }
             }
             events.emplace_back(new EpidemicEvent {location_name_, 
@@ -57,7 +63,7 @@ std::vector<std::shared_ptr<warped::Event> > Location::receiveEvent(const warped
                         epidemic_event.pid_, epidemic_event.susceptibility_, 
                         epidemic_event.vaccination_status_, epidemic_event.infection_state_,
                         timestamp, epidemic_event.prev_state_change_timestamp_);
-            state_.current_population_.insert( 
+            state_.current_population_.insert(state_.current_population_.begin(), 
                 std::pair <unsigned int, std::shared_ptr<Person>> (epidemic_event.pid_, person));
         } break;
 
