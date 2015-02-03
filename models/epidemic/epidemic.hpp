@@ -38,7 +38,8 @@ public:
             susceptibility_ = person->susceptibility_;
             vaccination_status_ = person->vaccination_status_;
             infection_state_ = person->infection_state_;
-            loc_arrival_timestamp_ = person->loc_arrival_timestamp_;
+            loc_arrival_timestamp_ = 
+                std::max(loc_arrival_timestamp_, person->loc_arrival_timestamp_);
             prev_state_change_timestamp_ = person->prev_state_change_timestamp_;
         }
     }
