@@ -63,7 +63,7 @@ std::vector<std::shared_ptr<warped::Event> > Airport::receiveEvent(const warped:
   case ARRIVAL:
     {
       // Schedule a landing
-      response_events.emplace_back(new AirportEvent { this->name_, LANDING, received_event.ts_ });
+      response_events.emplace_back(new AirportEvent { this->name_, LANDING, received_event.ts_+1 });
       break;
     }
   case LANDING:
