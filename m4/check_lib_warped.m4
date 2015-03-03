@@ -5,7 +5,7 @@ dnl Usage: CHECK_LIB_WARPED
 AC_DEFUN([CHECK_LIB_WARPED],
 [
     dnl This allows the user to override default include directory
-    AC_ARG_WITH([mpi-warped],
+    AC_ARG_WITH([warped],
                 [AS_HELP_STRING([--with-warped(=/path/to/library)], [location of warped. Do not include /lib or /include])],
                 [CPPFLAGS="$CPPFLAGS -isystem$withval/include"; LDFLAGS="$LDFLAGS -L$withval/lib";],
                 [])
