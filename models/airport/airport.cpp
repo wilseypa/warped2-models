@@ -50,6 +50,9 @@ std::vector<std::shared_ptr<warped::Event> > Airport::receiveEvent(const warped:
             // Schedule an arrival at a random airport
             unsigned int arrival_time = received_event.ts_ + (unsigned int)arrive_expo();
             unsigned int destination_index = rand_airport(this->rng_engine_);
+            while (destination_index == this->index_) {
+                destination_index = rand_airport(this->rng_engine_);
+            }
             response_events.emplace_back(new AirportEvent { 
                     Airport::object_name(destination_index), ARRIVAL, arrival_time });
             break;
