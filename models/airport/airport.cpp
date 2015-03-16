@@ -121,7 +121,8 @@ int main(int argc, const char** argv) {
     }
     std::cout << departures << " total departures" << std::endl;
     std::cout << arrivals << " total arrivals" << std::endl;
-    std::cout << planes_grounded << " planes grounded" << std::endl;
+    std::cout << planes_grounded << " of " << num_planes*num_airports 
+                                            << " planes grounded" << std::endl;
 
     return 0;
 }
