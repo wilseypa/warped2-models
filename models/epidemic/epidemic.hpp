@@ -13,6 +13,24 @@
 
 WARPED_DEFINE_OBJECT_STATE_STRUCT(LocationState) {
 
+    LocationState () = default;
+    LocationState (const LocationState& other) {
+        current_population_.clear();
+        for (auto it = other.current_population_.begin(); 
+                            it != other.current_population_.end(); it++) {
+            auto person = it->second;
+            auto new_person = 
+                std::make_shared<Person>(   person->pid_, 
+                                            person->susceptibility_, 
+                                            person->vaccination_status_, 
+                                            person->infection_state_, 
+                                            person->loc_arrival_timestamp_, 
+                                            person->prev_state_change_timestamp_    );
+            current_population_.insert(current_population_.begin(), 
+                std::pair <unsigned int, std::shared_ptr<Person>> (person->pid_, new_person));
+        }
+    };
+
     std::map <unsigned int, std::shared_ptr<Person>> current_population_;
 };
 
