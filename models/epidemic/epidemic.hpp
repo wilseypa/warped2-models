@@ -13,8 +13,8 @@
 
 WARPED_DEFINE_OBJECT_STATE_STRUCT(LocationState) {
 
-    LocationState () = default;
-    LocationState (const LocationState& other) {
+    LocationState() = default;
+    LocationState(const LocationState& other) {
         current_population_.clear();
         for (auto it = other.current_population_.begin(); 
                             it != other.current_population_.end(); it++) {
