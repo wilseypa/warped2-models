@@ -15,6 +15,8 @@
 
 #include "tclap/ValueArg.h"
 
+#define NEG_EXPL_OFFSET 10
+
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(PcsEvent)
 
 std::vector<std::shared_ptr<warped::Event> > PcsCell::createInitialEvents() {
@@ -46,7 +48,7 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
                 state_.portables_[pid]->call_arrival_ts_ = timestamp;
 
                 NegativeExpntl move_expo(pcs_event.call_duration_, this->rng_.get());
-                auto move_interval = (unsigned int) move_expo();
+                auto move_interval = (unsigned int) move_expo() + NEG_EXPL_OFFSET;
                 if (move_interval < state_.portables_[pid]->call_duration_) {
                     events.emplace_back(new PcsEvent {name_, timestamp + move_interval, 
                                         state_.portables_[pid], PORTABLE_MOVE_OUT});
@@ -63,197 +65,43 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
         } break;
 
         case CALL_COMPLETION: {
+
+            state_.idle_channel_cnt_++;
+            state_.portables_[pid]->is_busy_ = false;
+
+            NegativeExpntl move_expo(pcs_event.call_duration_, this->rng_.get());
+            auto move_interval = (unsigned int) move_expo();
+            if (move_interval < state_.portables_[pid]->call_duration_) {
+                events.emplace_back(new PcsEvent {random_move(), timestamp + move_interval, 
+                                        state_.portables_[pid], PORTABLE_MOVE_IN});
+            } else {
+                events.emplace_back(new PcsEvent {name_, 
+                                        timestamp + state_.portables_[pid]->call_interval_, 
+                                        state_.portables_[pid], CALL_ARRIVAL});
+            }
         } break;
 
         case PORTABLE_MOVE_OUT: {
+
+            auto portable = state_.portables_[pid];
+            state_.portables_.erase(pid);
+            state_.idle_channel_cnt_++;
+            events.emplace_back(new PcsEvent {random_move(), 
+                                        timestamp+travel_duration_, portable, PORTABLE_MOVE_IN});
+            std::move(portable);
+
         } break;
 
         case PORTABLE_MOVE_IN: {
+
         } break;
 
-        default: {}
+        default: {
+            assert(0);
+        }
     }
     return events;
 }
-
-
-#if 0
-        case NEXTCALL_METHOD: {
-      // Attempt to place a call
-      this->state_.call_attempts_++;
-      if ( !state_.normal_channels_ ) {
-        // All normal channels are in use; call is blocked
-        this->state_.channel_blocks_++;
-        // Reschedule the call
-        unsigned int next_timestamp = received_event.next_timestamp_ + (unsigned int) next_expo();
-        if ( next_timestamp < received_event.move_timestamp_ ) {
-          response_events.emplace_back(new PcsEvent { this->name_, received_event.completion_timestamp_,
-                                next_timestamp, received_event.move_timestamp_, NORMAL, NEXTCALL_METHOD });
-        } else {
-          std::string current_cell = this->name_;
-          std::string new_cell = this->name_;
-          while ( received_event.move_timestamp_ < next_timestamp ) {
-            current_cell = new_cell;
-            new_cell = this->random_move();
-            received_event.move_timestamp_ += (unsigned int) move_expo();
-          }
-          response_events.emplace_back(new PcsEvent { this->name_, received_event.completion_timestamp_,
-                                next_timestamp, received_event.move_timestamp_, NORMAL, NEXTCALL_METHOD });
-        }
-      } else {
-        // The call can be connected; allocate a channel
-        state_.normal_channels_--;
-        // Randomize the call move time and end time
-        unsigned int completion_timestamp = received_event.next_timestamp_ + (unsigned int) time_expo();
-        unsigned int next_timestamp = received_event.next_timestamp_ + (unsigned int) next_expo();
-      busy_line_nextcall:
-        if ( next_timestamp < received_event.move_timestamp_ ) {
-          if ( completion_timestamp < next_timestamp ) {
-            // The call will be completed in this cell
-            response_events.emplace_back(new PcsEvent { this->name_, completion_timestamp,
-                            next_timestamp, received_event.move_timestamp_, NORMAL, COMPLETIONCALL_METHOD });
-          } else {
-            // Busy line; a call will be made from this cell afterward
-            state_.call_attempts_++;
-            state_.busy_lines_++;
-            next_timestamp += (unsigned int) next_expo();
-            goto busy_line_nextcall;
-          }
-        } else {
-          if ( completion_timestamp < received_event.move_timestamp_ ) {
-            // The call will be completed in this cell
-            response_events.emplace_back(new PcsEvent { this->name_, completion_timestamp,
-                  next_timestamp, received_event.move_timestamp_, NORMAL, COMPLETIONCALL_METHOD });
-          } else {
-            // The call was successful, but it will move cells before completion
-            response_events.emplace_back(new PcsEvent { this->name_, completion_timestamp,
-                  next_timestamp, received_event.move_timestamp_, NORMAL, MOVECALLOUT_METHOD });
-          }
-        }
-      }
-      break;
-    }
-  case COMPLETIONCALL_METHOD:
-    {
-      // End of a call
-      // Deallocate the channel
-      if ( received_event.channel_ == NORMAL ) {
-        state_.normal_channels_++;
-      } else if ( received_event.channel_ == RESERVE ) {
-        state_.reserve_channels_++;
-      } else {
-        std::cerr << "Invalid channel type when completing call" << std::endl;
-        exit(1);
-      }
-
-      if ( received_event.next_timestamp_ < received_event.move_timestamp_ ) {
-        // The portable will attempt a new call in this cell
-        response_events.emplace_back(new PcsEvent { this->name_, (unsigned int) -1,
-              received_event.next_timestamp_, received_event.move_timestamp_, NONE, NEXTCALL_METHOD });
-      } else {
-        // The portable will move to a different cell while not on a call
-        // Find out where the next call will take place
-        std::string new_cell = this->name_;
-        std::string current_cell = this->name_;
-        unsigned int move_timestamp = received_event.move_timestamp_;
-        unsigned int next_timestamp = received_event.next_timestamp_;
-        while ( move_timestamp < next_timestamp ) {
-          current_cell = new_cell;
-          new_cell = this->random_move();
-          move_timestamp += (unsigned int) move_expo();
-        }
-        response_events.emplace_back(new PcsEvent { this->name_, (unsigned int) -1,
-                                            next_timestamp, move_timestamp, NONE, NEXTCALL_METHOD });
-      }
-      break;
-    }
-  case MOVECALLIN_METHOD:
-    {
-      unsigned int move_timestamp = received_event.move_timestamp_ + (unsigned int) move_expo();
-      if ( !state_.normal_channels_ && !state_.reserve_channels_ ) {
-        // No normal or reserve channels are available; the call is dropped
-        state_.handoff_blocks_++;
-        if ( received_event.next_timestamp_ < move_timestamp ) {
-          // The portable will attempt a new call in this cell
-          response_events.emplace_back(new PcsEvent { this->name_, (unsigned int) -1,
-                        received_event.next_timestamp_, move_timestamp, NONE, NEXTCALL_METHOD });
-        } else {
-          // The portable will move to a different cell while not on a call
-          // Find out where the next call will take place
-          std::string new_cell = this->name_;
-          std::string current_cell = this->name_;
-          unsigned int next_timestamp = received_event.next_timestamp_;
-          while ( move_timestamp < next_timestamp ) {
-            current_cell = new_cell;
-            new_cell = this->random_move();
-            move_timestamp += (unsigned int) move_expo();
-          }
-          response_events.emplace_back(new PcsEvent { this->name_, (unsigned int) -1,
-                                        next_timestamp, move_timestamp, NONE, NEXTCALL_METHOD });
-        }
-      } else {
-        channel_t channel;
-        if ( state_.normal_channels_ ) {
-          // A normal channel is available for the call; allocate it
-          state_.normal_channels_--;
-          channel = NORMAL;
-        } else {
-          // No normal channels are available; allocate a reserve channel
-          state_.reserve_channels_--;
-          channel = RESERVE;
-        }
-        unsigned int next_timestamp = received_event.next_timestamp_;
-      busy_line_movecallin:
-        if ( next_timestamp < move_timestamp ) {
-          if ( received_event.completion_timestamp_ < next_timestamp ) {
-            // The call will end in this cell
-            response_events.emplace_back(new PcsEvent { this->name_, received_event.completion_timestamp_,
-                                next_timestamp, move_timestamp, channel, COMPLETIONCALL_METHOD });
-          } else {
-            // A call will be attempted while the line is busy
-            state_.busy_lines_++;
-            state_.call_attempts_++;
-            next_timestamp += next_expo();
-            goto busy_line_movecallin;
-          }
-        } else {
-          if ( received_event.completion_timestamp_ < move_timestamp ) {
-            // The call will end in this cell
-            response_events.emplace_back(new PcsEvent { this->name_, received_event.completion_timestamp_,
-                                        next_timestamp, move_timestamp, channel, COMPLETIONCALL_METHOD });
-          } else {
-            // The call will be moved out of this cell before it ends
-            response_events.emplace_back(new PcsEvent { this->name_, received_event.completion_timestamp_,
-                                        next_timestamp, move_timestamp, channel, MOVECALLOUT_METHOD });
-          }
-        }
-      }
-      break;
-    }
-  case MOVECALLOUT_METHOD:
-    {
-      // Free a channel of whatever type this call is on
-      if ( received_event.channel_ == NORMAL ) {
-        state_.normal_channels_++;
-      } else if ( received_event.channel_ == RESERVE ) {
-        state_.reserve_channels_++;
-      } else {
-        std::cerr << "Invalid channel type when transferring call to new cell" << std::endl;
-        exit(1);
-      }
-      // Move call to random adjacent cell
-      response_events.emplace_back(new PcsEvent { this->name_, received_event.completion_timestamp_,
-            received_event.next_timestamp_, received_event.move_timestamp_, NONE, MOVECALLIN_METHOD });
-      break;
-    }
-  default:
-    {
-      std::cerr << "Invalid method name in event" << std::endl;
-      exit(1);
-    }
-  }
-#endif
-
 
 std::string PcsCell::compute_move(direction_t direction) {
 
@@ -305,6 +153,7 @@ int main(int argc, const char **argv) {
     unsigned int num_cells_y        = 256;
     unsigned int call_interval_mean = 500;
     unsigned int call_duration_mean = 250;
+    unsigned int travel_duration    = 50;
     unsigned int channel_cnt        = 10;
     unsigned int num_portables      = 25;
 
@@ -312,13 +161,15 @@ int main(int argc, const char **argv) {
                                                             false, num_cells_x, "unsigned int");
     TCLAP::ValueArg<unsigned int> num_cells_y_arg("y", "num-cells-y", "Height of cell grid",
                                                             false, num_cells_y, "unsigned int");
-    TCLAP::ValueArg<double> call_interval_mean_arg("i", "call-interval",
+    TCLAP::ValueArg<unsigned int> call_interval_mean_arg("i", "call-interval",
                                 "Mean time between end of last call and a new call", 
                                                     false, call_interval_mean, "unsigned int");
-    TCLAP::ValueArg<double> call_duration_mean_arg("d", "call-duration", "Mean call duration", 
+    TCLAP::ValueArg<unsigned int> call_duration_mean_arg("d", "call-duration", "Mean call duration", 
                                                     false, call_duration_mean, "unsigned int");
+    TCLAP::ValueArg<unsigned int> travel_duration_arg("t", "travel-duration", "Travel duration", 
+                                                    false, travel_duration, "unsigned int");
     TCLAP::ValueArg<unsigned int> channel_cnt_arg("n", "channel-count",
-                    "Number of communication channels", false, channel_cnt, "unsigned int");
+                        "Number of communication channels", false, channel_cnt, "unsigned int");
     TCLAP::ValueArg<unsigned int> num_portables_arg("p", "portable-count", 
                             "Portables per cell", false, num_portables, "unsigned int");
 
@@ -332,6 +183,7 @@ int main(int argc, const char **argv) {
     num_cells_y         = num_cells_y_arg.getValue();
     call_interval_mean  = call_interval_mean_arg.getValue();
     call_duration_mean  = call_duration_mean_arg.getValue();
+    travel_duration     = travel_duration_arg.getValue();
     channel_cnt         = channel_cnt_arg.getValue();
     num_portables       = num_portables_arg.getValue();
 
@@ -348,13 +200,14 @@ int main(int argc, const char **argv) {
 
         for (unsigned int i = 0; i < num_portables; i++) {
             pid++;
-            auto interval = (unsigned int) interval_expo();
-            auto duration = (unsigned int) duration_expo();
+            auto interval = (unsigned int) interval_expo() + NEG_EXPL_OFFSET;
+            auto duration = (unsigned int) duration_expo() + NEG_EXPL_OFFSET;
             auto portable = std::make_shared<Portable> (pid, false, 0, interval, duration);
             portables.push_back(portable);
         }
         std::string name = std::string("Object ") + std::to_string(i);
-        objects.emplace_back(name, num_cells_x, num_cells_y, channel_cnt, portables, i);
+        objects.emplace_back(name, num_cells_x, num_cells_y, 
+                                travel_duration, channel_cnt, portables, i);
     }
     std::move(rng);
 

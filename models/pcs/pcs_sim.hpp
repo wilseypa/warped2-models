@@ -111,6 +111,7 @@ public:
     PcsCell(    const std::string& name, 
                 unsigned int num_cells_x, 
                 unsigned int num_cells_y, 
+                unsigned int travel_duration, 
                 unsigned int channel_cnt, 
                 std::vector<std::shared_ptr<Portable>> portables, 
                 unsigned int index      )
@@ -119,6 +120,7 @@ public:
             state_(), 
             num_cells_x_(num_cells_x), 
             num_cells_y_(num_cells_y),
+            travel_duration_(travel_duration),
             channel_cnt_(channel_cnt),
             index_(index),
             rng_(new MLCG) {
@@ -142,6 +144,7 @@ protected:
     PcsState                state_;
     unsigned int            num_cells_x_;
     unsigned int            num_cells_y_;
+    unsigned int            travel_duration_;
     unsigned int            channel_cnt_;
     unsigned int            index_;
     std::shared_ptr<MLCG>   rng_;
