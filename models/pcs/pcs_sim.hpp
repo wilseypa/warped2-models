@@ -14,15 +14,18 @@
 class Portable {
 public:
 
-    Portable(   bool is_busy, 
+    Portable(   unsigned int pid, 
+                bool is_busy, 
                 unsigned int call_arrival_ts, 
                 unsigned int call_interval, 
                 unsigned int call_duration      )
-        :   is_busy_(is_busy), 
+        :   pid_(pid), 
+            is_busy_(is_busy), 
             call_arrival_ts_(call_arrival_ts), 
             call_interval_(call_interval), 
             call_duration_(call_duration) {}
 
+    unsigned int    pid_;
     bool            is_busy_;
     unsigned int    call_arrival_ts_;
     unsigned int    call_interval_;
@@ -35,16 +38,20 @@ WARPED_DEFINE_OBJECT_STATE_STRUCT(PcsState) {
     PcsState(const PcsState& other) {
         idle_channel_cnt_ = other.idle_channel_cnt_;
         for (auto it = other.portables_.begin(); it != other.portables_.end(); it++) {
-            auto portable = *it;
-            auto new_portable = std::make_shared<Portable>( portable->is_busy_,
+            auto portable = it->second;
+            auto new_portable = std::make_shared<Portable>( portable->pid_,
+                                                            portable->is_busy_,
                                                             portable->call_arrival_ts_,
                                                             portable->call_interval_,
                                                             portable->call_duration_    );
+            portables_.insert(portables_.begin(), 
+                std::pair <unsigned int, std::shared_ptr<Portable>> (portable->pid_, 
+                                                                            new_portable));
         }
     };
 
     unsigned int idle_channel_cnt_;
-    std::vector <std::shared_ptr<Portable>> portables_;
+    std::map <unsigned int, std::shared_ptr<Portable>> portables_;
 };
 
 enum event_type_t {
@@ -72,12 +79,12 @@ public:
                         std::shared_ptr<Portable> portable, event_type_t event_type)
         : receiver_name_(receiver_name), event_timestamp_(timestamp), event_type_(event_type) {
 
-        if (portable != nullptr) {
-            is_busy_ = portable->is_busy_;
-            call_arrival_ts_ = portable->call_arrival_ts_;
-            call_interval_ = portable->call_interval_;
-            call_duration_ = portable->call_duration_;
-        }
+        assert (portable != nullptr);
+        pid_                = portable->pid_;
+        is_busy_            = portable->is_busy_;
+        call_arrival_ts_    = portable->call_arrival_ts_;
+        call_interval_      = portable->call_interval_;
+        call_duration_      = portable->call_duration_;
     }
 
     const std::string& receiverName() const { return receiver_name_; }
@@ -86,15 +93,16 @@ public:
     std::string     receiver_name_;
     unsigned int    event_timestamp_;
     event_type_t    event_type_;
+    unsigned int    pid_;
     bool            is_busy_;
     unsigned int    call_arrival_ts_;
     unsigned int    call_interval_;
     unsigned int    call_duration_;
 
     WARPED_REGISTER_SERIALIZABLE_MEMBERS(cereal::base_class<warped::Event>(this), 
-                                            receiver_name_, event_timestamp_, 
-                                            event_type_, is_busy_, call_arrival_ts_, 
-                                            call_interval_, call_duration_)
+                                            receiver_name_, event_timestamp_, event_type_, 
+                                            pid_, is_busy_, call_arrival_ts_, call_interval_, 
+                                            call_duration_)
 };
 
 class PcsCell : public warped::SimulationObject {
@@ -103,10 +111,8 @@ public:
     PcsCell(    const std::string& name, 
                 unsigned int num_cells_x, 
                 unsigned int num_cells_y, 
-                unsigned int num_portables,
                 unsigned int channel_cnt, 
-                unsigned int call_interval_mean, 
-                unsigned int call_duration_mean, 
+                std::vector<std::shared_ptr<Portable>> portables, 
                 unsigned int index      )
 
         :   SimulationObject(name), 
@@ -118,13 +124,10 @@ public:
             rng_(new MLCG) {
 
         // Update the state variables
-        state_.idle_channel_cnt_ = 0;
-        NegativeExpntl interval_expo(call_interval_mean, this->rng_.get());
-        NegativeExpntl duration_expo(call_duration_mean, this->rng_.get());
-        for (unsigned int i = 0; i < num_portables; i++) {
-            auto interval = (unsigned int) interval_expo();
-            auto duration = (unsigned int) duration_expo();
-            state_.portables_.emplace_back(new Portable {false, 0, interval, duration});
+        state_.idle_channel_cnt_ = channel_cnt_;
+        for (auto& portable : portables) {
+            state_.portables_.insert(state_.portables_.begin(), 
+                std::pair <unsigned int, std::shared_ptr<Portable>> (portable->pid_, portable));
         }
     }
 

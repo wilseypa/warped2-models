@@ -20,10 +20,10 @@ WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(PcsEvent)
 std::vector<std::shared_ptr<warped::Event> > PcsCell::createInitialEvents() {
 
     std::vector<std::shared_ptr<warped::Event>> events;
-    for (unsigned int i = 0; i < this->state_.portables_.size(); i++) {
-        unsigned int call_timestamp = this->state_.portables_[i]->call_interval_;
-        events.emplace_back(new PcsEvent {this->name_, call_timestamp, 
-                                    this->state_.portables_[i], CALL_ARRIVAL});
+    for (auto it = state_.portables_.begin(); it != state_.portables_.end(); it++) {
+        auto portable = it->second;
+        events.emplace_back(new PcsEvent {this->name_, portable->call_interval_, 
+                                                            portable, CALL_ARRIVAL});
     }
     return events;
 }
@@ -32,10 +32,14 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
 
     std::vector<std::shared_ptr<warped::Event>> events;
     auto pcs_event = static_cast<const PcsEvent&>(event);
+    //auto timestamp = pcs_event.event_timestamp_;
 
     switch (pcs_event.event_type_) {
 
         case CALL_ARRIVAL: {
+            NegativeExpntl move_expo(pcs_event.call_duration_, this->rng_.get());
+            auto move_interval = (unsigned int) move_expo();
+            std::move(move_interval);
 
         } break;
 
@@ -316,11 +320,27 @@ int main(int argc, const char **argv) {
     num_portables       = num_portables_arg.getValue();
 
     std::vector<PcsCell> objects;
+    unsigned int pid = 0;
+    std::shared_ptr<MLCG> rng = std::make_shared<MLCG> ();
+
     for (unsigned int i = 0; i < num_cells_x * num_cells_y; i++) {
+
+        std::vector<std::shared_ptr<Portable>> portables;
+
+        NegativeExpntl interval_expo(call_interval_mean, rng.get());
+        NegativeExpntl duration_expo(call_duration_mean, rng.get());
+
+        for (unsigned int i = 0; i < num_portables; i++) {
+            pid++;
+            auto interval = (unsigned int) interval_expo();
+            auto duration = (unsigned int) duration_expo();
+            auto portable = std::make_shared<Portable> (pid, false, 0, interval, duration);
+            portables.push_back(portable);
+        }
         std::string name = std::string("Object ") + std::to_string(i);
-        objects.emplace_back(name, num_cells_x, num_cells_y, num_portables, 
-                                channel_cnt, call_interval_mean, call_duration_mean, i);
+        objects.emplace_back(name, num_cells_x, num_cells_y, channel_cnt, portables, i);
     }
+    std::move(rng);
 
     std::vector<warped::SimulationObject*> object_pointers;
     for (auto& o : objects) {
