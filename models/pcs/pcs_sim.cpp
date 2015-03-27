@@ -1,6 +1,4 @@
-// This model was ported from the ROSS pcs model. See https://github.com/carothersc/ROSS
-// Also see "Distributed Simulation of Large-Scale PCS Networks" by Carothers et al.
-// Author: Eric Carver carverer@mail.uc.edu
+// See "Distributed Simulation of Large-Scale PCS Networks" by Carothers et al.
 
 #include <vector>
 #include <memory>
@@ -19,57 +17,15 @@
 
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(PcsEvent)
 
-unsigned int PcsEvent::timestamp() const
-{
-  if ( this->move_timestamp_ < this->completion_timestamp_ ) {
-    if ( this->next_timestamp_ < this->move_timestamp_ ) {
-      return this->next_timestamp_;
-    }
-    else {
-      return this->move_timestamp_;
-    }
-  }
-  else {
-    if ( this->next_timestamp_ < this->completion_timestamp_ ) {
-      return this->next_timestamp_;
-    }
-    else {
-      return this->completion_timestamp_;
-    }
-  }
-}
+std::vector<std::shared_ptr<warped::Event> > PcsCell::createInitialEvents() {
 
-std::vector<std::shared_ptr<warped::Event> > PcsCell::createInitialEvents()
-{
-  std::vector<std::shared_ptr<warped::Event> > events;
-
-  NegativeExpntl move_expo(move_call_mean_, this->rng_.get());
-  NegativeExpntl next_expo(next_call_mean_, this->rng_.get());
-  NegativeExpntl time_expo(call_time_mean_, this->rng_.get());
-
-  for (unsigned int i = 0; i < this->num_portables_; i++) {
-    unsigned int completion_timestamp = (unsigned int) -1;
-    unsigned int move_timestamp = (unsigned int) move_expo();
-    unsigned int next_timestamp = (unsigned int) next_expo();
-
-    if ( next_timestamp < move_timestamp ) {
-      // The event will be processed here
-      events.emplace_back(new PcsEvent {this->name_, completion_timestamp, 
-                        next_timestamp, move_timestamp, NORMAL, NEXTCALL_METHOD });
-    } else {
-      // The event will be sent elsewhere
-      std::string current_cell = this->name_;
-      std::string new_cell = this->name_;
-      while ( move_timestamp < next_timestamp ) {
-        current_cell = new_cell;
-        new_cell = this->random_move();
-        move_timestamp += (unsigned int) next_expo();
-      }
-      events.emplace_back(new PcsEvent {current_cell, completion_timestamp, 
-                        next_timestamp, move_timestamp, NORMAL, NEXTCALL_METHOD });
+    std::vector<std::shared_ptr<warped::Event>> events;
+    for (unsigned int i = 0; i < this->state_.portables_.size(); i++) {
+        unsigned int call_timestamp = this->state_.portables_[i]->call_interval_;
+        events.emplace_back(new PcsEvent {this->name_, call_timestamp, 
+                                    this->state_.portables_[i], CALL_ARRIVAL});
     }
-  }
-  return events;
+    return events;
 }
 
 std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped::Event& event)
@@ -261,120 +217,98 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
   return response_events;
 }
 
-std::string PcsCell::compute_move(const direction_t direction) const {
-  int current_x, current_y, new_x, new_y;
-  current_y = ((int)this->index_) / num_cells_x_;
-  current_x = ((int)this->index_) - (current_y * num_cells_x_);
+std::string PcsCell::compute_move(direction_t direction) {
 
-  switch ( direction ) {
-  case LEFT:
-    new_x = ((current_x - 1) + num_cells_x_) % num_cells_x_;
-    new_y = current_y;
-    break;
-  case RIGHT:
-    new_x = (current_x + 1) % num_cells_x_;
-    new_y = current_y;
-    break;
-  case DOWN:
-    new_x = current_x;
-    new_y = ((current_y - 1) + num_cells_y_) % num_cells_y_;
-    break;
-  case UP:
-    new_x = current_x;
-    new_y = (current_y + 1) % num_cells_y_;
-    break;
-  default:
-    std::cerr << "Invalid move direction " << direction << std::endl;
-    exit(1);
-  }
+    int new_x = 0, new_y = 0;
+    int current_y = ((int)this->index_) / num_cells_x_;
+    int current_x = ((int)this->index_) - (current_y * num_cells_x_);
 
-  return std::string("Object ") + std::to_string(new_x + (new_y * num_cells_x_));
+    switch (direction) {
+
+        case LEFT: {
+            new_x = ((current_x - 1) + num_cells_x_) % num_cells_x_;
+            new_y = current_y;
+        } break;
+
+        case RIGHT: {
+            new_x = (current_x + 1) % num_cells_x_;
+            new_y = current_y;
+        } break;
+
+        case DOWN: {
+            new_x = current_x;
+            new_y = ((current_y - 1) + num_cells_y_) % num_cells_y_;
+        } break;
+
+        case UP: {
+            new_x = current_x;
+            new_y = (current_y + 1) % num_cells_y_;
+        } break;
+
+        default: {
+            std::cerr << "Invalid move direction " << direction << std::endl;
+            assert(0);
+        }
+    }
+
+    return std::string("Object ") + std::to_string(new_x + (new_y * num_cells_x_));
 }
 
-std::string PcsCell::random_move() const {
-  std::default_random_engine gen;
-  std::uniform_int_distribution<unsigned int> rand_direction(0,3);
-  return this->compute_move((direction_t)rand_direction(gen));
+std::string PcsCell::random_move() {
+
+    std::default_random_engine gen;
+    std::uniform_int_distribution<unsigned int> rand_direction(0,3);
+    return this->compute_move((direction_t)rand_direction(gen));
 }
 
 int main(int argc, const char** argv) {
-  unsigned int num_cells_x = 1024;
-  unsigned int num_cells_y = 1024;
-  double move_call_mean = 4500.0;
-  double next_call_mean = 360.0;
-  double call_time_mean = 180.0;
-  unsigned int normal_channels = 10;
-  unsigned int reserve_channels = 0;
-  unsigned int num_portables = 16;
 
-  TCLAP::ValueArg<unsigned int> num_cells_x_arg("x", "num-cells-x", "Width of cell grid",
-                                                false, num_cells_x, "unsigned int");
-  TCLAP::ValueArg<unsigned int> num_cells_y_arg("y", "num-cells-y", "Height of cell grid",
-                                                false, num_cells_y, "unsigned int");
-  TCLAP::ValueArg<double> move_call_mean_arg("m", "move-time",
-                                             "Mean time each portable resides in a cell",
-                                             false, move_call_mean, "double");
-  TCLAP::ValueArg<double> next_call_mean_arg("n", "next-time",
-                                             "Mean time between call attempts by a portable",
-                                             false, next_call_mean, "double");
-  TCLAP::ValueArg<double> call_time_mean_arg("t", "call-time", "Mean call length", false,
-                                             call_time_mean, "double");
-  TCLAP::ValueArg<unsigned int> normal_channels_arg("s", "channels",
-                                   "Number of Normal communication channels per cell",
-                                                    false, normal_channels, "unsigned int");
-  TCLAP::ValueArg<unsigned int> reserve_channels_arg("r", "reserve-channels",
-                                     "Number of Reserve communication channels per cell",
-                                                     false, reserve_channels, "unsigned int");
-  TCLAP::ValueArg<unsigned int> num_portables_arg("p", "portables", "Portables per cell",
-                                                  false, num_portables, "unsigned int");
+    unsigned int num_cells_x        = 256;
+    unsigned int num_cells_y        = 256;
+    unsigned int call_interval_mean = 360;
+    unsigned int call_duration_mean = 150;
+    unsigned int channel_cnt        = 10;
+    unsigned int num_portables      = 25;
 
-  std::vector<TCLAP::Arg*> args = {&num_cells_x_arg, &num_cells_y_arg, &move_call_mean_arg,
-                                   &next_call_mean_arg, &call_time_mean_arg,
-                                   &normal_channels_arg, &reserve_channels_arg,
-                                   &num_portables_arg};
+    TCLAP::ValueArg<unsigned int> num_cells_x_arg("x", "num-cells-x", "Width of cell grid",
+                                                            false, num_cells_x, "unsigned int");
+    TCLAP::ValueArg<unsigned int> num_cells_y_arg("y", "num-cells-y", "Height of cell grid",
+                                                            false, num_cells_y, "unsigned int");
+    TCLAP::ValueArg<double> call_interval_mean_arg("i", "call-interval",
+                                "Mean time between end of last call and a new call", 
+                                                    false, call_interval_mean, "unsigned int");
+    TCLAP::ValueArg<double> call_duration_mean_arg("d", "call-duration", "Mean call duration", 
+                                                    false, call_duration_mean, "unsigned int");
+    TCLAP::ValueArg<unsigned int> channel_cnt_arg("c", "channel-count",
+                    "Number of communication channels", false, channel_cnt, "unsigned int");
+    TCLAP::ValueArg<unsigned int> num_portables_arg("p", "portable-count", 
+                            "Portables per cell", false, num_portables, "unsigned int");
 
-  warped::Simulation pcs_sim {"PCS Simulation", argc, argv, args};
+    std::vector<TCLAP::Arg*> cmd_line_args = {&num_cells_x_arg, &num_cells_y_arg, 
+                                                &call_interval_mean_arg, &call_duration_mean_arg, 
+                                                &channel_cnt_mean_arg, &num_portables_mean_arg};
 
-  num_cells_x = num_cells_x_arg.getValue();
-  num_cells_y = num_cells_y_arg.getValue();
-  move_call_mean = move_call_mean_arg.getValue();
-  next_call_mean = next_call_mean_arg.getValue();
-  call_time_mean = call_time_mean_arg.getValue();
-  normal_channels = normal_channels_arg.getValue();
-  reserve_channels = reserve_channels_arg.getValue();
-  num_portables = num_portables_arg.getValue();
+    warped::Simulation simulation {"PCS Simulation", argc, argv, cmd_line_args};
 
-  std::vector<PcsCell> objects;
+    num_cells_x         = num_cells_x_arg.getValue();
+    num_cells_y         = num_cells_y_arg.getValue();
+    call_interval_mean  = call_interval_mean_arg.getValue();
+    call_duration_mean  = call_duration_mean_arg.getValue();
+    channel_cnt         = channel_cnt_arg.getValue();
+    num_portables       = num_portables_arg.getValue();
 
-  for (unsigned int i = 0; i < num_cells_x * num_cells_y; i++) {
-    std::string name = std::string("Object ") + std::to_string(i);
-    objects.emplace_back(name, num_cells_x, num_cells_y, num_portables, normal_channels,
-                         reserve_channels, call_time_mean, next_call_mean, move_call_mean, i);
-  }
+    std::vector<PcsCell> objects;
+    for (unsigned int i = 0; i < num_cells_x * num_cells_y; i++) {
+        std::string name = std::string("Object ") + std::to_string(i);
+        objects.emplace_back(name, num_cells_x, num_cells_y, num_portables, 
+                                channel_cnt, call_interval_mean, call_duration_mean, i);
+    }
 
-  std::vector<warped::SimulationObject*> object_pointers;
-  for (auto& o : objects) {
-    object_pointers.push_back(&o);
-  }
+    std::vector<warped::SimulationObject*> object_pointers;
+    for (auto& o : objects) {
+        object_pointers.push_back(&o);
+    }
+    pcs_sim.simulate(object_pointers);
 
-  pcs_sim.simulate(object_pointers);
-
-  unsigned int handoff_blocks = 0;
-  unsigned int busy_lines = 0;
-  unsigned int call_attempts = 0;
-  unsigned int channel_blocks = 0;
-
-  for (auto& o : objects) {
-    handoff_blocks += o.state_.handoff_blocks_;
-    busy_lines += o.state_.busy_lines_;
-    call_attempts += o.state_.call_attempts_;
-    channel_blocks += o.state_.channel_blocks_;
-  }
-
-  std::cout << call_attempts << " calls attempted" << std::endl;
-  std::cout << busy_lines << " busy lines" << std::endl;
-  std::cout << channel_blocks << " blocked calls" << std::endl;
-  std::cout << handoff_blocks << " dropped calls" << std::endl;
-
-  return 0;
+    return 0;
 }
