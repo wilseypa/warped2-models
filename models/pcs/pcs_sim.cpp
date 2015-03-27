@@ -32,27 +32,43 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
 
     std::vector<std::shared_ptr<warped::Event>> events;
     auto pcs_event = static_cast<const PcsEvent&>(event);
-    //auto timestamp = pcs_event.event_timestamp_;
+    auto timestamp = pcs_event.event_timestamp_;
+    auto pid       = pcs_event.pid_;
 
     switch (pcs_event.event_type_) {
 
         case CALL_ARRIVAL: {
-            NegativeExpntl move_expo(pcs_event.call_duration_, this->rng_.get());
-            auto move_interval = (unsigned int) move_expo();
-            std::move(move_interval);
 
+            if (state_.idle_channel_cnt_) {
+
+                state_.idle_channel_cnt_--;
+                state_.portables_[pid]->is_busy_ = true;
+                state_.portables_[pid]->call_arrival_ts_ = timestamp;
+
+                NegativeExpntl move_expo(pcs_event.call_duration_, this->rng_.get());
+                auto move_interval = (unsigned int) move_expo();
+                if (move_interval < state_.portables_[pid]->call_duration_) {
+                    events.emplace_back(new PcsEvent {name_, timestamp + move_interval, 
+                                        state_.portables_[pid], PORTABLE_MOVE_OUT});
+                } else {
+                    events.emplace_back(new PcsEvent {name_, 
+                                        timestamp + state_.portables_[pid]->call_duration_, 
+                                        state_.portables_[pid], CALL_COMPLETION});
+                }
+            } else {
+                events.emplace_back(new PcsEvent {name_, 
+                                        timestamp + state_.portables_[pid]->call_interval_, 
+                                        state_.portables_[pid], CALL_ARRIVAL});
+            }
         } break;
 
         case CALL_COMPLETION: {
-
-        } break;
-
-        case PORTABLE_MOVE_IN: {
-
         } break;
 
         case PORTABLE_MOVE_OUT: {
+        } break;
 
+        case PORTABLE_MOVE_IN: {
         } break;
 
         default: {}
@@ -287,8 +303,8 @@ int main(int argc, const char **argv) {
 
     unsigned int num_cells_x        = 256;
     unsigned int num_cells_y        = 256;
-    unsigned int call_interval_mean = 360;
-    unsigned int call_duration_mean = 150;
+    unsigned int call_interval_mean = 500;
+    unsigned int call_duration_mean = 250;
     unsigned int channel_cnt        = 10;
     unsigned int num_portables      = 25;
 

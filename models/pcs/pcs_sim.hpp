@@ -58,8 +58,8 @@ enum event_type_t {
 
     CALL_ARRIVAL,
     CALL_COMPLETION,
-    PORTABLE_MOVE_IN,
-    PORTABLE_MOVE_OUT
+    PORTABLE_MOVE_OUT,
+    PORTABLE_MOVE_IN
 };
 
 enum direction_t {
