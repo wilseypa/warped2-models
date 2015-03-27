@@ -31,7 +31,7 @@ public:
 
 WARPED_DEFINE_OBJECT_STATE_STRUCT(PcsState) {
 
-    PcsState();
+    PcsState() = default;
     PcsState(const PcsState& other) {
         idle_channel_cnt_ = other.idle_channel_cnt_;
         for (auto it = other.portables_.begin(); it != other.portables_.end(); it++) {
@@ -143,8 +143,8 @@ protected:
     unsigned int            index_;
     std::shared_ptr<MLCG>   rng_;
 
-    std::string PcsCell::compute_move(direction_t direction);
-    std::string PcsCell::random_move();
+    std::string compute_move(direction_t direction);
+    std::string random_move();
 };
 
 #endif

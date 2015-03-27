@@ -28,18 +28,37 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::createInitialEvents() {
     return events;
 }
 
-std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped::Event& event)
-{
-  std::vector<std::shared_ptr<warped::Event> > response_events;
-  auto received_event = static_cast<const PcsEvent&>(event);
+std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped::Event& event) {
 
-  NegativeExpntl move_expo(move_call_mean_, this->rng_.get());
-  NegativeExpntl next_expo(next_call_mean_, this->rng_.get());
-  NegativeExpntl time_expo(call_time_mean_, this->rng_.get());
+    std::vector<std::shared_ptr<warped::Event>> events;
+    auto pcs_event = static_cast<const PcsEvent&>(event);
 
-  switch ( received_event.method_name_ ) {
-  case NEXTCALL_METHOD:
-    {
+    switch (pcs_event.event_type_) {
+
+        case CALL_ARRIVAL: {
+
+        } break;
+
+        case CALL_COMPLETION: {
+
+        } break;
+
+        case PORTABLE_MOVE_IN: {
+
+        } break;
+
+        case PORTABLE_MOVE_OUT: {
+
+        } break;
+
+        default: {}
+    }
+    return events;
+}
+
+
+#if 0
+        case NEXTCALL_METHOD: {
       // Attempt to place a call
       this->state_.call_attempts_++;
       if ( !state_.normal_channels_ ) {
@@ -213,9 +232,8 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
       exit(1);
     }
   }
+#endif
 
-  return response_events;
-}
 
 std::string PcsCell::compute_move(direction_t direction) {
 
@@ -261,7 +279,7 @@ std::string PcsCell::random_move() {
     return this->compute_move((direction_t)rand_direction(gen));
 }
 
-int main(int argc, const char** argv) {
+int main(int argc, const char **argv) {
 
     unsigned int num_cells_x        = 256;
     unsigned int num_cells_y        = 256;
@@ -286,7 +304,7 @@ int main(int argc, const char** argv) {
 
     std::vector<TCLAP::Arg*> cmd_line_args = {&num_cells_x_arg, &num_cells_y_arg, 
                                                 &call_interval_mean_arg, &call_duration_mean_arg, 
-                                                &channel_cnt_mean_arg, &num_portables_mean_arg};
+                                                &channel_cnt_arg, &num_portables_arg};
 
     warped::Simulation simulation {"PCS Simulation", argc, argv, cmd_line_args};
 
@@ -308,7 +326,7 @@ int main(int argc, const char** argv) {
     for (auto& o : objects) {
         object_pointers.push_back(&o);
     }
-    pcs_sim.simulate(object_pointers);
+    simulation.simulate(object_pointers);
 
     return 0;
 }
