@@ -297,7 +297,7 @@ int main(int argc, const char **argv) {
                                                     false, call_interval_mean, "unsigned int");
     TCLAP::ValueArg<double> call_duration_mean_arg("d", "call-duration", "Mean call duration", 
                                                     false, call_duration_mean, "unsigned int");
-    TCLAP::ValueArg<unsigned int> channel_cnt_arg("c", "channel-count",
+    TCLAP::ValueArg<unsigned int> channel_cnt_arg("n", "channel-count",
                     "Number of communication channels", false, channel_cnt, "unsigned int");
     TCLAP::ValueArg<unsigned int> num_portables_arg("p", "portable-count", 
                             "Portables per cell", false, num_portables, "unsigned int");
