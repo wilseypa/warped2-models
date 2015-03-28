@@ -94,6 +94,23 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
 
         case PORTABLE_MOVE_IN: {
 
+            auto portable = std::make_shared<Portable> (pid, 
+                                                        pcs_event.is_busy_, 
+                                                        pcs_event.call_arrival_ts_, 
+                                                        pcs_event.call_interval_, 
+                                                        pcs_event.call_duration_);
+            state_.portables_.insert(state_.portables_.begin(), 
+                std::pair <unsigned int, std::shared_ptr<Portable>> (portable->pid_, portable));
+            if (portable->is_busy_) {
+                if (!state_.idle_channel_cnt_) {
+                    portable->is_busy_ = false;
+                } else {
+                    auto completion_timestamp = 
+                        std::max(pcs_event.call_arrival_ts_ + pcs_event.call_duration_, timestamp);
+                    events.emplace_back(new PcsEvent {name_, completion_timestamp, 
+                                                                        portable, CALL_COMPLETION});
+                }
+            }
         } break;
 
         default: {
