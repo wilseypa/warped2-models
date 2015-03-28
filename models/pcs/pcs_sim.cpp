@@ -105,6 +105,7 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
                 if (!state_.idle_channel_cnt_) {
                     portable->is_busy_ = false;
                 } else {
+                    state_.idle_channel_cnt_--;
                     auto completion_timestamp = 
                         std::max(pcs_event.call_arrival_ts_ + pcs_event.call_duration_, timestamp);
                     events.emplace_back(new PcsEvent {name_, completion_timestamp, 
