@@ -51,27 +51,26 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
                 auto move_interval = (unsigned int) move_expo() + NEG_EXPL_OFFSET;
                 if (move_interval < state_.portables_[pid]->call_duration_) {
                     events.emplace_back(new PcsEvent {name_, timestamp + move_interval, 
-                                        state_.portables_[pid], PORTABLE_MOVE_OUT});
+                                                state_.portables_[pid], PORTABLE_MOVE_OUT});
                 } else {
                     events.emplace_back(new PcsEvent {name_, 
                                         timestamp + state_.portables_[pid]->call_duration_, 
-                                        state_.portables_[pid], CALL_COMPLETION});
+                                                    state_.portables_[pid], CALL_COMPLETION});
                 }
             } else {
                 events.emplace_back(new PcsEvent {name_, 
-                                        timestamp, state_.portables_[pid], CALL_COMPLETION});
+                                        timestamp + state_.portables_[pid]->call_interval_, 
+                                                        state_.portables_[pid], CALL_ARRIVAL});
             }
         } break;
 
         case CALL_COMPLETION: {
 
-            if (state_.portables_[pid]->is_busy_) {
-                state_.idle_channel_cnt_++;
-                state_.portables_[pid]->is_busy_ = false;
-            }
+            state_.idle_channel_cnt_++;
+            state_.portables_[pid]->is_busy_ = false;
             events.emplace_back(new PcsEvent {name_, 
                                         timestamp + state_.portables_[pid]->call_interval_, 
-                                        state_.portables_[pid], CALL_ARRIVAL});
+                                                        state_.portables_[pid], CALL_ARRIVAL});
         } break;
 
         case PORTABLE_MOVE_OUT: {
@@ -79,8 +78,8 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
             auto portable = state_.portables_[pid];
             state_.portables_.erase(pid);
             state_.idle_channel_cnt_++;
-            events.emplace_back(new PcsEvent {random_move(), 
-                                        timestamp+travel_duration_, portable, PORTABLE_MOVE_IN});
+            events.emplace_back(new PcsEvent {random_move(), timestamp + NEG_EXPL_OFFSET, 
+                                                                portable, PORTABLE_MOVE_IN});
             std::move(portable);
 
         } break;
@@ -95,16 +94,22 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
             state_.portables_.insert(state_.portables_.begin(), 
                 std::pair <unsigned int, std::shared_ptr<Portable>> (portable->pid_, portable));
 
+            bool call_terminated = true;
             if (portable->is_busy_ && state_.idle_channel_cnt_) {
-                state_.idle_channel_cnt_--;
-                auto completion_timestamp = 
-                    std::max(pcs_event.call_arrival_ts_ + pcs_event.call_duration_, timestamp);
-                events.emplace_back(new PcsEvent {name_, 
-                                            completion_timestamp, portable, CALL_COMPLETION});
-            } else {
+                auto completion_timestamp = pcs_event.call_arrival_ts_ + pcs_event.call_duration_;
+                if (completion_timestamp > timestamp) {
+                    state_.idle_channel_cnt_--;
+                    events.emplace_back(new PcsEvent {name_, completion_timestamp, 
+                                                                    portable, CALL_COMPLETION});
+                    call_terminated = false;
+                }
+            }
+
+            if (call_terminated) {
                 portable->is_busy_ = false;
                 events.emplace_back(new PcsEvent {name_, 
-                                        timestamp, state_.portables_[pid], CALL_COMPLETION});
+                                        timestamp + state_.portables_[pid]->call_interval_, 
+                                                        state_.portables_[pid], CALL_ARRIVAL});
             }
         } break;
 
@@ -165,7 +170,6 @@ int main(int argc, const char **argv) {
     unsigned int num_cells_y        = 100;
     unsigned int call_interval_mean = 500;
     unsigned int call_duration_mean = 250;
-    unsigned int travel_duration    = 50;
     unsigned int channel_cnt        = 10;
     unsigned int num_portables      = 25;
 
@@ -178,8 +182,6 @@ int main(int argc, const char **argv) {
                                                     false, call_interval_mean, "unsigned int");
     TCLAP::ValueArg<unsigned int> call_duration_mean_arg("d", "call-duration", "Mean call duration", 
                                                     false, call_duration_mean, "unsigned int");
-    TCLAP::ValueArg<unsigned int> travel_duration_arg("t", "travel-duration", "Travel duration", 
-                                                    false, travel_duration, "unsigned int");
     TCLAP::ValueArg<unsigned int> channel_cnt_arg("n", "channel-count",
                         "Number of communication channels", false, channel_cnt, "unsigned int");
     TCLAP::ValueArg<unsigned int> num_portables_arg("p", "portable-count", 
@@ -195,7 +197,6 @@ int main(int argc, const char **argv) {
     num_cells_y         = num_cells_y_arg.getValue();
     call_interval_mean  = call_interval_mean_arg.getValue();
     call_duration_mean  = call_duration_mean_arg.getValue();
-    travel_duration     = travel_duration_arg.getValue();
     channel_cnt         = channel_cnt_arg.getValue();
     num_portables       = num_portables_arg.getValue();
 
@@ -219,7 +220,7 @@ int main(int argc, const char **argv) {
         }
         std::string name = std::string("Object ") + std::to_string(i);
         objects.emplace_back(name, num_cells_x, num_cells_y, 
-                                travel_duration, channel_cnt, portables, i);
+                                        channel_cnt, portables, i);
     }
     std::move(rng);
 
