@@ -161,8 +161,8 @@ std::string PcsCell::random_move() {
 
 int main(int argc, const char **argv) {
 
-    unsigned int num_cells_x        = 256;
-    unsigned int num_cells_y        = 256;
+    unsigned int num_cells_x        = 100;
+    unsigned int num_cells_y        = 100;
     unsigned int call_interval_mean = 500;
     unsigned int call_duration_mean = 250;
     unsigned int travel_duration    = 50;
