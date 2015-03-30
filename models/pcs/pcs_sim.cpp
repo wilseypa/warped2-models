@@ -59,26 +59,19 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
                 }
             } else {
                 events.emplace_back(new PcsEvent {name_, 
-                                        timestamp + state_.portables_[pid]->call_interval_, 
-                                        state_.portables_[pid], CALL_ARRIVAL});
+                                        timestamp, state_.portables_[pid], CALL_COMPLETION});
             }
         } break;
 
         case CALL_COMPLETION: {
 
-            state_.idle_channel_cnt_++;
-            state_.portables_[pid]->is_busy_ = false;
-
-            NegativeExpntl move_expo(pcs_event.call_duration_, this->rng_.get());
-            auto move_interval = (unsigned int) move_expo();
-            if (move_interval < state_.portables_[pid]->call_duration_) {
-                events.emplace_back(new PcsEvent {random_move(), timestamp + move_interval, 
-                                        state_.portables_[pid], PORTABLE_MOVE_IN});
-            } else {
-                events.emplace_back(new PcsEvent {name_, 
+            if (state_.portables_[pid]->is_busy_) {
+                state_.idle_channel_cnt_++;
+                state_.portables_[pid]->is_busy_ = false;
+            }
+            events.emplace_back(new PcsEvent {name_, 
                                         timestamp + state_.portables_[pid]->call_interval_, 
                                         state_.portables_[pid], CALL_ARRIVAL});
-            }
         } break;
 
         case PORTABLE_MOVE_OUT: {
@@ -101,16 +94,17 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
                                                         pcs_event.call_duration_);
             state_.portables_.insert(state_.portables_.begin(), 
                 std::pair <unsigned int, std::shared_ptr<Portable>> (portable->pid_, portable));
-            if (portable->is_busy_) {
-                if (!state_.idle_channel_cnt_) {
-                    portable->is_busy_ = false;
-                } else {
-                    state_.idle_channel_cnt_--;
-                    auto completion_timestamp = 
-                        std::max(pcs_event.call_arrival_ts_ + pcs_event.call_duration_, timestamp);
-                    events.emplace_back(new PcsEvent {name_, completion_timestamp, 
-                                                                        portable, CALL_COMPLETION});
-                }
+
+            if (portable->is_busy_ && state_.idle_channel_cnt_) {
+                state_.idle_channel_cnt_--;
+                auto completion_timestamp = 
+                    std::max(pcs_event.call_arrival_ts_ + pcs_event.call_duration_, timestamp);
+                events.emplace_back(new PcsEvent {name_, 
+                                            completion_timestamp, portable, CALL_COMPLETION});
+            } else {
+                portable->is_busy_ = false;
+                events.emplace_back(new PcsEvent {name_, 
+                                        timestamp, state_.portables_[pid], CALL_COMPLETION});
             }
         } break;
 
