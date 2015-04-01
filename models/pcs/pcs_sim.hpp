@@ -35,23 +35,28 @@ public:
 WARPED_DEFINE_OBJECT_STATE_STRUCT(PcsState) {
 
     PcsState() = default;
+
     PcsState(const PcsState& other) {
+
         idle_channel_cnt_ = other.idle_channel_cnt_;
-        for (auto it = other.portables_.begin(); it != other.portables_.end(); it++) {
+
+        portables_ = std::make_shared<std::map <unsigned int, std::shared_ptr<Portable>>>();
+        for (auto it = other.portables_->begin(); it != other.portables_->end(); it++) {
             auto portable = it->second;
             auto new_portable = std::make_shared<Portable>( portable->pid_,
                                                             portable->is_busy_,
                                                             portable->call_arrival_ts_,
                                                             portable->call_interval_,
                                                             portable->call_duration_    );
-            portables_.insert(portables_.begin(), 
+            assert(new_portable != nullptr);
+            portables_->insert(portables_->begin(), 
                 std::pair <unsigned int, std::shared_ptr<Portable>> (portable->pid_, 
                                                                             new_portable));
         }
     };
 
     unsigned int idle_channel_cnt_;
-    std::map <unsigned int, std::shared_ptr<Portable>> portables_;
+    std::shared_ptr<std::map <unsigned int, std::shared_ptr<Portable>>> portables_;
 };
 
 enum event_type_t {
@@ -115,8 +120,8 @@ public:
                 std::vector<std::shared_ptr<Portable>> portables, 
                 unsigned int index      )
 
-        :   SimulationObject(name), 
-            state_(), 
+        :   SimulationObject(name),
+            state_(),
             num_cells_x_(num_cells_x), 
             num_cells_y_(num_cells_y),
             channel_cnt_(channel_cnt),
@@ -124,14 +129,17 @@ public:
             rng_(new MLCG) {
 
         // Update the state variables
-        state_.idle_channel_cnt_ = channel_cnt_;
+        state_ = std::make_shared<PcsState>();
+        state_->idle_channel_cnt_ = channel_cnt_;
+        state_->portables_ = 
+            std::make_shared<std::map <unsigned int, std::shared_ptr<Portable>>>();
         for (auto& portable : portables) {
-            state_.portables_.insert(state_.portables_.begin(), 
+            state_->portables_->insert(state_->portables_->begin(), 
                 std::pair <unsigned int, std::shared_ptr<Portable>> (portable->pid_, portable));
         }
     }
 
-    virtual warped::ObjectState& getState() { return this->state_; }
+    virtual warped::ObjectState& getState() { return *state_; }
 
     virtual std::vector<std::shared_ptr<warped::Event> > createInitialEvents();
 
@@ -139,12 +147,12 @@ public:
 
 protected:
 
-    PcsState                state_;
-    unsigned int            num_cells_x_;
-    unsigned int            num_cells_y_;
-    unsigned int            channel_cnt_;
-    unsigned int            index_;
-    std::shared_ptr<MLCG>   rng_;
+    std::shared_ptr<PcsState>   state_;
+    unsigned int                num_cells_x_;
+    unsigned int                num_cells_y_;
+    unsigned int                channel_cnt_;
+    unsigned int                index_;
+    std::shared_ptr<MLCG>       rng_;
 
     std::string compute_move(direction_t direction);
     std::string random_move();

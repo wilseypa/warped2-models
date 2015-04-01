@@ -22,8 +22,9 @@ WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(PcsEvent)
 std::vector<std::shared_ptr<warped::Event> > PcsCell::createInitialEvents() {
 
     std::vector<std::shared_ptr<warped::Event>> events;
-    for (auto it = state_.portables_.begin(); it != state_.portables_.end(); it++) {
+    for (auto it = state_->portables_->begin(); it != state_->portables_->end(); it++) {
         auto portable = it->second;
+        assert(portable != nullptr);
         events.emplace_back(new PcsEvent {this->name_, portable->call_interval_, 
                                                             portable, CALL_ARRIVAL});
     }
@@ -41,43 +42,54 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
 
         case CALL_ARRIVAL: {
 
-            if (state_.idle_channel_cnt_) {
+            auto it = state_->portables_->find(pid);
+            assert(it != state_->portables_->end());
+            auto portable = it->second;
+            assert(portable != nullptr);
 
-                state_.idle_channel_cnt_--;
-                state_.portables_[pid]->is_busy_ = true;
-                state_.portables_[pid]->call_arrival_ts_ = timestamp;
+            if (state_->idle_channel_cnt_) {
+
+                state_->idle_channel_cnt_--;
+                portable->is_busy_ = true;
+                portable->call_arrival_ts_ = timestamp;
 
                 NegativeExpntl move_expo(pcs_event.call_duration_, this->rng_.get());
                 auto move_interval = (unsigned int) move_expo() + NEG_EXPL_OFFSET;
-                if (move_interval < state_.portables_[pid]->call_duration_) {
+                if (move_interval < portable->call_duration_) {
                     events.emplace_back(new PcsEvent {name_, timestamp + move_interval, 
-                                                state_.portables_[pid], PORTABLE_MOVE_OUT});
+                                                                    portable, PORTABLE_MOVE_OUT});
                 } else {
-                    events.emplace_back(new PcsEvent {name_, 
-                                        timestamp + state_.portables_[pid]->call_duration_, 
-                                                    state_.portables_[pid], CALL_COMPLETION});
+                    events.emplace_back(new PcsEvent {name_, timestamp + portable->call_duration_, 
+                                                                    portable, CALL_COMPLETION});
                 }
             } else {
-                events.emplace_back(new PcsEvent {name_, 
-                                        timestamp + state_.portables_[pid]->call_interval_, 
-                                                        state_.portables_[pid], CALL_ARRIVAL});
+                events.emplace_back(new PcsEvent {name_, timestamp + portable->call_interval_, 
+                                                                    portable, CALL_ARRIVAL});
             }
         } break;
 
         case CALL_COMPLETION: {
 
-            state_.idle_channel_cnt_++;
-            state_.portables_[pid]->is_busy_ = false;
-            events.emplace_back(new PcsEvent {name_, 
-                                        timestamp + state_.portables_[pid]->call_interval_, 
-                                                        state_.portables_[pid], CALL_ARRIVAL});
+            auto it = state_->portables_->find(pid);
+            assert(it != state_->portables_->end());
+            auto portable = it->second;
+            assert(portable != nullptr);
+
+            state_->idle_channel_cnt_++;
+            portable->is_busy_ = false;
+            events.emplace_back(new PcsEvent {name_, timestamp + portable->call_interval_, 
+                                                                    portable, CALL_ARRIVAL});
         } break;
 
         case PORTABLE_MOVE_OUT: {
 
-            auto portable = state_.portables_[pid];
-            state_.portables_.erase(pid);
-            state_.idle_channel_cnt_++;
+            auto it = state_->portables_->find(pid);
+            assert(it != state_->portables_->end());
+            auto portable = it->second;
+            assert(portable != nullptr);
+
+            state_->portables_->erase(pid);
+            state_->idle_channel_cnt_++;
             events.emplace_back(new PcsEvent {random_move(), timestamp + NEG_EXPL_OFFSET, 
                                                                 portable, PORTABLE_MOVE_IN});
             std::move(portable);
@@ -86,19 +98,23 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
 
         case PORTABLE_MOVE_IN: {
 
+            auto it = state_->portables_->find(pid);
+            assert(it == state_->portables_->end());
+
             auto portable = std::make_shared<Portable> (pid, 
                                                         pcs_event.is_busy_, 
                                                         pcs_event.call_arrival_ts_, 
                                                         pcs_event.call_interval_, 
                                                         pcs_event.call_duration_);
-            state_.portables_.insert(state_.portables_.begin(), 
+            assert(portable != nullptr);
+            state_->portables_->insert(state_->portables_->begin(), 
                 std::pair <unsigned int, std::shared_ptr<Portable>> (portable->pid_, portable));
 
             bool call_terminated = true;
-            if (portable->is_busy_ && state_.idle_channel_cnt_) {
+            if (portable->is_busy_ && state_->idle_channel_cnt_) {
                 auto completion_timestamp = pcs_event.call_arrival_ts_ + pcs_event.call_duration_;
                 if (completion_timestamp > timestamp) {
-                    state_.idle_channel_cnt_--;
+                    state_->idle_channel_cnt_--;
                     events.emplace_back(new PcsEvent {name_, completion_timestamp, 
                                                                     portable, CALL_COMPLETION});
                     call_terminated = false;
@@ -107,9 +123,10 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
 
             if (call_terminated) {
                 portable->is_busy_ = false;
+                assert((*state_->portables_)[pid] != nullptr);
                 events.emplace_back(new PcsEvent {name_, 
-                                        timestamp + state_.portables_[pid]->call_interval_, 
-                                                        state_.portables_[pid], CALL_ARRIVAL});
+                                        timestamp + (*state_->portables_)[pid]->call_interval_, 
+                                                        (*state_->portables_)[pid], CALL_ARRIVAL});
             }
         } break;
 
