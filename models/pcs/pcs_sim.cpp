@@ -44,6 +44,7 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
 
         case CALL_ARRIVAL: {
 
+            state_.calls_placed_++;
             if (state_.idle_channel_cnt_) {
                 state_.idle_channel_cnt_--;
                 auto move_interval = (unsigned int) move_expo() + NEG_EXPL_OFFSET;
@@ -57,6 +58,7 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
                                                                         0, CALL_COMPLETION});
                 }
             } else {
+                state_.calls_dropped_++;
                 auto call_interval = (unsigned int) interval_expo() + NEG_EXPL_OFFSET;
                 events.emplace_back(new PcsEvent {name_, timestamp + call_interval, 
                                                                         0, CALL_ARRIVAL});
@@ -65,6 +67,7 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
 
         case CALL_COMPLETION: {
 
+            state_.calls_completed_++;
             state_.idle_channel_cnt_++;
             auto call_interval = (unsigned int) interval_expo() + NEG_EXPL_OFFSET;
             events.emplace_back(new PcsEvent {name_, timestamp + call_interval, 0, CALL_ARRIVAL});
@@ -80,12 +83,13 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
         case PORTABLE_MOVE_IN: {
 
             bool call_terminated = true;
-            if (pcs_event.call_arrival_ts_ && state_.idle_channel_cnt_) {
+            if (state_.idle_channel_cnt_) {
 
                 auto call_duration = (unsigned int) duration_expo() + NEG_EXPL_OFFSET;
                 auto completion_timestamp = pcs_event.call_arrival_ts_ + call_duration;
 
                 if (completion_timestamp > timestamp) {
+                    state_.calls_handed_over_++;
                     state_.idle_channel_cnt_--;
                     events.emplace_back(new PcsEvent {name_, completion_timestamp, 
                                                                         0, CALL_COMPLETION});
@@ -94,6 +98,7 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
             }
 
             if (call_terminated) {
+                state_.calls_dropped_++;
                 auto call_interval = (unsigned int) interval_expo() + NEG_EXPL_OFFSET;
                 events.emplace_back(new PcsEvent {name_, timestamp + call_interval, 
                                                                         0, CALL_ARRIVAL});
@@ -210,6 +215,19 @@ int main(int argc, const char **argv) {
         object_pointers.push_back(&o);
     }
     simulation.simulate(object_pointers);
+
+    unsigned int calls_placed = 0, calls_dropped = 0, 
+                 calls_completed = 0, calls_handed_over = 0;
+    for (auto& o : objects) {
+        calls_placed      += o.state_.calls_placed_;
+        calls_dropped     += o.state_.calls_dropped_;
+        calls_completed   += o.state_.calls_completed_;
+        calls_handed_over += o.state_.calls_handed_over_;
+    }
+    std::cout << "Calls placed      : " << calls_placed      << std::endl;
+    std::cout << "Calls dropped     : " << calls_dropped     << std::endl;
+    std::cout << "Calls completed   : " << calls_completed   << std::endl;
+    std::cout << "Calls handed over : " << calls_handed_over << std::endl;
 
     return 0;
 }

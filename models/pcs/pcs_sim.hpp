@@ -14,6 +14,10 @@
 WARPED_DEFINE_OBJECT_STATE_STRUCT(PcsState) {
 
     unsigned int idle_channel_cnt_;
+    unsigned int calls_placed_;
+    unsigned int calls_dropped_;
+    unsigned int calls_completed_;
+    unsigned int calls_handed_over_;
 };
 
 enum event_type_t {
@@ -85,7 +89,11 @@ public:
             rng_(new MLCG) {
 
         // Update the state variables
-        state_.idle_channel_cnt_ = channel_cnt_;
+        state_.idle_channel_cnt_    = channel_cnt_;
+        state_.calls_placed_        = 0;
+        state_.calls_dropped_       = 0;
+        state_.calls_completed_     = 0;
+        state_.calls_handed_over_   = 0;
     }
 
     virtual warped::ObjectState& getState() { return state_; }
@@ -94,9 +102,10 @@ public:
 
     virtual std::vector<std::shared_ptr<warped::Event> > receiveEvent(const warped::Event&);
 
+    PcsState                state_;
+
 protected:
 
-    PcsState                state_;
     unsigned int            num_cells_x_;
     unsigned int            num_cells_y_;
     unsigned int            channel_cnt_;
