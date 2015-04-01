@@ -13,11 +13,13 @@
 
 WARPED_DEFINE_OBJECT_STATE_STRUCT(LocationState) {
 
-    LocationState() = default;
+    LocationState()
+        { current_population_ = make_shared<std::map <unsigned int, std::shared_ptr<Person>>>(); }
+
     LocationState(const LocationState& other) {
-        current_population_.clear();
-        for (auto it = other.current_population_.begin(); 
-                            it != other.current_population_.end(); it++) {
+        current_population_ = make_shared<std::map <unsigned int, std::shared_ptr<Person>>>();
+        for (auto it = other.current_population_->begin(); 
+                            it != other.current_population_->end(); it++) {
             auto person = it->second;
             auto new_person = 
                 std::make_shared<Person>(   person->pid_, 
@@ -26,12 +28,12 @@ WARPED_DEFINE_OBJECT_STATE_STRUCT(LocationState) {
                                             person->infection_state_, 
                                             person->loc_arrival_timestamp_, 
                                             person->prev_state_change_timestamp_    );
-            current_population_.insert(current_population_.begin(), 
+            current_population_->insert(current_population_->begin(), 
                 std::pair <unsigned int, std::shared_ptr<Person>> (person->pid_, new_person));
         }
     };
 
-    std::map <unsigned int, std::shared_ptr<Person>> current_population_;
+    std::shared_ptr<std::map <unsigned int, std::shared_ptr<Person>>> current_population_;
 };
 
 enum event_type_t {
@@ -93,6 +95,8 @@ public:
                 location_state_refresh_interval_(loc_state_refresh_interval), 
                 location_diffusion_trigger_interval_(loc_diffusion_trig_interval) {
 
+        state_ = make_shared<LocationState>();
+
         disease_model_ = 
             std::make_shared<DiseaseModel>(
                     transmissibility, latent_dwell_interval, incubating_dwell_interval, 
@@ -104,12 +108,12 @@ public:
             std::make_shared<DiffusionNetwork>(diffusion_seed, travel_time_to_hub);
 
         for (auto& person : population) {
-            state_.current_population_.insert(state_.current_population_.begin(), 
+            state_->current_population_->insert(state_->current_population_->begin(), 
                 std::pair <unsigned int, std::shared_ptr<Person>> (person->pid_, person));
         }
     }
 
-    virtual warped::ObjectState& getState() { return state_; }
+    virtual warped::ObjectState& getState() { return *state_; }
 
     virtual std::vector<std::shared_ptr<warped::Event>> createInitialEvents();
 
@@ -127,7 +131,7 @@ public:
 
 protected:
 
-    LocationState state_;
+    std::shared_ptr<LocationState> state_;
     std::string location_name_;
     std::shared_ptr<DiseaseModel> disease_model_;
     std::shared_ptr<DiffusionNetwork> diffusion_network_;

@@ -38,14 +38,14 @@ public:
         rand_num_gen_ = warped::make_unique<RandomNumGenerator>(seed);
     }
 
-    void reaction(std::map<unsigned int, std::shared_ptr<Person>> population, 
+    void reaction(std::shared_ptr<std::map<unsigned int, std::shared_ptr<Person>>> population, 
                                                     unsigned int current_time) {
 
         unsigned int uninfected_num = 0, latent_num = 0, incubating_num = 0, 
                             infectious_num = 0, asympt_num = 0, recovered_num = 0;
         std::vector<std::shared_ptr<Person>> uninfected_population;
 
-        for (auto entry : population) {
+        for (auto entry : *population) {
             ptts(entry.second, current_time);
             if ((entry.second)->infection_state_ == infection_state_t::UNINFECTED) {
                 uninfected_population.push_back(entry.second);

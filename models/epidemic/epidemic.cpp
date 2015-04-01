@@ -28,7 +28,7 @@ std::vector<std::shared_ptr<warped::Event> > Location::receiveEvent(const warped
     switch (epidemic_event.event_type_) {
 
         case event_type_t::DISEASE_UPDATE_TRIGGER: {
-            disease_model_->reaction(state_.current_population_, timestamp);
+            disease_model_->reaction(state_->current_population_, timestamp);
             events.emplace_back(new EpidemicEvent {location_name_, 
                                 timestamp + location_state_refresh_interval_, 
                                 nullptr, DISEASE_UPDATE_TRIGGER});
@@ -38,10 +38,10 @@ std::vector<std::shared_ptr<warped::Event> > Location::receiveEvent(const warped
             std::string selected_location = diffusion_network_->pickLocation();
             if (selected_location != "") {
                 auto travel_time = diffusion_network_->travelTimeToLocation(selected_location);
-                unsigned int person_count = state_.current_population_.size();
+                unsigned int person_count = state_->current_population_->size();
                 if (person_count) {
                     unsigned int person_id = diffusion_network_->pickPerson(person_count);
-                    auto map_iter = state_.current_population_.begin();
+                    auto map_iter = state_->current_population_->begin();
                     unsigned int temp_cnt = 0;
                     while (temp_cnt < person_id) {
                         map_iter++;
@@ -50,7 +50,7 @@ std::vector<std::shared_ptr<warped::Event> > Location::receiveEvent(const warped
                     std::shared_ptr<Person> person = map_iter->second;
                     events.emplace_back(new EpidemicEvent {selected_location, 
                                             timestamp + travel_time, person, DIFFUSION});
-                    state_.current_population_.erase(map_iter);
+                    state_->current_population_->erase(map_iter);
                 }
             }
             events.emplace_back(new EpidemicEvent {location_name_, 
@@ -63,7 +63,7 @@ std::vector<std::shared_ptr<warped::Event> > Location::receiveEvent(const warped
                         epidemic_event.pid_, epidemic_event.susceptibility_, 
                         epidemic_event.vaccination_status_, epidemic_event.infection_state_,
                         timestamp, epidemic_event.prev_state_change_timestamp_);
-            state_.current_population_.insert(state_.current_population_.begin(), 
+            state_->current_population_->insert(state_->current_population_->begin(), 
                 std::pair <unsigned int, std::shared_ptr<Person>> (epidemic_event.pid_, person));
         } break;
 
