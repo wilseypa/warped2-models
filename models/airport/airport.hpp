@@ -24,6 +24,14 @@ enum airport_event_t {
     DEPARTURE
 };
 
+enum direction_t {
+
+    LEFT,
+    RIGHT,
+    DOWN,
+    UP
+};
+
 class AirportEvent : public warped::Event {
 public:
     AirportEvent() = default;
@@ -72,6 +80,9 @@ protected:
     const unsigned int arrive_mean_;
     const unsigned int depart_mean_;
     const unsigned int index_;
+
+    std::string compute_move(direction_t direction);
+    std::string random_move();
 };
 
 #endif

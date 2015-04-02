@@ -29,7 +29,7 @@ std::vector<std::shared_ptr<warped::Event> > Airport::createInitialEvents() {
 
 inline std::string Airport::object_name(const unsigned int object_index) {
 
-    return std::string("Object ") + std::to_string(object_index);
+    return std::string("Airport_") + std::to_string(object_index);
 }
 
 std::vector<std::shared_ptr<warped::Event> > Airport::receiveEvent(const warped::Event& event) {
@@ -40,8 +40,6 @@ std::vector<std::shared_ptr<warped::Event> > Airport::receiveEvent(const warped:
     NegativeExpntl depart_expo((double)this->depart_mean_, this->rng_.get());
     NegativeExpntl arrive_expo((double)this->arrive_mean_, this->rng_.get());
 
-    std::uniform_int_distribution<unsigned int> rand_airport(0,this->num_airports_-1);
-
     switch (received_event.type_) {
 
         case DEPARTURE: {
@@ -49,12 +47,8 @@ std::vector<std::shared_ptr<warped::Event> > Airport::receiveEvent(const warped:
             this->state_.departures_++;
             // Schedule an arrival at a random airport
             unsigned int arrival_time = received_event.ts_ + (unsigned int)arrive_expo();
-            unsigned int destination_index = rand_airport(this->rng_engine_);
-            while (destination_index == this->index_) {
-                destination_index = rand_airport(this->rng_engine_);
-            }
             response_events.emplace_back(new AirportEvent { 
-                    Airport::object_name(destination_index), ARRIVAL, arrival_time });
+                                                    random_move(), ARRIVAL, arrival_time });
             break;
         }
 
@@ -71,9 +65,40 @@ std::vector<std::shared_ptr<warped::Event> > Airport::receiveEvent(const warped:
     return response_events;
 }
 
+std::string Airport::compute_move(direction_t direction) {
+
+    switch (direction) {
+
+        case LEFT: {
+        } break;
+
+        case RIGHT: {
+        } break;
+
+        case DOWN: {
+        } break;
+
+        case UP: {
+        } break;
+
+        default: {
+            std::cerr << "Invalid move direction " << direction << std::endl;
+            assert(0);
+        }
+    }
+    return object_name(0);
+}
+
+std::string Airport::random_move() {
+
+    std::default_random_engine gen;
+    std::uniform_int_distribution<unsigned int> rand_direction(0,3);
+    return this->compute_move((direction_t)rand_direction(gen));
+}
+
 int main(int argc, const char** argv) {
 
-    unsigned int num_airports     = 100;
+    unsigned int num_airports     = 5000;
     unsigned int mean_ground_time = 50;
     unsigned int mean_flight_time = 200;
     unsigned int num_planes       = 50;
