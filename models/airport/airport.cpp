@@ -1,6 +1,5 @@
 // An implementation of Fujimoto's airport model
 // Ported from the ROSS airport model (https://github.com/carothersc/ROSS/blob/master/ross/models/airport)
-// Author: Eric Carver (carverer@mail.uc.edu)
 
 #include <vector>
 #include <memory>
@@ -13,6 +12,8 @@
 #include "NegExp.h"
 
 #include "tclap/ValueArg.h"
+
+#define NEG_EXPL_OFFSET  1
 
 
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(AirportEvent)
@@ -46,7 +47,8 @@ std::vector<std::shared_ptr<warped::Event> > Airport::receiveEvent(const warped:
             this->state_.planes_grounded_--;
             this->state_.departures_++;
             // Schedule an arrival at a random airport
-            unsigned int arrival_time = received_event.ts_ + (unsigned int)arrive_expo();
+            unsigned int arrival_time = 
+                        received_event.ts_ + (unsigned int)arrive_expo() + NEG_EXPL_OFFSET;
             response_events.emplace_back(new AirportEvent { 
                                                     random_move(), ARRIVAL, arrival_time });
             break;
@@ -56,7 +58,8 @@ std::vector<std::shared_ptr<warped::Event> > Airport::receiveEvent(const warped:
             this->state_.arrivals_++;
             this->state_.planes_grounded_++;
             // Schedule a departure
-            unsigned int departure_time = received_event.ts_ + (unsigned int)depart_expo();
+            unsigned int departure_time = 
+                        received_event.ts_ + (unsigned int)depart_expo() + NEG_EXPL_OFFSET;
             response_events.emplace_back(new AirportEvent { this->name_, DEPARTURE, 
                                                                             departure_time });
             break;
@@ -67,18 +70,30 @@ std::vector<std::shared_ptr<warped::Event> > Airport::receiveEvent(const warped:
 
 std::string Airport::compute_move(direction_t direction) {
 
+    unsigned int new_x = 0, new_y = 0;
+    unsigned int current_y = index_ / num_airports_x_;
+    unsigned int current_x = index_ % num_airports_x_;
+
     switch (direction) {
 
         case LEFT: {
+            new_x = (current_x + num_airports_x_ - 1) % num_airports_x_;
+            new_y = current_y;
         } break;
 
         case RIGHT: {
+            new_x = (current_x + 1) % num_airports_x_;
+            new_y = current_y;
         } break;
 
         case DOWN: {
+            new_x = current_x;
+            new_y = (current_y + num_airports_y_ - 1) % num_airports_y_;
         } break;
 
         case UP: {
+            new_x = current_x;
+            new_y = (current_y + 1) % num_airports_y_;
         } break;
 
         default: {
@@ -86,7 +101,8 @@ std::string Airport::compute_move(direction_t direction) {
             assert(0);
         }
     }
-    return object_name(0);
+
+    return object_name(new_x + new_y * num_airports_x_);
 }
 
 std::string Airport::random_move() {
@@ -98,13 +114,16 @@ std::string Airport::random_move() {
 
 int main(int argc, const char** argv) {
 
-    unsigned int num_airports     = 5000;
-    unsigned int mean_ground_time = 50;
-    unsigned int mean_flight_time = 200;
-    unsigned int num_planes       = 50;
+    unsigned int num_airports_x     = 50;
+    unsigned int num_airports_y     = 50;
+    unsigned int mean_ground_time   = 50;
+    unsigned int mean_flight_time   = 200;
+    unsigned int num_planes         = 50;
 
-    TCLAP::ValueArg<unsigned int> num_airports_arg("n", "num-airports", "Number of airports",
-                                                            false, num_airports, "unsigned int");
+    TCLAP::ValueArg<unsigned int> num_airports_x_arg("x", "num-airports-x", "Width of airport grid",
+                                                            false, num_airports_x, "unsigned int");
+    TCLAP::ValueArg<unsigned int> num_airports_y_arg("y", "num-airports-y", "Height of airport grid",
+                                                            false, num_airports_y, "unsigned int");
     TCLAP::ValueArg<unsigned int> mean_ground_time_arg("g", "ground-time", 
                 "Mean time of planes waiting to depart", false, mean_ground_time, "unsigned int");
     TCLAP::ValueArg<unsigned int> mean_flight_time_arg("f", "flight-time", "Mean flight time",
@@ -112,21 +131,23 @@ int main(int argc, const char** argv) {
     TCLAP::ValueArg<unsigned int> num_planes_arg("p", "num-planes", "Number of planes per airport",
                                                                 false, num_planes, "unsigned int");
 
-    std::vector<TCLAP::Arg*> args = {&num_airports_arg, &mean_ground_time_arg, 
-                                            &mean_flight_time_arg, &num_planes_arg};
+    std::vector<TCLAP::Arg*> args = {&num_airports_x_arg, &num_airports_y_arg, &mean_ground_time_arg, 
+                                                                &mean_flight_time_arg, &num_planes_arg};
 
     warped::Simulation airport_sim {"Airport Simulation", argc, argv, args};
 
-    num_airports = num_airports_arg.getValue();
-    mean_ground_time = mean_ground_time_arg.getValue();
-    mean_flight_time = mean_flight_time_arg.getValue();
-    num_planes = num_planes_arg.getValue();
+    num_airports_x      = num_airports_x_arg.getValue();
+    num_airports_y      = num_airports_y_arg.getValue();
+    mean_ground_time    = mean_ground_time_arg.getValue();
+    mean_flight_time    = mean_flight_time_arg.getValue();
+    num_planes          = num_planes_arg.getValue();
 
     std::vector<Airport> objects;
 
-    for (unsigned int i = 0; i < num_airports; i++) {
+    for (unsigned int i = 0; i < num_airports_x*num_airports_y; i++) {
         std::string name = Airport::object_name(i);
-        objects.emplace_back(name, num_airports, num_planes, mean_flight_time, mean_ground_time, i);
+        objects.emplace_back(name, num_airports_x, num_airports_y, num_planes, 
+                                                mean_flight_time, mean_ground_time, i);
     }
 
     std::vector<warped::SimulationObject*> object_pointers;
@@ -146,7 +167,7 @@ int main(int argc, const char** argv) {
     }
     std::cout << departures << " total departures" << std::endl;
     std::cout << arrivals << " total arrivals" << std::endl;
-    std::cout << planes_grounded << " of " << num_planes*num_airports 
+    std::cout << planes_grounded << " of "  << num_airports_x*num_airports_y*num_planes 
                                             << " planes grounded" << std::endl;
 
     return 0;

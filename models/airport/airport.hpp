@@ -1,6 +1,5 @@
 // An implementation of Fujimoto's airport model
 // Ported from the ROSS airport model (https://github.com/carothersc/ROSS/blob/master/ross/models/airport)
-// Author: Eric Carver (carverer@mail.uc.edu)
 
 #ifndef AIRPORT_HPP_DEFINED
 #define AIRPORT_HPP_DEFINED
@@ -51,13 +50,22 @@ public:
 
 class Airport : public warped::SimulationObject {
 public:
-    Airport(const std::string& name, const unsigned int num_airports, 
-            const unsigned int num_planes, const unsigned int arrive_mean, 
-            const unsigned int depart_mean, const unsigned int index)
-        : SimulationObject(name), state_(), rng_(new MLCG), 
-            num_airports_(num_airports), num_planes_(num_planes), 
-            arrive_mean_(arrive_mean), depart_mean_(depart_mean), 
-            index_(index) {
+    Airport(    const std::string& name, 
+                const unsigned int num_airports_x, 
+                const unsigned int num_airports_y, 
+                const unsigned int num_planes, 
+                const unsigned int arrive_mean, 
+                const unsigned int depart_mean, 
+                const unsigned int index)
+        :   SimulationObject(name), 
+            state_(), 
+            rng_(new MLCG), 
+            num_airports_x_(num_airports_x), 
+            num_airports_y_(num_airports_y), 
+            num_planes_(num_planes), 
+            arrive_mean_(arrive_mean), 
+            depart_mean_(depart_mean), 
+            index_(index)               {
 
         state_.departures_      = 0;
         state_.arrivals_        = 0;
@@ -75,7 +83,8 @@ public:
 protected:
     std::shared_ptr<MLCG> rng_;
     std::default_random_engine rng_engine_;
-    const unsigned int num_airports_;
+    const unsigned int num_airports_x_;
+    const unsigned int num_airports_y_;
     const unsigned int num_planes_;
     const unsigned int arrive_mean_;
     const unsigned int depart_mean_;
