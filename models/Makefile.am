@@ -1,1 +1,1 @@
-SUBDIRS = ping_pong iscas phold pcs airport epidemic traffic
+SUBDIRS = ping_pong phold pcs airport epidemic traffic
