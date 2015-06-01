@@ -109,66 +109,81 @@ std::vector<std::shared_ptr<warped::Event> >
                             traffic_event.arrived_from_, arrival_from, timestamp});
         } break;
 
+
         case DEPARTURE: {
 
-#if 0
-            switch(M->car.current_lane){
-                case WEST_LEFT:
-                    TrafficState->num_out_west_left_--;
-                    new_event_direction = 0;
-                    break;
-                case WEST_STRAIGHT:
-                    TrafficState->num_out_west_straight_--;
-                    new_event_direction = 0;
-                    break;
-                case WEST_RIGHT:
-                    TrafficState->num_out_west_right_--;
-                    new_event_direction = 0;
-                    break;
-                case EAST_LEFT:
-                    TrafficState->num_out_east_left_--;
-                    new_event_direction = 1;
-                    break;
-                case EAST_STRAIGHT:
-                    TrafficState->num_out_east_straight_--;
-                    new_event_direction = 1;
-                    break;
-                case EAST_RIGHT:
-                    TrafficState->num_out_east_right_--;
-                    new_event_direction = 1;
-                    break;
-                case NORTH_LEFT:
-                    TrafficState->num_out_north_left_--;
-                    new_event_direction = 3;
-                    break;
-                case NORTH_STRAIGHT:
-                    TrafficState->num_out_north_straight_--;
-                    new_event_direction = 3;
-                    break;
-                case NORTH_RIGHT:
-                    TrafficState->num_out_north_right_--;
-                    new_event_direction = 3;
-                    break;
-                case SOUTH_LEFT:
-                    TrafficState->num_out_south_left_--;
-                    new_event_direction = 2;
-                    break;
-                case SOUTH_STRAIGHT:
-                    TrafficState->num_out_south_straight_--;
-                    new_event_direction = 2;
-                    break;
-                case SOUTH_RIGHT:
-                    TrafficState->num_out_south_right_--;
-                    new_event_direction = 2;
-                    break;
+            direction_t departure_direction = NORTH;
+            switch (traffic_event.current_lane_) {
+
+                case WEST_LEFT: {
+                    state_.num_out_west_left_--;
+                    departure_direction = WEST;
+                } break;
+
+                case WEST_STRAIGHT: {
+                    state_.num_out_west_straight_--;
+                    departure_direction = WEST;
+                } break;
+
+                case WEST_RIGHT: {
+                    state_.num_out_west_right_--;
+                    departure_direction = WEST;
+                } break;
+
+                case EAST_LEFT: {
+                    state_.num_out_east_left_--;
+                    departure_direction = EAST;
+                } break;
+
+                case EAST_STRAIGHT: {
+                    state_.num_out_east_straight_--;
+                    departure_direction = EAST;
+                } break;
+
+                case EAST_RIGHT: {
+                    state_.num_out_east_right_--;
+                    departure_direction = EAST;
+                } break;
+
+                case NORTH_LEFT: {
+                    state_.num_out_north_left_--;
+                    departure_direction = NORTH;
+                } break;
+
+                case NORTH_STRAIGHT: {
+                    state_.num_out_north_straight_--;
+                    departure_direction = NORTH;
+                } break;
+
+                case NORTH_RIGHT: {
+                    state_.num_out_north_right_--;
+                    departure_direction = NORTH;
+                } break;
+
+                case SOUTH_LEFT: {
+                    state_.num_out_south_left_--;
+                    departure_direction = SOUTH;
+                } break;
+
+                case SOUTH_STRAIGHT: {
+                    state_.num_out_south_straight_--;
+                    departure_direction = SOUTH;
+                } break;
+
+                case SOUTH_RIGHT: {
+                    state_.num_out_south_right_--;
+                    departure_direction = SOUTH;
+                } break;
             }
-            
-            events.emplace_back(new TrafficEvent {car.x_to_go, car.y_to_go, car.current_lane, car.arrived_from, car.event_type});
-            received_event.type_ = ARRIVAL;
-#endif
+
+            auto timestamp = traffic_event.ts_ + (unsigned int) interval_expo();
+            events.emplace_back(new TrafficEvent {
+                            this->compute_move(departure_direction), ARRIVAL, 
+                            traffic_event.x_to_go_, traffic_event.y_to_go_, 
+                            traffic_event.arrived_from_, traffic_event.current_lane_, timestamp});
         } break;
 
-            
+
         case DIRECTION_SELECT: {
 #if 0
             switch(M->car.current_lane){
