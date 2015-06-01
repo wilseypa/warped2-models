@@ -1,16 +1,9 @@
 // An implementation of Fujimoto's airport model
 // Ported from the ROSS airport model (https://github.com/carothersc/ROSS/blob/master/ross/models/airport)
 
-#include <vector>
-#include <memory>
 #include <random>
-
-#include "warped.hpp"
 #include "airport.hpp"
-
-#include "MLCG.h"
 #include "NegExp.h"
-
 #include "tclap/ValueArg.h"
 
 #define NEG_EXPL_OFFSET  1
