@@ -9,7 +9,6 @@
 #include <memory>
 
 #include "warped.hpp"
-
 #include "MLCG.h"
 
 WARPED_DEFINE_OBJECT_STATE_STRUCT(TrafficState) {
@@ -111,11 +110,13 @@ class Intersection : public warped::SimulationObject {
 public:
     Intersection(   const std::string& name, 
                     const unsigned int num_cars,
+                    const unsigned int mean_interval,
                     const unsigned int index    )
             :   SimulationObject(name), 
                 state_(), 
                 rng_(new MLCG), 
                 num_cars_(num_cars),
+                mean_interval_(mean_interval),
                 index_(index)       {
 
          state_.total_cars_arrived_ = 0;
@@ -156,8 +157,8 @@ public:
 
 protected:
     std::shared_ptr<MLCG> rng_;
-    std::default_random_engine rng_engine_;
     const unsigned int num_cars_;
+    const unsigned int mean_interval_;
     const unsigned int index_;
 
     std::string compute_move(direction_t direction);

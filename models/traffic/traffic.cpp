@@ -1,17 +1,12 @@
 // Ported from the ROSS traffic model 
 // https://github.com/carothersc/ROSS-Models/blob/master/traffic/
 
-#include <vector>
-#include <memory>
 #include <random>
-
-#include "warped.hpp"
 #include "traffic.hpp"
-
-#include "MLCG.h"
-
+#include "NegExp.h"
 #include "tclap/ValueArg.h"
 
+#define NEG_EXPL_OFFSET  1
 
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(TrafficEvent)
 
@@ -29,72 +24,89 @@ inline std::string Intersection::object_name(const unsigned int object_index) {
 std::vector<std::shared_ptr<warped::Event> > 
                 Intersection::receiveEvent(const warped::Event& event) {
 
-    std::vector<std::shared_ptr<warped::Event> > response_events;
-    auto received_event = static_cast<const TrafficEvent&>(event);
+    std::vector<std::shared_ptr<warped::Event> > events;
+    auto traffic_event = static_cast<const TrafficEvent&>(event);
+    NegativeExpntl interval_expo(mean_interval_, rng_.get());
 
-    switch (received_event.type_) {
+    switch (traffic_event.type_) {
 
         case ARRIVAL: {
 
-#if 0
-            TrafficState->total_cars_arrived_++;
-            
-            switch(M->car.current_lane){
-                    
-                case WEST_LEFT:
-                    TrafficState->num_in_east_left_++;
-                    M->car.current_lane = EAST_LEFT;
-                    break;
-                case WEST_STRAIGHT:
-                    TrafficState->num_in_east_straight_++;
-                    M->car.current_lane = EAST_STRAIGHT;
-                    break;
-                case WEST_RIGHT:
-                    TrafficState->num_in_east_right_++;
-                    M->car.current_lane = EAST_RIGHT;
-                    break;
-                case EAST_LEFT:
-                    TrafficState->num_in_west_left_++;
-                    M->car.current_lane = WEST_LEFT;
-                    break;
-                case EAST_STRAIGHT:
-                    TrafficState->num_in_west_straight_++;
-                    M->car.current_lane = WEST_STRAIGHT;
-                    break;
-                case EAST_RIGHT:
-                    TrafficState->num_in_west_right_++;
-                    M->car.current_lane = WEST_RIGHT;
-                    break;
-                case NORTH_LEFT:
-                    TrafficState->num_in_south_left_++;
-                    M->car.current_lane = SOUTH_LEFT;
-                    break;
-                case NORTH_STRAIGHT:
-                    TrafficState->num_in_south_straight_++;
-                    M->car.current_lane = SOUTH_STRAIGHT;
-                    break;
-                case NORTH_RIGHT:
-                    TrafficState->num_in_south_right_++;
-                    M->car.current_lane = SOUTH_RIGHT;
-                    break;
-                case SOUTH_LEFT:
-                    TrafficState->num_in_north_left_++;
-                    M->car.current_lane = NORTH_LEFT;
-                    break;
-                case SOUTH_STRAIGHT:
-                    TrafficState->num_in_north_straight_++;
-                    M->car.current_lane = NORTH_STRAIGHT;
-                    break;
-                case SOUTH_RIGHT:
-                    TrafficState->num_in_north_right_++;
-                    M->car.current_lane = NORTH_RIGHT;
-                    break;
+            if (!traffic_event.x_to_go_ && !traffic_event.y_to_go_) {
+                state_.total_cars_finished_++;
+                break;
             }
-            
-            events.emplace_back(new TrafficEvent {car.x_to_go, car.y_to_go, car.current_lane, car.arrived_from, car.event_type});
-            received_event.type_ = DIRECTION_SELECT;
+            car_direction_t arrival_from = traffic_event.current_lane_;
+            state_.total_cars_arrived_++;
 
-#endif
+            switch (traffic_event.current_lane_) {
+
+                case WEST_LEFT: {
+                    state_.num_in_east_left_++;
+                    arrival_from = EAST_LEFT;
+                } break;
+
+                case WEST_STRAIGHT: {
+                    state_.num_in_east_straight_++;
+                    arrival_from = EAST_STRAIGHT;
+                } break;
+
+                case WEST_RIGHT: {
+                    state_.num_in_east_right_++;
+                    arrival_from = EAST_RIGHT;
+                } break;
+
+                case EAST_LEFT: {
+                    state_.num_in_west_left_++;
+                    arrival_from = WEST_LEFT;
+                } break;
+
+                case EAST_STRAIGHT: {
+                    state_.num_in_west_straight_++;
+                    arrival_from = WEST_STRAIGHT;
+                } break;
+
+                case EAST_RIGHT: {
+                    state_.num_in_west_right_++;
+                    arrival_from = WEST_RIGHT;
+                } break;
+
+                case NORTH_LEFT: {
+                    state_.num_in_south_left_++;
+                    arrival_from = SOUTH_LEFT;
+                } break;
+
+                case NORTH_STRAIGHT: {
+                    state_.num_in_south_straight_++;
+                    arrival_from = SOUTH_STRAIGHT;
+                } break;
+
+                case NORTH_RIGHT: {
+                    state_.num_in_south_right_++;
+                    arrival_from = SOUTH_RIGHT;
+                } break;
+
+                case SOUTH_LEFT: {
+                    state_.num_in_north_left_++;
+                    arrival_from = NORTH_LEFT;
+                } break;
+
+                case SOUTH_STRAIGHT: {
+                    state_.num_in_north_straight_++;
+                    arrival_from = NORTH_STRAIGHT;
+                } break;
+
+                case SOUTH_RIGHT: {
+                    state_.num_in_north_right_++;
+                    arrival_from = NORTH_RIGHT;
+                } break;
+            }
+
+            auto timestamp = traffic_event.ts_ + (unsigned int) interval_expo();
+            events.emplace_back(new TrafficEvent {
+                            this->name_, DIRECTION_SELECT, 
+                            traffic_event.x_to_go_, traffic_event.y_to_go_, 
+                            traffic_event.arrived_from_, arrival_from, timestamp});
         } break;
 
         case DEPARTURE: {
@@ -557,7 +569,7 @@ std::vector<std::shared_ptr<warped::Event> >
 
         default: {}
     }
-    return response_events;
+    return events;
 }
 
 std::string Intersection::compute_move(direction_t direction) {
