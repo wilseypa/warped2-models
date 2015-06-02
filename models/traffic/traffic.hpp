@@ -167,7 +167,6 @@ protected:
     const unsigned int index_;
 
     std::string compute_move(direction_t direction);
-    std::string random_move();
 };
 
 #endif

@@ -689,13 +689,6 @@ std::string Intersection::compute_move(direction_t direction) {
     return object_name(new_x + new_y * num_intersections_x_);
 }
 
-std::string Intersection::random_move() {
-
-    std::default_random_engine gen;
-    std::uniform_int_distribution<unsigned int> rand_direction(0,3);
-    return this->compute_move((direction_t)rand_direction(gen));
-}
-
 int main(int argc, const char** argv) {
 
     unsigned int num_intersections_x   = 100;
