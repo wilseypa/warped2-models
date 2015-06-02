@@ -108,13 +108,17 @@ public:
 
 class Intersection : public warped::SimulationObject {
 public:
-    Intersection(   const std::string& name, 
+    Intersection(   const std::string& name,
+                    const unsigned int num_cells_x,
+                    const unsigned int num_cells_y,
                     const unsigned int num_cars,
                     const unsigned int mean_interval,
                     const unsigned int index    )
-            :   SimulationObject(name), 
-                state_(), 
-                rng_(new MLCG), 
+            :   SimulationObject(name),
+                state_(),
+                rng_(new MLCG),
+                num_cells_x_(num_cells_x),
+                num_cells_y_(num_cells_y),
                 num_cars_(num_cars),
                 mean_interval_(mean_interval),
                 index_(index)       {
@@ -157,6 +161,8 @@ public:
 
 protected:
     std::shared_ptr<MLCG> rng_;
+    const unsigned int num_cells_x_;
+    const unsigned int num_cells_y_;
     const unsigned int num_cars_;
     const unsigned int mean_interval_;
     const unsigned int index_;
