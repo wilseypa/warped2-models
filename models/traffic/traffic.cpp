@@ -13,6 +13,24 @@ WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(TrafficEvent)
 std::vector<std::shared_ptr<warped::Event> > Intersection::createInitialEvents() {
 
     std::vector<std::shared_ptr<warped::Event> > events;
+    NegativeExpntl interval_expo(this->mean_interval_, this->rng_.get());
+
+    std::default_random_engine gen;
+    std::uniform_int_distribution<unsigned int> rand_car_direction(0,11);
+    auto car_arrival = (car_direction_t) rand_car_direction(gen);
+    auto car_current_lane = car_arrival;
+
+    std::uniform_int_distribution<unsigned int> rand_x(-99,100);
+    auto x = (unsigned int) rand_x(gen);
+
+    std::uniform_int_distribution<unsigned int> rand_y(-99,100);
+    auto y = (unsigned int) rand_y(gen);
+
+    for (unsigned int i = 0; i < this->num_cars_; i++) {
+        events.emplace_back(new TrafficEvent {
+                this->random_move(), ARRIVAL, x, y, 
+                car_arrival, car_current_lane, (unsigned int) interval_expo()});
+    }
     return events;
 }
 
@@ -26,7 +44,7 @@ std::vector<std::shared_ptr<warped::Event> >
 
     std::vector<std::shared_ptr<warped::Event> > events;
     auto traffic_event = static_cast<const TrafficEvent&>(event);
-    NegativeExpntl interval_expo(mean_interval_, rng_.get());
+    NegativeExpntl interval_expo(mean_interval_, this->rng_.get());
 
     switch (traffic_event.type_) {
 
