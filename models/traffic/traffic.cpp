@@ -7,6 +7,7 @@
 #include "tclap/ValueArg.h"
 
 #define NEG_EXPL_OFFSET  1
+#define MAX_CARS_ON_ROAD 5
 
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(TrafficEvent)
 
@@ -20,15 +21,12 @@ std::vector<std::shared_ptr<warped::Event> > Intersection::createInitialEvents()
     auto car_arrival = (car_direction_t) rand_car_direction(gen);
     auto car_current_lane = car_arrival;
 
-    std::uniform_int_distribution<unsigned int> rand_x(-99,100);
-    auto x = (unsigned int) rand_x(gen);
-
-    std::uniform_int_distribution<unsigned int> rand_y(-99,100);
-    auto y = (unsigned int) rand_y(gen);
+    std::uniform_int_distribution<int> rand_x(-99,100);
+    std::uniform_int_distribution<int> rand_y(-99,100);
 
     for (unsigned int i = 0; i < this->num_cars_; i++) {
         events.emplace_back(new TrafficEvent {
-                object_name(this->index_), ARRIVAL, x, y, 
+                object_name(this->index_), ARRIVAL, rand_x(gen), rand_y(gen), 
                 car_arrival, car_current_lane, (unsigned int) interval_expo()});
     }
     return events;
@@ -203,404 +201,455 @@ std::vector<std::shared_ptr<warped::Event> >
 
 
         case DIRECTION_SELECT: {
-#if 0
-            switch(M->car.current_lane){
-                case EAST_LEFT:
-                    TrafficState->num_in_east_left--;
-                    if(M->car.y_to_go < 0 && TrafficEvent->num_out_south_straight < MAX_CARS_ON_ROAD){
-                        M->car.current_lane = SOUTH_STRAIGHT;
-                        TrafficState->num_out_south_straight ++;
-                        M->car.y_to_go++;
-                    }
-                    else if(M->car.x_to_go < 0 && TrafficEvent->num_out_south_right < MAX_CARS_ON_ROAD){
-                        M->car.current_lane = SOUTH_RIGHT;
-                        TrafficState->num_out_south_right ++;
-                        M->car.x_to_go++;
-                    }
-                    else if(M->car.x_to_go > 0 && TrafficEvent->num_out_south_left < MAX_CARS_ON_ROAD){
-                        M->car.current_lane = SOUTH_LEFT;
-                        TrafficState->num_out_south_left ++;
-                        M->car.x_to_go--;
-                    }
-                    else{
-                        if(M->car.arrived_from == SOUTH_LEFT){
-                            M->car.current_lane = EAST_RIGHT;
-                            TrafficState->num_out_east_right++;
-                        }
-                        else if(M->car.arrived_from == EAST_STRAIGHT){
-                            M->car.current_lane = EAST_STRAIGHT;
-                            TrafficState->num_out_east_straight++;
-                        }
-                        else if(M->car.arrived_from == NORTH_RIGHT){
-                            M->car.current_lane = EAST_LEFT;
-                            TrafficState->num_out_east_left++;
-                        }
-                    }
-                    break;
-                case EAST_STRAIGHT:
-                    TrafficState->num_in_east_straight--;
-                    if(M->car.x_to_go < 0 && TrafficEvent->num_out_west_straight < MAX_CARS_ON_ROAD){
-                        M->car.current_lane = WEST_STRAIGHT;
-                        TrafficState->num_out_west_straight ++;
-                        M->car.x_to_go++;
-                    }
-                    else if(M->car.y_to_go < 0 && TrafficEvent->num_out_west_left < MAX_CARS_ON_ROAD){
-                        M->car.current_lane = WEST_LEFT;
-                        TrafficState->num_out_west_left ++;
-                        M->car.y_to_go++;
-                    }
-                    else if(M->car.y_to_go > 0 && TrafficEvent->num_out_west_right < MAX_CARS_ON_ROAD){
-                        M->car.current_lane = WEST_RIGHT;
-                        TrafficState->num_out_west_right ++;
-                        M->car.y_to_go--;
-                    }
-                    else{
-                        if(M->car.arrived_from == NORTH_RIGHT){
-                            M->car.current_lane = EAST_LEFT;
-                            TrafficEvent->num_out_east_left++;
-                        }
-                        else if(M->car.arrived_from == EAST_STRAIGHT){
-                            M->car.current_lane = EAST_STRAIGHT;
-                            TrafficEvent->num_out_east_straight++;
-                        }
-                        else if(M->car.arrived_from == SOUTH_LEFT){
-                            M->car.current_lane = EAST_RIGHT;
-                            TrafficEvent->num_out_east_right++;
+
+            int x_to_go = traffic_event.x_to_go_;
+            int y_to_go = traffic_event.y_to_go_;
+            car_direction_t current_lane = traffic_event.current_lane_;
+
+            switch (traffic_event.current_lane_) {
+
+                case EAST_LEFT: {
+                    state_.num_in_east_left_--;
+                    if ((y_to_go < 0) && 
+                                (state_.num_out_south_straight_ < MAX_CARS_ON_ROAD)) {
+                        current_lane = SOUTH_STRAIGHT;
+                        state_.num_out_south_straight_++;
+                        y_to_go++;
+
+                    } else if ((x_to_go < 0) && 
+                                (state_.num_out_south_right_ < MAX_CARS_ON_ROAD)){
+                        current_lane = SOUTH_RIGHT;
+                        state_.num_out_south_right_++;
+                        x_to_go++;
+
+                    } else if ((x_to_go > 0) && 
+                                (state_.num_out_south_left_ < MAX_CARS_ON_ROAD)){
+                        current_lane = SOUTH_LEFT;
+                        state_.num_out_south_left_++;
+                        x_to_go--;
+
+                    } else {
+                        if (traffic_event.arrived_from_ == SOUTH_LEFT) {
+                            current_lane = EAST_RIGHT;
+                            state_.num_out_east_right_++;
+
+                        } else if (traffic_event.arrived_from_ == EAST_STRAIGHT) {
+                            current_lane = EAST_STRAIGHT;
+                            state_.num_out_east_straight_++;
+
+                        } else if (traffic_event.arrived_from_ == NORTH_RIGHT) {
+                            current_lane = EAST_LEFT;
+                            state_.num_out_east_left_++;
                         }
                     }
-                    
-                    break;
-                case EAST_RIGHT:
-                    TrafficEvent->num_in_east_right--;
-                    if(M->car.y_to_go > 0 && TrafficEvent->num_out_north_straight < MAX_CARS_ON_ROAD){
-                        M->car.current_lane = NORTH_STRAIGHT;
-                        TrafficEvent->num_out_north_straight ++;
-                        M->car.y_to_go--;
-                    }
-                    else if(M->car.x_to_go > 0 && TrafficEvent->num_out_north_right < MAX_CARS_ON_ROAD){
-                        M->car.current_lane = NORTH_RIGHT;
-                        TrafficEvent->num_out_north_right ++;
-                        M->car.x_to_go --;
-                    }
-                    else if(M->car.x_to_go < 0 && TrafficEvent->num_out_north_left < MAX_CARS_ON_ROAD){
-                        M->car.current_lane = NORTH_LEFT;
-                        TrafficEvent->num_out_north_left ++;
-                        M->car.x_to_go++;
-                    }
-                    else{
-                        if(M->car.arrived_from == SOUTH_LEFT){
-                            M->car.current_lane = EAST_RIGHT;
-                            TrafficEvent->num_out_east_right++;
-                        }
-                        else if(M->car.arrived_from == EAST_STRAIGHT){
-                            M->car.current_lane = EAST_STRAIGHT;
-                            TrafficEvent->num_out_east_straight++;
-                        }
-                        else if(M->car.arrived_from == NORTH_RIGHT){
-                            M->car.current_lane = EAST_LEFT;
-                            TrafficEvent->num_out_east_left++;
-                        }
-                    }
-                    break;
-                case WEST_LEFT:
-                    TrafficEvent->num_in_west_left--;
-                    if(M->car.y_to_go > 0 && TrafficEvent->num_out_north_straight < MAX_CARS_ON_ROAD){
-                        M->car.current_lane = NORTH_STRAIGHT;
-                        TrafficEvent->num_out_north_straight ++;
-                        M->car.y_to_go--;
-                    }
-                    else if(M->car.x_to_go > 0 && TrafficEvent->num_out_north_right < MAX_CARS_ON_ROAD){
-                        M->car.current_lane = NORTH_RIGHT;
-                        TrafficEvent->num_out_north_right ++;
-                        M->car.x_to_go--;
-                    }
-                    else if(M->car.x_to_go < 0 && TrafficEvent->num_out_north_left < MAX_CARS_ON_ROAD){
-                        M->car.current_lane = NORTH_LEFT;
-                        TrafficEvent->num_out_north_left ++;
-                        M->car.x_to_go++;
-                    }
-                    else{
-                        if(M->car.arrived_from == SOUTH_RIGHT){
-                            M->car.current_lane = WEST_LEFT;
-                            TrafficEvent->num_out_west_left++;
-                        }
-                        else if(M->car.arrived_from == WEST_STRAIGHT){
-                            M->car.current_lane = WEST_STRAIGHT;
-                            TrafficEvent->num_out_west_straight++;
-                        }
-                        else if(M->car.arrived_from == NORTH_LEFT){
-                            M->car.current_lane = WEST_RIGHT;
-                            TrafficEvent->num_out_west_right++;
+                } break;
+
+                case EAST_STRAIGHT: {
+                    state_.num_in_east_straight_--;
+                    if ((x_to_go < 0) && 
+                                (state_.num_out_west_straight_ < MAX_CARS_ON_ROAD)) {
+                        current_lane = WEST_STRAIGHT;
+                        state_.num_out_west_straight_++;
+                        x_to_go++;
+
+                    } else if ((y_to_go < 0) && 
+                                (state_.num_out_west_left_ < MAX_CARS_ON_ROAD)) {
+                        current_lane = WEST_LEFT;
+                        state_.num_out_west_left_++;
+                        y_to_go++;
+
+                    } else if ((y_to_go > 0) && 
+                                (state_.num_out_west_right_ < MAX_CARS_ON_ROAD)) {
+                        current_lane = WEST_RIGHT;
+                        state_.num_out_west_right_++;
+                        y_to_go--;
+
+                    } else {
+                        if (traffic_event.arrived_from_ == NORTH_RIGHT) {
+                            current_lane = EAST_LEFT;
+                            state_.num_out_east_left_++;
+
+                        } else if (traffic_event.arrived_from_ == EAST_STRAIGHT) {
+                            current_lane = EAST_STRAIGHT;
+                            state_.num_out_east_straight_++;
+
+                        } else if (traffic_event.arrived_from_ == SOUTH_LEFT) {
+                            current_lane = EAST_RIGHT;
+                            state_.num_out_east_right_++;
                         }
                     }
-                    break;
-                case WEST_STRAIGHT:
-                    TrafficEvent->num_in_west_straight--;
-                    if(M->car.x_to_go > 0 && TrafficEvent->num_out_east_straight < MAX_CARS_ON_ROAD){
-                        M->car.current_lane = EAST_STRAIGHT;
-                        TrafficEvent->num_out_east_straight ++;
-                        M->car.x_to_go--;
-                    }
-                    else if(M->car.y_to_go > 0 && TrafficEvent->num_out_east_left < MAX_CARS_ON_ROAD){
-                        M->car.current_lane = EAST_LEFT;
-                        TrafficEvent->num_out_east_left ++;
-                        M->car.y_to_go --;
-                    }
-                    else if(M->car.y_to_go < 0 && TrafficEvent->num_out_east_right < MAX_CARS_ON_ROAD){
-                        M->car.current_lane = EAST_RIGHT;
-                        TrafficEvent->num_out_east_right ++;
-                        M->car.y_to_go++;
-                    }
-                    else{
-                        if(M->car.arrived_from == SOUTH_RIGHT){
-                            M->car.current_lane = WEST_LEFT;
-                            TrafficEvent->num_out_west_left++;
-                        }
-                        else if(M->car.arrived_from == WEST_STRAIGHT){
-                            M->car.current_lane = WEST_STRAIGHT;
-                            TrafficEvent->num_out_west_straight++;
-                        }
-                        else if(M->car.arrived_from == NORTH_LEFT){
-                            M->car.current_lane = WEST_RIGHT;
-                            TrafficEvent->num_out_west_right++;
-                        }
-                    }
-                    break;
-                case WEST_RIGHT:
-                    TrafficEvent->num_in_west_right--;
-                    if(M->car.y_to_go < 0 && TrafficEvent->num_out_south_straight < MAX_CARS_ON_ROAD){
-                        M->car.current_lane = SOUTH_STRAIGHT;
-                        TrafficEvent->num_out_south_straight ++;
-                        M->car.y_to_go++;
-                    }
-                    else if(M->car.x_to_go > 0 && TrafficEvent->num_out_south_left < MAX_CARS_ON_ROAD){
-                        M->car.current_lane = SOUTH_LEFT;
-                        TrafficEvent->num_out_south_left ++;
-                        M->car.x_to_go--;
-                    }
-                    else if(M->car.x_to_go < 0 && TrafficEvent->num_out_south_right < MAX_CARS_ON_ROAD){
-                        M->car.current_lane = SOUTH_RIGHT;
-                        TrafficEvent->num_out_south_right ++;
-                        M->car.x_to_go++;
-                    }
-                    else{
-                        if(M->car.arrived_from == SOUTH_RIGHT){
-                            M->car.current_lane = WEST_LEFT;
-                            TrafficEvent->num_out_west_left++;
-                        }
-                        else if(M->car.arrived_from == WEST_STRAIGHT){
-                            M->car.current_lane = WEST_STRAIGHT;
-                            TrafficEvent->num_out_west_straight++;
-                        }
-                        else if(M->car.arrived_from == NORTH_LEFT){
-                            M->car.current_lane = WEST_RIGHT;
-                            TrafficEvent->num_out_west_right++;
+                } break;
+
+                case EAST_RIGHT: {
+                    state_.num_in_east_right_--;
+                    if ((y_to_go > 0) && 
+                                (state_.num_out_north_straight_ < MAX_CARS_ON_ROAD)) {
+                        current_lane = NORTH_STRAIGHT;
+                        state_.num_out_north_straight_++;
+                        y_to_go--;
+
+                    } else if ((x_to_go > 0) && 
+                                (state_.num_out_north_right_ < MAX_CARS_ON_ROAD)) {
+                        current_lane = NORTH_RIGHT;
+                        state_.num_out_north_right_++;
+                        x_to_go --;
+
+                    } else if ((x_to_go < 0) && 
+                                (state_.num_out_north_left_ < MAX_CARS_ON_ROAD)) {
+                        current_lane = NORTH_LEFT;
+                        state_.num_out_north_left_++;
+                        x_to_go++;
+
+                    } else {
+                        if (traffic_event.arrived_from_ == SOUTH_LEFT) {
+                            current_lane = EAST_RIGHT;
+                            state_.num_out_east_right_++;
+
+                        } else if (traffic_event.arrived_from_ == EAST_STRAIGHT) {
+                            current_lane = EAST_STRAIGHT;
+                            state_.num_out_east_straight_++;
+
+                        } else if (traffic_event.arrived_from_ == NORTH_RIGHT) {
+                            current_lane = EAST_LEFT;
+                            state_.num_out_east_left_++;
                         }
                     }
-                    break;
-                case NORTH_LEFT:
-                    TrafficEvent->num_in_north_left--;
-                    if(M->car.x_to_go > 0 && TrafficEvent->num_out_east_straight < MAX_CARS_ON_ROAD){
-                        M->car.current_lane = EAST_STRAIGHT;
-                        TrafficEvent->num_out_east_straight ++;
-                        M->car.x_to_go --;
-                    }
-                    else if(M->car.y_to_go > 0 && TrafficEvent->num_out_east_left < MAX_CARS_ON_ROAD){
-                        M->car.current_lane = EAST_LEFT;
-                        TrafficEvent->num_out_east_left ++;
-                        M->car.y_to_go--;
-                    }
-                    else if(M->car.y_to_go < 0 && TrafficEvent->num_out_east_right < MAX_CARS_ON_ROAD){
-                        M->car.current_lane = EAST_RIGHT;
-                        TrafficEvent->num_out_east_right ++;
-                        M->car.y_to_go++;
-                    }
-                    else{
-                        if(M->car.arrived_from == WEST_RIGHT){
-                            M->car.current_lane = NORTH_LEFT;
-                            TrafficEvent->num_out_north_left++;
-                        }
-                        else if(M->car.arrived_from == NORTH_STRAIGHT){
-                            M->car.current_lane = NORTH_STRAIGHT;
-                            TrafficEvent->num_out_north_straight++;
-                        }
-                        else if(M->car.arrived_from == EAST_LEFT){
-                            M->car.current_lane = NORTH_RIGHT;
-                            TrafficEvent->num_out_north_right++;
-                        }
-                    }
-                    
-                    break;
-                case NORTH_STRAIGHT:
-                    TrafficEvent->num_in_north_straight--;
-                    if(M->car.y_to_go < 0 && TrafficEvent->num_out_south_straight < MAX_CARS_ON_ROAD){
-                        M->car.current_lane = SOUTH_STRAIGHT;
-                        TrafficEvent->num_out_south_straight ++;
-                        M->car.y_to_go++;
-                    }
-                    else if(M->car.x_to_go > 0 && TrafficEvent->num_out_south_left < MAX_CARS_ON_ROAD){
-                        M->car.current_lane = SOUTH_LEFT;
-                        TrafficEvent->num_out_south_left ++;
-                        M->car.x_to_go--;
-                    }
-                    else if(M->car.x_to_go < 0 && TrafficEvent->num_out_south_right < MAX_CARS_ON_ROAD){
-                        M->car.current_lane = SOUTH_RIGHT;
-                        TrafficEvent->num_out_south_right ++;
-                        M->car.x_to_go++;
-                    }
-                    else{
-                        if(M->car.arrived_from == WEST_RIGHT){
-                            M->car.current_lane = NORTH_LEFT;
-                            TrafficEvent->num_out_north_left++;
-                        }
-                        else if(M->car.arrived_from == NORTH_STRAIGHT){
-                            M->car.current_lane = NORTH_STRAIGHT;
-                            TrafficEvent->num_out_north_straight++;
-                        }
-                        else if(M->car.arrived_from == EAST_LEFT){
-                            M->car.current_lane = NORTH_RIGHT;
-                            TrafficEvent->num_out_north_right++;
+                } break;
+
+                case WEST_LEFT: {
+                    state_.num_in_west_left_--;
+                    if ((y_to_go > 0) && 
+                                (state_.num_out_north_straight_ < MAX_CARS_ON_ROAD)) {
+                        current_lane = NORTH_STRAIGHT;
+                        state_.num_out_north_straight_++;
+                        y_to_go--;
+
+                    } else if ((x_to_go > 0) && 
+                                (state_.num_out_north_right_ < MAX_CARS_ON_ROAD)) {
+                        current_lane = NORTH_RIGHT;
+                        state_.num_out_north_right_++;
+                        x_to_go--;
+
+                    } else if ((x_to_go < 0) && 
+                                (state_.num_out_north_left_ < MAX_CARS_ON_ROAD)) {
+                        current_lane = NORTH_LEFT;
+                        state_.num_out_north_left_++;
+                        x_to_go++;
+
+                    } else {
+                        if (traffic_event.arrived_from_ == SOUTH_RIGHT) {
+                            current_lane = WEST_LEFT;
+                            state_.num_out_west_left_++;
+
+                        } else if (traffic_event.arrived_from_ == WEST_STRAIGHT) {
+                            current_lane = WEST_STRAIGHT;
+                            state_.num_out_west_straight_++;
+
+                        } else if (traffic_event.arrived_from_ == NORTH_LEFT) {
+                            current_lane = WEST_RIGHT;
+                            state_.num_out_west_right_++;
                         }
                     }
-                    break;
-                    
-                case NORTH_RIGHT:
-                    TrafficEvent->num_in_north_right--;
-                    if(M->car.x_to_go < 0 && TrafficEvent->num_out_west_straight < MAX_CARS_ON_ROAD){
-                        M->car.current_lane = WEST_STRAIGHT;
-                        TrafficEvent->num_out_west_straight ++;
-                        M->car.x_to_go++;
-                    }
-                    else if(M->car.y_to_go < 0 && TrafficEvent->num_out_west_left < MAX_CARS_ON_ROAD){
-                        M->car.current_lane = WEST_LEFT;
-                        TrafficEvent->num_out_west_left ++;
-                        M->car.y_to_go++;
-                    }
-                    else if(M->car.y_to_go > 0 && TrafficEvent->num_out_west_right < MAX_CARS_ON_ROAD){
-                        M->car.current_lane = WEST_RIGHT;
-                        TrafficEvent->num_out_west_right ++;
-                        M->car.y_to_go--;
-                    }
-                    else{
-                        if(M->car.arrived_from == WEST_RIGHT){
-                            M->car.current_lane = NORTH_LEFT;
-                            TrafficEvent->num_out_north_left++;
-                        }
-                        else if(M->car.arrived_from == NORTH_STRAIGHT){
-                            M->car.current_lane = NORTH_STRAIGHT;
-                            TrafficEvent->num_out_north_straight++;
-                        }
-                        else if(M->car.arrived_from == EAST_LEFT){
-                            M->car.current_lane = NORTH_RIGHT;
-                            TrafficEvent->num_out_north_right++;
-                        }
-                    }
-                    break;
-                case SOUTH_LEFT:
-                    TrafficEvent->num_in_south_left--;
-                    if(M->car.x_to_go < 0 && TrafficEvent->num_out_west_straight < MAX_CARS_ON_ROAD){
-                        M->car.current_lane = WEST_STRAIGHT;
-                        TrafficEvent->num_out_west_straight ++;
-                        M->car.x_to_go++;
-                    }
-                    else if(M->car.y_to_go < 0 && TrafficEvent->num_out_west_left < MAX_CARS_ON_ROAD){
-                        M->car.current_lane = WEST_LEFT;
-                        TrafficEvent->num_out_west_left ++;
-                        M->car.y_to_go++;
-                    }
-                    else if(M->car.y_to_go > 0 && TrafficEvent->num_out_west_right < MAX_CARS_ON_ROAD){
-                        M->car.current_lane = WEST_RIGHT;
-                        TrafficEvent->num_out_west_right ++;
-                        M->car.y_to_go--;
-                    }
-                    else{
-                        if(M->car.arrived_from == WEST_LEFT){
-                            M->car.current_lane = SOUTH_RIGHT;
-                            TrafficEvent->num_out_south_right++;
-                        }
-                        else if(M->car.arrived_from == SOUTH_STRAIGHT){
-                            M->car.current_lane = SOUTH_STRAIGHT;
-                            TrafficEvent->num_out_south_straight++;
-                        }
-                        else if(M->car.arrived_from == EAST_RIGHT){
-                            M->car.current_lane = SOUTH_LEFT;
-                            TrafficEvent->num_out_south_left++;
+                } break;
+
+                case WEST_STRAIGHT: {
+                    state_.num_in_west_straight_--;
+                    if ((x_to_go > 0) && 
+                                (state_.num_out_east_straight_ < MAX_CARS_ON_ROAD)) {
+                        current_lane = EAST_STRAIGHT;
+                        state_.num_out_east_straight_++;
+                        x_to_go--;
+
+                    } else if ((y_to_go > 0) && 
+                                (state_.num_out_east_left_ < MAX_CARS_ON_ROAD)) {
+                        current_lane = EAST_LEFT;
+                        state_.num_out_east_left_++;
+                        y_to_go --;
+
+                    } else if ((y_to_go < 0) && 
+                                (state_.num_out_east_right_ < MAX_CARS_ON_ROAD)) {
+                        current_lane = EAST_RIGHT;
+                        state_.num_out_east_right_++;
+                        y_to_go++;
+
+                    } else {
+                        if (traffic_event.arrived_from_ == SOUTH_RIGHT) {
+                            current_lane = WEST_LEFT;
+                            state_.num_out_west_left_++;
+
+                        } else if (traffic_event.arrived_from_ == WEST_STRAIGHT) {
+                            current_lane = WEST_STRAIGHT;
+                            state_.num_out_west_straight_++;
+
+                        } else if (traffic_event.arrived_from_ == NORTH_LEFT) {
+                            current_lane = WEST_RIGHT;
+                            state_.num_out_west_right_++;
                         }
                     }
-                    
-                    break;
-                case SOUTH_STRAIGHT:
-                    TrafficEvent->num_in_south_straight--;
-                    if(M->car.y_to_go > 0 && TrafficEvent->num_out_north_straight < MAX_CARS_ON_ROAD){
-                        M->car.current_lane = NORTH_STRAIGHT;
-                        TrafficEvent->num_out_north_straight ++;
-                        M->car.y_to_go--;
-                    }
-                    else if(M->car.x_to_go < 0 && TrafficEvent->num_out_north_left < MAX_CARS_ON_ROAD){
-                        M->car.current_lane = NORTH_LEFT;
-                        TrafficEvent->num_out_north_left ++;
-                        M->car.x_to_go++;
-                    }
-                    else if(M->car.x_to_go > 0 && TrafficEvent->num_out_north_right < MAX_CARS_ON_ROAD){
-                        M->car.current_lane = NORTH_RIGHT;
-                        TrafficEvent->num_out_north_right ++;
-                        M->car.x_to_go --;
-                    }
-                    else{
-                        if(M->car.arrived_from == EAST_RIGHT){
-                            M->car.current_lane = SOUTH_LEFT;
-                            TrafficEvent->num_out_south_left++;
-                        }
-                        else if(M->car.arrived_from == SOUTH_STRAIGHT){
-                            M->car.current_lane = SOUTH_STRAIGHT;
-                            TrafficEvent->num_out_south_straight++;
-                        }
-                        else if(M->car.arrived_from == WEST_LEFT){
-                            M->car.current_lane = SOUTH_RIGHT;
-                            TrafficEvent->num_out_south_right++;
-                        }
-                    }
-                    break;
-                    
-                case SOUTH_RIGHT:
-                    TrafficEvent->num_in_south_right--;
-                    if(M->car.x_to_go > 0 && TrafficEvent->num_out_east_straight < MAX_CARS_ON_ROAD){
-                        M->car.current_lane = EAST_STRAIGHT;
-                        TrafficEvent->num_out_east_straight ++;
-                        M->car.x_to_go--;
-                    }
-                    else if(M->car.y_to_go > 0 && TrafficEvent->num_out_east_left < MAX_CARS_ON_ROAD){
-                        M->car.current_lane = EAST_LEFT;
-                        TrafficEvent->num_out_east_left ++;
-                        M->car.y_to_go--;
-                    }
-                    else if(M->car.y_to_go < 0 && TrafficEvent->num_out_east_right < MAX_CARS_ON_ROAD){
-                        M->car.current_lane = EAST_RIGHT;
-                        TrafficEvent->num_out_east_right ++;
-                        M->car.y_to_go++;
-                    }
-                    else{
-                        if(M->car.arrived_from == EAST_RIGHT){
-                            M->car.current_lane = SOUTH_LEFT;
-                            TrafficEvent->num_out_south_left++;
-                        }
-                        else if(M->car.arrived_from == SOUTH_STRAIGHT){
-                            M->car.current_lane = SOUTH_STRAIGHT;
-                            TrafficEvent->num_out_south_straight++;
-                        }
-                        else if(M->car.arrived_from == WEST_LEFT){
-                            M->car.current_lane = SOUTH_RIGHT;
-                            TrafficEvent->num_out_south_right++;
+                } break;
+
+                case WEST_RIGHT: {
+                    state_.num_in_west_right_--;
+                    if ((y_to_go < 0) && 
+                                (state_.num_out_south_straight_ < MAX_CARS_ON_ROAD)) {
+                        current_lane = SOUTH_STRAIGHT;
+                        state_.num_out_south_straight_++;
+                        y_to_go++;
+
+                    } else if ((x_to_go > 0) && 
+                                (state_.num_out_south_left_ < MAX_CARS_ON_ROAD)) {
+                        current_lane = SOUTH_LEFT;
+                        state_.num_out_south_left_++;
+                        x_to_go--;
+
+                    } else if ((x_to_go < 0) && 
+                                (state_.num_out_south_right_ < MAX_CARS_ON_ROAD)) {
+                        current_lane = SOUTH_RIGHT;
+                        state_.num_out_south_right_++;
+                        x_to_go++;
+
+                    } else {
+                        if (traffic_event.arrived_from_ == SOUTH_RIGHT) {
+                            current_lane = WEST_LEFT;
+                            state_.num_out_west_left_++;
+
+                        } else if (traffic_event.arrived_from_ == WEST_STRAIGHT) {
+                            current_lane = WEST_STRAIGHT;
+                            state_.num_out_west_straight_++;
+
+                        } else if (traffic_event.arrived_from_ == NORTH_LEFT) {
+                            current_lane = WEST_RIGHT;
+                            state_.num_out_west_right_++;
                         }
                     }
-                    break;
+                } break;
+
+                case NORTH_LEFT: {
+                    state_.num_in_north_left_--;
+                    if ((x_to_go > 0) && 
+                                (state_.num_out_east_straight_ < MAX_CARS_ON_ROAD)) {
+                        current_lane = EAST_STRAIGHT;
+                        state_.num_out_east_straight_++;
+                        x_to_go--;
+
+                    } else if ((y_to_go > 0) && 
+                                (state_.num_out_east_left_ < MAX_CARS_ON_ROAD)) {
+                        current_lane = EAST_LEFT;
+                        state_.num_out_east_left_++;
+                        y_to_go--;
+
+                    } else if ((y_to_go < 0) && 
+                                (state_.num_out_east_right_ < MAX_CARS_ON_ROAD)) {
+                        current_lane = EAST_RIGHT;
+                        state_.num_out_east_right_++;
+                        y_to_go++;
+
+                    } else {
+                        if (traffic_event.arrived_from_ == WEST_RIGHT) {
+                            current_lane = NORTH_LEFT;
+                            state_.num_out_north_left_++;
+
+                        } else if (traffic_event.arrived_from_ == NORTH_STRAIGHT) {
+                            current_lane = NORTH_STRAIGHT;
+                            state_.num_out_north_straight_++;
+
+                        } else if (traffic_event.arrived_from_ == EAST_LEFT) {
+                            current_lane = NORTH_RIGHT;
+                            state_.num_out_north_right_++;
+                        }
+                    }
+                } break;
+
+                case NORTH_STRAIGHT: {
+                    state_.num_in_north_straight_--;
+                    if ((y_to_go < 0) && 
+                                (state_.num_out_south_straight_ < MAX_CARS_ON_ROAD)) {
+                        current_lane = SOUTH_STRAIGHT;
+                        state_.num_out_south_straight_++;
+                        y_to_go++;
+
+                    } else if ((x_to_go > 0) && 
+                                (state_.num_out_south_left_ < MAX_CARS_ON_ROAD)) {
+                        current_lane = SOUTH_LEFT;
+                        state_.num_out_south_left_++;
+                        x_to_go--;
+
+                    } else if ((x_to_go < 0) && 
+                                (state_.num_out_south_right_ < MAX_CARS_ON_ROAD)) {
+                        current_lane = SOUTH_RIGHT;
+                        state_.num_out_south_right_++;
+                        x_to_go++;
+
+                    } else {
+                        if (traffic_event.arrived_from_ == WEST_RIGHT) {
+                            current_lane = NORTH_LEFT;
+                            state_.num_out_north_left_++;
+
+                        } else if (traffic_event.arrived_from_ == NORTH_STRAIGHT) {
+                            current_lane = NORTH_STRAIGHT;
+                            state_.num_out_north_straight_++;
+
+                        } else if (traffic_event.arrived_from_ == EAST_LEFT) {
+                            current_lane = NORTH_RIGHT;
+                            state_.num_out_north_right_++;
+                        }
+                    }
+                } break;
+
+                case NORTH_RIGHT: {
+                    state_.num_in_north_right_--;
+                    if ((x_to_go < 0) && 
+                                (state_.num_out_west_straight_ < MAX_CARS_ON_ROAD)) {
+                        current_lane = WEST_STRAIGHT;
+                        state_.num_out_west_straight_++;
+                        x_to_go++;
+
+                    } else if ((y_to_go < 0) && 
+                                (state_.num_out_west_left_ < MAX_CARS_ON_ROAD)) {
+                        current_lane = WEST_LEFT;
+                        state_.num_out_west_left_++;
+                        y_to_go++;
+
+                    } else if ((y_to_go > 0) && 
+                                (state_.num_out_west_right_ < MAX_CARS_ON_ROAD)) {
+                        current_lane = WEST_RIGHT;
+                        state_.num_out_west_right_++;
+                        y_to_go--;
+
+                    } else {
+                        if (traffic_event.arrived_from_ == WEST_RIGHT) {
+                            current_lane = NORTH_LEFT;
+                            state_.num_out_north_left_++;
+
+                        } else if (traffic_event.arrived_from_ == NORTH_STRAIGHT) {
+                            current_lane = NORTH_STRAIGHT;
+                            state_.num_out_north_straight_++;
+
+                        } else if (traffic_event.arrived_from_ == EAST_LEFT) {
+                            current_lane = NORTH_RIGHT;
+                            state_.num_out_north_right_++;
+                        }
+                    }
+                } break;
+
+                case SOUTH_LEFT: {
+                    state_.num_in_south_left_--;
+                    if ((x_to_go < 0) && 
+                                (state_.num_out_west_straight_ < MAX_CARS_ON_ROAD)) {
+                        current_lane = WEST_STRAIGHT;
+                        state_.num_out_west_straight_++;
+                        x_to_go++;
+
+                    } else if ((y_to_go < 0) && 
+                                (state_.num_out_west_left_ < MAX_CARS_ON_ROAD)) {
+                        current_lane = WEST_LEFT;
+                        state_.num_out_west_left_++;
+                        y_to_go++;
+
+                    } else if ((y_to_go > 0) && 
+                                (state_.num_out_west_right_ < MAX_CARS_ON_ROAD)) {
+                        current_lane = WEST_RIGHT;
+                        state_.num_out_west_right_++;
+                        y_to_go--;
+
+                    } else {
+                        if (traffic_event.arrived_from_ == WEST_LEFT) {
+                            current_lane = SOUTH_RIGHT;
+                            state_.num_out_south_right_++;
+
+                        } else if (traffic_event.arrived_from_ == SOUTH_STRAIGHT) {
+                            current_lane = SOUTH_STRAIGHT;
+                            state_.num_out_south_straight_++;
+
+                        } else if (traffic_event.arrived_from_ == EAST_RIGHT) {
+                            current_lane = SOUTH_LEFT;
+                            state_.num_out_south_left_++;
+                        }
+                    }
+                } break;
+
+                case SOUTH_STRAIGHT: {
+                    state_.num_in_south_straight_--;
+                    if ((y_to_go > 0) && 
+                                (state_.num_out_north_straight_ < MAX_CARS_ON_ROAD)) {
+                        current_lane = NORTH_STRAIGHT;
+                        state_.num_out_north_straight_++;
+                        y_to_go--;
+
+                    } else if ((x_to_go < 0) && 
+                                (state_.num_out_north_left_ < MAX_CARS_ON_ROAD)) {
+                        current_lane = NORTH_LEFT;
+                        state_.num_out_north_left_++;
+                        x_to_go++;
+
+                    } else if ((x_to_go > 0) && 
+                                (state_.num_out_north_right_ < MAX_CARS_ON_ROAD)) {
+                        current_lane = NORTH_RIGHT;
+                        state_.num_out_north_right_++;
+                        x_to_go --;
+
+                    } else {
+                        if (traffic_event.arrived_from_ == EAST_RIGHT) {
+                            current_lane = SOUTH_LEFT;
+                            state_.num_out_south_left_++;
+
+                        } else if (traffic_event.arrived_from_ == SOUTH_STRAIGHT) {
+                            current_lane = SOUTH_STRAIGHT;
+                            state_.num_out_south_straight_++;
+
+                        } else if (traffic_event.arrived_from_ == WEST_LEFT) {
+                            current_lane = SOUTH_RIGHT;
+                            state_.num_out_south_right_++;
+                        }
+                    }
+                } break;
+
+                case SOUTH_RIGHT: {
+                    state_.num_in_south_right_--;
+                    if ((x_to_go > 0) && 
+                                (state_.num_out_east_straight_ < MAX_CARS_ON_ROAD)) {
+                        current_lane = EAST_STRAIGHT;
+                        state_.num_out_east_straight_++;
+                        x_to_go--;
+
+                    } else if ((y_to_go > 0) && 
+                                (state_.num_out_east_left_ < MAX_CARS_ON_ROAD)) {
+                        current_lane = EAST_LEFT;
+                        state_.num_out_east_left_++;
+                        y_to_go--;
+
+                    } else if ((y_to_go < 0) && 
+                                (state_.num_out_east_right_ < MAX_CARS_ON_ROAD)) {
+                        current_lane = EAST_RIGHT;
+                        state_.num_out_east_right_++;
+                        y_to_go++;
+
+                    } else {
+                        if (traffic_event.arrived_from_ == EAST_RIGHT) {
+                            current_lane = SOUTH_LEFT;
+                            state_.num_out_south_left_++;
+
+                        } else if (traffic_event.arrived_from_ == SOUTH_STRAIGHT) {
+                            current_lane = SOUTH_STRAIGHT;
+                            state_.num_out_south_straight_++;
+
+                        } else if (traffic_event.arrived_from_ == WEST_LEFT) {
+                            current_lane = SOUTH_RIGHT;
+                            state_.num_out_south_right_++;
+                        }
+                    }
+                } break;
             }
-            events.emplace_back(new TrafficEvent {car.x_to_go, car.y_to_go, car.current_lane, car.arrived_from, car.event_type});
-            received_event.type_ = DEPARTURE;
-#endif            
+
+            auto timestamp = traffic_event.ts_ + (unsigned int) interval_expo();
+            events.emplace_back(new TrafficEvent {
+                            this->name_, DEPARTURE, x_to_go, y_to_go, 
+                            traffic_event.current_lane_, current_lane, timestamp});
         } break;
 
-        default: {}
+        default: {
+            assert(0);
+        }
     }
     return events;
 }

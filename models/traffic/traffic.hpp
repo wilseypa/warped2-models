@@ -77,10 +77,10 @@ public:
     TrafficEvent() = default;
     TrafficEvent(   const std::string& receiver_name, 
                     const traffic_event_t type, 
-                    unsigned int x_to_go, 
-                    unsigned int y_to_go, 
-                    car_direction_t arrived_from, 
-                    car_direction_t current_lane, 
+                    const int x_to_go, 
+                    const int y_to_go, 
+                    const car_direction_t arrived_from, 
+                    const car_direction_t current_lane, 
                     const unsigned int timestamp    )
             :   receiver_name_(receiver_name), 
                 type_(type), 
@@ -95,8 +95,8 @@ public:
 
     std::string receiver_name_;
     traffic_event_t type_;
-	unsigned int x_to_go_;
-	unsigned int y_to_go_;
+	int x_to_go_;
+	int y_to_go_;
 	car_direction_t arrived_from_;
 	car_direction_t current_lane_;
     unsigned int ts_;
