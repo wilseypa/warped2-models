@@ -28,7 +28,7 @@ std::vector<std::shared_ptr<warped::Event> > Intersection::createInitialEvents()
 
     for (unsigned int i = 0; i < this->num_cars_; i++) {
         events.emplace_back(new TrafficEvent {
-                this->random_move(), ARRIVAL, x, y, 
+                object_name(this->index_), ARRIVAL, x, y, 
                 car_arrival, car_current_lane, (unsigned int) interval_expo()});
     }
     return events;
@@ -608,28 +608,28 @@ std::vector<std::shared_ptr<warped::Event> >
 std::string Intersection::compute_move(direction_t direction) {
 
     unsigned int new_x = 0, new_y = 0;
-    unsigned int current_y = this->index_ / num_cells_x_;
-    unsigned int current_x = this->index_ % num_cells_x_;
+    unsigned int current_y = this->index_ / num_intersections_x_;
+    unsigned int current_x = this->index_ % num_intersections_x_;
 
     switch (direction) {
         case WEST: {
-            new_x = (current_x + num_cells_x_ - 1) % num_cells_x_;
+            new_x = (current_x + num_intersections_x_ - 1) % num_intersections_x_;
             new_y = current_y;
         } break;
 
         case EAST: {
-            new_x = (current_x + 1) % num_cells_x_;
+            new_x = (current_x + 1) % num_intersections_x_;
             new_y = current_y;
         } break;
 
         case SOUTH: {
             new_x = current_x;
-            new_y = (current_y + num_cells_y_ - 1) % num_cells_y_;
+            new_y = (current_y + num_intersections_y_ - 1) % num_intersections_y_;
         } break;
 
         case NORTH: {
             new_x = current_x;
-            new_y = (current_y + 1) % num_cells_y_;
+            new_y = (current_y + 1) % num_intersections_y_;
         } break;
 
         default: {
@@ -637,7 +637,7 @@ std::string Intersection::compute_move(direction_t direction) {
             assert(0);
         }
     }
-    return std::string("Intersection_") + std::to_string(new_x + (new_y * num_cells_x_));
+    return object_name(new_x + new_y * num_intersections_x_);
 }
 
 std::string Intersection::random_move() {
@@ -649,7 +649,56 @@ std::string Intersection::random_move() {
 
 int main(int argc, const char** argv) {
 
-    std::cout << argc << argv[1];
+    unsigned int num_intersections_x   = 100;
+    unsigned int num_intersections_y   = 100;
+    unsigned int num_cars              = 25;
+    unsigned int mean_interval         = 400;
+
+    TCLAP::ValueArg<unsigned int> num_intersections_x_arg("x", "num-intersections-x", 
+                "Width of intersection grid", false, num_intersections_x, "unsigned int");
+    TCLAP::ValueArg<unsigned int> num_intersections_y_arg("y", "num-intersections-y", 
+                "Height of intersection grid", false, num_intersections_y, "unsigned int");
+    TCLAP::ValueArg<unsigned int> num_cars_arg("n", "number-of-cars", 
+                "Number of cars per intersection", false, num_cars, "unsigned int");
+    TCLAP::ValueArg<unsigned int> mean_interval_arg("i", "mean-interval", 
+                "Mean interval", false, mean_interval, "unsigned int");
+
+    std::vector<TCLAP::Arg*> cmd_line_args = {  &num_intersections_x_arg, 
+                                                &num_intersections_y_arg, 
+                                                &num_cars_arg, 
+                                                &mean_interval_arg  };
+
+    warped::Simulation simulation {"Traffic Simulation", argc, argv, cmd_line_args};
+
+    num_intersections_x = num_intersections_x_arg.getValue();
+    num_intersections_y = num_intersections_y_arg.getValue();
+    num_cars            = num_cars_arg.getValue();
+    mean_interval       = mean_interval_arg.getValue();
+
+    std::vector<Intersection> objects;
+    for (unsigned int index = 0; index < num_intersections_x * num_intersections_y; index++) {
+        objects.emplace_back(   num_intersections_x, 
+                                num_intersections_y, 
+                                num_cars, 
+                                mean_interval, 
+                                index
+                            );
+    }
+
+    std::vector<warped::SimulationObject*> object_pointers;
+    for (auto& o : objects) {
+        object_pointers.push_back(&o);
+    }
+    simulation.simulate(object_pointers);
+
+    unsigned int total_cars_arrived = 0, total_cars_finished = 0;
+    for (auto& o : objects) {
+        total_cars_arrived  += o.state_.total_cars_arrived_;
+        total_cars_finished += o.state_.total_cars_finished_;
+    }
+    std::cout << "Total cars arrived  : " << total_cars_arrived  << std::endl;
+    std::cout << "Total cars finished : " << total_cars_finished << std::endl;
+
     return 0;
 }
 
