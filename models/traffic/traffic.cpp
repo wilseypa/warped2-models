@@ -607,17 +607,29 @@ std::vector<std::shared_ptr<warped::Event> >
 
 std::string Intersection::compute_move(direction_t direction) {
 
+    unsigned int new_x = 0, new_y = 0;
+    unsigned int current_y = this->index_ / num_cells_x_;
+    unsigned int current_x = this->index_ % num_cells_x_;
+
     switch (direction) {
         case WEST: {
+            new_x = (current_x + num_cells_x_ - 1) % num_cells_x_;
+            new_y = current_y;
         } break;
 
         case EAST: {
+            new_x = (current_x + 1) % num_cells_x_;
+            new_y = current_y;
         } break;
 
         case SOUTH: {
+            new_x = current_x;
+            new_y = (current_y + num_cells_y_ - 1) % num_cells_y_;
         } break;
 
         case NORTH: {
+            new_x = current_x;
+            new_y = (current_y + 1) % num_cells_y_;
         } break;
 
         default: {
@@ -625,7 +637,7 @@ std::string Intersection::compute_move(direction_t direction) {
             assert(0);
         }
     }
-    return object_name(0);
+    return std::string("Intersection_") + std::to_string(new_x + (new_y * num_cells_x_));
 }
 
 std::string Intersection::random_move() {
