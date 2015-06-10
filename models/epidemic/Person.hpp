@@ -3,12 +3,13 @@
 
 enum infection_state_t {
 
-    UNINFECTED,
+    UNINFECTED = 0,
     LATENT,
     INCUBATING,
     INFECTIOUS,
     ASYMPT,
-    RECOVERED
+    RECOVERED,
+    MAX_INFECTION_STATE_NUM
 };
 
 class Person {
