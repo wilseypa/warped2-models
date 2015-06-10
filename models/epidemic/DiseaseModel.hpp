@@ -38,7 +38,7 @@ public:
         rand_num_gen_ = warped::make_unique<RandomNumGenerator>(seed);
     }
 
-    void reaction(std::shared_ptr<std::map<unsigned int, std::shared_ptr<Person>>> population, 
+    void reaction(std::shared_ptr<std::map<unsigned long, std::shared_ptr<Person>>> population, 
                                                     unsigned int current_time) {
 
         unsigned int uninfected_num = 0, latent_num = 0, incubating_num = 0, 

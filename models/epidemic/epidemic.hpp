@@ -13,11 +13,12 @@
 
 WARPED_DEFINE_OBJECT_STATE_STRUCT(LocationState) {
 
-    LocationState()
-        { current_population_ = make_shared<std::map <unsigned int, std::shared_ptr<Person>>>(); }
+    LocationState() { 
+        current_population_ = make_shared<std::map <unsigned long, std::shared_ptr<Person>>>();
+    }
 
     LocationState(const LocationState& other) {
-        current_population_ = make_shared<std::map <unsigned int, std::shared_ptr<Person>>>();
+        current_population_ = make_shared<std::map <unsigned long, std::shared_ptr<Person>>>();
         for (auto it = other.current_population_->begin(); 
                             it != other.current_population_->end(); it++) {
             auto person = it->second;
@@ -29,11 +30,11 @@ WARPED_DEFINE_OBJECT_STATE_STRUCT(LocationState) {
                                             person->loc_arrival_timestamp_, 
                                             person->prev_state_change_timestamp_    );
             current_population_->insert(current_population_->begin(), 
-                std::pair <unsigned int, std::shared_ptr<Person>> (person->pid_, new_person));
+                std::pair <unsigned long, std::shared_ptr<Person>> (person->pid_, new_person));
         }
     };
 
-    std::shared_ptr<std::map <unsigned int, std::shared_ptr<Person>>> current_population_;
+    std::shared_ptr<std::map <unsigned long, std::shared_ptr<Person>>> current_population_;
 };
 
 enum event_type_t {
@@ -66,7 +67,7 @@ public:
     unsigned int timestamp() const { return loc_arrival_timestamp_; }
 
     std::string receiver_name_;
-    unsigned int pid_;
+    unsigned long pid_;
     double susceptibility_;
     bool vaccination_status_;
     infection_state_t infection_state_;
@@ -109,7 +110,7 @@ public:
 
         for (auto& person : population) {
             state_->current_population_->insert(state_->current_population_->begin(), 
-                std::pair <unsigned int, std::shared_ptr<Person>> (person->pid_, person));
+                std::pair <unsigned long, std::shared_ptr<Person>> (person->pid_, person));
         }
     }
 

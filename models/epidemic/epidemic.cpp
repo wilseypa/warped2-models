@@ -64,7 +64,7 @@ std::vector<std::shared_ptr<warped::Event> > Location::receiveEvent(const warped
                         epidemic_event.vaccination_status_, epidemic_event.infection_state_,
                         timestamp, epidemic_event.prev_state_change_timestamp_);
             state_->current_population_->insert(state_->current_population_->begin(), 
-                std::pair <unsigned int, std::shared_ptr<Person>> (epidemic_event.pid_, person));
+                std::pair <unsigned long, std::shared_ptr<Person>> (epidemic_event.pid_, person));
         } break;
 
         default: {}
@@ -156,11 +156,11 @@ int main(int argc, const char** argv) {
             unsigned int loc_diffusion_trig_interval = 0; //rand
 
             for (unsigned int person_id = 0; person_id < num_persons_per_location; person_id++) {
-                unsigned int pid = region_id * location_id + person_id;
+                unsigned long pid = region_id * location_id + person_id;
                 double susceptibility = 0.0; //rand
                 bool vaccination_status = false; //rand
-                infection_state_t state = (infection_state_t) 
-                                                    (0 % (unsigned int) MAX_INFECTION_STATE_NUM); //rand
+                infection_state_t state = 
+                    (infection_state_t) (0 % (unsigned int) MAX_INFECTION_STATE_NUM); //rand
 
                 auto person = std::make_shared<Person> (    pid, 
                                                             susceptibility, 
