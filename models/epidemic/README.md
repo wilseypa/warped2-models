@@ -37,8 +37,9 @@ locations are  connected to each  other via a virtual central hub. This
 has been done to reduce  complexity in management of the inter-location 
 distances.
 
-time<sub>location-1 -> location-2</sub> = <br>
-time<sub>location-1 -> hub</sub> + time<sub>hub -> location-2</sub> <br>
+Travel Time<sub> location 1 => location 2</sub> = 
+Travel Time<sub> location 1 => hub</sub> + 
+Travel Time<sub> hub => location 2</sub>
 
 ##Configuration :
 
