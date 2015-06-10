@@ -41,37 +41,18 @@ Travel time from location 1 to location 2 = <br>
 ..Travel time from location 1 to central hub + Travel time from central 
 hub to location 2 <br>
 
-###Important Information :
+##Configuration :
 
-The  config  file can  be auto-generated  with  random  region  details 
-using the 'createXmlConfig.py'  script. Type ***python createXmlConfig.py 
-'config file name'*** to create the config file.
+The model lets the user adjust the following parameters :
 
-
-##Configuration File :
-
-The model generator program lets the user adjust the following parameters
-before writing out the model:
-
-1. Diffusion  : model, seed, model parameters
-    a. Model Parameters for Watts-Strogatz: K, Beta
-
-2. Disease    : transmissiblity, latent dwell time, latent infectivity, 
-                incubating dwell time, incubating infectivity, 
-                infectious dwell time, infectious infectivity, 
-                asympt dwell time, asympt infectivity, 
-                prob_ulu, prob_ulv, prob_urv, prob_uiv, prob_uiu, 
-                location state refresh interval, seed
-
-3. Population : <br>
-For each region
-..For each location 
-....Travel time to central hub
-....Diffusion trigger interval
-....For each person
-......Susceptibility
-......Is Vaccinated
-......Infection State <br>
+1. Number of regions
+2. Number of locations per region
+3. Population per location
+4. Mean travel time to hub
+5. Diffusion seed
+6. Disease seed
+7. Location state refresh interval
+8. Mean location diffusion interval
 
 ###Legend :
 
