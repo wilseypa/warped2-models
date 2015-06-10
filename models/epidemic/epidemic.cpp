@@ -83,7 +83,7 @@ int main(int argc, const char** argv) {
     unsigned int location_state_refresh_interval    = 50;
     unsigned int mean_location_diffusion_interval   = 200;
 
-    TCLAP::ValueArg<unsigned int> num_regions_arg("r", "num-regions", "Number of regions",
+    TCLAP::ValueArg<unsigned int> num_regions_arg("n", "num-regions", "Number of regions",
                                                             false, num_regions, "unsigned int");
     TCLAP::ValueArg<unsigned int> num_locations_per_region_arg("l", "num-locations-per-region", 
                 "Number of locations per region", false, num_locations_per_region, "unsigned int");
@@ -91,13 +91,13 @@ int main(int argc, const char** argv) {
                 "Number of persons per location", false, num_persons_per_location, "unsigned int");
     TCLAP::ValueArg<unsigned int> mean_travel_time_to_hub_arg("t", "mean-travel-time-to-hub", 
                         "Mean travel time to hub", false, mean_travel_time_to_hub, "unsigned int");
-    TCLAP::ValueArg<unsigned int> diffusion_seed_arg("df", "diffusion-seed", "Diffusion seed", 
+    TCLAP::ValueArg<unsigned int> diffusion_seed_arg("f", "diffusion-seed", "Diffusion seed", 
                                                             false, diffusion_seed, "unsigned int");
-    TCLAP::ValueArg<unsigned int> disease_seed_arg("ds", "disease-seed", "Disease seed", 
+    TCLAP::ValueArg<unsigned int> disease_seed_arg("s", "disease-seed", "Disease seed", 
                                                             false, disease_seed, "unsigned int");
-    TCLAP::ValueArg<unsigned int> location_state_refresh_interval_arg("lri", "refresh-interval", 
+    TCLAP::ValueArg<unsigned int> location_state_refresh_interval_arg("r", "refresh-interval", 
         "Location state refresh interval", false, location_state_refresh_interval, "unsigned int");
-    TCLAP::ValueArg<unsigned int> mean_location_diffusion_interval_arg("ldi", "diffusion-interval", 
+    TCLAP::ValueArg<unsigned int> mean_location_diffusion_interval_arg("i", "diffusion-interval", 
         "Mean location diffusion interval", false, mean_location_diffusion_interval, "unsigned int");
 
     std::vector<TCLAP::Arg*> args = {   &num_regions_arg, 
