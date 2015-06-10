@@ -37,13 +37,12 @@ locations are  connected to each  other via a virtual central hub. This
 has been done to reduce  complexity in management of the inter-location 
 distances.
 
-Travel time from location 1 to location 2 = <br>
-..Travel time from location 1 to central hub + Travel time from central 
-hub to location 2 <br>
+time<sub>location-1 -> location-2</sub> = <br>
+time<sub>location-1 -> hub</sub> + time<sub>hub -> location-2</sub> <br>
 
 ##Configuration :
 
-The model lets the user adjust the following parameters :
+User can adjust the following parameters :
 
 1. Number of regions
 2. Number of locations per region
