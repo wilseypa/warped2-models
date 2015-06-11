@@ -82,7 +82,6 @@ public:
 
 protected:
     std::shared_ptr<MLCG> rng_;
-    std::default_random_engine rng_engine_;
     const unsigned int num_airports_x_;
     const unsigned int num_airports_y_;
     const unsigned int num_planes_;
