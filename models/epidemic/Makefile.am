@@ -8,3 +8,7 @@ epidemic_sim_SOURCES = \
     DiseaseModel.hpp \
     epidemic.hpp \
     epidemic.cpp
+
+epidemic_sim_CPPFLAGS = -isystem$(top_srcdir)/deps/rnd -I$(top_srcdir)/deps
+
+epidemic_sim_LDADD=$(top_builddir)/deps/rnd/libRnd.la

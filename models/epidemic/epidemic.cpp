@@ -1,11 +1,12 @@
+#include <random>
 #include "epidemic.hpp"
 #include "WattsStrogatzModel.hpp"
+#include "MLCG.h"
+#include "NegExp.h"
 #include "tclap/ValueArg.h"
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/xml_parser.hpp>
-#include <boost/foreach.hpp>
 
-using namespace boost::property_tree;
+#define NEG_EXP_OFFSET 50
+
 
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(EpidemicEvent)
 
@@ -121,6 +122,10 @@ int main(int argc, const char** argv) {
     location_state_refresh_interval  = location_state_refresh_interval_arg.getValue();
     mean_location_diffusion_interval = mean_location_diffusion_interval_arg.getValue();
 
+    std::shared_ptr<MLCG> rng = make_shared<MLCG> ();
+    NegativeExpntl travel_time_expo(mean_travel_time_to_hub, rng.get());
+    NegativeExpntl diffusion_expo(mean_location_diffusion_interval, rng.get());
+
     // Diffusion model
     unsigned int k = 8;
     float beta = 0.1;
@@ -151,16 +156,26 @@ int main(int argc, const char** argv) {
             std::string location_name = std::string("location_") + std::to_string(location_id);
             std::string location = region_name + std::string("-") + location_name;
             std::vector<std::shared_ptr<Person>> population;
-            unsigned int travel_time_to_hub = 0; //rand
+            unsigned int travel_time_to_hub = 
+                            (unsigned int) travel_time_expo() + NEG_EXP_OFFSET;
             travel_map.insert(std::pair<std::string, unsigned int>(location, travel_time_to_hub));
-            unsigned int loc_diffusion_trig_interval = 0; //rand
+            unsigned int location_diffusion_interval = 
+                            (unsigned int) diffusion_expo() + NEG_EXP_OFFSET;
 
             for (unsigned int person_id = 0; person_id < num_persons_per_location; person_id++) {
                 unsigned long pid = region_id * location_id + person_id;
-                double susceptibility = 0.0; //rand
-                bool vaccination_status = false; //rand
-                infection_state_t state = 
-                    (infection_state_t) (0 % (unsigned int) MAX_INFECTION_STATE_NUM); //rand
+    
+                std::default_random_engine gen;
+
+                std::uniform_int_distribution<unsigned int> rand_susceptibility(0,10);
+                double susceptibility = ((double)rand_susceptibility(gen))/10;
+
+                std::uniform_int_distribution<unsigned int> rand_vaccination(0,1);
+                bool vaccination_status = (bool) rand_vaccination(gen);
+
+                std::uniform_int_distribution<unsigned int> 
+                            rand_infection(0, (unsigned int) MAX_INFECTION_STATE_NUM-1);
+                infection_state_t state = (infection_state_t) rand_infection(gen);
 
                 auto person = std::make_shared<Person> (    pid, 
                                                             susceptibility, 
@@ -187,7 +202,7 @@ int main(int argc, const char** argv) {
                                     prob_uiv, 
                                     prob_uiu, 
                                     location_state_refresh_interval, 
-                                    loc_diffusion_trig_interval, 
+                                    location_diffusion_interval, 
                                     population, 
                                     travel_time_to_hub, 
                                     disease_seed, 
