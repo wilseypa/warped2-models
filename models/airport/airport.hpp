@@ -7,10 +7,11 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <random>
 
 #include "warped.hpp"
 
-#include "MLCG.h"
+std::random_device rd;
 
 WARPED_DEFINE_OBJECT_STATE_STRUCT(AirportState) {
     unsigned int arrivals_;
@@ -59,13 +60,13 @@ public:
                 const unsigned int index)
         :   SimulationObject(name), 
             state_(), 
-            rng_(new MLCG), 
+            rng_(new std::default_random_engine(rd())),
             num_airports_x_(num_airports_x), 
             num_airports_y_(num_airports_y), 
             num_planes_(num_planes), 
             arrive_mean_(arrive_mean), 
             depart_mean_(depart_mean), 
-            index_(index)               {
+            index_(index) {
 
         state_.departures_      = 0;
         state_.arrivals_        = 0;
@@ -81,7 +82,7 @@ public:
     static inline std::string object_name(const unsigned int);
 
 protected:
-    std::shared_ptr<MLCG> rng_;
+    std::shared_ptr<std::default_random_engine> rng_;
     const unsigned int num_airports_x_;
     const unsigned int num_airports_y_;
     const unsigned int num_planes_;

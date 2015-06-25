@@ -1,22 +1,24 @@
 // An implementation of Fujimoto's airport model
 // Ported from the ROSS airport model (https://github.com/carothersc/ROSS/blob/master/ross/models/airport)
 
+#include <cassert>
 #include <random>
 #include "airport.hpp"
-#include "NegExp.h"
 #include "tclap/ValueArg.h"
-
-#define NEG_EXPL_OFFSET  1
-
 
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(AirportEvent)
 
 std::vector<std::shared_ptr<warped::Event> > Airport::createInitialEvents() {
 
+    // Register random number generator
+    this->registerRNG<std::default_random_engine>(this->rng_);
+
+    std::exponential_distribution<double> depart_expo(1.0/depart_mean_);
     std::vector<std::shared_ptr<warped::Event> > events;
-    NegativeExpntl depart_expo((double)this->depart_mean_, this->rng_.get());
+
     for (unsigned int i = 0; i < this->num_planes_; i++) {
-        events.emplace_back(new AirportEvent {this->name_, DEPARTURE, (unsigned int)depart_expo()});
+        unsigned int departure = std::ceil(depart_expo(*this->rng_));
+        events.emplace_back(new AirportEvent {this->name_, DEPARTURE, departure});
     }
     return events;
 }
@@ -31,8 +33,8 @@ std::vector<std::shared_ptr<warped::Event> > Airport::receiveEvent(const warped:
     std::vector<std::shared_ptr<warped::Event> > response_events;
     auto received_event = static_cast<const AirportEvent&>(event);
 
-    NegativeExpntl depart_expo((double)this->depart_mean_, this->rng_.get());
-    NegativeExpntl arrive_expo((double)this->arrive_mean_, this->rng_.get());
+    std::exponential_distribution<double> depart_expo(1.0/depart_mean_);
+    std::exponential_distribution<double> arrive_expo(1.0/arrive_mean_);
 
     switch (received_event.type_) {
 
@@ -40,8 +42,7 @@ std::vector<std::shared_ptr<warped::Event> > Airport::receiveEvent(const warped:
             this->state_.planes_grounded_--;
             this->state_.departures_++;
             // Schedule an arrival at a random airport
-            unsigned int arrival_time = 
-                        received_event.ts_ + (unsigned int)arrive_expo() + NEG_EXPL_OFFSET;
+            unsigned int arrival_time = received_event.ts_ + (unsigned int)arrive_expo(*this->rng_);
             response_events.emplace_back(new AirportEvent { 
                                                     random_move(), ARRIVAL, arrival_time });
             break;
@@ -51,8 +52,7 @@ std::vector<std::shared_ptr<warped::Event> > Airport::receiveEvent(const warped:
             this->state_.arrivals_++;
             this->state_.planes_grounded_++;
             // Schedule a departure
-            unsigned int departure_time = 
-                        received_event.ts_ + (unsigned int)depart_expo() + NEG_EXPL_OFFSET;
+            unsigned int departure_time = received_event.ts_ + (unsigned int)depart_expo(*this->rng_);
             response_events.emplace_back(new AirportEvent { this->name_, DEPARTURE, 
                                                                             departure_time });
             break;
@@ -100,9 +100,8 @@ std::string Airport::compute_move(direction_t direction) {
 
 std::string Airport::random_move() {
 
-    std::default_random_engine gen;
     std::uniform_int_distribution<unsigned int> rand_direction(0,3);
-    return this->compute_move((direction_t)rand_direction(gen));
+    return this->compute_move((direction_t)rand_direction(*this->rng_));
 }
 
 int main(int argc, const char** argv) {
