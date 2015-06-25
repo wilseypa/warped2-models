@@ -4,12 +4,9 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <random>
 
 #include "warped.hpp"
-
-#include "MLCG.h"
-#include "NegExp.h"
-
 
 WARPED_DEFINE_OBJECT_STATE_STRUCT(PcsState) {
 
@@ -85,8 +82,8 @@ public:
             call_duration_mean_(call_duration_mean), 
             move_interval_mean_(move_interval_mean),
             portable_init_cnt_(portable_cnt),
-            index_(index), 
-            rng_(new MLCG) {
+            index_(index),
+            rng_(new std::default_random_engine(index)) {
 
         // Update the state variables
         state_.idle_channel_cnt_    = channel_cnt_;
@@ -114,7 +111,8 @@ protected:
     unsigned int            move_interval_mean_;
     unsigned int            portable_init_cnt_;
     unsigned int            index_;
-    std::shared_ptr<MLCG>   rng_;
+
+    std::shared_ptr<std::default_random_engine> rng_;
 
     std::string compute_move(direction_t direction);
     std::string random_move();

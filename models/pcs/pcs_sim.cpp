@@ -10,21 +10,19 @@
 #include "warped.hpp"
 #include "pcs_sim.hpp"
 
-#include "MLCG.h"
-#include "NegExp.h"
-
 #include "tclap/ValueArg.h"
-
-#define NEG_EXPL_OFFSET  1
 
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(PcsEvent)
 
 std::vector<std::shared_ptr<warped::Event> > PcsCell::createInitialEvents() {
 
-    NegativeExpntl interval_expo(call_interval_mean_, rng_.get());
+    // Register random number generator to allow kernel to roll it back
+    this->registerRNG<std::default_random_engine>(this->rng_);
+
+    std::exponential_distribution<double> interval_expo(1.0/call_interval_mean_);
     std::vector<std::shared_ptr<warped::Event>> events;
     for (unsigned int i = 0; i < portable_init_cnt_; i++) {
-        auto interval = (unsigned int) interval_expo();
+        auto interval = (unsigned int) std::ceil(interval_expo(*this->rng_));
         events.emplace_back(new PcsEvent {this->name_, interval, 0, CALL_ARRIVAL});
     }
     return events;
@@ -36,9 +34,9 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
     auto pcs_event = static_cast<const PcsEvent&>(event);
     auto timestamp = pcs_event.event_timestamp_;
 
-    NegativeExpntl interval_expo(call_interval_mean_, rng_.get());
-    NegativeExpntl duration_expo(call_duration_mean_, rng_.get());
-    NegativeExpntl move_expo(move_interval_mean_, rng_.get());
+    std::exponential_distribution<double> interval_expo(1.0/call_interval_mean_);
+    std::exponential_distribution<double> duration_expo(1.0/call_duration_mean_);
+    std::exponential_distribution<double> move_expo(1.0/move_interval_mean_);
 
     switch (pcs_event.event_type_) {
 
@@ -47,8 +45,8 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
             state_.calls_placed_++;
             if (state_.idle_channel_cnt_) {
                 state_.idle_channel_cnt_--;
-                auto move_interval = (unsigned int) move_expo() + NEG_EXPL_OFFSET;
-                auto call_duration = (unsigned int) duration_expo() + NEG_EXPL_OFFSET;
+                auto move_interval = (unsigned int) std::ceil(move_expo(*this->rng_));
+                auto call_duration = (unsigned int) std::ceil(duration_expo(*this->rng_));
 
                 if (move_interval < call_duration) {
                     events.emplace_back(new PcsEvent {name_, timestamp + move_interval, 
@@ -59,7 +57,7 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
                 }
             } else {
                 state_.calls_dropped_++;
-                auto call_interval = (unsigned int) interval_expo() + NEG_EXPL_OFFSET;
+                auto call_interval = (unsigned int) std::ceil(interval_expo(*this->rng_));
                 events.emplace_back(new PcsEvent {name_, timestamp + call_interval, 
                                                                         0, CALL_ARRIVAL});
             }
@@ -69,7 +67,7 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
 
             state_.calls_completed_++;
             state_.idle_channel_cnt_++;
-            auto call_interval = (unsigned int) interval_expo() + NEG_EXPL_OFFSET;
+            auto call_interval = (unsigned int) std::ceil(interval_expo(*this->rng_));
             events.emplace_back(new PcsEvent {name_, timestamp + call_interval, 0, CALL_ARRIVAL});
         } break;
 
@@ -85,7 +83,7 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
             bool call_terminated = true;
             if (state_.idle_channel_cnt_) {
 
-                auto call_duration = (unsigned int) duration_expo() + NEG_EXPL_OFFSET;
+                auto call_duration = (unsigned int) std::ceil(duration_expo(*this->rng_));
                 auto completion_timestamp = pcs_event.call_arrival_ts_ + call_duration;
 
                 if (completion_timestamp > timestamp) {
@@ -99,7 +97,7 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
 
             if (call_terminated) {
                 state_.calls_dropped_++;
-                auto call_interval = (unsigned int) interval_expo() + NEG_EXPL_OFFSET;
+                auto call_interval = (unsigned int) std::ceil(interval_expo(*this->rng_));
                 events.emplace_back(new PcsEvent {name_, timestamp + call_interval, 
                                                                         0, CALL_ARRIVAL});
             }
@@ -151,9 +149,8 @@ std::string PcsCell::compute_move(direction_t direction) {
 
 std::string PcsCell::random_move() {
 
-    std::default_random_engine gen;
     std::uniform_int_distribution<unsigned int> rand_direction(0,3);
-    return this->compute_move((direction_t)rand_direction(gen));
+    return this->compute_move((direction_t)rand_direction(*this->rng_));
 }
 
 int main(int argc, const char **argv) {
