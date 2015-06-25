@@ -1,33 +1,33 @@
 // Ported from the ROSS traffic model 
 // https://github.com/carothersc/ROSS-Models/blob/master/traffic/
 
+#include <cassert>
 #include <random>
 #include "traffic.hpp"
-#include "NegExp.h"
 #include "tclap/ValueArg.h"
 
-#define NEG_EXPL_OFFSET  1
 #define MAX_CARS_ON_ROAD 5
 
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(TrafficEvent)
 
 std::vector<std::shared_ptr<warped::Event> > Intersection::createInitialEvents() {
 
-    std::vector<std::shared_ptr<warped::Event> > events;
-    NegativeExpntl interval_expo(this->mean_interval_, this->rng_.get());
+    this->registerRNG(this->rng_);
 
-    std::default_random_engine gen;
+    std::exponential_distribution<double> interval_expo(1.0/this->mean_interval_);
+
     std::uniform_int_distribution<unsigned int> rand_car_direction(0,11);
-    auto car_arrival = (car_direction_t) rand_car_direction(gen);
+    auto car_arrival = (car_direction_t) rand_car_direction(*this->rng_);
     auto car_current_lane = car_arrival;
 
     std::uniform_int_distribution<int> rand_x(-99,100);
     std::uniform_int_distribution<int> rand_y(-99,100);
 
+    std::vector<std::shared_ptr<warped::Event> > events;
     for (unsigned int i = 0; i < this->num_cars_; i++) {
         events.emplace_back(new TrafficEvent {
-                object_name(this->index_), ARRIVAL, rand_x(gen), rand_y(gen), 
-                car_arrival, car_current_lane, (unsigned int) interval_expo()});
+                object_name(this->index_), ARRIVAL, rand_x(*this->rng_), rand_y(*this->rng_), 
+                car_arrival, car_current_lane, (unsigned int) std::ceil(interval_expo(*this->rng_))});
     }
     return events;
 }
@@ -42,7 +42,7 @@ std::vector<std::shared_ptr<warped::Event> >
 
     std::vector<std::shared_ptr<warped::Event> > events;
     auto traffic_event = static_cast<const TrafficEvent&>(event);
-    NegativeExpntl interval_expo(mean_interval_, this->rng_.get());
+    std::exponential_distribution<double> interval_expo(1.0/this->mean_interval_);
 
     switch (traffic_event.type_) {
 
@@ -118,7 +118,7 @@ std::vector<std::shared_ptr<warped::Event> >
                 } break;
             }
 
-            auto timestamp = traffic_event.ts_ + (unsigned int) interval_expo();
+            auto timestamp = traffic_event.ts_ + (unsigned int) std::ceil(interval_expo(*this->rng_));
             events.emplace_back(new TrafficEvent {
                             this->name_, DIRECTION_SELECT, 
                             traffic_event.x_to_go_, traffic_event.y_to_go_, 
@@ -192,7 +192,7 @@ std::vector<std::shared_ptr<warped::Event> >
                 } break;
             }
 
-            auto timestamp = traffic_event.ts_ + (unsigned int) interval_expo();
+            auto timestamp = traffic_event.ts_ + (unsigned int) std::ceil(interval_expo(*this->rng_));
             events.emplace_back(new TrafficEvent {
                             this->compute_move(departure_direction), ARRIVAL, 
                             traffic_event.x_to_go_, traffic_event.y_to_go_, 
@@ -641,7 +641,7 @@ std::vector<std::shared_ptr<warped::Event> >
                 } break;
             }
 
-            auto timestamp = traffic_event.ts_ + (unsigned int) interval_expo();
+            auto timestamp = traffic_event.ts_ + (unsigned int) std::ceil(interval_expo(*this->rng_));
             events.emplace_back(new TrafficEvent {
                             this->name_, DEPARTURE, x_to_go, y_to_go, 
                             traffic_event.current_lane_, current_lane, timestamp});

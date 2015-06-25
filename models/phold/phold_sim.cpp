@@ -7,17 +7,12 @@
 #include <iostream>
 #include <algorithm>
 #include <cstdlib>
+#include <memory>
 
 #include "warped.hpp"
 #include "tclap/ValueArg.h"
 
-#include "MLCG.h"
-#include "Normal.h"
-#include "Poisson.h"
-#include "Binomial.h"
-#include "Uniform.h"
-#include "NegExp.h"
-#include "DiscUnif.h"
+std::random_device rd;
 
 enum distribution_t {UNIFORM, POISSON, EXPONENTIAL, NORMAL, BINOMIAL, FIXED,
                      ALTERNATE, ROUNDROBIN, CONDITIONAL, ALL};
@@ -51,12 +46,15 @@ public:
                 unsigned int num_objects, distribution_t distribution,
                 double distribution_mean = 1.0)
         : SimulationObject(name), state_(), initial_events_(initial_events),
-            num_objects_(num_objects), rng_(new MLCG), distribution_(distribution),
-            distribution_mean_(distribution_mean) {}
+            num_objects_(num_objects), rng_(new std::default_random_engine(rd())),
+            distribution_(distribution), distribution_mean_(distribution_mean) {}
 
     warped::ObjectState& getState() { return this->state_; }
 
     std::vector<std::shared_ptr<warped::Event> > createInitialEvents() {
+
+        this->registerRNG(this->rng_);
+
         std::vector<std::shared_ptr<warped::Event> > events;
         for (unsigned int i = 0; i < this->initial_events_; i++) {
             ++this->state_.messages_sent_;
@@ -81,13 +79,13 @@ public:
 protected:
     const unsigned int initial_events_;
     const unsigned int num_objects_;
-    std::shared_ptr<MLCG> rng_;
+    std::shared_ptr<std::default_random_engine> rng_;
     const distribution_t distribution_;
     const double distribution_mean_;
 
     std::string get_destination() const {
-        DiscreteUniform Dest(0, ((int)(num_objects_))-1, this->rng_.get());
-        unsigned int destination_number = (unsigned int) Dest();
+        std::uniform_int_distribution<int> dest(0, (int)(num_objects_-1));
+        unsigned int destination_number = (unsigned int) dest(*this->rng_);
         return std::string("Object ") + std::to_string(destination_number);
     }
 
@@ -95,32 +93,32 @@ protected:
         double delay;
         switch ( this->distribution_ ) {
             case UNIFORM : {
-                Uniform uniform(this->distribution_mean_, 0.0, this->rng_.get());
-                delay = uniform();
+                std::uniform_int_distribution<int> uniform(0.0, 2*this->distribution_mean_);
+                delay = uniform(*this->rng_);
             } break;
 
             case NORMAL : {
-                Normal normal(this->distribution_mean_, 0.0, this->rng_.get());
-                delay = normal();
+                std::normal_distribution<double> normal(this->distribution_mean_, 1.0);
+                delay = (unsigned int) normal(*this->rng_);
             } break;
 
             case BINOMIAL : {
-                Binomial binomial((int)this->distribution_mean_, 0.0, this->rng_.get());
-                delay = binomial();
+                std::binomial_distribution<int> binomial((int)this->distribution_mean_, 0.0);
+                delay = binomial(*this->rng_);
             } break;
 
             case POISSON : {
-                Poisson poisson(this->distribution_mean_, this->rng_.get());
-                delay = poisson();
+                std::poisson_distribution<int> poisson((int)this->distribution_mean_);
+                delay = poisson(*this->rng_);
             } break;
 
             case EXPONENTIAL : {
-                NegativeExpntl expo(this->distribution_mean_, this->rng_.get());
-                delay = expo();
+                std::exponential_distribution<double> expo(1.0/this->distribution_mean_);
+                delay = (unsigned int) expo(*this->rng_);
             } break;
 
             case FIXED : {
-                delay = (unsigned int)this->distribution_mean_ ;
+                delay = (unsigned int) this->distribution_mean_ ;
             } break;
 
             default : {

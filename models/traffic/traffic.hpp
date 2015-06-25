@@ -7,9 +7,11 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <random>
 
 #include "warped.hpp"
-#include "MLCG.h"
+
+std::random_device rd;
 
 WARPED_DEFINE_OBJECT_STATE_STRUCT(TrafficState) {
 
@@ -115,7 +117,7 @@ public:
                     const unsigned int index    )
             :   SimulationObject(object_name(index)),
                 state_(),
-                rng_(new MLCG),
+                rng_(new std::default_random_engine(rd())),
                 num_intersections_x_(num_intersections_x),
                 num_intersections_y_(num_intersections_y),
                 num_cars_(num_cars),
@@ -159,7 +161,7 @@ public:
     static inline std::string object_name(const unsigned int);
 
 protected:
-    std::shared_ptr<MLCG> rng_;
+    std::shared_ptr<std::default_random_engine> rng_;
     const unsigned int num_intersections_x_;
     const unsigned int num_intersections_y_;
     const unsigned int num_cars_;
