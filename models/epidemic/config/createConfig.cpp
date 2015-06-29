@@ -32,11 +32,11 @@
 /* Regions */
 #define NUM_REGIONS                         1000
 #define MIN_NUM_LOCATIONS_PER_REGION        500
-#define MAX_NUM_LOCATIONS_PER_REGION        1500
+#define MAX_NUM_LOCATIONS_PER_REGION        500
 
 /* Location */
-#define MIN_NUM_PERSONS_PER_LOCATION        500
-#define MAX_NUM_PERSONS_PER_LOCATION        1000
+#define MIN_NUM_PERSONS_PER_LOCATION        100
+#define MAX_NUM_PERSONS_PER_LOCATION        100
 #define MIN_TRAVEL_TIME_TO_HUB              50
 #define MAX_TRAVEL_TIME_TO_HUB              400
 #define MIN_LOCATION_DIFFUSION_INTERVAL     200
@@ -62,17 +62,66 @@ int main( int argc, char *argv[] ) {
         return 0;
     }
 
-    config_stream << NUM_REGIONS << std::endl;
+    // Write the diffusion parameters
+    config_stream << DIFFUSION_SEED << ",";
+    config_stream << K              << ",";
+    config_stream << BETA           << std::endl;
 
+    // Write the disease parameters
+    config_stream << TRANSMISSIBILITY                   << std::endl;
+    config_stream << LATENT_DWELL_TIME                  << ",";
+    config_stream << LATENT_INFECTIVITY                 << std::endl;
+    config_stream << INCUBATING_DWELL_TIME              << ",";
+    config_stream << INCUBATING_INFECTIVITY             << std::endl;
+    config_stream << INFECTIOUS_DWELL_TIME              << ",";
+    config_stream << INFECTIOUS_INFECTIVITY             << std::endl;
+    config_stream << ASYMPT_DWELL_TIME                  << ",";
+    config_stream << ASYMPT_INFECTIVITY                 << std::endl;
+    config_stream << PROB_ULU                           << ",";
+    config_stream << PROB_ULV                           << ",";
+    config_stream << PROB_URV                           << ",";
+    config_stream << PROB_UIV                           << ",";
+    config_stream << PROB_UIU                           << std::endl;
+    config_stream << LOCATION_STATE_REFRESH_INTERVAL    << ",";
+    config_stream << DISEASE_SEED                       << std::endl;
+
+    // Write the population parameters
+    unsigned long pid = 1;
+    config_stream << NUM_REGIONS << std::endl;
     for (unsigned int region_id = 0; region_id < NUM_REGIONS; region_id++) {
-        config_stream << "region_" << region_id << std::endl;
-        unsigned int num_locations = 
-            rand() % (MAX_NUM_LOCATIONS_PER_REGION - MIN_NUM_LOCATIONS_PER_REGION) + 
-                                                            MIN_NUM_LOCATIONS_PER_REGION;
+        config_stream << "region_" << region_id << ",";
+
+        int diff_locations = MAX_NUM_LOCATIONS_PER_REGION - MIN_NUM_LOCATIONS_PER_REGION;
+        unsigned int num_locations = (diff_locations <= 0) ? MIN_NUM_LOCATIONS_PER_REGION : 
+                                    (rand() % diff_locations + MIN_NUM_LOCATIONS_PER_REGION);
         config_stream << num_locations << std::endl;
 
         for (unsigned int location_id = 0; location_id < num_locations; location_id++) {
-            config_stream << "location_" << location_id << std::endl;
+            config_stream << "location_" << location_id << ",";
+
+            int diff_travel_time = MAX_TRAVEL_TIME_TO_HUB - MIN_TRAVEL_TIME_TO_HUB;
+            unsigned int travel_time = (diff_travel_time <= 0) ? MIN_TRAVEL_TIME_TO_HUB : 
+                                        (rand() % diff_travel_time + MIN_TRAVEL_TIME_TO_HUB);
+            config_stream << travel_time << ",";
+
+            int diff_diffusion_interval = 
+                            MAX_LOCATION_DIFFUSION_INTERVAL - MIN_LOCATION_DIFFUSION_INTERVAL;
+            unsigned int diffusion_interval = 
+                    (diff_diffusion_interval <= 0) ? MIN_LOCATION_DIFFUSION_INTERVAL : 
+                        (rand() % diff_diffusion_interval + MIN_LOCATION_DIFFUSION_INTERVAL);
+            config_stream << diffusion_interval << ",";
+
+            int diff_persons = MAX_NUM_PERSONS_PER_LOCATION - MIN_NUM_PERSONS_PER_LOCATION;
+            unsigned int num_persons = (diff_persons <= 0) ? MIN_NUM_PERSONS_PER_LOCATION : 
+                                        (rand() % diff_persons + MIN_NUM_PERSONS_PER_LOCATION);
+            config_stream << num_persons << std::endl;
+
+            for (unsigned int person_id = 0; person_id < num_persons; person_id++) {
+                config_stream << pid++ << ",";
+                config_stream << "0." << rand() % 100 << ",";
+                config_stream << rand() % 2 << ",";
+                config_stream << rand() % 6 << std::endl;
+            }
         }
     }
 
