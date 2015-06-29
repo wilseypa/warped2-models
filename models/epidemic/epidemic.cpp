@@ -122,7 +122,7 @@ int main(int argc, const char** argv) {
     location_state_refresh_interval  = location_state_refresh_interval_arg.getValue();
     mean_location_diffusion_interval = mean_location_diffusion_interval_arg.getValue();
 
-    std::shared_ptr<MLCG> rng = make_shared<MLCG> ();
+    std::shared_ptr<MLCG> rng = std::make_shared<MLCG> ();
     NegativeExpntl travel_time_expo(mean_travel_time_to_hub, rng.get());
     NegativeExpntl diffusion_expo(mean_location_diffusion_interval, rng.get());
 

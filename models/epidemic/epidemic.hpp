@@ -14,11 +14,11 @@
 WARPED_DEFINE_OBJECT_STATE_STRUCT(LocationState) {
 
     LocationState() { 
-        current_population_ = make_shared<std::map <unsigned long, std::shared_ptr<Person>>>();
+        current_population_ = std::make_shared<std::map <unsigned long, std::shared_ptr<Person>>>();
     }
 
     LocationState(const LocationState& other) {
-        current_population_ = make_shared<std::map <unsigned long, std::shared_ptr<Person>>>();
+        current_population_ = std::make_shared<std::map <unsigned long, std::shared_ptr<Person>>>();
         for (auto it = other.current_population_->begin(); 
                             it != other.current_population_->end(); it++) {
             auto person = it->second;
@@ -96,7 +96,7 @@ public:
                 location_state_refresh_interval_(loc_state_refresh_interval), 
                 location_diffusion_trigger_interval_(loc_diffusion_trig_interval) {
 
-        state_ = make_shared<LocationState>();
+        state_ = std::make_shared<LocationState>();
 
         disease_model_ = 
             std::make_shared<DiseaseModel>(

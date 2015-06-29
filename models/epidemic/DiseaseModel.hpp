@@ -8,7 +8,6 @@
 
 #define PROB_MULTIPLIER 100
 
-using namespace std;
 
 class DiseaseModel {
 public:

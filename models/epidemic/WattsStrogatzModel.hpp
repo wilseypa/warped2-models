@@ -81,7 +81,7 @@ public:
             }
         }
         if (count == nodes_.size()) {
-            std::cerr << "Watts-Strogatz model: Invalid fetch request." << endl;
+            std::cerr << "Watts-Strogatz model: Invalid fetch request." << std::endl;
             abort();
         }
 
