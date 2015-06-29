@@ -6,6 +6,5 @@ Author: Sounak Gupta <br>
 
 Create a configuration file using the following commands:
 
-g++ --std=c++11 createConfig.cpp
-./a.out <config\_filename>
+	g++ --std=c++11 createConfig.cpp;./a.out <config\_filename>
 
