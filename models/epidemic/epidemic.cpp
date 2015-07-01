@@ -182,7 +182,6 @@ int main(int argc, const char** argv) {
             pos = buffer.find(delimiter);
             std::string location_name = buffer.substr(0, pos);
             std::string location = region_name + location_name;
-            std::cout << location << std::endl;
             buffer.erase(0, pos + delimiter.length());
             pos = buffer.find(delimiter);
             token = buffer.substr(0, pos);
