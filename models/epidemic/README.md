@@ -48,11 +48,13 @@ User can adjust the following parameters :
 1. Number of regions
 2. Number of locations per region
 3. Population per location
-4. Mean travel time to hub
+4. Travel time to hub
 5. Diffusion seed
 6. Disease seed
 7. Location state refresh interval
-8. Mean location diffusion interval
+8. Location diffusion interval
+
+Please refer to [Configuration Creator](config/README.md) for details.
 
 ###Legend :
 
