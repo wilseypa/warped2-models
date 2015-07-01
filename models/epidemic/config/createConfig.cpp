@@ -89,7 +89,7 @@ int main( int argc, char *argv[] ) {
     unsigned long pid = 1;
     config_stream << NUM_REGIONS << std::endl;
     for (unsigned int region_id = 0; region_id < NUM_REGIONS; region_id++) {
-        config_stream << "region_" << region_id << ",";
+        config_stream << "r" << region_id << ",";
 
         int diff_locations = MAX_NUM_LOCATIONS_PER_REGION - MIN_NUM_LOCATIONS_PER_REGION;
         unsigned int num_locations = (diff_locations <= 0) ? MIN_NUM_LOCATIONS_PER_REGION : 
@@ -97,7 +97,7 @@ int main( int argc, char *argv[] ) {
         config_stream << num_locations << std::endl;
 
         for (unsigned int location_id = 0; location_id < num_locations; location_id++) {
-            config_stream << "location_" << location_id << ",";
+            config_stream << "l" << location_id << ",";
 
             int diff_travel_time = MAX_TRAVEL_TIME_TO_HUB - MIN_TRAVEL_TIME_TO_HUB;
             unsigned int travel_time = (diff_travel_time <= 0) ? MIN_TRAVEL_TIME_TO_HUB : 
