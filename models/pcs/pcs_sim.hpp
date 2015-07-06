@@ -95,7 +95,7 @@ public:
 
     virtual warped::ObjectState& getState() { return state_; }
 
-    virtual std::vector<std::shared_ptr<warped::Event> > createInitialEvents();
+    virtual std::vector<std::shared_ptr<warped::Event> > initializeObject() override;
 
     virtual std::vector<std::shared_ptr<warped::Event> > receiveEvent(const warped::Event&);
 

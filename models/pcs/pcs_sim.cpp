@@ -14,7 +14,7 @@
 
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(PcsEvent)
 
-std::vector<std::shared_ptr<warped::Event> > PcsCell::createInitialEvents() {
+std::vector<std::shared_ptr<warped::Event> > PcsCell::initializeObject() {
 
     // Register random number generator to allow kernel to roll it back
     this->registerRNG<std::default_random_engine>(this->rng_);

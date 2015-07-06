@@ -11,8 +11,6 @@
 
 #include "warped.hpp"
 
-std::random_device rd;
-
 WARPED_DEFINE_OBJECT_STATE_STRUCT(TrafficState) {
 
     unsigned int total_cars_arrived_;
@@ -117,7 +115,7 @@ public:
                     const unsigned int index    )
             :   SimulationObject(object_name(index)),
                 state_(),
-                rng_(new std::default_random_engine(rd())),
+                rng_(new std::default_random_engine(index)),
                 num_intersections_x_(num_intersections_x),
                 num_intersections_y_(num_intersections_y),
                 num_cars_(num_cars),
@@ -152,7 +150,7 @@ public:
          state_.num_out_west_right_ = 0;
     }
 
-    virtual std::vector<std::shared_ptr<warped::Event>> createInitialEvents();
+    virtual std::vector<std::shared_ptr<warped::Event>> initializeObject() override;
     virtual std::vector<std::shared_ptr<warped::Event>> receiveEvent(const warped::Event&);
     virtual warped::ObjectState& getState() { return this->state_; }
 

@@ -8,7 +8,7 @@
 
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(AirportEvent)
 
-std::vector<std::shared_ptr<warped::Event> > Airport::createInitialEvents() {
+std::vector<std::shared_ptr<warped::Event> > Airport::initializeObject() {
 
     // Register random number generator
     this->registerRNG<std::default_random_engine>(this->rng_);

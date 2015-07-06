@@ -51,7 +51,7 @@ public:
 
     warped::ObjectState& getState() { return this->state_; }
 
-    std::vector<std::shared_ptr<warped::Event> > createInitialEvents() {
+    std::vector<std::shared_ptr<warped::Event> > initializeObject() override {
 
         this->registerRNG(this->rng_);
 

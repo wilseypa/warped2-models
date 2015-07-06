@@ -5,7 +5,7 @@
 
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(EpidemicEvent)
 
-std::vector<std::shared_ptr<warped::Event> > Location::createInitialEvents() {
+std::vector<std::shared_ptr<warped::Event> > Location::initializeObject() {
 
     std::vector<std::shared_ptr<warped::Event> > events;
     events.emplace_back(new EpidemicEvent {this->location_name_, 

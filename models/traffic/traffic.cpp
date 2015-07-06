@@ -10,7 +10,7 @@
 
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(TrafficEvent)
 
-std::vector<std::shared_ptr<warped::Event> > Intersection::createInitialEvents() {
+std::vector<std::shared_ptr<warped::Event> > Intersection::initializeObject() {
 
     this->registerRNG(this->rng_);
 

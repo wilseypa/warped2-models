@@ -73,7 +73,7 @@ public:
         state_.planes_grounded_ = num_planes_;
     }
 
-    virtual std::vector<std::shared_ptr<warped::Event> > createInitialEvents();
+    virtual std::vector<std::shared_ptr<warped::Event> > initializeObject() override;
     virtual std::vector<std::shared_ptr<warped::Event> > receiveEvent(const warped::Event&);
     virtual warped::ObjectState& getState() { return this->state_; }
 
