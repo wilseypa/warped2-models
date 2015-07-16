@@ -23,7 +23,7 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::initializeObject() {
     std::vector<std::shared_ptr<warped::Event>> events;
     for (unsigned int i = 0; i < portable_init_cnt_; i++) {
         auto interval = (unsigned int) std::ceil(interval_expo(*this->rng_));
-        events.emplace_back(new PcsEvent {this->name_, interval, 0, CALL_ARRIVAL});
+        events.emplace_back(new PcsEvent {this->name_, interval, 0, CALL_ARRIVED});
     }
     return events;
 }
@@ -40,7 +40,7 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
 
     switch (pcs_event.event_type_) {
 
-        case CALL_ARRIVAL: {
+        case CALL_ARRIVED: {
 
             state_.calls_placed_++;
             if (state_.idle_channel_cnt_) {
@@ -50,35 +50,35 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
 
                 if (move_interval < call_duration) {
                     events.emplace_back(new PcsEvent {name_, timestamp + move_interval, 
-                                                            timestamp, PORTABLE_MOVE_OUT});
+                                                            timestamp, MOVE_CALL_OUT});
                 } else {
                     events.emplace_back(new PcsEvent {name_, timestamp + call_duration, 
-                                                                        0, CALL_COMPLETION});
+                                                                        0, CALL_COMPLETED});
                 }
             } else {
                 state_.calls_dropped_++;
                 auto call_interval = (unsigned int) std::ceil(interval_expo(*this->rng_));
                 events.emplace_back(new PcsEvent {name_, timestamp + call_interval, 
-                                                                        0, CALL_ARRIVAL});
+                                                                        0, CALL_ARRIVED});
             }
         } break;
 
-        case CALL_COMPLETION: {
+        case CALL_COMPLETED: {
 
             state_.calls_completed_++;
             state_.idle_channel_cnt_++;
             auto call_interval = (unsigned int) std::ceil(interval_expo(*this->rng_));
-            events.emplace_back(new PcsEvent {name_, timestamp + call_interval, 0, CALL_ARRIVAL});
+            events.emplace_back(new PcsEvent {name_, timestamp + call_interval, 0, CALL_ARRIVED});
         } break;
 
-        case PORTABLE_MOVE_OUT: {
+        case MOVE_CALL_OUT: {
 
             state_.idle_channel_cnt_++;
             events.emplace_back(new PcsEvent {random_move(), timestamp, 
-                                            pcs_event.call_arrival_ts_, PORTABLE_MOVE_IN});
+                                            pcs_event.call_arrival_ts_, MOVE_CALL_IN});
         } break;
 
-        case PORTABLE_MOVE_IN: {
+        case MOVE_CALL_IN: {
 
             bool call_terminated = true;
             if (state_.idle_channel_cnt_) {
@@ -90,7 +90,7 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
                     state_.calls_handed_over_++;
                     state_.idle_channel_cnt_--;
                     events.emplace_back(new PcsEvent {name_, completion_timestamp, 
-                                                                        0, CALL_COMPLETION});
+                                                                        0, CALL_COMPLETED});
                     call_terminated = false;
                 }
             }
@@ -99,7 +99,7 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
                 state_.calls_dropped_++;
                 auto call_interval = (unsigned int) std::ceil(interval_expo(*this->rng_));
                 events.emplace_back(new PcsEvent {name_, timestamp + call_interval, 
-                                                                        0, CALL_ARRIVAL});
+                                                                        0, CALL_ARRIVED});
             }
         } break;
 
@@ -157,16 +157,21 @@ int main(int argc, const char **argv) {
 
     unsigned int num_cells_x        = 100;
     unsigned int num_cells_y        = 100;
+    unsigned int max_normal_ch_cnt  = 10;
+    unsigned int max_reserve_ch_cnt = 5;
     unsigned int call_interval_mean = 400;
     unsigned int call_duration_mean = 250;
     unsigned int move_interval_mean = 500;
-    unsigned int channel_cnt        = 10;
-    unsigned int num_portables      = 25;
+    unsigned int num_portables      = 50;
 
     TCLAP::ValueArg<unsigned int> num_cells_x_arg("x", "num-cells-x", "Width of cell grid",
                                                             false, num_cells_x, "unsigned int");
     TCLAP::ValueArg<unsigned int> num_cells_y_arg("y", "num-cells-y", "Height of cell grid",
                                                             false, num_cells_y, "unsigned int");
+    TCLAP::ValueArg<unsigned int> max_normal_ch_cnt_arg("n", "normal-ch-cnt",
+                        "Number of normal channels", false, max_normal_ch_cnt, "unsigned int");
+    TCLAP::ValueArg<unsigned int> max_reserve_ch_cnt_arg("r", "reserve-ch-cnt",
+                        "Number of reserve channels", false, max_reserve_ch_cnt, "unsigned int");
     TCLAP::ValueArg<unsigned int> call_interval_mean_arg("i", "call-interval",
                                 "Mean time between end of last call and a new call", 
                                                     false, call_interval_mean, "unsigned int");
@@ -175,34 +180,35 @@ int main(int argc, const char **argv) {
     TCLAP::ValueArg<unsigned int> move_interval_mean_arg("m", "move-interval", 
                                 "Mean time between end of last move and next move", 
                                                     false, move_interval_mean, "unsigned int");
-    TCLAP::ValueArg<unsigned int> channel_cnt_arg("n", "channel-count",
-                        "Number of communication channels", false, channel_cnt, "unsigned int");
     TCLAP::ValueArg<unsigned int> num_portables_arg("p", "portable-count", 
                                 "Portables per cell", false, num_portables, "unsigned int");
 
     std::vector<TCLAP::Arg*> cmd_line_args = {  &num_cells_x_arg, 
                                                 &num_cells_y_arg, 
+                                                &max_normal_ch_cnt_arg, 
+                                                &max_reserve_ch_cnt_arg, 
                                                 &call_interval_mean_arg, 
                                                 &call_duration_mean_arg, 
                                                 &move_interval_mean_arg, 
-                                                &channel_cnt_arg, 
                                                 &num_portables_arg      };
 
     warped::Simulation simulation {"PCS Simulation", argc, argv, cmd_line_args};
 
     num_cells_x         = num_cells_x_arg.getValue();
     num_cells_y         = num_cells_y_arg.getValue();
+    max_normal_ch_cnt   = max_normal_ch_cnt_arg.getValue();
+    max_reserve_ch_cnt  = max_reserve_ch_cnt_arg.getValue();
     call_interval_mean  = call_interval_mean_arg.getValue();
     call_duration_mean  = call_duration_mean_arg.getValue();
     move_interval_mean  = move_interval_mean_arg.getValue();
-    channel_cnt         = channel_cnt_arg.getValue();
     num_portables       = num_portables_arg.getValue();
 
     std::vector<PcsCell> objects;
     for (unsigned int i = 0; i < num_cells_x * num_cells_y; i++) {
 
         std::string name = std::string("Cell_") + std::to_string(i);
-        objects.emplace_back(   name, num_cells_x, num_cells_y, channel_cnt, 
+        objects.emplace_back(   name, num_cells_x, num_cells_y, 
+                                max_normal_ch_cnt, max_reserve_ch_cnt, 
                                 call_interval_mean, call_duration_mean, 
                                 move_interval_mean, num_portables, i );
     }
@@ -213,18 +219,18 @@ int main(int argc, const char **argv) {
     }
     simulation.simulate(object_pointers);
 
-    unsigned int calls_placed = 0, calls_dropped = 0, 
-                 calls_completed = 0, calls_handed_over = 0;
+    unsigned int call_attempts = 0, channel_blocks = 0, 
+                    busy_lines = 0, handoff_blocks = 0;
     for (auto& o : objects) {
-        calls_placed      += o.state_.calls_placed_;
-        calls_dropped     += o.state_.calls_dropped_;
-        calls_completed   += o.state_.calls_completed_;
-        calls_handed_over += o.state_.calls_handed_over_;
+        call_attempts  += o.state_.call_attempts_;
+        channel_blocks += o.state_.channel_blocks_;
+        busy_lines     += o.state_.busy_lines_;
+        handoff_blocks += o.state_.handoff_blocks_;
     }
-    std::cout << "Calls placed      : " << calls_placed      << std::endl;
-    std::cout << "Calls dropped     : " << calls_dropped     << std::endl;
-    std::cout << "Calls completed   : " << calls_completed   << std::endl;
-    std::cout << "Calls handed over : " << calls_handed_over << std::endl;
+    std::cout << "Call attempts  : " << call_attempts  << std::endl;
+    std::cout << "Channel blocks : " << channel_blocks << std::endl;
+    std::cout << "Busy lines     : " << busy_lines     << std::endl;
+    std::cout << "Handoff blocks : " << handoff_blocks << std::endl;
 
     return 0;
 }
