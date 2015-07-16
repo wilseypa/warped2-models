@@ -10,19 +10,27 @@
 
 WARPED_DEFINE_OBJECT_STATE_STRUCT(PcsState) {
 
-    unsigned int idle_channel_cnt_;
-    unsigned int calls_placed_;
-    unsigned int calls_dropped_;
-    unsigned int calls_completed_;
-    unsigned int calls_handed_over_;
+    unsigned int normal_channels_;
+    unsigned int reserve_channels_;
+    unsigned int call_attempts_;
+    unsigned int channel_blocks_;
+    unsigned int busy_lines_;
+    unsigned int handoff_blocks_;
 };
 
 enum event_type_t {
 
-    CALL_ARRIVAL,
-    CALL_COMPLETION,
-    PORTABLE_MOVE_OUT,
-    PORTABLE_MOVE_IN
+    CALL_ARRIVED,
+    CALL_COMPLETED,
+    MOVE_CALL_IN,
+    MOVE_CALL_OUT
+};
+
+enum channel_type_t {
+
+    NONE,
+    NORMAL,
+    RESERVE
 };
 
 enum direction_t {
@@ -41,11 +49,14 @@ public:
     PcsEvent(   const std::string   receiver_name, 
                 unsigned int        timestamp, 
                 unsigned int        call_arrival_ts, 
-                event_type_t        event_type         )
+                event_type_t        event_type, 
+                channel_type_t      channel_type    )
+
         :   receiver_name_(receiver_name), 
             event_timestamp_(timestamp), 
             call_arrival_ts_(call_arrival_ts), 
-            event_type_(event_type) {}
+            event_type_(event_type), 
+            channel_type_(channel_type) {}
 
     const std::string& receiverName() const { return receiver_name_; }
     unsigned int timestamp() const { return event_timestamp_; }
@@ -54,10 +65,11 @@ public:
     unsigned int    event_timestamp_;
     unsigned int    call_arrival_ts_;
     event_type_t    event_type_;
+    channel_type_t  channel_type_;
 
     WARPED_REGISTER_SERIALIZABLE_MEMBERS(cereal::base_class<warped::Event>(this), 
                                             receiver_name_, event_timestamp_, event_type_, 
-                                            call_arrival_ts_)
+                                            channel_type_, call_arrival_ts_)
 };
 
 class PcsCell : public warped::SimulationObject {
@@ -66,7 +78,8 @@ public:
     PcsCell(    const std::string&  name, 
                 unsigned int        num_cells_x, 
                 unsigned int        num_cells_y, 
-                unsigned int        channel_cnt, 
+                unsigned int        max_normal_ch_cnt, 
+                unsigned int        max_reserve_ch_cnt, 
                 unsigned int        call_interval_mean, 
                 unsigned int        call_duration_mean, 
                 unsigned int        move_interval_mean, 
@@ -77,7 +90,8 @@ public:
             state_(), 
             num_cells_x_(num_cells_x), 
             num_cells_y_(num_cells_y), 
-            channel_cnt_(channel_cnt), 
+            max_normal_ch_cnt_(max_normal_ch_cnt), 
+            max_reserve_ch_cnt_(max_reserve_ch_cnt), 
             call_interval_mean_(call_interval_mean), 
             call_duration_mean_(call_duration_mean), 
             move_interval_mean_(move_interval_mean),
@@ -86,11 +100,12 @@ public:
             rng_(new std::default_random_engine(index)) {
 
         // Update the state variables
-        state_.idle_channel_cnt_    = channel_cnt_;
-        state_.calls_placed_        = 0;
-        state_.calls_dropped_       = 0;
-        state_.calls_completed_     = 0;
-        state_.calls_handed_over_   = 0;
+        state_.normal_channels_  = max_normal_ch_cnt_;
+        state_.reserve_channels_ = max_reserve_ch_cnt_;
+        state_.call_attempts_    = 0;
+        state_.channel_blocks_   = 0;
+        state_.busy_lines_       = 0;
+        state_.handoff_blocks_   = 0;
     }
 
     virtual warped::ObjectState& getState() { return state_; }
@@ -99,18 +114,19 @@ public:
 
     virtual std::vector<std::shared_ptr<warped::Event> > receiveEvent(const warped::Event&);
 
-    PcsState                state_;
+    PcsState state_;
 
 protected:
 
-    unsigned int            num_cells_x_;
-    unsigned int            num_cells_y_;
-    unsigned int            channel_cnt_;
-    unsigned int            call_interval_mean_;
-    unsigned int            call_duration_mean_;
-    unsigned int            move_interval_mean_;
-    unsigned int            portable_init_cnt_;
-    unsigned int            index_;
+    unsigned int num_cells_x_;
+    unsigned int num_cells_y_;
+    unsigned int max_normal_ch_cnt_;
+    unsigned int max_reserve_ch_cnt_;
+    unsigned int call_interval_mean_;
+    unsigned int call_duration_mean_;
+    unsigned int move_interval_mean_;
+    unsigned int portable_init_cnt_;
+    unsigned int index_;
 
     std::shared_ptr<std::default_random_engine> rng_;
 
