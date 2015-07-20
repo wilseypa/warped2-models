@@ -18,12 +18,19 @@ WARPED_DEFINE_OBJECT_STATE_STRUCT(PcsState) {
     unsigned int handoff_blocks_;
 };
 
-enum event_type_t {
+enum method_t {
 
-    CALL_ARRIVED,
-    CALL_COMPLETED,
-    MOVE_CALL_IN,
-    MOVE_CALL_OUT
+    NEXT_CALL_METHOD, 
+    COMPLETE_CALL_METHOD, 
+    MOVE_CALL_IN_METHOD, 
+    MOVE_CALL_OUT_METHOD
+};
+
+enum action_t {
+
+    NEXTCALL, 
+    COMPLETECALL, 
+    MOVECALL
 };
 
 enum channel_type_t {
@@ -47,29 +54,37 @@ public:
     PcsEvent() = default;
 
     PcsEvent(   const std::string   receiver_name, 
-                unsigned int        timestamp, 
-                unsigned int        call_arrival_ts, 
-                event_type_t        event_type, 
+                unsigned int        event_ts, 
+                unsigned int        complete_call_ts, 
+                unsigned int        next_call_ts, 
+                unsigned int        move_call_ts,
+                method_t            method, 
                 channel_type_t      channel_type    )
 
         :   receiver_name_(receiver_name), 
-            event_timestamp_(timestamp), 
-            call_arrival_ts_(call_arrival_ts), 
-            event_type_(event_type), 
+            event_ts_(event_ts), 
+            complete_call_ts_(complete_call_ts), 
+            next_call_ts_(next_call_ts), 
+            move_call_ts_(move_call_ts), 
+            method_(method), 
             channel_type_(channel_type) {}
 
     const std::string& receiverName() const { return receiver_name_; }
-    unsigned int timestamp() const { return event_timestamp_; }
+
+    unsigned int timestamp() const { return event_ts_; }
 
     std::string     receiver_name_;
-    unsigned int    event_timestamp_;
-    unsigned int    call_arrival_ts_;
-    event_type_t    event_type_;
+    unsigned int    event_ts_;
+    unsigned int    complete_call_ts_;
+    unsigned int    next_call_ts_;
+    unsigned int    move_call_ts_;
+    method_t        method_;
     channel_type_t  channel_type_;
 
     WARPED_REGISTER_SERIALIZABLE_MEMBERS(cereal::base_class<warped::Event>(this), 
-                                            receiver_name_, event_timestamp_, event_type_, 
-                                            channel_type_, call_arrival_ts_)
+                                            receiver_name_, event_ts_, 
+                                            complete_call_ts_, next_call_ts_, 
+                                            move_call_ts_, method_, channel_type_)
 };
 
 class PcsCell : public warped::SimulationObject {
@@ -132,6 +147,10 @@ protected:
 
     std::string compute_move(direction_t direction);
     std::string random_move();
+
+    action_t action(unsigned int complete_call_ts, 
+                    unsigned int next_call_ts, 
+                    unsigned int move_call_ts);
 };
 
 #endif
