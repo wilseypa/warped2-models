@@ -10,8 +10,7 @@
 
 WARPED_DEFINE_OBJECT_STATE_STRUCT(PcsState) {
 
-    unsigned int normal_channels_;
-    unsigned int reserve_channels_;
+    unsigned int idle_channel_cnt_;
     unsigned int call_attempts_;
     unsigned int channel_blocks_;
     unsigned int busy_lines_;
@@ -33,13 +32,6 @@ enum action_t {
     MOVECALL
 };
 
-enum channel_type_t {
-
-    NONE,
-    NORMAL,
-    RESERVE
-};
-
 enum direction_t {
 
     LEFT,
@@ -58,16 +50,14 @@ public:
                 unsigned int        complete_call_ts, 
                 unsigned int        next_call_ts, 
                 unsigned int        move_call_ts,
-                method_t            method, 
-                channel_type_t      channel_type    )
+                method_t            method      )
 
         :   receiver_name_(receiver_name), 
             event_ts_(event_ts), 
             complete_call_ts_(complete_call_ts), 
             next_call_ts_(next_call_ts), 
             move_call_ts_(move_call_ts), 
-            method_(method), 
-            channel_type_(channel_type) {}
+            method_(method) {}
 
     const std::string& receiverName() const { return receiver_name_; }
 
@@ -79,12 +69,10 @@ public:
     unsigned int    next_call_ts_;
     unsigned int    move_call_ts_;
     method_t        method_;
-    channel_type_t  channel_type_;
 
     WARPED_REGISTER_SERIALIZABLE_MEMBERS(cereal::base_class<warped::Event>(this), 
-                                            receiver_name_, event_ts_, 
-                                            complete_call_ts_, next_call_ts_, 
-                                            move_call_ts_, method_, channel_type_)
+                                            receiver_name_, event_ts_, complete_call_ts_, 
+                                            next_call_ts_, move_call_ts_, method_)
 };
 
 class PcsCell : public warped::SimulationObject {
@@ -93,8 +81,7 @@ public:
     PcsCell(    const std::string&  name, 
                 unsigned int        num_cells_x, 
                 unsigned int        num_cells_y, 
-                unsigned int        max_normal_ch_cnt, 
-                unsigned int        max_reserve_ch_cnt, 
+                unsigned int        max_channel_cnt, 
                 unsigned int        call_interval_mean, 
                 unsigned int        call_duration_mean, 
                 unsigned int        move_interval_mean, 
@@ -105,8 +92,7 @@ public:
             state_(), 
             num_cells_x_(num_cells_x), 
             num_cells_y_(num_cells_y), 
-            max_normal_ch_cnt_(max_normal_ch_cnt), 
-            max_reserve_ch_cnt_(max_reserve_ch_cnt), 
+            max_channel_cnt_(max_channel_cnt), 
             call_interval_mean_(call_interval_mean), 
             call_duration_mean_(call_duration_mean), 
             move_interval_mean_(move_interval_mean),
@@ -115,8 +101,7 @@ public:
             rng_(new std::default_random_engine(index)) {
 
         // Update the state variables
-        state_.normal_channels_  = max_normal_ch_cnt_;
-        state_.reserve_channels_ = max_reserve_ch_cnt_;
+        state_.idle_channel_cnt_ = max_channel_cnt_;
         state_.call_attempts_    = 0;
         state_.channel_blocks_   = 0;
         state_.busy_lines_       = 0;
@@ -135,8 +120,7 @@ protected:
 
     unsigned int num_cells_x_;
     unsigned int num_cells_y_;
-    unsigned int max_normal_ch_cnt_;
-    unsigned int max_reserve_ch_cnt_;
+    unsigned int max_channel_cnt_;
     unsigned int call_interval_mean_;
     unsigned int call_duration_mean_;
     unsigned int move_interval_mean_;
