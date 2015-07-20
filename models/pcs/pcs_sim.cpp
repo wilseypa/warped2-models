@@ -19,11 +19,30 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::initializeObject() {
     // Register random number generator to allow kernel to roll it back
     this->registerRNG<std::default_random_engine>(this->rng_);
 
+    std::exponential_distribution<double> duration_expo(call_duration_mean_);
+    std::exponential_distribution<double> move_expo(move_interval_mean_);
     std::exponential_distribution<double> interval_expo(call_interval_mean_);
+
     std::vector<std::shared_ptr<warped::Event>> events;
     for (unsigned int i = 0; i < portable_init_cnt_; i++) {
-        auto interval = (unsigned int) std::ceil(interval_expo(*this->rng_));
-        events.emplace_back(new PcsEvent {this->name_, interval, 0, CALL_ARRIVED, NORMAL});
+        auto complete_call_ts = (unsigned int) std::ceil(duration_expo(*this->rng_));
+        auto move_call_ts     = (unsigned int) std::ceil(move_expo(*this->rng_));
+        auto next_call_ts     = (unsigned int) std::ceil(interval_expo(*this->rng_));
+
+        auto next_action = action(complete_call_ts, next_call_ts, move_call_ts);
+        switch (next_action) {
+            case COMPLETECALL: 
+            case MOVECALL: {
+                events.emplace_back(new PcsEvent {this->name_, next_call_ts, 
+                                next_call_ts + call_duration_mean_, next_call_ts, 
+                                move_call_ts + move_interval_mean_, NEXT_CALL_METHOD, NORMAL});
+            } break;
+
+            case NEXTCALL: {
+                events.emplace_back(new PcsEvent {this->name_, next_call_ts, 
+                        complete_call_ts, next_call_ts, move_call_ts, NEXT_CALL_METHOD, NORMAL});
+            } break;
+        }
     }
     return events;
 }
@@ -151,6 +170,19 @@ std::string PcsCell::random_move() {
 
     std::uniform_int_distribution<unsigned int> rand_direction(0,3);
     return this->compute_move((direction_t)rand_direction(*this->rng_));
+}
+
+action_t action(unsigned int complete_call_ts, 
+                unsigned int next_call_ts, 
+                unsigned int move_call_ts) {
+
+    action_t next_action;
+    if (complete_call_ts < next_call_ts) {
+        next_action = (complete_call_ts < move_call_ts) ? COMPLETECALL : MOVECALL;
+    } else {
+        next_action = (next_call_ts < move_call_ts) ? NEXTCALL : MOVECALL;
+    }
+    return next_action;
 }
 
 int main(int argc, const char **argv) {
