@@ -19,11 +19,11 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::initializeObject() {
     // Register random number generator to allow kernel to roll it back
     this->registerRNG<std::default_random_engine>(this->rng_);
 
-    std::exponential_distribution<double> interval_expo(1.0/call_interval_mean_);
+    std::exponential_distribution<double> interval_expo(call_interval_mean_);
     std::vector<std::shared_ptr<warped::Event>> events;
     for (unsigned int i = 0; i < portable_init_cnt_; i++) {
         auto interval = (unsigned int) std::ceil(interval_expo(*this->rng_));
-        events.emplace_back(new PcsEvent {this->name_, interval, 0, CALL_ARRIVED});
+        events.emplace_back(new PcsEvent {this->name_, interval, 0, CALL_ARRIVED, NORMAL});
     }
     return events;
 }
