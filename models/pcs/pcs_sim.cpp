@@ -29,18 +29,19 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::initializeObject() {
         auto move_call_ts     = (unsigned int) std::ceil(move_expo(*this->rng_));
         auto next_call_ts     = (unsigned int) std::ceil(interval_expo(*this->rng_));
 
-        auto next_action = action(complete_call_ts, next_call_ts, move_call_ts);
+        auto next_action = min_ts(complete_call_ts, next_call_ts, move_call_ts);
         switch (next_action) {
-            case COMPLETECALL: 
+            case COMPLETECALL:
             case MOVECALL: {
                 events.emplace_back(new PcsEvent {this->name_, next_call_ts, 
-                                next_call_ts + call_duration_mean_, next_call_ts, 
-                                move_call_ts + move_interval_mean_, NEXT_CALL_METHOD, NORMAL});
+                                    next_call_ts + complete_call_ts, next_call_ts, 
+                                    next_call_ts + move_call_ts, NEXT_CALL_METHOD});
             } break;
 
             case NEXTCALL: {
                 events.emplace_back(new PcsEvent {this->name_, next_call_ts, 
-                        complete_call_ts, next_call_ts, move_call_ts, NEXT_CALL_METHOD, NORMAL});
+                                    complete_call_ts, next_call_ts, 
+                                    move_call_ts, NEXT_CALL_METHOD, NORMAL});
             } break;
         }
     }
@@ -197,7 +198,7 @@ std::string PcsCell::random_move() {
     return this->compute_move((direction_t)rand_direction(*this->rng_));
 }
 
-action_t action(unsigned int complete_call_ts, 
+action_t min_ts(unsigned int complete_call_ts, 
                 unsigned int next_call_ts, 
                 unsigned int move_call_ts) {
 

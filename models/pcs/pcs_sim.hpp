@@ -132,7 +132,7 @@ protected:
     std::string compute_move(direction_t direction);
     std::string random_move();
 
-    action_t action(unsigned int complete_call_ts, 
+    action_t min_ts(unsigned int complete_call_ts, 
                     unsigned int next_call_ts, 
                     unsigned int move_call_ts);
 };
