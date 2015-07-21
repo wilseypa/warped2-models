@@ -62,10 +62,12 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
     std::exponential_distribution<double> duration_expo(call_duration_mean_);
     std::exponential_distribution<double> move_expo(move_interval_mean_);
 
+    unsigned int complete_call_ts = 0, move_call_ts = 0, next_call_ts = 0;
+    action_t next_action;
     switch (pcs_event.method_) {
 
         case NEXT_CALL_METHOD: {
-
+#if 0
             state_.call_attempts_++;
             if (!state_.normal_channels_) { // All normal channels busy
                 state_.channel_blocks_++;
@@ -111,17 +113,18 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
                 events.emplace_back(new PcsEvent {name_, timestamp + call_interval, 
                                                                         0, CALL_ARRIVED});
             }
+#endif
         } break;
 
         case COMPLETE_CALL_METHOD: {
 
             state_.idle_channel_cnt_++;
-            auto next_call_ts     = pcs_sim.next_call_ts_;
-            auto move_call_ts     = pcs_sim.move_call_ts_;
-            auto complete_call_ts = next_call_ts + 
-                                        (unsigned int) std::ceil(interval_expo(*this->rng_));
+            next_call_ts = pcs_event.next_call_ts_;
+            move_call_ts = pcs_event.move_call_ts_;
+            complete_call_ts = next_call_ts + 
+                        (unsigned int) std::ceil(interval_expo(*this->rng_));
 
-            auto next_action = min_ts(complete_call_ts, next_call_ts, move_call_ts);
+            next_action = min_ts(complete_call_ts, next_call_ts, move_call_ts);
             switch (next_action) {
                 case COMPLETECALL: {
                     assert(0);
@@ -138,44 +141,46 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
                                         complete_call_ts, next_call_ts, 
                                         move_call_ts, NEXT_CALL_METHOD});
                 } break;
+            }
         } break;
 
         case MOVE_CALL_OUT_METHOD: {
 
-            auto complete_call_ts = pcs_sim.complete_call_ts_;
-            auto next_call_ts     = pcs_sim.next_call_ts_;
-            auto move_call_ts     = pcs_sim.move_call_ts_;
+            complete_call_ts = pcs_event.complete_call_ts_;
+            next_call_ts     = pcs_event.next_call_ts_;
+            move_call_ts     = pcs_event.move_call_ts_;
 
-            if (complete_call_ts_ < next_call_ts_) {
+            if (complete_call_ts <= next_call_ts) {
                 state_.idle_channel_cnt_++;
             }
             events.emplace_back(new PcsEvent {random_move(), move_call_ts, 
-                                        complete_call_ts_, next_call_ts_, 
+                                        complete_call_ts, next_call_ts, 
                                         move_call_ts, MOVE_CALL_IN_METHOD});
         } break;
 
         case MOVE_CALL_IN_METHOD: {
 
-            bool call_terminated = true;
-            if (state_.idle_channel_cnt_) {
-
-                auto call_duration = (unsigned int) std::ceil(duration_expo(*this->rng_));
-                auto completion_timestamp = pcs_event.call_arrival_ts_ + call_duration;
-
-                if (completion_timestamp > timestamp) {
-                    state_.calls_handed_over_++;
+            complete_call_ts = pcs_event.complete_call_ts_;
+            next_call_ts     = pcs_event.next_call_ts_;
+            move_call_ts     = next_call_ts + 
+                                        (unsigned int) std::ceil(move_expo(*this->rng_));
+            if (complete_call_ts <= next_call_ts) {
+                if (!state_.idle_channel_cnt_) {
+                    state_.handoff_blocks_++;
+                    state_.channel_blocks_++;
+                    events.emplace_back(new PcsEvent {this->name_, next_call_ts, 
+                                        complete_call_ts, next_call_ts, 
+                                        move_call_ts, NEXT_CALL_METHOD});
+                } else {
                     state_.idle_channel_cnt_--;
-                    events.emplace_back(new PcsEvent {name_, completion_timestamp, 
-                                                                        0, CALL_COMPLETED});
-                    call_terminated = false;
+                    events.emplace_back(new PcsEvent {this->name_, next_call_ts, 
+                                        complete_call_ts, next_call_ts, 
+                                        move_call_ts, NEXT_CALL_METHOD});
                 }
-            }
-
-            if (call_terminated) {
-                state_.calls_dropped_++;
-                auto call_interval = (unsigned int) std::ceil(interval_expo(*this->rng_));
-                events.emplace_back(new PcsEvent {name_, timestamp + call_interval, 
-                                                                        0, CALL_ARRIVED});
+            } else {
+                events.emplace_back(new PcsEvent {this->name_, next_call_ts, 
+                                        complete_call_ts, next_call_ts, 
+                                        move_call_ts, NEXT_CALL_METHOD});
             }
         } break;
 
@@ -229,9 +234,9 @@ std::string PcsCell::random_move() {
     return this->compute_move((direction_t)rand_direction(*this->rng_));
 }
 
-action_t min_ts(unsigned int complete_call_ts, 
-                unsigned int next_call_ts, 
-                unsigned int move_call_ts) {
+action_t PcsCell::min_ts(   unsigned int complete_call_ts, 
+                            unsigned int next_call_ts, 
+                            unsigned int move_call_ts) {
 
     action_t next_action;
     if (complete_call_ts < next_call_ts) {
