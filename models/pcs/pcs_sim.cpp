@@ -31,17 +31,22 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::initializeObject() {
 
         auto next_action = min_ts(complete_call_ts, next_call_ts, move_call_ts);
         switch (next_action) {
-            case COMPLETECALL:
-            case MOVECALL: {
+            case COMPLETECALL: {
                 events.emplace_back(new PcsEvent {this->name_, next_call_ts, 
                                     next_call_ts + complete_call_ts, next_call_ts, 
                                     next_call_ts + move_call_ts, NEXT_CALL_METHOD});
             } break;
 
+            case MOVECALL: {
+                events.emplace_back(new PcsEvent {this->name_, move_call_ts, 
+                                    next_call_ts + complete_call_ts, next_call_ts, 
+                                    move_call_ts, MOVE_CALL_OUT_METHOD});
+            } break;
+
             case NEXTCALL: {
                 events.emplace_back(new PcsEvent {this->name_, next_call_ts, 
                                     complete_call_ts, next_call_ts, 
-                                    move_call_ts, NEXT_CALL_METHOD, NORMAL});
+                                    move_call_ts, NEXT_CALL_METHOD});
             } break;
         }
     }
@@ -110,17 +115,43 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
 
         case COMPLETE_CALL_METHOD: {
 
-            state_.calls_completed_++;
             state_.idle_channel_cnt_++;
-            auto call_interval = (unsigned int) std::ceil(interval_expo(*this->rng_));
-            events.emplace_back(new PcsEvent {name_, timestamp + call_interval, 0, CALL_ARRIVED});
+            auto next_call_ts     = pcs_sim.next_call_ts_;
+            auto move_call_ts     = pcs_sim.move_call_ts_;
+            auto complete_call_ts = next_call_ts + 
+                                        (unsigned int) std::ceil(interval_expo(*this->rng_));
+
+            auto next_action = min_ts(complete_call_ts, next_call_ts, move_call_ts);
+            switch (next_action) {
+                case COMPLETECALL: {
+                    assert(0);
+                } break;
+
+                case MOVECALL: {
+                    events.emplace_back(new PcsEvent {this->name_, move_call_ts, 
+                                        complete_call_ts, next_call_ts, 
+                                        move_call_ts, MOVE_CALL_OUT_METHOD});
+                } break;
+
+                case NEXTCALL: {
+                    events.emplace_back(new PcsEvent {this->name_, next_call_ts, 
+                                        complete_call_ts, next_call_ts, 
+                                        move_call_ts, NEXT_CALL_METHOD});
+                } break;
         } break;
 
         case MOVE_CALL_OUT_METHOD: {
 
-            state_.idle_channel_cnt_++;
-            events.emplace_back(new PcsEvent {random_move(), timestamp, 
-                                            pcs_event.call_arrival_ts_, MOVE_CALL_IN});
+            auto complete_call_ts = pcs_sim.complete_call_ts_;
+            auto next_call_ts     = pcs_sim.next_call_ts_;
+            auto move_call_ts     = pcs_sim.move_call_ts_;
+
+            if (complete_call_ts_ < next_call_ts_) {
+                state_.idle_channel_cnt_++;
+            }
+            events.emplace_back(new PcsEvent {random_move(), move_call_ts, 
+                                        complete_call_ts_, next_call_ts_, 
+                                        move_call_ts, MOVE_CALL_IN_METHOD});
         } break;
 
         case MOVE_CALL_IN_METHOD: {
