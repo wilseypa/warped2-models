@@ -13,7 +13,6 @@ WARPED_DEFINE_OBJECT_STATE_STRUCT(PcsState) {
     unsigned int idle_channel_cnt_;
     unsigned int call_attempts_;
     unsigned int channel_blocks_;
-    unsigned int busy_lines_;
     unsigned int handoff_blocks_;
 };
 
@@ -104,7 +103,6 @@ public:
         state_.idle_channel_cnt_ = max_channel_cnt_;
         state_.call_attempts_    = 0;
         state_.channel_blocks_   = 0;
-        state_.busy_lines_       = 0;
         state_.handoff_blocks_   = 0;
     }
 
