@@ -90,35 +90,43 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
     switch (pcs_event.method_) {
 
         case NEXT_CALL_METHOD: {
-#if 0
+
+            move_call_ts = pcs_event.move_call_ts_;
+            complete_call_ts = pcs_event.complete_call_ts_;
+            next_call_ts = pcs_event.next_call_ts_;
+            assert(next_call_ts <= complete_call_ts);
             state_.call_attempts_++;
-            if (!state_.normal_channels_) { // All normal channels busy
+
+            if (!state_.idle_channel_cnt_) { // Channels not available
                 state_.channel_blocks_++;
-                auto next_call_ts     = pcs_event.next_call_ts_ + 
-                                        (unsigned int) std::ceil(interval_expo(*this->rng_));
-                auto complete_call_ts = pcs_event.complete_call_ts_;
-                auto move_call_ts     = pcs_event.move_call_ts_;
-
-                auto next_action = action(complete_call_ts, next_call_ts, move_call_ts);
-                switch(next_action) {
-                    case COMPLETECALL: 
-                    case MOVECALL: {
-                        events.emplace_back(new PcsEvent {this->name_, next_call_ts, 
-                                next_call_ts + call_duration_mean_, next_call_ts, 
-                                move_call_ts + move_interval_mean_, NEXT_CALL_METHOD, NORMAL});
-                    } break;
-
-                    case NEXTCALL: {
-                        events.emplace_back(new PcsEvent {this->name_, next_call_ts, 
-                                complete_call_ts, next_call_ts, move_call_ts, 
-                                NEXT_CALL_METHOD, NORMAL});
-                    } break;
+                next_call_ts += (unsigned int) std::ceil(interval_expo(*this->rng_));
+                complete_call_ts = next_call_ts + 
+                                        (unsigned int) std::ceil(duration_expo(*this->rng_));
+                if (move_call_ts <= next_call_ts) {
+                    events.emplace_back(new PcsEvent {this->name_, move_call_ts, 
+                                        complete_call_ts, next_call_ts, 
+                                        move_call_ts, MOVE_CALL_OUT_METHOD});
+                } else {
+                    auto new_move_call_ts = next_call_ts + 
+                                        (unsigned int) std::ceil(move_expo(*this->rng_));
+                    events.emplace_back(new PcsEvent {this->name_, next_call_ts, 
+                                        complete_call_ts, next_call_ts, 
+                                        new_move_call_ts, NEXT_CALL_METHOD});
                 }
-            } else { // Normal channels available
-                state_.normal_channels_--;
-
+            } else { // Channels available
+                state_.idle_channel_cnt_--;
+                if (complete_call_ts < move_call_ts) {
+                    next_call_ts = complete_call_ts + 
+                                        (unsigned int) std::ceil(interval_expo(*this->rng_));
+                    events.emplace_back(new PcsEvent {this->name_, complete_call_ts, 
+                                        complete_call_ts, next_call_ts, 
+                                        move_call_ts, COMPLETE_CALL_METHOD});
+                } else {
+                    events.emplace_back(new PcsEvent {this->name_, move_call_ts, 
+                                        complete_call_ts, next_call_ts, 
+                                        move_call_ts, MOVE_CALL_OUT_METHOD});
+                }
             }
-#endif
         } break;
 
         case COMPLETE_CALL_METHOD: {
@@ -127,7 +135,7 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
             next_call_ts = pcs_event.next_call_ts_;
             move_call_ts = pcs_event.move_call_ts_;
             complete_call_ts = next_call_ts + 
-                        (unsigned int) std::ceil(interval_expo(*this->rng_));
+                        (unsigned int) std::ceil(duration_expo(*this->rng_));
 
             next_action = min_ts(complete_call_ts, next_call_ts, move_call_ts);
             switch (next_action) {
@@ -149,8 +157,8 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
         case MOVE_CALL_OUT_METHOD: {
 
             complete_call_ts = pcs_event.complete_call_ts_;
-            next_call_ts     = pcs_event.next_call_ts_;
-            move_call_ts     = pcs_event.move_call_ts_;
+            next_call_ts = pcs_event.next_call_ts_;
+            move_call_ts = pcs_event.move_call_ts_;
 
             if (complete_call_ts < next_call_ts) {
                 state_.idle_channel_cnt_++;
@@ -163,8 +171,9 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
         case MOVE_CALL_IN_METHOD: {
 
             complete_call_ts = pcs_event.complete_call_ts_;
-            next_call_ts     = pcs_event.next_call_ts_;
-            move_call_ts    += (unsigned int) std::ceil(move_expo(*this->rng_));
+            next_call_ts = pcs_event.next_call_ts_;
+            move_call_ts = pcs_event.move_call_ts_ + 
+                        (unsigned int) std::ceil(move_expo(*this->rng_));
             next_action = min_ts(complete_call_ts, next_call_ts, move_call_ts);
 
             // Call handover only if complete_call_ts < next_call_ts
@@ -182,7 +191,7 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
 
                         case MOVECALL: {
                             complete_call_ts = next_call_ts + 
-                                    (unsigned int) std::ceil(interval_expo(*this->rng_));
+                                    (unsigned int) std::ceil(duration_expo(*this->rng_));
                             events.emplace_back(new PcsEvent {this->name_, move_call_ts, 
                                                         complete_call_ts, next_call_ts, 
                                                         move_call_ts, MOVE_CALL_OUT_METHOD});
@@ -190,7 +199,7 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
 
                         case COMPLETECALL: {
                             complete_call_ts = next_call_ts + 
-                                    (unsigned int) std::ceil(interval_expo(*this->rng_));
+                                    (unsigned int) std::ceil(duration_expo(*this->rng_));
                             events.emplace_back(new PcsEvent {this->name_, next_call_ts, 
                                                         complete_call_ts, next_call_ts, 
                                                         move_call_ts, NEXT_CALL_METHOD});
