@@ -24,5 +24,5 @@ User can adjust the following parameters :
 ##References :
 
 [1] An implementation of Fujimoto's airport model. Ported from the ROSS airport 
-model (https://github.com/carothersc/ROSS/blob/master/ross/models/airport)
+model (https://github.com/carothersc/ROSS-Models/tree/master/airport)
 
