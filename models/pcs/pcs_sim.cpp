@@ -19,9 +19,9 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::initializeObject() {
     // Register random number generator to allow kernel to roll it back
     this->registerRNG<std::default_random_engine>(this->rng_);
 
-    std::exponential_distribution<double> duration_expo(1.0/call_duration_mean_);
-    std::exponential_distribution<double> move_expo(1.0/move_interval_mean_);
-    std::exponential_distribution<double> interval_expo(1.0/call_interval_mean_);
+    std::exponential_distribution<double> duration_expo(call_duration_mean_);
+    std::exponential_distribution<double> move_expo(move_interval_mean_);
+    std::exponential_distribution<double> interval_expo(call_interval_mean_);
 
     std::vector<std::shared_ptr<warped::Event>> events;
 
@@ -80,9 +80,9 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
     std::vector<std::shared_ptr<warped::Event>> events;
     auto pcs_event = static_cast<const PcsEvent&>(event);
 
-    std::exponential_distribution<double> duration_expo(1.0/call_duration_mean_);
-    std::exponential_distribution<double> move_expo(1.0/move_interval_mean_);
-    std::exponential_distribution<double> interval_expo(1.0/call_interval_mean_);
+    std::exponential_distribution<double> duration_expo(call_duration_mean_);
+    std::exponential_distribution<double> move_expo(move_interval_mean_);
+    std::exponential_distribution<double> interval_expo(call_interval_mean_);
 
     unsigned int complete_call_ts = 0, move_call_ts = 0, next_call_ts = 0;
     action_t next_action;
