@@ -7,6 +7,9 @@ WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(EpidemicEvent)
 
 std::vector<std::shared_ptr<warped::Event> > Location::initializeObject() {
 
+    // Register random number generator to allow kernel to roll it back
+    this->registerRNG<std::default_random_engine>(this->rng_);
+
     std::vector<std::shared_ptr<warped::Event> > events;
     events.emplace_back(new EpidemicEvent {this->location_name_, 
                     this->location_state_refresh_interval_, nullptr, DISEASE_UPDATE_TRIGGER});
@@ -95,10 +98,6 @@ int main(int argc, const char** argv) {
     getline(config_stream, buffer);
     pos = buffer.find(delimiter);
     token = buffer.substr(0, pos);
-    unsigned int diffusion_seed = (unsigned int) std::stoul(token);
-    buffer.erase(0, pos + delimiter.length());
-    pos = buffer.find(delimiter);
-    token = buffer.substr(0, pos);
     unsigned int k = (unsigned int) std::stoul(token);
     buffer.erase(0, pos + delimiter.length());
     float beta = std::stof(buffer);
@@ -155,11 +154,7 @@ int main(int argc, const char** argv) {
     float prob_uiu = std::stof(buffer);
 
     getline(config_stream, buffer);
-    pos = buffer.find(delimiter);
-    token = buffer.substr(0, pos);
-    unsigned int location_state_refresh_interval = (unsigned int) stoul(token);
-    buffer.erase(0, pos + delimiter.length());
-    unsigned int disease_seed = (unsigned int) stoul(buffer);
+    unsigned int location_state_refresh_interval = (unsigned int) stoul(buffer);
 
     //Population
     getline(config_stream, buffer);
@@ -241,15 +236,14 @@ int main(int argc, const char** argv) {
                                     diffusion_interval,
                                     population,
                                     travel_time_to_hub, 
-                                    disease_seed, 
-                                    diffusion_seed
+                                    location_id
                                 );
         }
     }
     config_stream.close();
 
     // Create the Watts-Strogatz model
-    auto ws = std::make_shared<WattsStrogatzModel>(k, beta, diffusion_seed);
+    auto ws = std::make_shared<WattsStrogatzModel>(k, beta);
     std::vector<std::string> nodes;
     for (auto& o : objects) {
         nodes.push_back(o.getLocationName());

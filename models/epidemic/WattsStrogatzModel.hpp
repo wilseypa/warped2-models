@@ -2,18 +2,15 @@
 #define WATTS_STROGATZ_MODEL_HPP
 
 #include "memory.hpp"
-#include "RandomNumGenerator.hpp"
+#include <random>
 
 #define BETA_PRECISION 10000
 
 class WattsStrogatzModel {
 public:
 
-    WattsStrogatzModel(unsigned int k, float beta, unsigned int seed) 
-            : k_(k), beta_(beta) {
-
-        rand_num_generator_ = warped::make_unique<RandomNumGenerator>(seed);
-    }
+    WattsStrogatzModel(unsigned int k, float beta) 
+            : k_(k), beta_(beta) {}
 
     void populateNodes(std::vector<std::string> nodes) {
 
@@ -50,15 +47,19 @@ public:
         }
 
         /* Rewire each edge with probability beta */
+        std::default_random_engine generator;
+        std::uniform_int_distribution<int> precision_dist(0, BETA_PRECISION-1);
+        std::uniform_int_distribution<int> node_dist(0, num_nodes-1);
+
         for (unsigned int index = 0; index < num_nodes; index++) {
             for (unsigned int node_index = 0; node_index < num_nodes; node_index++) {
                 if (!connections_[index][node_index]) continue;
-                unsigned int rand_num = rand_num_generator_->generateRandNum(BETA_PRECISION);
+                auto rand_num = (unsigned int) precision_dist(generator);
                 if (rand_num >= precision_beta) continue;
 
                 unsigned int new_index = 0;
                 while(1) {
-                    new_index = rand_num_generator_->generateRandNum(num_nodes);
+                    new_index = (unsigned int) node_dist(generator);
                     if ((new_index != index) && (new_index != node_index)) break;
                 }
                 connections_[index][node_index] = false;
@@ -98,7 +99,6 @@ private:
     std::vector<std::string> nodes_;
     unsigned int k_;
     float beta_;
-    std::unique_ptr<RandomNumGenerator> rand_num_generator_;
     bool **connections_;
 };
 

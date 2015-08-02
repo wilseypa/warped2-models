@@ -4,10 +4,10 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <random>
 #include "memory.hpp"
 #include "warped.hpp"
 #include "Person.hpp"
-#include "RandomNumGenerator.hpp"
 #include "DiseaseModel.hpp"
 #include "DiffusionNetwork.hpp"
 
@@ -90,11 +90,12 @@ public:
                 float asympt_infectivity, float prob_ulu, float prob_ulv, float prob_urv, 
                 float prob_uiv, float prob_uiu, unsigned int loc_state_refresh_interval, 
                 unsigned int loc_diffusion_trig_interval, 
-                std::vector<std::shared_ptr<Person>> population, unsigned int travel_time_to_hub, 
-                unsigned int disease_seed, unsigned int diffusion_seed)
+                std::vector<std::shared_ptr<Person>> population, 
+                unsigned int travel_time_to_hub, unsigned int index)
             : SimulationObject(name), state_(), location_name_(name), 
                 location_state_refresh_interval_(loc_state_refresh_interval), 
-                location_diffusion_trigger_interval_(loc_diffusion_trig_interval) {
+                location_diffusion_trigger_interval_(loc_diffusion_trig_interval), 
+                rng_(new std::default_random_engine(index)) {
 
         state_ = std::make_shared<LocationState>();
 
@@ -103,10 +104,10 @@ public:
                     transmissibility, latent_dwell_interval, incubating_dwell_interval, 
                     infectious_dwell_interval, asympt_dwell_interval, latent_infectivity, 
                     incubating_infectivity, infectious_infectivity, asympt_infectivity, 
-                    prob_ulu, prob_ulv, prob_urv, prob_uiv, prob_uiu, disease_seed);
+                    prob_ulu, prob_ulv, prob_urv, prob_uiv, prob_uiu, rng_);
 
         diffusion_network_ = 
-            std::make_shared<DiffusionNetwork>(diffusion_seed, travel_time_to_hub);
+            std::make_shared<DiffusionNetwork>(travel_time_to_hub, rng_);
 
         for (auto& person : population) {
             state_->current_population_->insert(state_->current_population_->begin(), 
@@ -138,6 +139,7 @@ protected:
     std::shared_ptr<DiffusionNetwork> diffusion_network_;
     unsigned int location_state_refresh_interval_;
     unsigned int location_diffusion_trigger_interval_;
+    std::shared_ptr<std::default_random_engine> rng_;
 };
 
 #endif

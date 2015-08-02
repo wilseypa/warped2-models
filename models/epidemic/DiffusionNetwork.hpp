@@ -3,16 +3,14 @@
 
 #include "memory.hpp"
 #include "Person.hpp"
-#include "RandomNumGenerator.hpp"
+#include <random>
 
 class DiffusionNetwork {
 public:
 
-    DiffusionNetwork(unsigned int seed, unsigned int travel_time_to_hub) 
-        : travel_time_to_hub_(travel_time_to_hub) {
-    
-        rand_num_gen_ = warped::make_unique<RandomNumGenerator>(seed);
-    }
+    DiffusionNetwork(   unsigned int travel_time_to_hub,
+                        std::shared_ptr<std::default_random_engine> rng )
+        : travel_time_to_hub_(travel_time_to_hub), rng_(rng) {}
 
     std::string pickLocation() {
 
@@ -20,7 +18,8 @@ public:
         unsigned int location_num = travel_time_chart_.size();
 
         if(location_num) {
-            unsigned int location_id = rand_num_gen_->generateRandNum(location_num);
+            std::uniform_int_distribution<int> distribution(0, location_num-1);
+            auto location_id = (unsigned int) distribution(*rng_);
             auto map_iter = travel_time_chart_.begin();
             for(unsigned int count = 0; count < location_id; count++) {
                 map_iter++;
@@ -39,7 +38,8 @@ public:
 
         unsigned int person_id = 0;
         if(person_count) {
-            person_id = rand_num_gen_->generateRandNum(person_count); 
+            std::uniform_int_distribution<int> distribution(0, person_count-1);
+            person_id = (unsigned int) distribution(*rng_); 
         }
         return person_id;
     }
@@ -50,8 +50,8 @@ public:
     }
 
 private:
-    std::unique_ptr<RandomNumGenerator> rand_num_gen_;
     unsigned int travel_time_to_hub_;
+    std::shared_ptr<std::default_random_engine> rng_;
     std::map<std::string, unsigned int> travel_time_chart_;
 };
 

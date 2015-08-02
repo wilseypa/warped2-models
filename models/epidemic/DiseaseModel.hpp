@@ -4,7 +4,7 @@
 #include <cmath>
 #include "memory.hpp"
 #include "Person.hpp"
-#include "RandomNumGenerator.hpp"
+#include <random>
 
 #define PROB_MULTIPLIER 100
 
@@ -20,7 +20,8 @@ public:
                     float latent_infectivity, float incubating_infectivity, 
                     float infectious_infectivity, float asympt_infectivity, 
                     float prob_ulu, float prob_ulv, float prob_urv, 
-                    float prob_uiv, float prob_uiu, unsigned int seed) 
+                    float prob_uiv, float prob_uiu,  
+                    std::shared_ptr<std::default_random_engine> rng)
             : transmissibility_(transmissibility), 
                 latent_dwell_interval_(latent_dwell_interval), 
                 incubating_dwell_interval_(incubating_dwell_interval), 
@@ -32,10 +33,7 @@ public:
                 asympt_infectivity_(asympt_infectivity), 
                 prob_ulu_(prob_ulu), prob_ulv_(prob_ulv), 
                 prob_urv_(prob_urv), prob_uiv_(prob_uiv), 
-                prob_uiu_(prob_uiu) {
-
-        rand_num_gen_ = warped::make_unique<RandomNumGenerator>(seed);
-    }
+                prob_uiu_(prob_uiu), rng_(rng) {}
 
     void reaction(std::shared_ptr<std::map<unsigned long, std::shared_ptr<Person>>> population, 
                                                     unsigned int current_time) {
@@ -91,8 +89,9 @@ public:
                     pow(prod_prob, (double) (current_time - person->loc_arrival_timestamp_));
 
                 unsigned int disease_num = (unsigned int) disease_prob * PROB_MULTIPLIER;
-                if (disease_num > rand_num_gen_->generateRandNum(PROB_MULTIPLIER)) {
-                    unsigned int rand_num = rand_num_gen_->generateRandNum(PROB_MULTIPLIER);
+                std::uniform_int_distribution<int> distribution(0, PROB_MULTIPLIER-1);
+                if (disease_num > (unsigned int) distribution(*rng_)) {
+                    auto rand_num = (unsigned int) distribution(*rng_);
 
                     if (person->vaccination_status_) {
                         unsigned int ulv_num = (unsigned int) (prob_ulv_ * PROB_MULTIPLIER);
@@ -170,7 +169,7 @@ private:
     float prob_urv_;
     float prob_uiv_;
     float prob_uiu_;
-    std::unique_ptr<RandomNumGenerator> rand_num_gen_;
+    std::shared_ptr<std::default_random_engine> rng_;
 };
 
 #endif

@@ -5,8 +5,6 @@
 /** Config Settings **/
 
 /* Diffusion parameter */
-#define DIFFUSION_SEED                      101
-
 // Watts-Strogatz model parameters
 #define K                                   8
 #define BETA                                0.1
@@ -27,12 +25,11 @@
 #define PROB_UIV                            0.1
 #define PROB_UIU                            0.3
 #define LOCATION_STATE_REFRESH_INTERVAL     50
-#define DISEASE_SEED                        90
 
 /* Regions */
 #define NUM_REGIONS                         1000
-#define MIN_NUM_LOCATIONS_PER_REGION        500
-#define MAX_NUM_LOCATIONS_PER_REGION        500
+#define MIN_NUM_LOCATIONS_PER_REGION        10
+#define MAX_NUM_LOCATIONS_PER_REGION        10
 
 /* Location */
 #define MIN_NUM_PERSONS_PER_LOCATION        100
@@ -63,7 +60,6 @@ int main( int argc, char *argv[] ) {
     }
 
     // Write the diffusion parameters
-    config_stream << DIFFUSION_SEED << ",";
     config_stream << K              << ",";
     config_stream << BETA           << std::endl;
 
@@ -82,8 +78,7 @@ int main( int argc, char *argv[] ) {
     config_stream << PROB_URV                           << ",";
     config_stream << PROB_UIV                           << ",";
     config_stream << PROB_UIU                           << std::endl;
-    config_stream << LOCATION_STATE_REFRESH_INTERVAL    << ",";
-    config_stream << DISEASE_SEED                       << std::endl;
+    config_stream << LOCATION_STATE_REFRESH_INTERVAL    << std::endl;
 
     // Write the population parameters
     unsigned long pid = 1;
