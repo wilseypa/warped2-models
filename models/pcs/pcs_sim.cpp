@@ -19,17 +19,17 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::initializeObject() {
     // Register random number generator to allow kernel to roll it back
     this->registerRNG<std::default_random_engine>(this->rng_);
 
-    std::exponential_distribution<double> duration_expo(call_duration_mean_);
-    std::exponential_distribution<double> move_expo(move_interval_mean_);
-    std::exponential_distribution<double> interval_expo(call_interval_mean_);
+    std::poisson_distribution<unsigned int> duration_expo(call_duration_mean_);
+    std::poisson_distribution<unsigned int> move_expo(move_interval_mean_);
+    std::poisson_distribution<unsigned int> interval_expo(call_interval_mean_);
 
     std::vector<std::shared_ptr<warped::Event>> events;
 
     for (unsigned int i = 0; i < portable_init_cnt_; i++) {
 
-        auto complete_call_ts = (unsigned int) std::ceil(duration_expo(*this->rng_));
-        auto move_call_ts     = (unsigned int) std::ceil(move_expo(*this->rng_));
-        auto next_call_ts     = (unsigned int) std::ceil(interval_expo(*this->rng_));
+        unsigned int complete_call_ts = duration_expo(*this->rng_);
+        unsigned int move_call_ts     = move_expo(*this->rng_);
+        unsigned int next_call_ts     = interval_expo(*this->rng_);
 
         auto next_action = min_ts(complete_call_ts, next_call_ts, move_call_ts);
         switch (next_action) {
@@ -80,9 +80,9 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
     std::vector<std::shared_ptr<warped::Event>> events;
     auto pcs_event = static_cast<const PcsEvent&>(event);
 
-    std::exponential_distribution<double> duration_expo(call_duration_mean_);
-    std::exponential_distribution<double> move_expo(move_interval_mean_);
-    std::exponential_distribution<double> interval_expo(call_interval_mean_);
+    std::poisson_distribution<unsigned int> duration_expo(call_duration_mean_);
+    std::poisson_distribution<unsigned int> move_expo(move_interval_mean_);
+    std::poisson_distribution<unsigned int> interval_expo(call_interval_mean_);
 
     unsigned int complete_call_ts = 0, move_call_ts = 0, next_call_ts = 0;
     action_t next_action;
@@ -99,16 +99,14 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
 
             if (!state_.idle_channel_cnt_) { // Channels not available
                 state_.channel_blocks_++;
-                next_call_ts += (unsigned int) std::ceil(interval_expo(*this->rng_));
-                complete_call_ts = next_call_ts + 
-                                        (unsigned int) std::ceil(duration_expo(*this->rng_));
+                next_call_ts += interval_expo(*this->rng_);
+                complete_call_ts = next_call_ts + duration_expo(*this->rng_);
                 if (move_call_ts <= next_call_ts) {
                     events.emplace_back(new PcsEvent {this->name_, move_call_ts, 
                                         complete_call_ts, next_call_ts, 
                                         move_call_ts, MOVE_CALL_OUT_METHOD});
                 } else {
-                    auto new_move_call_ts = next_call_ts + 
-                                        (unsigned int) std::ceil(move_expo(*this->rng_));
+                    unsigned int new_move_call_ts = next_call_ts + move_expo(*this->rng_);
                     events.emplace_back(new PcsEvent {this->name_, next_call_ts, 
                                         complete_call_ts, next_call_ts, 
                                         new_move_call_ts, NEXT_CALL_METHOD});
@@ -116,8 +114,7 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
             } else { // Channels available
                 state_.idle_channel_cnt_--;
                 if (complete_call_ts < move_call_ts) {
-                    next_call_ts = complete_call_ts + 
-                                        (unsigned int) std::ceil(interval_expo(*this->rng_));
+                    next_call_ts = complete_call_ts + interval_expo(*this->rng_);
                     events.emplace_back(new PcsEvent {this->name_, complete_call_ts, 
                                         complete_call_ts, next_call_ts, 
                                         move_call_ts, COMPLETE_CALL_METHOD});
@@ -134,8 +131,7 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
             state_.idle_channel_cnt_++;
             next_call_ts = pcs_event.next_call_ts_;
             move_call_ts = pcs_event.move_call_ts_;
-            complete_call_ts = next_call_ts + 
-                        (unsigned int) std::ceil(duration_expo(*this->rng_));
+            complete_call_ts = next_call_ts + duration_expo(*this->rng_);
 
             next_action = min_ts(complete_call_ts, next_call_ts, move_call_ts);
             switch (next_action) {
@@ -172,8 +168,7 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
 
             complete_call_ts = pcs_event.complete_call_ts_;
             next_call_ts = pcs_event.next_call_ts_;
-            move_call_ts = pcs_event.move_call_ts_ + 
-                        (unsigned int) std::ceil(move_expo(*this->rng_));
+            move_call_ts = pcs_event.move_call_ts_ + move_expo(*this->rng_);
             next_action = min_ts(complete_call_ts, next_call_ts, move_call_ts);
 
             // Call handover only if complete_call_ts < next_call_ts
@@ -190,16 +185,14 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
                         } break;
 
                         case MOVECALL: {
-                            complete_call_ts = next_call_ts + 
-                                    (unsigned int) std::ceil(duration_expo(*this->rng_));
+                            complete_call_ts = next_call_ts + duration_expo(*this->rng_);
                             events.emplace_back(new PcsEvent {this->name_, move_call_ts, 
                                                         complete_call_ts, next_call_ts, 
                                                         move_call_ts, MOVE_CALL_OUT_METHOD});
                         } break;
 
                         case COMPLETECALL: {
-                            complete_call_ts = next_call_ts + 
-                                    (unsigned int) std::ceil(duration_expo(*this->rng_));
+                            complete_call_ts = next_call_ts + duration_expo(*this->rng_);
                             events.emplace_back(new PcsEvent {this->name_, next_call_ts, 
                                                         complete_call_ts, next_call_ts, 
                                                         move_call_ts, NEXT_CALL_METHOD});
@@ -315,9 +308,9 @@ int main(int argc, const char **argv) {
     unsigned int num_cells_x        = 100;
     unsigned int num_cells_y        = 100;
     unsigned int max_channel_cnt    = 15;
-    unsigned int call_interval_mean = 300;
-    unsigned int call_duration_mean = 250;
-    unsigned int move_interval_mean = 200;
+    unsigned int call_interval_mean = 200;
+    unsigned int call_duration_mean = 50;
+    unsigned int move_interval_mean = 100;
     unsigned int num_portables      = 50;
 
     TCLAP::ValueArg<unsigned int> num_cells_x_arg("x", "num-cells-x", "Width of cell grid",
