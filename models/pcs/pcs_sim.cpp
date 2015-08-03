@@ -45,15 +45,15 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::initializeObject() {
                 } else { // Channels not available
                     complete_call_ts += next_call_ts;
                     state_.channel_blocks_++;
-                    // If move_call_ts < next_call_ts, start the handover process
-                    if (move_call_ts <= next_call_ts) {
-                        events.emplace_back(new PcsEvent {this->name_, move_call_ts, 
-                                            complete_call_ts, next_call_ts, 
-                                            move_call_ts, MOVE_CALL_OUT_METHOD});
-                    } else { // Else start a new call
+                    // If next_call_ts < move_call_ts, start a new call
+                    if (next_call_ts < move_call_ts) {
                         events.emplace_back(new PcsEvent {this->name_, next_call_ts, 
                                             complete_call_ts, next_call_ts, 
                                             move_call_ts, NEXT_CALL_METHOD});
+                    } else { // Else move to another cell
+                        events.emplace_back(new PcsEvent {this->name_, move_call_ts, 
+                                            complete_call_ts, next_call_ts, 
+                                            move_call_ts, MOVE_CALL_OUT_METHOD});
                     }
                 }
             } break;
@@ -61,7 +61,7 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::initializeObject() {
             case MOVECALL: {
                 /* Since no channels acquired, complete_call_ts < next_call_ts will 
                    create an ambiguity in the receiveEvent() */
-                complete_call_ts += (complete_call_ts <= next_call_ts) ? next_call_ts : 0;
+                complete_call_ts += next_call_ts;
                 events.emplace_back(new PcsEvent {this->name_, move_call_ts, 
                                             complete_call_ts, next_call_ts, 
                                             move_call_ts, MOVE_CALL_OUT_METHOD});
@@ -103,14 +103,14 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
                 state_.channel_blocks_++;
                 next_call_ts += interval_expo(*this->rng_) + TS_OFFSET;
                 complete_call_ts = next_call_ts + duration_expo(*this->rng_) + TS_OFFSET;
-                if (move_call_ts <= next_call_ts) {
-                    events.emplace_back(new PcsEvent {this->name_, move_call_ts, 
-                                        complete_call_ts, next_call_ts, 
-                                        move_call_ts, MOVE_CALL_OUT_METHOD});
-                } else {
+                if (next_call_ts < move_call_ts) {
                     events.emplace_back(new PcsEvent {this->name_, next_call_ts, 
                                         complete_call_ts, next_call_ts, 
                                         move_call_ts, NEXT_CALL_METHOD});
+                } else {
+                    events.emplace_back(new PcsEvent {this->name_, move_call_ts, 
+                                        complete_call_ts, next_call_ts, 
+                                        move_call_ts, MOVE_CALL_OUT_METHOD});
                 }
             } else { // Channels available
                 state_.idle_channel_cnt_--;
@@ -132,6 +132,7 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
             state_.idle_channel_cnt_++;
             next_call_ts = pcs_event.next_call_ts_;
             move_call_ts = pcs_event.move_call_ts_;
+            assert(complete_call_ts <= next_call_ts);
             complete_call_ts = next_call_ts + duration_expo(*this->rng_) + TS_OFFSET;
 
             next_action = min_ts(complete_call_ts, next_call_ts, move_call_ts);
@@ -156,11 +157,12 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
 
         case MOVE_CALL_OUT_METHOD: {
 
-            complete_call_ts = pcs_event.complete_call_ts_;
-            next_call_ts = pcs_event.next_call_ts_;
-            move_call_ts = pcs_event.move_call_ts_;
+            complete_call_ts = pcs_event.complete_call_ts_ + TS_OFFSET;
+            next_call_ts = pcs_event.next_call_ts_ + TS_OFFSET;
+            move_call_ts = pcs_event.move_call_ts_ + TS_OFFSET;
+            assert(MOVECALL == min_ts(complete_call_ts, next_call_ts, move_call_ts));
 
-            if (complete_call_ts < next_call_ts) {
+            if (complete_call_ts <= next_call_ts) {
                 state_.idle_channel_cnt_++;
             }
             events.emplace_back(new PcsEvent {random_move(), move_call_ts, 
