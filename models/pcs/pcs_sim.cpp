@@ -12,6 +12,8 @@
 
 #include "tclap/ValueArg.h"
 
+#define TS_OFFSET 1
+
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(PcsEvent)
 
 std::vector<std::shared_ptr<warped::Event> > PcsCell::initializeObject() {
@@ -27,9 +29,9 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::initializeObject() {
 
     for (unsigned int i = 0; i < portable_init_cnt_; i++) {
 
-        unsigned int complete_call_ts = duration_expo(*this->rng_);
-        unsigned int move_call_ts     = move_expo(*this->rng_);
-        unsigned int next_call_ts     = interval_expo(*this->rng_);
+        unsigned int complete_call_ts = duration_expo(*this->rng_) + TS_OFFSET;
+        unsigned int move_call_ts = move_expo(*this->rng_) + TS_OFFSET;
+        unsigned int next_call_ts = interval_expo(*this->rng_) + TS_OFFSET;
 
         auto next_action = min_ts(complete_call_ts, next_call_ts, move_call_ts);
         switch (next_action) {
@@ -59,7 +61,7 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::initializeObject() {
             case MOVECALL: {
                 /* Since no channels acquired, complete_call_ts < next_call_ts will 
                    create an ambiguity in the receiveEvent() */
-                complete_call_ts += (complete_call_ts < next_call_ts) ? next_call_ts : 0;
+                complete_call_ts += (complete_call_ts <= next_call_ts) ? next_call_ts : 0;
                 events.emplace_back(new PcsEvent {this->name_, move_call_ts, 
                                             complete_call_ts, next_call_ts, 
                                             move_call_ts, MOVE_CALL_OUT_METHOD});
@@ -94,27 +96,26 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
             move_call_ts = pcs_event.move_call_ts_;
             complete_call_ts = pcs_event.complete_call_ts_;
             next_call_ts = pcs_event.next_call_ts_;
-            assert(next_call_ts <= complete_call_ts);
+            assert(next_call_ts < complete_call_ts);
             state_.call_attempts_++;
 
             if (!state_.idle_channel_cnt_) { // Channels not available
                 state_.channel_blocks_++;
-                next_call_ts += interval_expo(*this->rng_);
-                complete_call_ts = next_call_ts + duration_expo(*this->rng_);
+                next_call_ts += interval_expo(*this->rng_) + TS_OFFSET;
+                complete_call_ts = next_call_ts + duration_expo(*this->rng_) + TS_OFFSET;
                 if (move_call_ts <= next_call_ts) {
                     events.emplace_back(new PcsEvent {this->name_, move_call_ts, 
                                         complete_call_ts, next_call_ts, 
                                         move_call_ts, MOVE_CALL_OUT_METHOD});
                 } else {
-                    unsigned int new_move_call_ts = next_call_ts + move_expo(*this->rng_);
                     events.emplace_back(new PcsEvent {this->name_, next_call_ts, 
                                         complete_call_ts, next_call_ts, 
-                                        new_move_call_ts, NEXT_CALL_METHOD});
+                                        move_call_ts, NEXT_CALL_METHOD});
                 }
             } else { // Channels available
                 state_.idle_channel_cnt_--;
+                next_call_ts = complete_call_ts + interval_expo(*this->rng_) + TS_OFFSET;
                 if (complete_call_ts < move_call_ts) {
-                    next_call_ts = complete_call_ts + interval_expo(*this->rng_);
                     events.emplace_back(new PcsEvent {this->name_, complete_call_ts, 
                                         complete_call_ts, next_call_ts, 
                                         move_call_ts, COMPLETE_CALL_METHOD});
@@ -131,7 +132,7 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
             state_.idle_channel_cnt_++;
             next_call_ts = pcs_event.next_call_ts_;
             move_call_ts = pcs_event.move_call_ts_;
-            complete_call_ts = next_call_ts + duration_expo(*this->rng_);
+            complete_call_ts = next_call_ts + duration_expo(*this->rng_) + TS_OFFSET;
 
             next_action = min_ts(complete_call_ts, next_call_ts, move_call_ts);
             switch (next_action) {
@@ -141,7 +142,10 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
                                         move_call_ts, MOVE_CALL_OUT_METHOD});
                 } break;
 
-                case COMPLETECALL: // Needed only if the complete_call_ts increment is 0
+                case COMPLETECALL: {
+                    assert(0);
+                } break;
+
                 case NEXTCALL: {
                     events.emplace_back(new PcsEvent {this->name_, next_call_ts, 
                                         complete_call_ts, next_call_ts, 
@@ -168,35 +172,28 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
 
             complete_call_ts = pcs_event.complete_call_ts_;
             next_call_ts = pcs_event.next_call_ts_;
-            move_call_ts = pcs_event.move_call_ts_ + move_expo(*this->rng_);
+            move_call_ts = pcs_event.move_call_ts_ + move_expo(*this->rng_) + TS_OFFSET;
             next_action = min_ts(complete_call_ts, next_call_ts, move_call_ts);
 
-            // Call handover only if complete_call_ts < next_call_ts
-            if (complete_call_ts < next_call_ts) {
+            // Call handover only if complete_call_ts <= next_call_ts
+            if (complete_call_ts <= next_call_ts) {
 
                 // No channels available
                 if (!state_.idle_channel_cnt_) {
                     state_.handoff_blocks_++;
                     state_.channel_blocks_++;
 
-                    switch (next_action) {
-                        case NEXTCALL: {
-                            assert(0);
-                        } break;
+                    complete_call_ts = next_call_ts + duration_expo(*this->rng_) + TS_OFFSET;
 
-                        case MOVECALL: {
-                            complete_call_ts = next_call_ts + duration_expo(*this->rng_);
-                            events.emplace_back(new PcsEvent {this->name_, move_call_ts, 
-                                                        complete_call_ts, next_call_ts, 
-                                                        move_call_ts, MOVE_CALL_OUT_METHOD});
-                        } break;
-
-                        case COMPLETECALL: {
-                            complete_call_ts = next_call_ts + duration_expo(*this->rng_);
-                            events.emplace_back(new PcsEvent {this->name_, next_call_ts, 
+                    // End call and schedule a new one if next_call_ts < move_call_ts
+                    if (next_call_ts < move_call_ts) {
+                        events.emplace_back(new PcsEvent {this->name_, next_call_ts, 
                                                         complete_call_ts, next_call_ts, 
                                                         move_call_ts, NEXT_CALL_METHOD});
-                        } break;
+                    } else {
+                        events.emplace_back(new PcsEvent {this->name_, move_call_ts, 
+                                                        complete_call_ts, next_call_ts, 
+                                                        move_call_ts, MOVE_CALL_OUT_METHOD});
                     }
                 } else { // Channels available, complete call
                     state_.idle_channel_cnt_--;
@@ -221,7 +218,10 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
                 }
             } else { // Portable was not busy
                 switch (next_action) {
-                    case COMPLETECALL: // possible only if complete_call_ts == next_call_ts
+                    case COMPLETECALL: {
+                        assert(0);
+                    } break;
+
                     case NEXTCALL: {
                         events.emplace_back(new PcsEvent {this->name_, next_call_ts, 
                                                         complete_call_ts, next_call_ts, 
