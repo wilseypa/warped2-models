@@ -45,16 +45,22 @@ Travel Time<sub> hub => location 2</sub>
 
 User can adjust the following parameters :
 
-1. Number of regions
-2. Number of locations per region
-3. Population per location
-4. Travel time to hub
-5. Diffusion seed
-6. Disease seed
-7. Location state refresh interval
-8. Location diffusion interval
+1. Watts-Strigatz model paramters
+    1. k (Default: 8)
+    2. beta (Default: 0.1)
+2. Disease parameters
+    1. transmissibility (Default: 0.12)
+    2. infectivity and dwell time of disease phases
+    3. probability of disease progress (refer to Legend)
+    4. Location state refresh interval (Default: 50)
+3. Number of regions (Default: 1000)
+4. Number of locations per region (Default: 10)
+5. For each location:
+    1. Population per location (Default: 100)
+    2. Travel time to hub
+    3. Location diffusion interval
 
-Please refer to [Configuration Creator](config/README.md) for details.
+Please refer to [Configuration Creator](config/) for details.
 
 ###Legend :
 

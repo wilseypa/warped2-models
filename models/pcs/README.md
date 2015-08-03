@@ -30,7 +30,8 @@ User can adjust the following parameters :
 
 [1] Lin, Y.-B., P. A. Fishwick, and S. Member. 1996. Asynchronous 
 parallel discrete event simulation. IEEE Transactions on Systems, 
-Man and Cybernetics 26 (4): 397–412. [10.1109/3468.508819]
+Man and Cybernetics 26 (4): 397–412. 
+[http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=508819]
 
 [2] Eytan Modiano. Introduction to Queueing Theory
 [http://web.mit.edu/modiano/www/6.263/lec5-6.pdf]
