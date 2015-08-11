@@ -13,7 +13,7 @@
 
 std::random_device rd;
 
-WARPED_DEFINE_OBJECT_STATE_STRUCT(AirportState) {
+WARPED_DEFINE_LP_STATE_STRUCT(AirportState) {
     unsigned int arrivals_;
     unsigned int departures_;
     unsigned int planes_grounded_;
@@ -49,7 +49,7 @@ public:
     WARPED_REGISTER_SERIALIZABLE_MEMBERS(cereal::base_class<warped::Event>(this), receiver_name_, type_, ts_)
 };
 
-class Airport : public warped::SimulationObject {
+class Airport : public warped::LogicalProcess {
 public:
     Airport(    const std::string& name, 
                 const unsigned int num_airports_x, 
@@ -58,7 +58,7 @@ public:
                 const unsigned int arrive_mean, 
                 const unsigned int depart_mean, 
                 const unsigned int index)
-        :   SimulationObject(name), 
+        :   LogicalProcess(name), 
             state_(), 
             rng_(new std::default_random_engine(rd())),
             num_airports_x_(num_airports_x), 
@@ -73,13 +73,13 @@ public:
         state_.planes_grounded_ = num_planes_;
     }
 
-    virtual std::vector<std::shared_ptr<warped::Event> > initializeObject() override;
+    virtual std::vector<std::shared_ptr<warped::Event> > initializeLP() override;
     virtual std::vector<std::shared_ptr<warped::Event> > receiveEvent(const warped::Event&);
-    virtual warped::ObjectState& getState() { return this->state_; }
+    virtual warped::LPState& getState() { return this->state_; }
 
     AirportState state_;
 
-    static inline std::string object_name(const unsigned int);
+    static inline std::string lp_name(const unsigned int);
 
 protected:
     std::shared_ptr<std::default_random_engine> rng_;

@@ -11,7 +11,7 @@
 
 #include "warped.hpp"
 
-WARPED_DEFINE_OBJECT_STATE_STRUCT(TrafficState) {
+WARPED_DEFINE_LP_STATE_STRUCT(TrafficState) {
 
     unsigned int total_cars_arrived_;
     unsigned int total_cars_finished_;
@@ -106,14 +106,14 @@ public:
                     type_, x_to_go_, y_to_go_, arrived_from_, current_lane_, ts_)
 };
 
-class Intersection : public warped::SimulationObject {
+class Intersection : public warped::LogicalProcess {
 public:
     Intersection(   const unsigned int num_intersections_x,
                     const unsigned int num_intersections_y,
                     const unsigned int num_cars,
                     const unsigned int mean_interval,
                     const unsigned int index    )
-            :   SimulationObject(object_name(index)),
+            :   LogicalProcess(lp_name(index)),
                 state_(),
                 rng_(new std::default_random_engine(index)),
                 num_intersections_x_(num_intersections_x),
@@ -150,13 +150,13 @@ public:
          state_.num_out_west_right_ = 0;
     }
 
-    virtual std::vector<std::shared_ptr<warped::Event>> initializeObject() override;
+    virtual std::vector<std::shared_ptr<warped::Event>> initializeLP() override;
     virtual std::vector<std::shared_ptr<warped::Event>> receiveEvent(const warped::Event&);
-    virtual warped::ObjectState& getState() { return this->state_; }
+    virtual warped::LPState& getState() { return this->state_; }
 
     TrafficState state_;
 
-    static inline std::string object_name(const unsigned int);
+    static inline std::string lp_name(const unsigned int);
 
 protected:
     std::shared_ptr<std::default_random_engine> rng_;

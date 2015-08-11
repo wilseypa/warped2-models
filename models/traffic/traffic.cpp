@@ -10,7 +10,7 @@
 
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(TrafficEvent)
 
-std::vector<std::shared_ptr<warped::Event> > Intersection::initializeObject() {
+std::vector<std::shared_ptr<warped::Event> > Intersection::initializeLP() {
 
     this->registerRNG(this->rng_);
 
@@ -26,15 +26,15 @@ std::vector<std::shared_ptr<warped::Event> > Intersection::initializeObject() {
     std::vector<std::shared_ptr<warped::Event> > events;
     for (unsigned int i = 0; i < this->num_cars_; i++) {
         events.emplace_back(new TrafficEvent {
-                object_name(this->index_), ARRIVAL, rand_x(*this->rng_), rand_y(*this->rng_), 
+                lp_name(this->index_), ARRIVAL, rand_x(*this->rng_), rand_y(*this->rng_), 
                 car_arrival, car_current_lane, (unsigned int) std::ceil(interval_expo(*this->rng_))});
     }
     return events;
 }
 
-inline std::string Intersection::object_name(const unsigned int object_index) {
+inline std::string Intersection::lp_name(const unsigned int lp_index) {
 
-    return std::string("Intersection_") + std::to_string(object_index);
+    return std::string("Intersection_") + std::to_string(lp_index);
 }
 
 std::vector<std::shared_ptr<warped::Event> > 
@@ -686,7 +686,7 @@ std::string Intersection::compute_move(direction_t direction) {
             assert(0);
         }
     }
-    return object_name(new_x + new_y * num_intersections_x_);
+    return lp_name(new_x + new_y * num_intersections_x_);
 }
 
 int main(int argc, const char** argv) {
@@ -717,9 +717,9 @@ int main(int argc, const char** argv) {
     num_cars            = num_cars_arg.getValue();
     mean_interval       = mean_interval_arg.getValue();
 
-    std::vector<Intersection> objects;
+    std::vector<Intersection> lps;
     for (unsigned int index = 0; index < num_intersections_x * num_intersections_y; index++) {
-        objects.emplace_back(   num_intersections_x, 
+        lps.emplace_back(   num_intersections_x, 
                                 num_intersections_y, 
                                 num_cars, 
                                 mean_interval, 
@@ -727,16 +727,16 @@ int main(int argc, const char** argv) {
                             );
     }
 
-    std::vector<warped::SimulationObject*> object_pointers;
-    for (auto& o : objects) {
-        object_pointers.push_back(&o);
+    std::vector<warped::LogicalProcess*> lp_pointers;
+    for (auto& lp : lps) {
+        lp_pointers.push_back(&lp);
     }
-    simulation.simulate(object_pointers);
+    simulation.simulate(lp_pointers);
 
     unsigned int total_cars_arrived = 0, total_cars_finished = 0;
-    for (auto& o : objects) {
-        total_cars_arrived  += o.state_.total_cars_arrived_;
-        total_cars_finished += o.state_.total_cars_finished_;
+    for (auto& lp : lps) {
+        total_cars_arrived  += lp.state_.total_cars_arrived_;
+        total_cars_finished += lp.state_.total_cars_finished_;
     }
     std::cout << "Total cars arrived  : " << total_cars_arrived  << std::endl;
     std::cout << "Total cars finished : " << total_cars_finished << std::endl;

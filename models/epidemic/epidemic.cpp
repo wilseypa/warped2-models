@@ -5,7 +5,7 @@
 
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(EpidemicEvent)
 
-std::vector<std::shared_ptr<warped::Event> > Location::initializeObject() {
+std::vector<std::shared_ptr<warped::Event> > Location::initializeLP() {
 
     // Register random number generator to allow kernel to roll it back
     this->registerRNG<std::default_random_engine>(this->rng_);
@@ -161,7 +161,7 @@ int main(int argc, const char** argv) {
     unsigned int num_regions = (unsigned int) std::stoul(buffer);
 
     std::map<std::string, unsigned int> travel_map;
-    std::vector<Location> objects;
+    std::vector<Location> lps;
 
     for (unsigned int region_id = 0; region_id < num_regions; region_id++) {
 
@@ -217,7 +217,7 @@ int main(int argc, const char** argv) {
                                                        );
                 population.push_back(person);
             }
-            objects.emplace_back(   location,
+            lps.emplace_back(   location,
                                     transmissibility,
                                     latent_dwell_time,
                                     incubating_dwell_time,
@@ -245,29 +245,29 @@ int main(int argc, const char** argv) {
     // Create the Watts-Strogatz model
     auto ws = std::make_shared<WattsStrogatzModel>(k, beta);
     std::vector<std::string> nodes;
-    for (auto& o : objects) {
-        nodes.push_back(o.getLocationName());
+    for (auto& lp : lps) {
+        nodes.push_back(lp.getLocationName());
     }
     ws->populateNodes(nodes);
     ws->mapNodes();
 
     // Create the travel map
-    for (auto& o : objects) {
-        std::vector<std::string> connections = ws->fetchNodeLinks(o.getLocationName());
+    for (auto& lp : lps) {
+        std::vector<std::string> connections = ws->fetchNodeLinks(lp.getLocationName());
         std::map<std::string, unsigned int> temp_travel_map;
         for (auto& link : connections) {
             auto travel_map_iter = travel_map.find(link);
             temp_travel_map.insert(std::pair<std::string, unsigned int>
                                 (travel_map_iter->first, travel_map_iter->second));
         }
-        o.populateTravelDistances(temp_travel_map);
+        lp.populateTravelDistances(temp_travel_map);
     }
 
-    std::vector<warped::SimulationObject*> object_pointers;
-    for (auto& o : objects) {
-        object_pointers.push_back(&o);
+    std::vector<warped::LogicalProcess*> lp_pointers;
+    for (auto& lp : lps) {
+        lp_pointers.push_back(&lp);
     }
-    epidemic_sim.simulate(object_pointers);
+    epidemic_sim.simulate(lp_pointers);
 
     return 0;
 }

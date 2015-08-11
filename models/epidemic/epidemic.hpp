@@ -11,7 +11,7 @@
 #include "DiseaseModel.hpp"
 #include "DiffusionNetwork.hpp"
 
-WARPED_DEFINE_OBJECT_STATE_STRUCT(LocationState) {
+WARPED_DEFINE_LP_STATE_STRUCT(LocationState) {
 
     LocationState() { 
         current_population_ = std::make_shared<std::map <unsigned long, std::shared_ptr<Person>>>();
@@ -80,7 +80,7 @@ public:
                 loc_arrival_timestamp_, prev_state_change_timestamp_, event_type_)
 };
 
-class Location : public warped::SimulationObject {
+class Location : public warped::LogicalProcess {
 public:
 
     Location(const std::string& name, float transmissibility, unsigned int latent_dwell_interval, 
@@ -92,7 +92,7 @@ public:
                 unsigned int loc_diffusion_trig_interval, 
                 std::vector<std::shared_ptr<Person>> population, 
                 unsigned int travel_time_to_hub, unsigned int index)
-            : SimulationObject(name), state_(), location_name_(name), 
+            : LogicalProcess(name), state_(), location_name_(name), 
                 location_state_refresh_interval_(loc_state_refresh_interval), 
                 location_diffusion_trigger_interval_(loc_diffusion_trig_interval), 
                 rng_(new std::default_random_engine(index)) {
@@ -115,9 +115,9 @@ public:
         }
     }
 
-    virtual warped::ObjectState& getState() { return *state_; }
+    virtual warped::LPState& getState() { return *state_; }
 
-    virtual std::vector<std::shared_ptr<warped::Event>> initializeObject() override;
+    virtual std::vector<std::shared_ptr<warped::Event>> initializeLP() override;
 
     virtual std::vector<std::shared_ptr<warped::Event>> receiveEvent(const warped::Event& event);
 

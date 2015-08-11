@@ -8,7 +8,7 @@
 
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(AirportEvent)
 
-std::vector<std::shared_ptr<warped::Event> > Airport::initializeObject() {
+std::vector<std::shared_ptr<warped::Event> > Airport::initializeLP() {
 
     // Register random number generator
     this->registerRNG<std::default_random_engine>(this->rng_);
@@ -23,9 +23,9 @@ std::vector<std::shared_ptr<warped::Event> > Airport::initializeObject() {
     return events;
 }
 
-inline std::string Airport::object_name(const unsigned int object_index) {
+inline std::string Airport::lp_name(const unsigned int lp_index) {
 
-    return std::string("Airport_") + std::to_string(object_index);
+    return std::string("Airport_") + std::to_string(lp_index);
 }
 
 std::vector<std::shared_ptr<warped::Event> > Airport::receiveEvent(const warped::Event& event) {
@@ -95,7 +95,7 @@ std::string Airport::compute_move(direction_t direction) {
         }
     }
 
-    return object_name(new_x + new_y * num_airports_x_);
+    return lp_name(new_x + new_y * num_airports_x_);
 }
 
 std::string Airport::random_move() {
@@ -134,28 +134,28 @@ int main(int argc, const char** argv) {
     mean_flight_time    = mean_flight_time_arg.getValue();
     num_planes          = num_planes_arg.getValue();
 
-    std::vector<Airport> objects;
+    std::vector<Airport> lps;
 
     for (unsigned int i = 0; i < num_airports_x*num_airports_y; i++) {
-        std::string name = Airport::object_name(i);
-        objects.emplace_back(name, num_airports_x, num_airports_y, num_planes, 
+        std::string name = Airport::lp_name(i);
+        lps.emplace_back(name, num_airports_x, num_airports_y, num_planes, 
                                                 mean_flight_time, mean_ground_time, i);
     }
 
-    std::vector<warped::SimulationObject*> object_pointers;
-    for (auto& o : objects) {
-        object_pointers.push_back(&o);
+    std::vector<warped::LogicalProcess*> lp_pointers;
+    for (auto& lp : lps) {
+        lp_pointers.push_back(&lp);
     }
 
-    airport_sim.simulate(object_pointers);
+    airport_sim.simulate(lp_pointers);
 
     unsigned int arrivals = 0;
     unsigned int departures = 0;
     unsigned int planes_grounded = 0;
-    for (auto& o : objects) {
-        arrivals += o.state_.arrivals_;
-        departures += o.state_.departures_;
-        planes_grounded += o.state_.planes_grounded_;
+    for (auto& lp : lps) {
+        arrivals += lp.state_.arrivals_;
+        departures += lp.state_.departures_;
+        planes_grounded += lp.state_.planes_grounded_;
     }
     std::cout << departures << " total departures" << std::endl;
     std::cout << arrivals << " total arrivals" << std::endl;

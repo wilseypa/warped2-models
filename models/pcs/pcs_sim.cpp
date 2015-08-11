@@ -16,7 +16,7 @@
 
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(PcsEvent)
 
-std::vector<std::shared_ptr<warped::Event> > PcsCell::initializeObject() {
+std::vector<std::shared_ptr<warped::Event> > PcsCell::initializeLP() {
 
     // Register random number generator to allow kernel to roll it back
     this->registerRNG<std::default_random_engine>(this->rng_);
@@ -350,25 +350,25 @@ int main(int argc, const char **argv) {
     move_interval_mean  = move_interval_mean_arg.getValue();
     num_portables       = num_portables_arg.getValue();
 
-    std::vector<PcsCell> objects;
+    std::vector<PcsCell> lps;
     for (unsigned int i = 0; i < num_cells_x * num_cells_y; i++) {
 
         std::string name = std::string("Cell_") + std::to_string(i);
-        objects.emplace_back(name, num_cells_x, num_cells_y, max_channel_cnt, 
+        lps.emplace_back(name, num_cells_x, num_cells_y, max_channel_cnt, 
                 call_interval_mean, call_duration_mean, move_interval_mean, num_portables, i);
     }
 
-    std::vector<warped::SimulationObject*> object_pointers;
-    for (auto& o : objects) {
-        object_pointers.push_back(&o);
+    std::vector<warped::LogicalProcess*> lp_pointers;
+    for (auto& lp : lps) {
+        lp_pointers.push_back(&lp);
     }
-    simulation.simulate(object_pointers);
+    simulation.simulate(lp_pointers);
 
     unsigned int call_attempts = 0, channel_blocks = 0, handoff_blocks = 0;
-    for (auto& o : objects) {
-        call_attempts  += o.state_.call_attempts_;
-        channel_blocks += o.state_.channel_blocks_;
-        handoff_blocks += o.state_.handoff_blocks_;
+    for (auto& lp : lps) {
+        call_attempts  += lp.state_.call_attempts_;
+        channel_blocks += lp.state_.channel_blocks_;
+        handoff_blocks += lp.state_.handoff_blocks_;
     }
     std::cout << "Call attempts  : " << call_attempts  << std::endl;
     std::cout << "Channel blocks : " << channel_blocks << std::endl;

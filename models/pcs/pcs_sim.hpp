@@ -8,7 +8,7 @@
 
 #include "warped.hpp"
 
-WARPED_DEFINE_OBJECT_STATE_STRUCT(PcsState) {
+WARPED_DEFINE_LP_STATE_STRUCT(PcsState) {
 
     unsigned int idle_channel_cnt_;
     unsigned int call_attempts_;
@@ -74,7 +74,7 @@ public:
                                             next_call_ts_, move_call_ts_, method_)
 };
 
-class PcsCell : public warped::SimulationObject {
+class PcsCell : public warped::LogicalProcess {
 public:
 
     PcsCell(    const std::string&  name, 
@@ -87,7 +87,7 @@ public:
                 unsigned int        portable_cnt, 
                 unsigned int        index      )
 
-        :   SimulationObject(name), 
+        :   LogicalProcess(name), 
             state_(), 
             num_cells_x_(num_cells_x), 
             num_cells_y_(num_cells_y), 
@@ -106,9 +106,9 @@ public:
         state_.handoff_blocks_   = 0;
     }
 
-    virtual warped::ObjectState& getState() { return state_; }
+    virtual warped::LPState& getState() { return state_; }
 
-    virtual std::vector<std::shared_ptr<warped::Event> > initializeObject() override;
+    virtual std::vector<std::shared_ptr<warped::Event> > initializeLP() override;
 
     virtual std::vector<std::shared_ptr<warped::Event> > receiveEvent(const warped::Event&);
 

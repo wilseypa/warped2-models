@@ -17,7 +17,7 @@ std::random_device rd;
 enum distribution_t {UNIFORM, POISSON, EXPONENTIAL, NORMAL, BINOMIAL, FIXED,
                      ALTERNATE, ROUNDROBIN, CONDITIONAL, ALL};
 
-WARPED_DEFINE_OBJECT_STATE_STRUCT(PholdState) {
+WARPED_DEFINE_LP_STATE_STRUCT(PholdState) {
     unsigned int messages_sent_;
     unsigned int messages_received_;
 };
@@ -40,18 +40,18 @@ public:
 
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(PholdEvent)
 
-class PholdObject : public warped::SimulationObject {
+class PholdLP : public warped::LogicalProcess {
 public:
-    PholdObject(const std::string& name, unsigned int initial_events,
-                unsigned int num_objects, distribution_t distribution,
+    PholdLP(const std::string& name, unsigned int initial_events,
+                unsigned int num_lps, distribution_t distribution,
                 double distribution_mean = 1.0)
-        : SimulationObject(name), state_(), initial_events_(initial_events),
-            num_objects_(num_objects), rng_(new std::default_random_engine(rd())),
+        : LogicalProcess(name), state_(), initial_events_(initial_events),
+            num_lps_(num_lps), rng_(new std::default_random_engine(rd())),
             distribution_(distribution), distribution_mean_(distribution_mean) {}
 
-    warped::ObjectState& getState() { return this->state_; }
+    warped::LPState& getState() { return this->state_; }
 
-    std::vector<std::shared_ptr<warped::Event> > initializeObject() override {
+    std::vector<std::shared_ptr<warped::Event> > initializeLP() override {
 
         this->registerRNG(this->rng_);
 
@@ -78,15 +78,15 @@ public:
 
 protected:
     const unsigned int initial_events_;
-    const unsigned int num_objects_;
+    const unsigned int num_lps_;
     std::shared_ptr<std::default_random_engine> rng_;
     const distribution_t distribution_;
     const double distribution_mean_;
 
     std::string get_destination() const {
-        std::uniform_int_distribution<int> dest(0, (int)(num_objects_-1));
+        std::uniform_int_distribution<int> dest(0, (int)(num_lps_-1));
         unsigned int destination_number = (unsigned int) dest(*this->rng_);
-        return std::string("Object ") + std::to_string(destination_number);
+        return std::string("LP ") + std::to_string(destination_number);
     }
 
     unsigned int get_timestamp_delay() const {
@@ -123,7 +123,7 @@ protected:
 
             default : {
                 delay = 0;
-                std::cerr << "Improper Distribution for a Source Object!!!" << std::endl;
+                std::cerr << "Improper Distribution for a Source LP!!!" << std::endl;
             }
         }
         return ( (unsigned int) delay );
@@ -134,7 +134,7 @@ int main(int argc, const char** argv) {
 
     double distribution_mean = 10.0;
     unsigned int num_initial_events = 1;
-    unsigned int num_objects = 10000;
+    unsigned int num_lps = 10000;
     std::string distribution = "EXPONENTIAL";
     std::string log_statistics = "no";
 
@@ -142,11 +142,11 @@ int main(int argc, const char** argv) {
                                                     "mean delay for events", 
                                                     false, distribution_mean, "double");
     TCLAP::ValueArg<unsigned int> num_initial_events_arg("e", "events", 
-                                                    "number of initial events per object", 
+                                                    "number of initial events per lp",
                                                     false, num_initial_events, "unsigned int");
-    TCLAP::ValueArg<unsigned int> num_objects_arg("n", "num_objects", 
-                                                    "number of simulation objects",
-                                                    false, num_objects, "unsigned int");
+    TCLAP::ValueArg<unsigned int> num_lps_arg("n", "num_lps", 
+                                                    "number of lps",
+                                                    false, num_lps, "unsigned int");
     TCLAP::ValueArg<std::string> distribution_arg("d", "distribution", "Statistical distribution \
                                                     for timestamp increment\nUNIFORM, POISSON, \
                                                     EXPONENTIAL, NORMAL, BINOMIAL, or FIXED", 
@@ -156,13 +156,13 @@ int main(int argc, const char** argv) {
                                                     false, log_statistics, "string");
 
     std::vector<TCLAP::Arg*> args = {&distribution_mean_arg, &num_initial_events_arg, 
-                                        &num_objects_arg, &distribution_arg, &log_statistics_arg};
+                                        &num_lps_arg, &distribution_arg, &log_statistics_arg};
 
     warped::Simulation phold_sim {"PHOLD Simulation", argc, argv, args};
 
     distribution_mean = distribution_mean_arg.getValue();
     num_initial_events = num_initial_events_arg.getValue();
-    num_objects = num_objects_arg.getValue();
+    num_lps = num_lps_arg.getValue();
     distribution = distribution_arg.getValue();
     log_statistics = log_statistics_arg.getValue();
 
@@ -195,23 +195,23 @@ int main(int argc, const char** argv) {
         exit(1);
     }
 
-    std::vector<PholdObject> objects;
-    for (unsigned int i = 0; i < num_objects; i++) {
-        std::string name = std::string("Object ") + std::to_string(i);
-        objects.emplace_back(name, num_initial_events, num_objects, dist, distribution_mean);
+    std::vector<PholdLP> lps;
+    for (unsigned int i = 0; i < num_lps; i++) {
+        std::string name = std::string("LP ") + std::to_string(i);
+        lps.emplace_back(name, num_initial_events, num_lps, dist, distribution_mean);
     }
 
-    std::vector<warped::SimulationObject*> object_pointers;
-    for (auto& o : objects) {
-        object_pointers.push_back(&o);
+    std::vector<warped::LogicalProcess*> lp_pointers;
+    for (auto& lp : lps) {
+        lp_pointers.push_back(&lp);
     }
 
-    phold_sim.simulate(object_pointers);
+    phold_sim.simulate(lp_pointers);
 
     if (log_statistics == "yes") {
-        for (auto& o : objects) {
-            std::cout << o.name_ << " sent " << o.state_.messages_sent_ << " and received "
-                                << o.state_.messages_received_ << " messages." << std::endl;
+        for (auto& lp : lps) {
+            std::cout << lp.name_ << " sent " << lp.state_.messages_sent_ << " and received "
+                                << lp.state_.messages_received_ << " messages." << std::endl;
         }
     }
 
