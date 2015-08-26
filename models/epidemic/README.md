@@ -45,7 +45,7 @@ Travel Time<sub> hub => location 2</sub>
 
 User can adjust the following parameters :
 
-1. Watts-Strigatz model paramters
+1. Watts-Strogatz model paramters
     1. k (Default: 8)
     2. beta (Default: 0.1)
 2. Disease parameters
