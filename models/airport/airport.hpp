@@ -60,7 +60,7 @@ public:
                 const unsigned int index)
         :   LogicalProcess(name), 
             state_(), 
-            rng_(new std::default_random_engine(rd())),
+            rng_(new std::default_random_engine(index)),
             num_airports_x_(num_airports_x), 
             num_airports_y_(num_airports_y), 
             num_planes_(num_planes), 
