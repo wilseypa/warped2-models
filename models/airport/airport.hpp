@@ -11,8 +11,6 @@
 
 #include "warped.hpp"
 
-std::random_device rd;
-
 WARPED_DEFINE_LP_STATE_STRUCT(AirportState) {
     unsigned int arrivals_;
     unsigned int departures_;

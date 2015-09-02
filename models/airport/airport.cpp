@@ -17,7 +17,7 @@ std::vector<std::shared_ptr<warped::Event> > Airport::initializeLP() {
     std::vector<std::shared_ptr<warped::Event> > events;
 
     for (unsigned int i = 0; i < this->num_planes_; i++) {
-        unsigned int departure = std::ceil(depart_expo(*this->rng_));
+        unsigned int departure = (unsigned int)std::ceil(depart_expo(*this->rng_));
         events.emplace_back(new AirportEvent {this->name_, DEPARTURE, departure});
     }
     return events;
@@ -42,7 +42,7 @@ std::vector<std::shared_ptr<warped::Event> > Airport::receiveEvent(const warped:
             this->state_.planes_grounded_--;
             this->state_.departures_++;
             // Schedule an arrival at a random airport
-            unsigned int arrival_time = received_event.ts_ + (unsigned int)arrive_expo(*this->rng_);
+            unsigned int arrival_time = received_event.ts_ + (unsigned int)std::ceil(arrive_expo(*this->rng_));
             response_events.emplace_back(new AirportEvent { 
                                                     random_move(), ARRIVAL, arrival_time });
             break;
@@ -52,7 +52,7 @@ std::vector<std::shared_ptr<warped::Event> > Airport::receiveEvent(const warped:
             this->state_.arrivals_++;
             this->state_.planes_grounded_++;
             // Schedule a departure
-            unsigned int departure_time = received_event.ts_ + (unsigned int)depart_expo(*this->rng_);
+            unsigned int departure_time = received_event.ts_ + (unsigned int)std::ceil(depart_expo(*this->rng_));
             response_events.emplace_back(new AirportEvent { this->name_, DEPARTURE, 
                                                                             departure_time });
             break;
