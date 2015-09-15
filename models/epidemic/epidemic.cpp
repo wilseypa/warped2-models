@@ -27,7 +27,9 @@ std::vector<std::shared_ptr<warped::Event> > Location::receiveEvent(const warped
     switch (epidemic_event.event_type_) {
 
         case event_type_t::DISEASE_UPDATE_TRIGGER: {
-            disease_model_->reaction(state_->current_population_, timestamp);
+            std::uniform_real_distribution<double> distribution(0.0, 1.0);
+            auto rand_factor = distribution(*rng_);
+            disease_model_->reaction(state_->current_population_, timestamp, rand_factor);
             events.emplace_back(new EpidemicEvent {location_name_, 
                                 timestamp + location_state_refresh_interval_, 
                                 nullptr, DISEASE_UPDATE_TRIGGER});

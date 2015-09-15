@@ -4,7 +4,6 @@
 #include <cmath>
 #include "memory.hpp"
 #include "Person.hpp"
-#include <random>
 
 #define PROB_MULTIPLIER 100
 
@@ -20,8 +19,7 @@ public:
                     float latent_infectivity, float incubating_infectivity, 
                     float infectious_infectivity, float asympt_infectivity, 
                     float prob_ulu, float prob_ulv, float prob_urv, 
-                    float prob_uiv, float prob_uiu,  
-                    std::shared_ptr<std::default_random_engine> rng)
+                    float prob_uiv, float prob_uiu) 
             : transmissibility_(transmissibility), 
                 latent_dwell_interval_(latent_dwell_interval), 
                 incubating_dwell_interval_(incubating_dwell_interval), 
@@ -33,10 +31,11 @@ public:
                 asympt_infectivity_(asympt_infectivity), 
                 prob_ulu_(prob_ulu), prob_ulv_(prob_ulv), 
                 prob_urv_(prob_urv), prob_uiv_(prob_uiv), 
-                prob_uiu_(prob_uiu), rng_(rng) {}
+                prob_uiu_(prob_uiu) {}
 
-    void reaction(std::shared_ptr<std::map<unsigned long, std::shared_ptr<Person>>> population, 
-                                                    unsigned int current_time) {
+    void reaction(
+            std::shared_ptr<std::map<unsigned long, std::shared_ptr<Person>>> population, 
+            unsigned int current_time, double rand_factor) {
 
         unsigned int uninfected_num = 0, latent_num = 0, incubating_num = 0, 
                             infectious_num = 0, asympt_num = 0, recovered_num = 0;
@@ -61,6 +60,7 @@ public:
         }
 
         if (uninfected_population.size()) {
+            auto rand_num = static_cast<unsigned int>(rand_factor * PROB_MULTIPLIER);
             for (auto person : uninfected_population) {
                 double susceptibility = person->susceptibility_;
                 double suscep_cross_trans = (double) (susceptibility * transmissibility_);
@@ -89,9 +89,7 @@ public:
                     pow(prod_prob, (double) (current_time - person->loc_arrival_timestamp_));
 
                 unsigned int disease_num = (unsigned int) disease_prob * PROB_MULTIPLIER;
-                std::uniform_int_distribution<int> distribution(0, PROB_MULTIPLIER-1);
-                if (disease_num > (unsigned int) distribution(*rng_)) {
-                    auto rand_num = (unsigned int) distribution(*rng_);
+                if (disease_num > rand_num) {
 
                     if (person->vaccination_status_) {
                         unsigned int ulv_num = (unsigned int) (prob_ulv_ * PROB_MULTIPLIER);
@@ -169,7 +167,6 @@ private:
     float prob_urv_;
     float prob_uiv_;
     float prob_uiu_;
-    std::shared_ptr<std::default_random_engine> rng_;
 };
 
 #endif

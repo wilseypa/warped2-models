@@ -104,7 +104,7 @@ public:
                     transmissibility, latent_dwell_interval, incubating_dwell_interval, 
                     infectious_dwell_interval, asympt_dwell_interval, latent_infectivity, 
                     incubating_infectivity, infectious_infectivity, asympt_infectivity, 
-                    prob_ulu, prob_ulv, prob_urv, prob_uiv, prob_uiu, rng_);
+                    prob_ulu, prob_ulv, prob_urv, prob_uiv, prob_uiu);
 
         diffusion_network_ = 
             std::make_shared<DiffusionNetwork>(travel_time_to_hub, rng_);
