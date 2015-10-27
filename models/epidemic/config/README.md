@@ -31,10 +31,15 @@ following command:
 4. Location parameters (refer to Legend-3)
     1. Minimum population of a location. Default value is 100.
     2. Maximum population of a location. Default value is 100.
-    3. Minimum travel time to Hub. Default value is 50 timestamps.
-    4. Maximum travel time to Hub. Default value is 400 timestamps.
+    3. Minimum travel time to Hub. Default value is 50 timestamps. Refer to Note.
+    4. Maximum travel time to Hub. Default value is 400 timestamps. Refer to Note.
     5. Minimum location diffusion interval. Default value is 200 timestamps.
     6. Maximum location diffusion interval. Default value is 500 timestamps.
+
+Note:
+Travel Time<sub> location 1 => location 2</sub> = 
+Travel Time<sub> location 1 => hub</sub> + 
+Travel Time<sub> hub => location 2</sub>
 
 
 ###Legend-1 :
@@ -61,10 +66,6 @@ following command:
     calculation  between  locations,  it  has  been  assumed that locations are 
     connected to each  other via a virtual central hub. This has been done to 
     reduce  complexity in management of the inter-location distances.
-
-    Travel Time<sub> location 1 => location 2</sub> = 
-        Travel Time<sub> location 1 => hub</sub> + 
-        Travel Time<sub> hub => location 2</sub>
 
     Diffusion interval refers to the time interval after which a person is sent 
     out from a particular location. Minimum and maximum values are used to 
