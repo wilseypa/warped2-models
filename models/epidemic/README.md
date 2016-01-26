@@ -23,7 +23,7 @@ This model contains four parts [1]:
 + A set of interacting entities.
 
 + A network graph that shows the interaction structure of entities. 
-  Currently 'FullyConnected' and 'WattsStrogatz' models are supported.
+  Currently 'WattsStrogatz' model [3] is supported.
 
 + A reaction process, called within-host progression, which models the 
   progress of the disease in an individual entity.
@@ -31,50 +31,9 @@ This model contains four parts [1]:
 + A diffusion process, called between-host transmission, which models 
   the transmission of the disease among individual entities.
 
-NOTE: Network graph design is diffusion model-specific. But to simplify 
-distance  calculation  between  locations,  it  has  been  assumed that 
-locations are  connected to each  other via a virtual central hub. This 
-has been done to reduce  complexity in management of the inter-location 
-distances.
-
-Travel Time<sub> location 1 => location 2</sub> = 
-Travel Time<sub> location 1 => hub</sub> + 
-Travel Time<sub> hub => location 2</sub>
-
 ##Configuration :
 
-User can adjust the following parameters :
-
-1. Watts-Strogatz model paramters
-    1. k (Default: 8)
-    2. beta (Default: 0.1)
-2. Disease parameters
-    1. transmissibility (Default: 0.12)
-    2. infectivity and dwell time of disease phases
-    3. probability of disease progress (refer to Legend)
-    4. Location state refresh interval (Default: 50)
-3. Number of regions (Default: 1000)
-4. Number of locations per region (Default: 10)
-5. For each location:
-    1. Population per location (Default: 100)
-    2. Travel time to hub
-    3. Location diffusion interval
-
 Please refer to [Configuration Creator](config/) for details.
-
-###Legend :
-
-	Refer to Figure 2 of ref[2] for the disease model
-	Transition Probabilities:
-		prob_ulu : uninfected->latent (untreated)
-		prob_ulv : uninfected->latent (vaccinated)
-		prob_urv : uninfected->recovered (vaccinated)
-		prob_uiv : uninfected->incubating (vaccinated)
-		prob_uiu : uninfected->incubating (untreated)
-
-	Location state refresh interval:
-		Intervals at which the disease spread at any location is re-computed
-
 
 ##References :
 

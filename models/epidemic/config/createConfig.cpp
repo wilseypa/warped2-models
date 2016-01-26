@@ -2,7 +2,7 @@
 #include <fstream>
 #include <string>
 
-/** Config Settings **/
+/** Config Settings - edit to get the desired settings **/
 
 /* Diffusion parameter */
 // Watts-Strogatz model parameters
@@ -39,6 +39,9 @@
 #define MIN_LOCATION_DIFFUSION_INTERVAL     200
 #define MAX_LOCATION_DIFFUSION_INTERVAL     500
 
+
+
+/** Config creator - don't edit anything here **/
 
 int main( int argc, char *argv[] ) {
 
