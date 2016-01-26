@@ -75,7 +75,7 @@ std::vector<std::shared_ptr<warped::Event> > Location::receiveEvent(const warped
 
 int main(int argc, const char** argv) {
 
-    std::string config_filename = "model_10k.dat";
+    std::string config_filename = "model_25k.dat";
     TCLAP::ValueArg<std::string> config_arg("m", "model", 
             "Epidemic model config", false, config_filename, "string");
     std::vector<TCLAP::Arg*> args = {&config_arg};

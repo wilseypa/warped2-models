@@ -27,7 +27,7 @@
 #define LOCATION_STATE_REFRESH_INTERVAL     50
 
 /* Regions */
-#define NUM_REGIONS                         1000
+#define NUM_REGIONS                         25000
 #define MIN_NUM_LOCATIONS_PER_REGION        10
 #define MAX_NUM_LOCATIONS_PER_REGION        10
 
