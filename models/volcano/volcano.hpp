@@ -11,27 +11,40 @@
 #include "warped.hpp"
 
 WARPED_DEFINE_LP_STATE_STRUCT(VolcanoState) {
+
+    unsigned int num_particles_;
+    //velocity of each particle
 };
 
 enum volcano_event_t {
+
+    ARRIVAL,
+    DEPARTURE,
+    DIRECTION_SELECT
 };
 
 class VolcanoEvent : public warped::Event {
 public:
     VolcanoEvent() = default;
     VolcanoEvent(   const std::string& receiver_name, 
-                    const volcano_event_t type, 
+                    const volcano_event_t type,
+                    const unsigned int vel_x,
+                    const unsigned int vel_y,
+                    const unsigned int vel_z,
                     const unsigned int timestamp    )
-        : receiver_name_(receiver_name), type_(type), ts_(timestamp) {}
+        : receiver_name_(receiver_name), type_(type), vel_x_(vel_x), vel_y_(vel_y), vel_z_(vel_z), ts_(timestamp) {}
 
     const std::string& receiverName() const { return receiver_name_; }
     unsigned int timestamp() const { return ts_; }
 
     std::string receiver_name_;
     volcano_event_t type_;
+    unsigned int vel_x_;
+    unsigned int vel_y_;
+    unsigned int vel_z_;
     unsigned int ts_;
 
-    WARPED_REGISTER_SERIALIZABLE_MEMBERS(cereal::base_class<warped::Event>(this), receiver_name_, type_, ts_)
+    WARPED_REGISTER_SERIALIZABLE_MEMBERS(cereal::base_class<warped::Event>(this), receiver_name_, type_, vel_x_, vel_y_, vel_z_, ts_)
 };
 
 class Volcano : public warped::LogicalProcess {
@@ -53,6 +66,13 @@ public:
 protected:
     std::shared_ptr<std::default_random_engine> rng_;
     const unsigned int index_;
+    const unsigned int num_particles_;
+    const unsigned int grid_max_x_;
+    const unsigned int grid_max_y_;
+    const unsigned int grid_max_z_;
+    const unsigned int blast_origin_x_;
+    const unsigned int blast_origin_y_;
+    const unsigned int blast_origin_z_;
 };
 
 #endif
