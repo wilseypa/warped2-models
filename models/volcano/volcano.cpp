@@ -34,7 +34,7 @@ std::vector<std::shared_ptr<warped::Event> > Volcano::receiveEvent(const warped:
 
 int main(int argc, const char** argv) {
 
-    warped::Simulation airport_sim {"Volcano Simulation", argc, argv, args};
+    warped::Simulation volcano_sim {"Volcano Simulation", argc, argv, args};
 
     std::vector<Volcano> lps;
 

@@ -1,4 +1,4 @@
-// A customized implementation of volcano model
+// A customized implementation of volcano model on a 3D grid
 
 #ifndef VOLCANO_HPP_DEFINED
 #define VOLCANO_HPP_DEFINED
@@ -12,7 +12,7 @@
 
 WARPED_DEFINE_LP_STATE_STRUCT(VolcanoState) {
 
-    // Velocity vector - V1_x,V1_y,V1_z;V2_x,V2_y,V2_z,...
+    // Velocity vector - V1_x,V1_y,V1_z;V2_x,V2_y,V2_z;...
     // There can be multiple particles in an LP at the same instant
     // Note: We assume there are no particle collisions in this model
     std::string particle_velocity_;
@@ -54,11 +54,20 @@ public:
 
 class Volcano : public warped::LogicalProcess {
 public:
-    Volcano(const std::string& name, const unsigned int index)
-        :   LogicalProcess(name), 
+    Volcano(    const unsigned int position_x,
+                const unsigned int position_y,
+                const unsigned int position_z,
+                const unsigned int index)
+        :   LogicalProcess(lp_name(name)), 
             state_(), 
-            rng_(new std::default_random_engine(index)),
-            index_(index) {}
+            rng_(new std::default_random_engine(index)), 
+            position_x_(position_x), 
+            position_y_(position_y), 
+            position_z_(position_z), 
+            index_(index) {
+
+        state_.particle_velocity_ = "";
+    }
 
     virtual std::vector<std::shared_ptr<warped::Event> > initializeLP() override;
     virtual std::vector<std::shared_ptr<warped::Event> > receiveEvent(const warped::Event&);
