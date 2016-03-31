@@ -10,79 +10,106 @@
 
 #include "warped.hpp"
 
-WARPED_DEFINE_LP_STATE_STRUCT(VolcanoState) {
+WARPED_DEFINE_LP_STATE_STRUCT(GridPositionState) {
 
-    // Velocity vector - V1_x,V1_y,V1_z;V2_x,V2_y,V2_z;...
+    unsigned int particle_cnt_;
+
+    // Paricle details - <origin_time>,<vel_x>,<vel_y>,<vel_z>;....
     // There can be multiple particles in an LP at the same instant
     // Note: We assume there are no particle collisions in this model
-    std::string particle_velocity_;
+    std::string particle_details_;
 };
 
-enum volcano_event_t {
+enum particle_event_t {
 
-    ARRIVAL,
-    DEPARTURE,
-    DIRECTION_SELECT
+    ENTER_PARTICLE,
+    EXIT_PARTICLES,
+    NEXT_BURST
 };
 
-class VolcanoEvent : public warped::Event {
+class ParticleEvent : public warped::Event {
 public:
-    VolcanoEvent() = default;
-    VolcanoEvent(   const std::string& receiver_name, 
-                    const volcano_event_t type, 
-                    const unsigned int vel_x, 
-                    const unsigned int vel_y, 
-                    const unsigned int vel_z, 
+    ParticleEvent() = default;
+    ParticleEvent(  const std::string& receiver_name, 
+                    const particle_event_t type, 
+                    const double vel_x, 
+                    const double vel_y, 
+                    const double vel_z, 
+                    const unsigned int origin_time, 
                     const unsigned int timestamp    )
-        :   receiver_name_(receiver_name), type_(type), 
-            vel_x_(vel_x), vel_y_(vel_y), vel_z_(vel_z), 
+        :   receiver_name_(receiver_name), 
+            type_(type), 
+            vel_x_(vel_x), 
+            vel_y_(vel_y), 
+            vel_z_(vel_z), 
+            origin_time_(origin_time), 
             ts_(timestamp) {}
 
     const std::string& receiverName() const { return receiver_name_; }
     unsigned int timestamp() const { return ts_; }
 
     std::string receiver_name_;
-    volcano_event_t type_;
-    unsigned int vel_x_;
-    unsigned int vel_y_;
-    unsigned int vel_z_;
+    particle_event_t type_;
+    double vel_x_;
+    double vel_y_;
+    double vel_z_;
+    unsigned int origin_time_;
     unsigned int ts_;
 
     WARPED_REGISTER_SERIALIZABLE_MEMBERS(cereal::base_class<warped::Event>(this), 
-                                receiver_name_, type_, vel_x_, vel_y_, vel_z_, ts_)
+                        receiver_name_, type_, vel_x_, vel_y_, vel_z_, origin_time_, ts_)
 };
 
-class Volcano : public warped::LogicalProcess {
+class GridPosition : public warped::LogicalProcess {
 public:
-    Volcano(    const unsigned int position_x,
-                const unsigned int position_y,
-                const unsigned int position_z,
-                const unsigned int index)
-        :   LogicalProcess(lp_name(name)), 
-            state_(), 
-            rng_(new std::default_random_engine(index)), 
-            position_x_(position_x), 
-            position_y_(position_y), 
-            position_z_(position_z), 
-            index_(index) {
+    GridPosition(   const unsigned int max_grid_x,
+                    const unsigned int max_grid_y,
+                    const unsigned int max_grid_z,
+                    const unsigned int num_particles_per_blast,
+                    const unsigned int mean_burst_interval,
+                    const double       max_gamma,
+                    const double       max_theta,
+                    const double       max_eta,
+                    const unsigned int mean_velocity_magnitude,
+                    const unsigned int index    )
+            :   LogicalProcess(lpName(index)), 
+                state_(), 
+                rng_(new std::default_random_engine(index)), 
+                max_grid_x_(max_grid_x), 
+                max_grid_y_(max_grid_y), 
+                max_grid_z_(max_grid_z), 
+                num_particles_per_blast_(num_particles_per_blast), 
+                mean_burst_interval_(mean_burst_interval),
+                max_gamma_(max_gamma),
+                max_theta_(max_theta),
+                max_eta_(max_eta),
+                mean_velocity_magnitude_(mean_velocity_magnitude),
+                index_(index) {
 
-        state_.particle_velocity_ = "";
+        state_.particle_cnt_ = 0;
+        state_.particle_details_ = "";
     }
 
     virtual std::vector<std::shared_ptr<warped::Event> > initializeLP() override;
     virtual std::vector<std::shared_ptr<warped::Event> > receiveEvent(const warped::Event&);
     virtual warped::LPState& getState() { return this->state_; }
 
-    VolcanoState state_;
+    GridPositionState state_;
 
-    static inline std::string lp_name(const unsigned int);
+    static inline std::string lpName(const unsigned int);
 
 protected:
     std::shared_ptr<std::default_random_engine> rng_;
+    const unsigned int max_grid_x_;
+    const unsigned int max_grid_y_;
+    const unsigned int max_grid_z_;
+    const unsigned int num_particles_per_blast_;
+    const unsigned int mean_burst_interval_;
+    const double       max_gamma_;
+    const double       max_theta_;
+    const double       max_eta_;
+    const unsigned int mean_velocity_magnitude_;
     const unsigned int index_;
-    const unsigned int position_x_;
-    const unsigned int position_y_;
-    const unsigned int position_z_;
 };
 
 #endif
