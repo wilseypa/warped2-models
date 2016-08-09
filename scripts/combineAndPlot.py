@@ -8,6 +8,9 @@ import itertools, operator
 import subprocess
 import Gnuplot
 import Gnuplot.funcutils
+import numpy as np
+import scipy as sp
+import scipy.stats
 
 ###### Settings go here ######
 TITLE = "Ladder Queue Threshold Manipulation for RAID-5 - Speedup - "
@@ -40,6 +43,13 @@ def getIndex(aList, text):
     for i,x in enumerate(aList):
         if x == text:
             return i
+
+def mean_confidence_interval(data, confidence=0.95):
+    a = 1.0*np.array(data)
+    n = len(a)
+    m, se = np.mean(a), scipy.stats.sem(a)
+    h = se * sp.stats.t._ppf((1+confidence)/2., n-1)
+    return m, m-h, m+h
 
 def median(mylist):
     sorts = sorted(mylist)
