@@ -45,20 +45,39 @@ def getIndex(aList, text):
             return i
 
 def mean_confidence_interval(data, confidence=0.95):
+    # check the input is not empty
+    if not data:
+        raise StatsError('no data points passed')
     a = 1.0*np.array(data)
     n = len(a)
     m, se = np.mean(a), scipy.stats.sem(a)
     h = se * sp.stats.t._ppf((1+confidence)/2., n-1)
     return m, m-h, m+h
 
-def median(mylist):
-    sorts = sorted(mylist)
+def median(data):
+    sorts = sorted(data)
     length = len(sorts)
     if length == 0:
         return 0
     if not length % 2:
         return (sorts[length / 2] + sorts[length / 2 - 1]) / 2.0
     return sorts[length / 2]
+
+def quartiles(data):
+    # check the input is not empty
+    if not data:
+        raise StatsError('no data points passed')
+    sorts = sorted(data)
+    mid = len(sorts) / 2
+    if (len(sorts) % 2 == 0):
+        # even
+        lowerQ = median(sorts[:mid])
+        upperQ = median(sorts[mid:])
+    else:
+        # odd
+        lowerQ = median(sorts[:mid])  # same as even
+        upperQ = median(sorts[mid+1:])
+    return lowerQ, upperQ
 
 def plot(data, title, xaxisLabel, yaxisLabel, linePreface):
     g = Gnuplot.Gnuplot()
