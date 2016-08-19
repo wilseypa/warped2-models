@@ -47,7 +47,7 @@ def getIndex(aList, text):
 def mean_confidence_interval(data, confidence=0.95):
     # check the input is not empty
     if not data:
-        raise StatsError('no data points passed')
+        raise StatsError('mean_ci - no data points passed')
     a = 1.0*np.array(data)
     n = len(a)
     m, se = np.mean(a), scipy.stats.sem(a)
@@ -55,18 +55,15 @@ def mean_confidence_interval(data, confidence=0.95):
     return m, m-h, m+h
 
 def median(data):
-    sorts = sorted(data)
-    length = len(sorts)
-    if length == 0:
-        return 0
-    if not length % 2:
-        return (sorts[length / 2] + sorts[length / 2 - 1]) / 2.0
-    return sorts[length / 2]
+    # check the input is not empty
+    if not data:
+        raise StatsError('median - no data points passed')
+    return np.median(np.array(data))
 
 def quartiles(data):
     # check the input is not empty
     if not data:
-        raise StatsError('no data points passed')
+        raise StatsError('quartiles - no data points passed')
     sorts = sorted(data)
     mid = len(sorts) / 2
     if (len(sorts) % 2 == 0):
