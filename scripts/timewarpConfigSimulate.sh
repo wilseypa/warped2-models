@@ -14,17 +14,17 @@ function run {
     modelCmd=$4
     maxSimTime=$5
     workerThreads=$6
-    schedulerCount=$7
+    scheduleQCount=$7
     chainSize=$8
 
     for ((iteration=1; iteration <= $testCycles; ++iteration));
     do
         cd ../models/$model/
         outMsg="\n($iteration/$testCycles) $modelCmd : $workerThreads threads, \
-                $schedulerCount schedulers, chain size: $chainSize, max sim time: $maxSimTime"
+                $scheduleQCount schedulers, chain size: $chainSize, max sim time: $maxSimTime"
         echo -e $outMsg
         runCommand="$modelCmd --max-sim-time $maxSimTime --simulation-type time-warp \
-            --time-warp-worker-threads $workerThreads --time-warp-scheduler-count $schedulerCount \
+            --time-warp-worker-threads $workerThreads --time-warp-scheduler-count $scheduleQCount \
             --time-warp-chain-size $chainSize"
         grepMe=`timeout $timeoutPeriod bash -c "$runCommand" | grep "Simulation completed in "`
         runTime=`echo $grepMe | sed -e 's/.*in \(.*\) second.*/\1/'`
@@ -32,7 +32,7 @@ function run {
         cd ../../scripts/
 
         # Write to log file
-        echo "$model,$modelCmd,$workerThreads,$schedulerCount,$chainSize,$runTime" >> $logFile
+        echo "$model,$modelCmd,$workerThreads,$scheduleQCount,$chainSize,$runTime" >> $logFile
 
         sleep 10
     done
@@ -44,7 +44,7 @@ logFile="logs/$hostname---$date.csv"
 
 # Write csv header
 ## Simulation Threads ScheduleQCount CausalityType Runtime Rollbacks
-echo "Model,ModelCommand,WorkerThreadCount,SchedulerCount,ChainSize,Runtime" > $logFile
+echo "Model,ModelCommand,WorkerThreadCount,ScheduleQCount,ChainSize,Runtime" > $logFile
 
 trap control_c SIGINT
 
