@@ -9,7 +9,7 @@ import scipy.stats as sps
 import pandas as pd
 
 ###### Settings go here ######
-filterList = ['Model' , 'WorkerThreadCount' , 'ScheduleQCount' , 'ChainSize']
+filterAttr = ['Model' , 'WorkerThreadCount' , 'ScheduleQCount' , 'ChainSize']
 searchAttr = 'Runtime'
 outFileName = 'logs/consolidated_result.csv'
 
@@ -52,8 +52,9 @@ def main():
     # Load data from csv file
     data = pd.read_csv(inFileName)
 
-    runtimeList = data.groupby(filterList)
-    results = runtimeList[searchAttr].describe()
+    # Create the filtered list
+    filterList = data.groupby(filterAttr)
+    results = filterList.apply(lambda x : mean_confidence_interval(x[searchAttr].tolist()))
     results.to_csv(outFileName, sep=',')
 
 if __name__ == "__main__":
