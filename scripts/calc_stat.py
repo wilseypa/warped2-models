@@ -7,11 +7,14 @@ import csv, sys
 import numpy as np
 import scipy.stats as sps
 import pandas as pd
+import re, shutil, tempfile
+
 
 ###### Settings go here ######
 filterAttr = ['Model' , 'WorkerThreadCount' , 'ScheduleQCount' , 'ChainSize']
 searchAttr = 'Runtime'
 outFileName = 'logs/consolidated_result.csv'
+columnList = ['Mean' , 'CI_Lower' , 'CI_Upper' , 'Median' , 'Lower_Quartile' , 'Upper_Quartile']
 
 ###### Don't edit below here ######
 
@@ -47,6 +50,33 @@ def quartiles(data):
         upperQ = median(sorts[mid+1:])
     return lowerQ, upperQ
 
+def statistics(data):
+    # check the input is not empty
+    if not data:
+        raise StatsError('statistics - no data points passed')
+    mean, ci_lower, ci_upper = mean_confidence_interval(data)
+    med = median(data)
+    lower_quartile, upper_quartile = quartiles(data)
+    statList = (str(mean), str(ci_lower), str(ci_upper), str(med), str(lower_quartile), str(upper_quartile))
+    return ",".join(statList)
+
+def sed_inplace(filename, pattern, repl):
+    # For efficiency, precompile the passed regular expression.
+    pattern_compiled = re.compile(pattern)
+
+    # For portability, NamedTemporaryFile() defaults to mode "w+b" (i.e., binary
+    # writing with updating). In this case, binary writing imposes non-trivial 
+    # encoding constraints resolved by switching to text writing.
+    with tempfile.NamedTemporaryFile(mode='w', delete=False) as tmp_file:
+        with open(filename) as src_file:
+            for line in src_file:
+                tmp_file.write(pattern_compiled.sub(repl, line))
+
+    # Overwrite the original file with the temporary file in a
+    # manner preserving file attributes (e.g., permissions).
+    shutil.copystat(filename, tmp_file.name)
+    shutil.move(tmp_file.name, filename)
+
 def main():
     inFileName = sys.argv[1]
     # Load data from csv file
@@ -54,8 +84,11 @@ def main():
 
     # Create the filtered list
     filterList = data.groupby(filterAttr)
-    results = filterList.apply(lambda x : mean_confidence_interval(x[searchAttr].tolist()))
-    results.to_csv(outFileName, sep=',')
+    results = filterList.apply(lambda x : statistics(x[searchAttr].tolist()))
+    results.to_csv(outFileName, header=[",".join(columnList)], sep=',')
+
+    # Remove " from the newly created csv file
+    sed_inplace(outFileName, r'"', '')
 
 if __name__ == "__main__":
     main()
