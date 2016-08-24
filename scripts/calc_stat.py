@@ -88,6 +88,8 @@ def main():
     results.to_csv(outFileName, header=[",".join(columnList)], sep=',')
 
     # Remove " from the newly created csv file
+    # Note: It is needed since pandas package has an unresolved bug for 
+    # quoting arg which retains the double quotes for column attributes.
     sed_inplace(outFileName, r'"', '')
 
 if __name__ == "__main__":
