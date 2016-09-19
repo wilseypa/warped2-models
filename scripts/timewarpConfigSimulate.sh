@@ -23,16 +23,21 @@ function run {
         outMsg="\n($iteration/$testCycles) $modelCmd : $workerThreads threads, \
                 $scheduleQCount schedulers, chain size: $chainSize, max sim time: $maxSimTime"
         echo -e $outMsg
+        tmpFile=`tempfile`
         runCommand="$modelCmd --max-sim-time $maxSimTime --simulation-type time-warp \
             --time-warp-worker-threads $workerThreads --time-warp-scheduler-count $scheduleQCount \
-            --time-warp-chain-size $chainSize"
-        grepMe=`timeout $timeoutPeriod bash -c "$runCommand" | grep "Simulation completed in "`
-        runTime=`echo $grepMe | sed -e 's/.*in \(.*\) second.*/\1/'`
-        echo "Simulation time: $runTime secs"
+            --time-warp-chain-size $chainSize --time-warp-statistics-file $tmpFile"
+        timeout $timeoutPeriod bash -c "$runCommand" | grep "Simulation completed in "
+
+        # Parse stats
+        statsRaw=`cat $tmpFile | grep "Total,"`
+        statsRefined=`echo $statsRaw | sed -e 's/Total,//g' -e 's/\t//g' -e 's/ //g'`
+
+        rm $tmpFile
         cd ../../scripts/
 
         # Write to log file
-        echo "$model,$modelCmd,$workerThreads,$scheduleQCount,$chainSize,$runTime" >> $logFile
+        echo "$model,$modelCmd,$workerThreads,$scheduleQCount,$chainSize,$statsRefined" >> $logFile
 
         sleep 10
     done
@@ -43,12 +48,14 @@ date=`date +"%m-%d-%y_%T"`
 logFile="logs/$hostname---$date.csv"
 
 # Write csv header
-## Simulation Threads ScheduleQCount CausalityType Runtime Rollbacks
-echo "Model,ModelCommand,WorkerThreadCount,ScheduleQCount,ChainSize,Runtime" > $logFile
+csvHeader="Model,ModelCommand,WorkerThreadCount,ScheduleQCount,ChainSize,\
+    Runtime,NumObjects,LocalPositiveEventsSent,RemotePositiveEventsSent,\
+    LocalNegativeEventsSent,RemoteNegativeEventsSent,PrimaryRollbacks,\
+    SecondaryRollbacks,CoastForwardedEvents,CancelledEvents,\
+    EventsProcessed,EventsCommitted,AvgMaxMemory"
+echo $csvHeader > $logFile
 
 trap control_c SIGINT
 
 . $1
-
-#run 10 5 epidemic "./epidemic_sim -m model_5500_obj.xml" 100000 4 2
 
