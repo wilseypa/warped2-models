@@ -12,7 +12,7 @@ import re, shutil, tempfile
 
 ###### Settings go here ######
 filterAttr = ['Model' , 'WorkerThreadCount' , 'ScheduleQCount' , 'ChainSize']
-searchAttr = 'Runtime'
+searchList = ['Runtime' , 'EventsProcessed' , 'EventsCommitted']
 outFileName = 'logs/consolidated_result.csv'
 columnList = ['Mean' , 'CI_Lower' , 'CI_Upper' , 'Median' , 'Lower_Quartile' , 'Upper_Quartile']
 
@@ -84,8 +84,10 @@ def main():
 
     # Create the filtered list
     filterList = data.groupby(filterAttr)
-    results = filterList.apply(lambda x : statistics(x[searchAttr].tolist()))
-    results.to_csv(outFileName, header=[",".join(columnList)], sep=',')
+    for searchAttr in searchList:
+        columnNames = [searchAttr + '_' + x for x in columnList]
+        results = filterList.apply(lambda x : statistics(x[searchAttr].tolist()))
+        results.to_csv(outFileName, header=[",".join(columnNames)], sep=',')
 
     # Remove " from the newly created csv file
     # Note: It is needed since pandas package has an unresolved bug for 

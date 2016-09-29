@@ -27,7 +27,7 @@ function run {
         runCommand="$modelCmd --max-sim-time $maxSimTime --simulation-type time-warp \
             --time-warp-worker-threads $workerThreads --time-warp-scheduler-count $scheduleQCount \
             --time-warp-chain-size $chainSize --time-warp-statistics-file $tmpFile"
-        timeout $timeoutPeriod bash -c "$runCommand" | grep "Simulation completed in "
+        timeout $timeoutPeriod bash -c "$runCommand" | grep -e "Simulation completed in " -e "Type of Schedule queue: "
 
         # Parse stats
         statsRaw=`cat $tmpFile | grep "Total,"`
@@ -48,11 +48,7 @@ date=`date +"%m-%d-%y_%T"`
 logFile="logs/$hostname---$date.csv"
 
 # Write csv header
-csvHeader="Model,ModelCommand,WorkerThreadCount,ScheduleQCount,ChainSize,\
-    Runtime,NumObjects,LocalPositiveEventsSent,RemotePositiveEventsSent,\
-    LocalNegativeEventsSent,RemoteNegativeEventsSent,PrimaryRollbacks,\
-    SecondaryRollbacks,CoastForwardedEvents,CancelledEvents,\
-    EventsProcessed,EventsCommitted,AvgMaxMemory"
+csvHeader="Model,ModelCommand,WorkerThreadCount,ScheduleQCount,ChainSize,Runtime,NumObjects,LocalPositiveEventsSent,RemotePositiveEventsSent,LocalNegativeEventsSent,RemoteNegativeEventsSent,PrimaryRollbacks,SecondaryRollbacks,CoastForwardedEvents,CancelledEvents,EventsProcessed,EventsCommitted,AvgMaxMemory"
 echo $csvHeader > $logFile
 
 trap control_c SIGINT
