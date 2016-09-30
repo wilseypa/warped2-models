@@ -11,8 +11,8 @@ import re, shutil, tempfile
 
 
 ###### Settings go here ######
-filterAttr = ['Model' , 'WorkerThreadCount' , 'ScheduleQCount' , 'ChainSize']
-searchList = ['Runtime' , 'EventsProcessed' , 'EventsCommitted']
+filterAttr = ['Model' , 'WorkerThreadCount' , 'ScheduleQCount' , 'ChainSize', 'EventsCommitted']
+searchList = ['Runtime' , 'EventsProcessed']
 outFileName = 'logs/consolidated_result.csv'
 columnList = ['Mean' , 'CI_Lower' , 'CI_Upper' , 'Median' , 'Lower_Quartile' , 'Upper_Quartile']
 
@@ -84,10 +84,14 @@ def main():
 
     # Create the filtered list
     filterList = data.groupby(filterAttr)
+    columnNames = []
     for searchAttr in searchList:
-        columnNames = [searchAttr + '_' + x for x in columnList]
-        results = filterList.apply(lambda x : statistics(x[searchAttr].tolist()))
-        results.to_csv(outFileName, header=[",".join(columnNames)], sep=',')
+        columnNames.append([searchAttr + '_' + x for x in columnList])
+
+    data_1 = filterList.apply(lambda x : statistics(x[searchList[0]].tolist()))
+    data_2 = filterList.apply(lambda x : statistics(x[searchList[1]].tolist()))
+    results = pd.DataFrame(data=dict(s1=data_1, s2=data_2))
+    results.to_csv(outFileName, header=[",".join(columnNames)], sep=',')
 
     # Remove " from the newly created csv file
     # Note: It is needed since pandas package has an unresolved bug for 
