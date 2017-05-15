@@ -75,13 +75,7 @@ class Forest : public warped::LogicalProcess{
                 state_.burning_status_ = 0; //Should we create this state as an enum instead of an unsigned int????????????
             }
             
-            virtual std::vector<std::shared_ptr<warped::Event> > initializeLP() override;
-            virtual std::vector<std::shared_ptr<warped::Event> > receiveEvent(const warped::Event&);
-            virtual warped::LPState& getState() { return this->state_; }
-            
             ForestState state_;
-            
-            static inline std::string lp_name(const unsigned int);
             
             
             
