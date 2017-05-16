@@ -35,8 +35,8 @@ class ForestEvent : public warped::Event {  //Class Definition of a forest fire 
     public:
         ForestEvent() = default;
         ForestEvent(const std::string& receiver_name, const forest_event_t type,
-                                                    const unsigned int timestamp)
-            : receiver_name_(receiver_name), type_(type), ts_(timestamp) {}
+                                                        const unsigned int timestamp)
+            : receiver_name_(receiver_name), type_(type), ts_(timestamp) {} //Initializing Class Components
         
         const std::string& receiverName() const { return receiver_name_; }
         unsigned int timestamp() const { return ts_; }
@@ -68,7 +68,7 @@ class Forest : public warped::LogicalProcess{
             num_forest_pixel_y_(num_forest_pixel_y),    
             vegetation_type_(vegetation_type), 
             elevation_(elevation),   
-            moisture_(moisture),    
+            vegetation_moisture_(vegetation_moisture),    
             ignition_mean_(ignition_mean),   
             spread_mean_(spread_mean),
             index_(index){
@@ -92,10 +92,10 @@ class Forest : public warped::LogicalProcess{
         const unsigned int num_forest_pixel_y_;    //the y coordinate of the LP on the picture
         const unsigned int vegetation_type_; //the type of vegetation growing in the LP
         const unsigned int elevation_;   //the elevation of the LP
-        const unsigned int moisture_;    //the amount of moisture in the LP
+        const unsigned int vegetation_moisture_;    //the amount of moisture in the LP
         const unsigned int ignition_mean_;   
         const unsigned int spread_mean_;
-        const unsigned int index_;
+        const unsigned int index_; //The identifier used by the model to distinguish between LPs
         
         std::string compute_move(direction_t direction);
 
