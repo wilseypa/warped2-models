@@ -11,12 +11,21 @@
 
 
 WARPED_DEFINE_LP_STATE_STRUCT(ForestState) {
-    unsigned int burning_status_;  //Range from 0 to 5 respresenting the amount of vegitation burned in an LP
+   enum burning_status_{
+      UNBURNT,
+      GROWTH,
+      DECAY,
+      BURNT_OUT
+   }; 
+
+   unsigned int heat_content_;
 };
 
 enum forest_event_t {
-    IGNITION,       //Another LP spreads and starts a fire in this LP
-    SPREADING       //The fire in this current LP is spreading to another LP
+        RADIATION_IN,
+        RADIATION_OUT,
+        IGNITION,
+        PEAK  
 };
 
 enum direction_t {  //The direction of the spread of fire from the currently burning LP
@@ -52,27 +61,27 @@ class ForestEvent : public warped::Event {  //Class Definition of a forest fire 
 class Forest : public warped::LogicalProcess{
     public:
         Forest( const std::string& name,
-                const unsigned int num_forest_pixel_x,    
-                const unsigned int num_forest_pixel_y,    
-                const unsigned int vegetation_type, 
-                const unsigned int elevation,   
-                const unsigned int moisture,    
-                const unsigned int ignition_mean,   
-                const unsigned int spread_mean,
+                const unsigned int size_x,    
+                const unsigned int size_y,    
+                const unsigned int ignition_threshold,
+                const unsigned int heat_rate,
+                const unsigned int peak_threshold,
+                const unsigned int radiation_percent,
+                const unsigned int burnout_threshold,
                 const unsigned int index)
                 
         :   LogicalProcess(name),
             state_(),
             rng_(new std::default_random_engine(index)),
-            num_forest_pixel_x_(num_forest_pixel_x),    
-            num_forest_pixel_y_(num_forest_pixel_y),    
-            vegetation_type_(vegetation_type), 
-            elevation_(elevation),   
-            vegetation_moisture_(vegetation_moisture),    
-            ignition_mean_(ignition_mean),   
-            spread_mean_(spread_mean),
+            size_x_(size_x),    
+            size_y_(size_y),   
+            ignition_threshold_(ignition_threshold),
+            peak_threshold_(peak_threshold),
+            radiation_percent_(radiation_percent),
+            burnout_threshold_(burnout_threshold),
             index_(index){
-                state_.burning_status_ = 0; //Should we create this state as an enum instead of an unsigned int????????????
+                state_.burning_status_ = UNBURNT;
+                heat_content_ = 0;
             }
             
             virtual std::vector<std::shared_ptr<warped::Event> > initializeLP() override;
@@ -88,13 +97,12 @@ class Forest : public warped::LogicalProcess{
             
     protected:
         std::shared_ptr<std::default_random_engine> rng_;
-        const unsigned int num_forest_pixel_x_;   //the x coordinate of the LP on the picture
-        const unsigned int num_forest_pixel_y_;    //the y coordinate of the LP on the picture
-        const unsigned int vegetation_type_; //the type of vegetation growing in the LP
-        const unsigned int elevation_;   //the elevation of the LP
-        const unsigned int vegetation_moisture_;    //the amount of moisture in the LP
-        const unsigned int ignition_mean_;   
-        const unsigned int spread_mean_;
+        const unsigned int size_x_;   //the x coordinate of the LP on the picture
+        const unsigned int size_y_;    //the y coordinate of the LP on the picture
+        const unsigned int ignition_threshold_; // threshold of heat that the LP needs to ignite
+        const unsigned int peak_threshold_; //threshold of heat reached by the fire before it stops growing
+        const unsigned int radiation_percent_; //Percent of heat radiation released at each event
+        const unsigned int burnout_threshold_; //Threshold of Heat that the lp needs to reach to burn out
         const unsigned int index_; //The identifier used by the model to distinguish between LPs
         
         std::string compute_move(direction_t direction);
