@@ -12,7 +12,8 @@
 
 #include "tclap/ValueArg.h"
 
-#define TS_OFFSET 1
+#define TS_OFFSET   1
+#define HOPS        3  /* Choose an odd number */
 
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(PcsEvent)
 
@@ -168,7 +169,7 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
 
             /* Attempt to make WARPED2-PCS similar to ROSS-PCS.
                Subscribers can hop to non-neighboring cells     */
-            std::uniform_int_distribution<unsigned int> rand_hops(1,4);
+            std::uniform_int_distribution<unsigned int> rand_hops(1, HOPS);
             unsigned int hops = rand_hops(*this->rng_);
             unsigned int index = index_;
             while (hops) {
