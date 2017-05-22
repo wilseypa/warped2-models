@@ -165,7 +165,18 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
             if (complete_call_ts <= next_call_ts) {
                 state_.idle_channel_cnt_++;
             }
-            events.emplace_back(new PcsEvent {random_move(), move_call_ts, 
+
+            /* Attempt to make WARPED2-PCS similar to ROSS-PCS.
+               Subscribers can hop to non-neighboring cells     */
+            std::uniform_int_distribution<unsigned int> rand_hops(1,4);
+            unsigned int hops = rand_hops(*this->rng_);
+            unsigned int index = index_;
+            while (hops) {
+                index = random_move(index);
+                hops--;
+            }
+            std::string name = std::string("Cell_") + std::to_string(index);
+            events.emplace_back(new PcsEvent {name, move_call_ts, 
                                         complete_call_ts, next_call_ts, 
                                         move_call_ts, MOVE_CALL_IN_METHOD});
         } break;
@@ -246,14 +257,15 @@ std::vector<std::shared_ptr<warped::Event> > PcsCell::receiveEvent(const warped:
     return events;
 }
 
-std::string PcsCell::compute_move(direction_t direction) {
+unsigned int PcsCell::random_move(unsigned int index) {
 
     unsigned int new_x = 0, new_y = 0;
-    unsigned int current_y = index_ / num_cells_x_;
-    unsigned int current_x = index_ % num_cells_x_;
+    unsigned int current_y = index / num_cells_x_;
+    unsigned int current_x = index % num_cells_x_;
 
-    switch (direction) {
-
+    std::uniform_int_distribution<unsigned int> rand_direction(0,3);
+    direction_t direction = (direction_t)rand_direction(*this->rng_);
+    switch(direction) {
         case LEFT: {
             new_x = (current_x + num_cells_x_ - 1) % num_cells_x_;
             new_y = current_y;
@@ -279,14 +291,7 @@ std::string PcsCell::compute_move(direction_t direction) {
             assert(0);
         }
     }
-
-    return std::string("Cell_") + std::to_string(new_x + (new_y * num_cells_x_));
-}
-
-std::string PcsCell::random_move() {
-
-    std::uniform_int_distribution<unsigned int> rand_direction(0,3);
-    return this->compute_move((direction_t)rand_direction(*this->rng_));
+    return (new_x + new_y * num_cells_x_);
 }
 
 action_t PcsCell::min_ts(   unsigned int complete_call_ts, 
