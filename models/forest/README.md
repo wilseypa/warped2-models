@@ -10,7 +10,7 @@ Cincinnati, OH  45221--0030 <br>
 This simulation model simulates the spread of fire in a forest. A new model of the traditional
 forest fire mode was developed using heat diffusion, with the idea that each LP or cell on a 
 map will ignite only when its heat content reaches a certain threshold determined by pixel in 
-the vegetetation that correlates to the respective LP.
+the vegetation that correlates to the respective LP.
 
 1. Vegetation maps
     - Reading the pixel value and assigning its attributes to an LP
@@ -19,7 +19,7 @@ the vegetetation that correlates to the respective LP.
     + Peak threshold - the amount of heat the LP needs to reach before it starts to decay
 
 2. Starting the fire/simulation at a specific LP
-3. After a cell is ignited it increases in heat content unti it reaches a certain threshold
+3. After a cell is ignited it increases in heat content until it reaches a certain threshold
 4. Then the LP sets off an internal Peak event signifying that the fire is fully developed
 5. Now the LP is increasing the heat content in the 8 cells adjacent to it
 6. The LP continues to send out Radiation events to other cells until an internal event is
