@@ -105,7 +105,7 @@ class Forest : public warped::LogicalProcess{
         const unsigned int burnout_threshold_; //Threshold of Heat that the lp needs to reach to burn out
         const unsigned int index_; //The identifier used by the model to distinguish between LPs
         
-        std::string compute_move(direction_t direction);
+        std::string compute_spread(); //Function to Spread the heat to adjacent cells
 
 }
 
