@@ -87,6 +87,7 @@ public:
         size_x_(size_x),    
         size_y_(size_y),   
         ignition_threshold_(ignition_threshold),
+        heat_rate_(heat_rate),
         peak_threshold_(peak_threshold),
         radiation_percent_(radiation_percent),
         burnout_threshold_(burnout_threshold),
@@ -108,7 +109,8 @@ protected:
     std::shared_ptr<std::default_random_engine> rng_;
     const unsigned int size_x_;   //The width of the picture being used
     const unsigned int size_y_;    //The height of the picture being used
-    const unsigned int ignition_threshold_; // threshold of heat that the LP needs to ignite
+    const unsigned int ignition_threshold_;// threshold of heat that the LP needs to ignite
+    const unsigned int heat_rate_; // The speed at which the fire is burning
     const unsigned int peak_threshold_; //threshold of heat reached by the fire before it stops growing
     const unsigned int radiation_percent_; //Percent of heat radiation released at each event
     const unsigned int burnout_threshold_; //Threshold of Heat that the lp needs to reach to burn out
