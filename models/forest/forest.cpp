@@ -6,7 +6,7 @@
 #include "forest.hpp"
 #include "tclap/ValueArg.h"
 
-WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(AirportEvent)
+WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(ForestEvent)
 
 std::vector<std::shared_ptr<warped::Event> > Forest::initializeLP() {
 
@@ -25,6 +25,60 @@ std::vector<std::shared_ptr<warped::Event> > Forest::initializeLP() {
 inline std::string Forest::lp_name(const unsigned int lp_index){
 
     return std::string("Forest_") + std::to_string(lp_index);
+}
+
+std::vector<std::shared_ptr<warped::Event> > Forest::receiveEvent(const warped::Event& event) {
+
+    std::vector<std::shared_ptr<warped::Event> > response_events;
+    auto received_event = static_cast<const ForestEvent&>(event);
+
+    switch (received_event.type_) {
+
+        case RADIATION: {
+            this->state_.heat_content_=this->state_.heat_content_ + recieved_event.heat_content;
+            // if there is enough heat and the vegtation is unburnt Schedule ignition 
+            if(this->state_.heat_content_ >= this->ignition_threshold && this->state_burn_status == UNBURNT){
+            unsigned int ignition_time = recieved_event.ts+1;
+            response_events.emplace_back(new ForestEvent {this->name_, IGNITION, ignition_time });
+            }
+            break;
+        }
+
+        case RADIATION_TIMER: {
+            unsigned int radiation_heat=this->state_.heat_content_ /100 * 5
+            this->state_.heat_content_ /100 * 95;
+            // Schedule Radiation events for each of the eight surrounding LPs
+            /*begin for loop*/
+            unsigned int radiation_time = received_event.ts_ + 1;
+            response_events.emplace_back(new ForestEvent { this->name_, RADIATION,
+                                                                            radiation_time });
+            /*end for loop*/
+            if(this->state_.heat_content_ <= this->burnout_threshold){
+            this->state_.burn_status_ = BURNOUT
+            }
+            else{
+            unsigned int radiation_timer = recieved_event.ts + 5;
+            response_events.emplace_back(new ForestEvent {this->name_, RADIATION_TIMER, radiation_timer });
+            }
+            break;
+        }
+        case IGNITION: {
+            this->state_.burn_status_=GROWTH;
+            // Schedule Peak Event
+            unsigned int peak_time = received_event.ts + ((this->peak_threshold-this->ignition_threshold)/this->heat_rate);
+            response_events.emplace_back(new ForestEvent {this->name_, PEAK, peak_time });
+            break;
+        }
+        case PEAK: {
+            this->state_.burn_status_=DECAY;
+            this->state_.heat_content_=this->state_.heat_content_ + (this->peak_threshold - this->ignition_threshold);
+            // Schedule first Radiation Timer
+            unsigned int radiation_timer = recieved_event.ts + 5;
+            response_events.emplace_back(new ForestEvent {this->name_, RADIATION_TIMER, radiation_timer });
+            break;
+        }
+    }
+    return response_events;
 }
 
 std::queue<int> ignition_threshold_vector;
