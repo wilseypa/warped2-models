@@ -2,7 +2,6 @@
 
 #include <cassert>
 #include <random>
-#include <queue>
 #include "forest.hpp"
 #include "tclap/ValueArg.h"
 
@@ -10,13 +9,17 @@ WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(AirportEvent)
 
 std::vector<std::shared_ptr<warped::Event> > Forest::initializeLP() {
 
+    // Register random number generator
+    //this->registerRNG<std::default_random_engine>(this->rng_);
+
+    std::default_random_engine rng;
+
+    uniform_int_distribution<int> LPS(0, this->width * this->height);
+
     std::vector<std::shared_ptr<warped::Event> > events;
-    /* For all cells in the forest if heat content > ignition threshold, then ignite */        
-    for (unsigned int i = 0; i < this->index_; i++){ 
-        if(this->state.heat_content_ >= this->ignition_threshold){ 
-            events.emplace_back(new ForestEvent {this->name_, IGNITION,ts_} 
-        }
-    }
+
+    events.emplace_back(new ForestEvent {lp_name(LPS(rng), IGNITION, 1}); 
+
 
     return events;
 }
@@ -27,12 +30,11 @@ inline std::string Forest::lp_name(const unsigned int lp_index){
     return std::string("Forest_") + std::to_string(lp_index);
 }
 
-std::queue<int> ignition_threshold_vector;
-std::queue<int> peak_threshold_vector;
-unsigned int width,height;
 
 
-unsigned char *read_bmp( std::string img_name ) {
+
+unsigned char *read_bmp( std::string img_name, unsigned int heat_rate,
+                         unsigned int radiation_percent, unsigned int burnout_threshold){
 
     FILE *fp = fopen(img_name.c_str(), "rb");
     if(!fp) throw "Argument Exception";
@@ -51,6 +53,8 @@ unsigned char *read_bmp( std::string img_name ) {
     unsigned int row_padded = (width*3 + 3) & (~3);
     unsigned char *data = new unsigned char[row_padded];
 
+
+
     for( unsigned int i = 0; i < height; i++ ) {
         fread(data, sizeof(unsigned char), row_padded, fp);
         for(unsigned int j = 0; j < width*3; j += 3) {
@@ -58,27 +62,15 @@ unsigned char *read_bmp( std::string img_name ) {
             //            << " G: " << (int)data[j+1]
             //            << " R: " << (int)data[j+2]
             //            << std::endl;
-        
-            //If this Pixel Value is Dark Green
-            if((int)data[j] >= 0 && (int)data[j] <= 102 &&
-                   (int)data[j+2] >= 0 && (int)data[j+2] <= 102 && 
-                       (int)data[j+1] >= 102 && (int)data[j+1] <= 204){
-          
-                //Values to be loaded into the LP
-                ignition_threshold_vector.push(200); 
-                peak_threshold_vector.push(1000);
+            unsigned int index_num = i*j; 
+            //Placeholder equations for threshold calculation
+            unsigned int ignition_threshold = (int)data[j] + (int)data[j+1] + (int)data[j+2];
+            unsigned int peak_threshold = ((int)data[j] + (int)data[j+1] + (int)data[j+2]) * 2;
+            
+            std::string name = Forest::lp_name(index_num)
+            lps.emplace_back(name, width, height,ignition_threshold, heat_rate, 
+                             peak_threshold, burnout_threshold, index_num);
 
-            }
-
-            //If this Pixel Value is Light Green/Yellow
-            if((int)data[j] >= 0 && (int)data[j] <= 102 &&
-                   (int)data[j+2] >= 0 && (int)data[j+2] <= 102 &&  
-                       (int)data[j+1] >= 102 && (int)data[j+1] <= 204){
-                                     
-                ignition_threshold_vector.push(200);
-                peak_threshold_vector.push(1000);
-
-            }    
         }
    }
    fclose(fp);
@@ -89,12 +81,15 @@ unsigned char *read_bmp( std::string img_name ) {
 
 
 int main(int argc, char *argv[],){
-    
+   
+    std::string config_filename = "map_hawaii.bmp";
     unsigned int heat_rate = 100;
     unsigned int radiation_percent = 5;
     unsigned int burnout_threshold = 50;
 
-/*
+    
+    TCLAP::ValueArg<std::string> config_arg("m", "map",
+                        "Forest model vegetation config", false, config_filename, "string");
     TCLAP::ValueArg<unsigned int> heat_rate_arg("h", "heat-rate", "Speed of growth of the fire",
                                                                 false, heat_rate, "unsigned int");
     TCLAP::ValueArg<unsigned int> radition_percent_arg("r", "radiation-percent", 
@@ -102,29 +97,20 @@ int main(int argc, char *argv[],){
     TCLAP::ValueArg<unsigned int> burnout_threshold_arg("b", "burnout-threshold",
                                     "Amount of heat needed for a cell to burn out", false, 
                                                             burnout_threshold, "unsigned int");
-    std::vector<TCLAP::Arg*> args = {&heat_rate_arg, &radiation_percent_arg,
-                                                            &burnout_threshold_arg};
-    
+    std::vector<TCLAP::Arg*> args = {&config_arg, &heat_rate_arg,
+                                     &radiation_percent_arg, &burnout_threshold_arg};
+   
+    config_filename = config_arg.getValue();
     heat_rate = heat_rate_arg.getValue();
     radiation_percent = radiation_percent_arg.getValue();
     burnout_threshold = burnout_threshold.getValue();
-*/
-  
-    if (argc != 2) return -1;
-    std::string img_name(argv[1]);
-    (void) read_bmp(img_name);
-    
+
     warped::Simulation forest_sim {"Forest Simulation", argc, argv, args};
 
     std::vector<Forest> lps;
    
-    for (unsigned int i = 0; i<width*height; i++){
-        
-        std::string name = Forest::lp_name(i)
-        lps.emplace_back(name, width, height,ignition_threshold_vector.front(),
-                                heat_rate, peak_threshold_vector.front(), burnout_threshold, i);
-    }
-    
+    (void) read_bmp(config_filename, heat_rate, radiation_percent, burnout_threshold);
+
     std::vector<warped::LogicalProcess*> lp_pointers;
     for (auto& lp : lps) {
         lp_pointers.push_back(&lp);
