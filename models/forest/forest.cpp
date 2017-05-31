@@ -30,8 +30,6 @@ inline std::string Forest::lp_name(const unsigned int lp_index){
     return std::string("Forest_") + std::to_string(lp_index);
 }
 
-<<<<<<< HEAD
-=======
 std::vector<std::shared_ptr<warped::Event> > Forest::receiveEvent(const warped::Event& event) {
 
     std::vector<std::shared_ptr<warped::Event> > response_events;
@@ -89,8 +87,6 @@ std::vector<std::shared_ptr<warped::Event> > Forest::receiveEvent(const warped::
 std::queue<int> ignition_threshold_vector;
 std::queue<int> peak_threshold_vector;
 unsigned int width,height;
->>>>>>> 36595fdfa98846b2a7d0c8ebd47e7a5f435bb4f4
-
 
 
 unsigned char *read_bmp( std::string img_name, unsigned int heat_rate,
