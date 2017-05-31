@@ -9,18 +9,13 @@ WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(ForestEvent)
 
 std::vector<std::shared_ptr<warped::Event> > Forest::initializeLP() {
 
-    // Register random number generator
-    //this->registerRNG<std::default_random_engine>(this->rng_);
-
-    std::default_random_engine rng;
-
-    uniform_int_distribution<int> LPS(0, this->width * this->height);
-
     std::vector<std::shared_ptr<warped::Event> > events;
 
-    events.emplace_back(new ForestEvent {lp_name(LPS(rng), IGNITION, 1}); 
-
-
+    for (unsigned int i = 0; i < this->index_; i++){ //For all of the cells in the forest
+        if(this->state.heat_content_ >= this->ignition_threshold){ //If heat content > ignition threshold
+            events.emplace_back(new ForestEvent {this->name_, IGNITION,ts_} // Then start an ignition event
+        }
+    }
     return events;
 }
 
@@ -40,7 +35,8 @@ std::vector<std::shared_ptr<warped::Event> > Forest::receiveEvent(const warped::
         case RADIATION: {
             this->state_.heat_content_=this->state_.heat_content_ + recieved_event.heat_content;
             // if there is enough heat and the vegtation is unburnt Schedule ignition 
-            if(this->state_.heat_content_ >= this->ignition_threshold && this->state_burn_status == UNBURNT){
+            if(this->state_.heat_content_ >= this->ignition_threshold && 
+                                                            this->state_burn_status == UNBURNT){
             unsigned int ignition_time = recieved_event.ts+1;
             response_events.emplace_back(new ForestEvent {this->name_, IGNITION, ignition_time });
             }
@@ -61,7 +57,8 @@ std::vector<std::shared_ptr<warped::Event> > Forest::receiveEvent(const warped::
             }
             else{
             unsigned int radiation_timer = recieved_event.ts + 5;
-            response_events.emplace_back(new ForestEvent {this->name_, RADIATION_TIMER, radiation_timer });
+            response_events.emplace_back(new ForestEvent {this->name_, RADIATION_TIMER,
+                                                                           radiation_timer });
             }
             break;
         }
@@ -77,20 +74,18 @@ std::vector<std::shared_ptr<warped::Event> > Forest::receiveEvent(const warped::
             this->state_.heat_content_=this->state_.heat_content_ + (this->peak_threshold - this->ignition_threshold);
             // Schedule first Radiation Timer
             unsigned int radiation_timer = recieved_event.ts + 5;
-            response_events.emplace_back(new ForestEvent {this->name_, RADIATION_TIMER, radiation_timer });
+            response_events.emplace_back(new ForestEvent {this->name_, RADIATION_TIMER, 
+                                                                          radiation_timer });
             break;
         }
     }
     return response_events;
 }
 
-std::queue<int> ignition_threshold_vector;
-std::queue<int> peak_threshold_vector;
-unsigned int width,height;
-
 
 unsigned char *read_bmp( std::string img_name, unsigned int heat_rate,
-                         unsigned int radiation_percent, unsigned int burnout_threshold){
+                            unsigned int radiation_percent, unsigned int burnout_threshold
+                                        unsigned int burn_start_x, unsigned int burn_start_y){
 
     FILE *fp = fopen(img_name.c_str(), "rb");
     if(!fp) throw "Argument Exception";
@@ -123,17 +118,77 @@ unsigned char *read_bmp( std::string img_name, unsigned int heat_rate,
             unsigned int ignition_threshold = (int)data[j] + (int)data[j+1] + (int)data[j+2];
             unsigned int peak_threshold = ((int)data[j] + (int)data[j+1] + (int)data[j+2]) * 2;
             
+
             std::string name = Forest::lp_name(index_num)
             lps.emplace_back(name, width, height,ignition_threshold, heat_rate, 
-                             peak_threshold, burnout_threshold, index_num);
-
+                                     peak_threshold, burnout_threshold, index_num);
+ 
+            /* If the LP being created is the start of the fire then give it intial heat content */
+            if(i == burn_start_x && j == burn_start_y){
+                this->state.heat_content_ = 400
+            }
         }
    }
    fclose(fp);
    return data;
 }
 
+std::string Forest::compute_spread(direction_t direction) {
 
+    unsigned int new_x = 0, new_y = 0;
+    unsigned int current_y = index_ / size_x_;
+    unsigned int current_x = index_ % size_x_;
+
+    switch (direction) {
+ 
+       case NORTH: {
+           new_x = current_x;
+           new_y = (current_y + 1) % size_y_;
+       } break;
+
+       case NORTH_EAST: {
+           new_x = (current_x + 1) % size_x_;
+           new_y = (current_y + 1) % size_y_;
+       } break;
+                                                                
+       case EAST: {
+           new_x = (current_x + 1) % size_x_;
+           new_y = current_y;
+       } break;
+                                                                                
+       case SOUTH_EAST: {
+           new_x = (current_x + 1) % size_x_;
+           new_y = (current_y + size_y_ - 1) % size_y_;
+       } break;
+
+       case SOUTH: {
+           new_x = current_x;
+           new_y = (current_y + size_y_ - 1) % size_y_;
+       } break;
+
+       case SOUTH_WEST: {
+           new_x = (current_x + size_x_ - 1) % size_x_;
+           new_y = (current_y + size_y_ - 1) % size_y_;
+       } break;
+
+       case WEST: {
+           new_x = (current_x + size_x_ - 1) % size_x_;
+           new_y = current_y; 
+       } break;
+
+       case NORTH_WEST: {
+           new_x = (current_x + size_x_ - 1) % size_x_;
+           new_y = (current_y + 1) % size_y_;
+       } break;
+       
+       default: {
+           std::cerr << "Invalid move direction " << direction << std::endl;
+           assert(0);
+       }
+       }
+
+       return lp_name(new_x + new_y * size_x_);
+}
 
 
 int main(int argc, char *argv[],){
@@ -142,30 +197,43 @@ int main(int argc, char *argv[],){
     unsigned int heat_rate = 100;
     unsigned int radiation_percent = 5;
     unsigned int burnout_threshold = 50;
+    unsigned int burn_start_x = 500;
+    unsigned int burn_start_y = 501;
 
     
-    TCLAP::ValueArg<std::string> config_arg("m", "map",
-                        "Forest model vegetation config", false, config_filename, "string");
+    TCLAP::ValueArg<std::string> config_arg("m", "map", "Forest model vegetation config", 
+                                                                false, config_filename, "string");
     TCLAP::ValueArg<unsigned int> heat_rate_arg("h", "heat-rate", "Speed of growth of the fire",
                                                                 false, heat_rate, "unsigned int");
     TCLAP::ValueArg<unsigned int> radition_percent_arg("r", "radiation-percent", 
-            "Percent of Heat released every timstamp", false, radiation_percent, "unsigned int");
+             "Percent of Heat released every timstamp", false, radiation_percent, "unsigned int");
     TCLAP::ValueArg<unsigned int> burnout_threshold_arg("b", "burnout-threshold",
                                     "Amount of heat needed for a cell to burn out", false, 
-                                                            burnout_threshold, "unsigned int");
+                                                               burnout_threshold, "unsigned int");
+    TCLAP::ValueArg<unsigned int> burn_start_x_arg("x", "burn-start-x",
+                                                     "x coordinate of the start of fire", false,
+                                                                    burn_start_x, "unsigned int");
+    TCLAP::ValueArg<unsigned int> burn_start_y_arg("y", "burn-start-y",
+                                                     "y coordinate of the start of fire", false,
+                                                                    burn_start_y, "unsigned int");
+
     std::vector<TCLAP::Arg*> args = {&config_arg, &heat_rate_arg,
-                                     &radiation_percent_arg, &burnout_threshold_arg};
+                                        &radiation_percent_arg, &burnout_threshold_arg,
+                                                    &burn_start_x_arg, &burn_start_y_arg};
    
     config_filename = config_arg.getValue();
     heat_rate = heat_rate_arg.getValue();
     radiation_percent = radiation_percent_arg.getValue();
     burnout_threshold = burnout_threshold.getValue();
+    burn_start_x = burn_start_x.getValue();
+    burn_start_y = burn_start_y.getValue();
 
     warped::Simulation forest_sim {"Forest Simulation", argc, argv, args};
 
     std::vector<Forest> lps;
    
-    (void) read_bmp(config_filename, heat_rate, radiation_percent, burnout_threshold);
+    (void) read_bmp(config_filename, heat_rate, radiation_percent, burnout_threshold, 
+                                                                burn_start_x, burn_start_y);
 
     std::vector<warped::LogicalProcess*> lp_pointers;
     for (auto& lp : lps) {
