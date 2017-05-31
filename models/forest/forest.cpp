@@ -33,12 +33,15 @@ std::vector<std::shared_ptr<warped::Event> > Forest::receiveEvent(const warped::
     switch (received_event.type_) {
 
         case RADIATION: {
+            if(this->state_.burn_status_==BURNT_OUT){
+            break
+            }
             this->state_.heat_content_=this->state_.heat_content_ + recieved_event.heat_content;
             // if there is enough heat and the vegtation is unburnt Schedule ignition 
             if(this->state_.heat_content_ >= this->ignition_threshold && 
                                                             this->state_burn_status == UNBURNT){
             unsigned int ignition_time = recieved_event.ts+1;
-            response_events.emplace_back(new ForestEvent {this->name_, IGNITION, ignition_time });
+            response_events.emplace_back(new ForestEvent {this->name, IGNITION, ignition_time });
             }
             break;
         }
@@ -47,13 +50,14 @@ std::vector<std::shared_ptr<warped::Event> > Forest::receiveEvent(const warped::
             unsigned int radiation_heat=this->state_.heat_content_ /100 * 5
             this->state_.heat_content_ /100 * 95;
             // Schedule Radiation events for each of the eight surrounding LPs
+
             /*begin for loop*/
             unsigned int radiation_time = received_event.ts_ + 1;
-            response_events.emplace_back(new ForestEvent { this->name_, RADIATION,
+            response_events.emplace_back(new ForestEvent { name, RADIATION,
                                                                             radiation_time });
             /*end for loop*/
             if(this->state_.heat_content_ <= this->burnout_threshold){
-            this->state_.burn_status_ = BURNOUT
+            this->state_.burn_status_ = BURNT_OUT
             }
             else{
             unsigned int radiation_timer = recieved_event.ts + 5;
