@@ -77,7 +77,7 @@ public:
             const unsigned int ignition_threshold,
             const unsigned int heat_rate,
             const unsigned int peak_threshold,
-            const unsigned int radiation_percent,
+            const unsigned int radiation_fraction,
             const unsigned int burnout_threshold,
             const unsigned int index    )
                 
@@ -89,7 +89,7 @@ public:
         ignition_threshold_(ignition_threshold),
         heat_rate_(heat_rate),
         peak_threshold_(peak_threshold),
-        radiation_percent_(radiation_percent),
+        radiation_fraction_(radiation_fraction),
         burnout_threshold_(burnout_threshold),
         index_(index) {
 
@@ -112,7 +112,7 @@ protected:
     const unsigned int ignition_threshold_;// threshold of heat that the LP needs to ignite
     const unsigned int heat_rate_; // The speed at which the fire is burning
     const unsigned int peak_threshold_; //threshold of heat reached by the fire before it stops growing
-    const unsigned int radiation_percent_; //Percent of heat radiation released at each event
+    const unsigned int radiation_fraction_; //Percent of heat radiation released at each event
     const unsigned int burnout_threshold_; //Threshold of Heat that the lp needs to reach to burn out
     const unsigned int index_; //The identifier used by the model to distinguish between LPs
  

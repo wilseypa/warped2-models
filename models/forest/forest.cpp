@@ -1,4 +1,4 @@
-//Implementation of a Forest Fire Simulation
+/* Implementation of a Forest Fire Simulation */
 
 #include <cassert>
 #include <random>
@@ -112,39 +112,39 @@ std::string Forest::compute_spread(direction_t direction) {
         } break;
        
         case EAST: {
-           new_x = (current_x + 1) % size_x_;
-           new_y = current_y;
-       } break;
+            new_x = (current_x + 1) % size_x_;
+            new_y = current_y;
+        } break;
                                                                                 
-       case SOUTH_EAST: {
-           new_x = (current_x + 1) % size_x_;
-           new_y = (current_y + size_y_ - 1) % size_y_;
-       } break;
+        case SOUTH_EAST: {
+            new_x = (current_x + 1) % size_x_;
+            new_y = (current_y + size_y_ - 1) % size_y_;
+        } break;
 
-       case SOUTH: {
-           new_x = current_x;
-           new_y = (current_y + size_y_ - 1) % size_y_;
-       } break;
+        case SOUTH: {
+            new_x = current_x;
+            new_y = (current_y + size_y_ - 1) % size_y_;
+        } break;
 
-       case SOUTH_WEST: {
-           new_x = (current_x + size_x_ - 1) % size_x_;
-           new_y = (current_y + size_y_ - 1) % size_y_;
-       } break;
+        case SOUTH_WEST: {
+            new_x = (current_x + size_x_ - 1) % size_x_;
+            new_y = (current_y + size_y_ - 1) % size_y_;
+        } break;
 
-       case WEST: {
-           new_x = (current_x + size_x_ - 1) % size_x_;
-           new_y = current_y; 
-       } break;
+        case WEST: {
+            new_x = (current_x + size_x_ - 1) % size_x_;
+            new_y = current_y; 
+        } break;
 
-       case NORTH_WEST: {
-           new_x = (current_x + size_x_ - 1) % size_x_;
-           new_y = (current_y + 1) % size_y_;
-       } break;
+        case NORTH_WEST: {
+            new_x = (current_x + size_x_ - 1) % size_x_;
+            new_y = (current_y + 1) % size_y_;
+        } break;
        
-       default: {
-           std::cerr << "Invalid move direction " << direction << std::endl;
-           assert(0);
-       }
+        default: {
+            std::cerr << "Invalid move direction " << direction << std::endl;
+            assert(0);
+        }
     }
 
    return lp_name(new_x + new_y * size_x_);
@@ -155,7 +155,7 @@ int main(int argc, char *argv[],){
    
     std::string config_filename = "map_hawaii.bmp";
     unsigned int heat_rate = 100;
-    unsigned int radiation_percent = 5;
+    double radiation_fraction_ = .05
     unsigned int burnout_threshold = 50;
     unsigned int burn_start_x = 500;
     unsigned int burn_start_y = 501;
@@ -165,8 +165,8 @@ int main(int argc, char *argv[],){
                                                                 false, config_filename, "string");
     TCLAP::ValueArg<unsigned int> heat_rate_arg("h", "heat-rate", "Speed of growth of the fire",
                                                                 false, heat_rate, "unsigned int");
-    TCLAP::ValueArg<unsigned int> radition_percent_arg("r", "radiation-percent", 
-             "Percent of Heat released every timstamp", false, radiation_percent, "unsigned int");
+    TCLAP::ValueArg<unsigned int> radiation_fraction_arg("r", "radiation-percent", 
+             "Percent of Heat released every timstamp", false, radiation_fraction, "unsigned int");
     TCLAP::ValueArg<unsigned int> burnout_threshold_arg("b", "burnout-threshold",
                                     "Amount of heat needed for a cell to burn out", false, 
                                                                burnout_threshold, "unsigned int");
@@ -178,12 +178,12 @@ int main(int argc, char *argv[],){
                                                                     burn_start_y, "unsigned int");
 
     std::vector<TCLAP::Arg*> args = {&config_arg, &heat_rate_arg,
-                                        &radiation_percent_arg, &burnout_threshold_arg,
+                                        &radiation_fraction_arg, &burnout_threshold_arg,
                                                     &burn_start_x_arg, &burn_start_y_arg};
    
     config_filename = config_arg.getValue();
     heat_rate = heat_rate_arg.getValue();
-    radiation_percent = radiation_percent_arg.getValue();
+    radiation_fraction = radiation_fraction_arg.getValue();
     burnout_threshold = burnout_threshold.getValue();
     burn_start_x = burn_start_x.getValue();
     burn_start_y = burn_start_y.getValue();
@@ -193,11 +193,11 @@ int main(int argc, char *argv[],){
     FILE *fp = fopen(img_name.c_str(), "rb");
     if(!fp) throw "Argument Exception";
 
-    // Read the 54-byte header
+    /* Read the 54-byte header */
     unsigned char info[54];
     fread(info, sizeof(unsigned char), 54, fp);
 
-    // Extract image height and width from header
+    /* Extract image height and width from header */
     width  = *(unsigned int *)&info[18];
     height = *(unsigned int *)&info[22];
 
@@ -218,11 +218,11 @@ int main(int argc, char *argv[],){
 
             std::string name = Forest::lp_name(index);
             lps.emplace_back(name, width, height, ignition_threshold, heat_rate, 
-                                     peak_threshold, burnout_threshold, index);
+                                     peak_threshold, radiation_fraction, burnout_threshold, index);
  
             /* If the LP being created is the start of the fire then give it intial heat content */
             if(i == burn_start_x && j == burn_start_y){
-                this->state.heat_content_ = 400;
+                state_.heat_content_ = ignition_threshold_ + 10;
             }
         }
     }
