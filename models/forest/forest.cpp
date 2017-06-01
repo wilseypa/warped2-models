@@ -45,45 +45,47 @@ std::vector<std::shared_ptr<warped::Event> > Forest::receiveEvent(const warped::
                                         state_.burn_status == UNBURNT) {
                 unsigned int ignition_time = received_event.ts_ + 1;
                 response_events.emplace_back(
-                        new ForestEvent {this->name, IGNITION, ignition_time });
+                        new ForestEvent {name, IGNITION, ignition_time });
             }
         } break;
 
         case RADIATION_TIMER: {
 
             unsigned int heat_radiated_out = state_.heat_content_ * radiation_fraction_;
-            state_.heat_content_ -= radiation_heat;
+            state_.heat_content_ -= heat_radiated_out;
 
             /* Schedule Radiation events for each of the eight surrounding LPs */
 
-            /*begin for loop*/
+            for(direction = NORTH; direction < 8; direction++){
+            name = compute_spread(direction)
             unsigned int radiation_time = received_event.ts_ + 1;
-            response_events.emplace_back(new ForestEvent { name, RADIATION,
+            response_events.emplace_back(new ForestEvent { name, RADIATION, heat_radiated_out/8, 
                                                                             radiation_time });
-            /*end for loop*/
-            if(this->state_.heat_content_ <= this->burnout_threshold){
-            this->state_.burn_status_ = BURNT_OUT
+            }
+            
+            if(state_.heat_content_ <= burnout_threshold){
+            state_.burn_status_ = BURNT_OUT
             }
             else{
             unsigned int radiation_timer = recieved_event.ts + 5;
-            response_events.emplace_back(new ForestEvent {this->name_, RADIATION_TIMER,
+            response_events.emplace_back(new ForestEvent {name_, RADIATION_TIMER,
                                                                            radiation_timer });
             }
             break;
         }
         case IGNITION: {
-            this->state_.burn_status_=GROWTH;
-            // Schedule Peak Event
-            unsigned int peak_time = received_event.ts + ((this->peak_threshold-this->ignition_threshold)/this->heat_rate);
-            response_events.emplace_back(new ForestEvent {this->name_, PEAK, peak_time });
+            state_.burn_status_=GROWTH;
+            /* Schedule Peak Event */
+            unsigned int peak_time = received_event.ts + ((peak_threshold_ - ignition_threshold_) / heat_rate_);
+            response_events.emplace_back(new ForestEvent {name_, PEAK, peak_time });
             break;
         }
         case PEAK: {
-            this->state_.burn_status_=DECAY;
-            this->state_.heat_content_=this->state_.heat_content_ + (this->peak_threshold - this->ignition_threshold);
-            // Schedule first Radiation Timer
-            unsigned int radiation_timer = recieved_event.ts + 5;
-            response_events.emplace_back(new ForestEvent {this->name_, RADIATION_TIMER, 
+            state_.burn_status_ = DECAY;
+            state_.heat_content_ = state_.heat_content_ + (peak_threshold_ - ignition_threshold_);
+            /* Schedule first Radiation Timer */
+            unsigned int radiation_timer = recieved_event.ts_ + 5;
+            response_events.emplace_back(new ForestEvent {name_, RADIATION_TIMER, 
                                                                           radiation_timer });
             break;
         }
