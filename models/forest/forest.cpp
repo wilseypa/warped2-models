@@ -11,9 +11,11 @@ std::vector<std::shared_ptr<warped::Event> > Forest::initializeLP() {
 
     std::vector<std::shared_ptr<warped::Event> > events;
 
-    for (unsigned int i = 0; i < this->index_; i++){ //For all of the cells in the forest
-        if(this->state.heat_content_ >= this->ignition_threshold){ //If heat content > ignition threshold
-            events.emplace_back(new ForestEvent {this->name_, IGNITION,ts_} // Then start an ignition event
+    /* For all of the cells in the forest, if heat content exceeds 
+       ignition threshold, start the ignition process */
+    for (unsigned int i = 0; i < size_x_*size_y_; i++) {
+        if (state_.heat_content_ >= ignition_threshold_) {
+            events.emplace_back(new ForestEvent {name_, IGNITION, 1}
         }
     }
     return events;
@@ -33,23 +35,26 @@ std::vector<std::shared_ptr<warped::Event> > Forest::receiveEvent(const warped::
     switch (received_event.type_) {
 
         case RADIATION: {
-            if(this->state_.burn_status_==BURNT_OUT){
-            break
+
+            if (this->state_.burn_status_ == BURNT_OUT) break;
+
+            state_.heat_content_ = state_.heat_content_ + received_event.heat_content_;
+
+            /* If there is enough heat and the vegtation is unburnt Schedule ignition */
+            if (state_.heat_content_ >= ignition_threshold_ && 
+                                        state_.burn_status == UNBURNT) {
+                unsigned int ignition_time = received_event.ts_ + 1;
+                response_events.emplace_back(
+                        new ForestEvent {this->name, IGNITION, ignition_time });
             }
-            this->state_.heat_content_=this->state_.heat_content_ + recieved_event.heat_content;
-            // if there is enough heat and the vegtation is unburnt Schedule ignition 
-            if(this->state_.heat_content_ >= this->ignition_threshold && 
-                                                            this->state_burn_status == UNBURNT){
-            unsigned int ignition_time = recieved_event.ts+1;
-            response_events.emplace_back(new ForestEvent {this->name, IGNITION, ignition_time });
-            }
-            break;
-        }
+        } break;
 
         case RADIATION_TIMER: {
-            unsigned int radiation_heat=this->state_.heat_content_ /100 * 5
-            this->state_.heat_content_ /100 * 95;
-            // Schedule Radiation events for each of the eight surrounding LPs
+
+            unsigned int heat_radiated_out = state_.heat_content_ * radiation_fraction_;
+            state_.heat_content_ -= radiation_heat;
+
+            /* Schedule Radiation events for each of the eight surrounding LPs */
 
             /*begin for loop*/
             unsigned int radiation_time = received_event.ts_ + 1;
@@ -86,57 +91,6 @@ std::vector<std::shared_ptr<warped::Event> > Forest::receiveEvent(const warped::
     return response_events;
 }
 
-
-unsigned char *read_bmp( std::string img_name, unsigned int heat_rate,
-                            unsigned int radiation_percent, unsigned int burnout_threshold
-                                        unsigned int burn_start_x, unsigned int burn_start_y){
-
-    FILE *fp = fopen(img_name.c_str(), "rb");
-    if(!fp) throw "Argument Exception";
-
-    // Read the 54-byte header
-    unsigned char info[54];
-    fread(info, sizeof(unsigned char), 54, fp);
-
-    // Extract image height and width from header
-    width  = *(unsigned int *)&info[18];
-    height = *(unsigned int *)&info[22];
-
-    std::cout << "Width  : " << width    << std::endl;
-    std::cout << "Height : " << height   << std::endl;
-
-    unsigned int row_padded = (width*3 + 3) & (~3);
-    unsigned char *data = new unsigned char[row_padded];
-
-
-
-    for( unsigned int i = 0; i < height; i++ ) {
-        fread(data, sizeof(unsigned char), row_padded, fp);
-        for(unsigned int j = 0; j < width*3; j += 3) {
-            //std::cout   << "B: "<< (int)data[j] 
-            //            << " G: " << (int)data[j+1]
-            //            << " R: " << (int)data[j+2]
-            //            << std::endl;
-            unsigned int index_num = i*j; 
-            //Placeholder equations for threshold calculation
-            unsigned int ignition_threshold = (int)data[j] + (int)data[j+1] + (int)data[j+2];
-            unsigned int peak_threshold = ((int)data[j] + (int)data[j+1] + (int)data[j+2]) * 2;
-            
-
-            std::string name = Forest::lp_name(index_num)
-            lps.emplace_back(name, width, height,ignition_threshold, heat_rate, 
-                                     peak_threshold, burnout_threshold, index_num);
- 
-            /* If the LP being created is the start of the fire then give it intial heat content */
-            if(i == burn_start_x && j == burn_start_y){
-                this->state.heat_content_ = 400
-            }
-        }
-   }
-   fclose(fp);
-   return data;
-}
-
 std::string Forest::compute_spread(direction_t direction) {
 
     unsigned int new_x = 0, new_y = 0;
@@ -145,17 +99,17 @@ std::string Forest::compute_spread(direction_t direction) {
 
     switch (direction) {
  
-       case NORTH: {
-           new_x = current_x;
-           new_y = (current_y + 1) % size_y_;
-       } break;
+        case NORTH: {
+            new_x = current_x;
+            new_y = (current_y + 1) % size_y_;
+        } break;
 
-       case NORTH_EAST: {
-           new_x = (current_x + 1) % size_x_;
-           new_y = (current_y + 1) % size_y_;
-       } break;
-                                                                
-       case EAST: {
+        case NORTH_EAST: {
+            new_x = (current_x + 1) % size_x_;
+            new_y = (current_y - 1) % size_y_;
+        } break;
+       
+        case EAST: {
            new_x = (current_x + 1) % size_x_;
            new_y = current_y;
        } break;
@@ -189,9 +143,9 @@ std::string Forest::compute_spread(direction_t direction) {
            std::cerr << "Invalid move direction " << direction << std::endl;
            assert(0);
        }
-       }
+    }
 
-       return lp_name(new_x + new_y * size_x_);
+   return lp_name(new_x + new_y * size_x_);
 }
 
 
@@ -234,10 +188,43 @@ int main(int argc, char *argv[],){
 
     warped::Simulation forest_sim {"Forest Simulation", argc, argv, args};
 
+    FILE *fp = fopen(img_name.c_str(), "rb");
+    if(!fp) throw "Argument Exception";
+
+    // Read the 54-byte header
+    unsigned char info[54];
+    fread(info, sizeof(unsigned char), 54, fp);
+
+    // Extract image height and width from header
+    width  = *(unsigned int *)&info[18];
+    height = *(unsigned int *)&info[22];
+
+    unsigned int row_padded = (width*3 + 3) & (~3);
+    unsigned char *data = new unsigned char[row_padded];
+
     std::vector<Forest> lps;
    
-    (void) read_bmp(config_filename, heat_rate, radiation_percent, burnout_threshold, 
-                                                                burn_start_x, burn_start_y);
+    for( unsigned int i = 0; i < height; i++ ) {
+
+        fread(data, sizeof(unsigned char), row_padded, fp);
+
+        for(unsigned int j = 0; j < width*3; j += 3) {
+            unsigned int index = i*width + j; 
+            /* Placeholder equations for threshold calculation */
+            unsigned int ignition_threshold = (int)data[j] + (int)data[j+1] + (int)data[j+2];
+            unsigned int peak_threshold = ((int)data[j] + (int)data[j+1] + (int)data[j+2]) * 2;
+
+            std::string name = Forest::lp_name(index);
+            lps.emplace_back(name, width, height, ignition_threshold, heat_rate, 
+                                     peak_threshold, burnout_threshold, index);
+ 
+            /* If the LP being created is the start of the fire then give it intial heat content */
+            if(i == burn_start_x && j == burn_start_y){
+                this->state.heat_content_ = 400;
+            }
+        }
+    }
+    fclose(fp);
 
     std::vector<warped::LogicalProcess*> lp_pointers;
     for (auto& lp : lps) {
@@ -246,9 +233,6 @@ int main(int argc, char *argv[],){
 
     forest_sim.simulate(lp_pointers);
 
-    
-
-    
     return 0;
 
 }
