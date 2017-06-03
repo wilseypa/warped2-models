@@ -25,7 +25,7 @@ std::vector<std::shared_ptr<warped::Event> > Forest::initializeLP() {
 
 inline std::string Forest::lp_name(const unsigned int lp_index){
 
-    return std::string("Forest_") + std::to_string(lp_index);
+    return std::string("Cell_") + std::to_string(lp_index);
 }
 
 std::vector<std::shared_ptr<warped::Event> > Forest::receiveEvent(const warped::Event& event) {
@@ -56,9 +56,9 @@ std::vector<std::shared_ptr<warped::Event> > Forest::receiveEvent(const warped::
             state_.heat_content_ -= heat_radiated_out;
 
             /* Schedule radiation events for surrounding LPs */
-            for( auto direction = NORTH; direction < DIRECTION_MAX; direction++) {
+            for( auto direction = NORTH; direction < DIRECTION_MAX; direction++ ) {
                 if (!connection_[direction]) continue;
-                response_events.emplace_back( new ForestEvent {compute_spread(direction), 
+                response_events.emplace_back( new ForestEvent {find_cell(direction), 
                                     RADIATION, heat_radiated_out/DIRECTION_MAX, 
                                             received_event.ts_ + RADIATION_DELAY} );
             }
@@ -75,7 +75,7 @@ std::vector<std::shared_ptr<warped::Event> > Forest::receiveEvent(const warped::
 
         case IGNITION: {
 
-            state_.burn_status_= GROWTH;
+            state_.burn_status_= BURNING;
 
             /* Schedule Peak Event */
             unsigned int peak_time = received_event.ts_ + 
@@ -85,7 +85,6 @@ std::vector<std::shared_ptr<warped::Event> > Forest::receiveEvent(const warped::
 
         case PEAK: {
 
-            state_.burn_status_ = DECAY;
             state_.heat_content_ = state_.heat_content_ + (peak_threshold_ - ignition_threshold_);
 
             /* Schedule first Radiation Timer */
@@ -96,61 +95,60 @@ std::vector<std::shared_ptr<warped::Event> > Forest::receiveEvent(const warped::
     return response_events;
 }
 
-std::string Forest::compute_spread(direction_t direction) {
+std::string Forest::find_cell( direction_t direction ) {
 
     unsigned int new_x = 0, new_y = 0;
     unsigned int current_y = index_ / size_x_;
     unsigned int current_x = index_ % size_x_;
 
-    switch (direction) {
- 
+    switch( direction ) {
+
         case NORTH: {
             new_x = current_x;
-            new_y = (current_y + 1) % size_y_;
+            new_y = (current_y + size_y_ - 1) % size_y_;
         } break;
 
         case NORTH_EAST: {
             new_x = (current_x + 1) % size_x_;
-            new_y = (current_y - 1) % size_y_;
+            new_y = (current_y + size_y_ - 1) % size_y_;
         } break;
-       
+
         case EAST: {
             new_x = (current_x + 1) % size_x_;
             new_y = current_y;
         } break;
-                                                                                
+
         case SOUTH_EAST: {
             new_x = (current_x + 1) % size_x_;
-            new_y = (current_y + size_y_ - 1) % size_y_;
+            new_y = (current_y + 1) % size_y_;
         } break;
 
         case SOUTH: {
             new_x = current_x;
-            new_y = (current_y + size_y_ - 1) % size_y_;
+            new_y = (current_y + 1) % size_y_;
         } break;
 
         case SOUTH_WEST: {
             new_x = (current_x + size_x_ - 1) % size_x_;
-            new_y = (current_y + size_y_ - 1) % size_y_;
+            new_y = (current_y + 1) % size_y_;
         } break;
 
         case WEST: {
             new_x = (current_x + size_x_ - 1) % size_x_;
-            new_y = current_y; 
+            new_y = current_y;
         } break;
 
         case NORTH_WEST: {
             new_x = (current_x + size_x_ - 1) % size_x_;
-            new_y = (current_y + 1) % size_y_;
+            new_y = (current_y + size_y_ - 1) % size_y_;
         } break;
-       
+
         default: {
             std::cerr << "Invalid move direction " << direction << std::endl;
             assert(0);
         }
     }
-
-   return lp_name(new_x + new_y * size_x_);
+    return lp_name( new_x + new_y * size_x_ );
 }
 
 

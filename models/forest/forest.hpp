@@ -14,15 +14,14 @@
 enum status_t {
 
     UNBURNT,
-    GROWTH,
-    DECAY,
+    BURNING,
     BURNT_OUT
 };
 
 WARPED_DEFINE_LP_STATE_STRUCT(ForestState) {
 
-    status_t burn_status;
-    unsigned int heat_content_;
+    status_t        burn_status;
+    unsigned int    heat_content_;
 };
 
 /*Forest fire events */
@@ -82,17 +81,17 @@ public:
             const unsigned int burnout_threshold,
             const unsigned int index    )
                 
-    :   LogicalProcess(name),
-        state_(),
-        rng_(new std::default_random_engine(index)),
-        size_x_(size_x),    
-        size_y_(size_y),   
-        ignition_threshold_(ignition_threshold),
-        heat_rate_(heat_rate),
-        peak_threshold_(peak_threshold),
-        radiation_fraction_(radiation_fraction),
-        burnout_threshold_(burnout_threshold),
-        index_(index) {
+        :   LogicalProcess(name),
+            state_(),
+            rng_(new std::default_random_engine(index)),
+            size_x_(size_x),    
+            size_y_(size_y),   
+            ignition_threshold_(ignition_threshold),
+            heat_rate_(heat_rate),
+            peak_threshold_(peak_threshold),
+            radiation_fraction_(radiation_fraction),
+            burnout_threshold_(burnout_threshold),
+            index_(index) {
 
         /* Initialize the state variables */
         state_.burning_status_ = UNBURNT;
@@ -108,17 +107,17 @@ public:
 
 protected:
     std::shared_ptr<std::default_random_engine> rng_;
-    const unsigned int size_x_;   //The width of the picture being used
-    const unsigned int size_y_;    //The height of the picture being used
-    const unsigned int ignition_threshold_;// threshold of heat that the LP needs to ignite
-    const unsigned int heat_rate_; // The speed at which the fire is burning
-    const unsigned int peak_threshold_; //threshold of heat reached by the fire before it stops growing
-    const unsigned int radiation_fraction_; //Percent of heat radiation released at each event
-    const unsigned int burnout_threshold_; //Threshold of Heat that the lp needs to reach to burn out
-    const bool connection_[DIRECTION_MAX]; // True when LP exists in adjacent node
-    const unsigned int index_; //The identifier used by the model to distinguish between LPs
+    const unsigned int  size_x_;                    // Width of the vegetation grid
+    const unsigned int  size_y_;                    // Height of the vegetation grid
+    const unsigned int  ignition_threshold_;        // Min heat content needed to ignite an LP
+    const unsigned int  heat_rate_;                 // Speed at which the fire grows in an LP
+    const unsigned int  peak_threshold_;            // Max heat content threshold of an LP
+    const unsigned int  radiation_fraction_;        // Heat fraction radiated out by a burning LP
+    const unsigned int  burnout_threshold_;         // Heat content threshold for a burnt out LP
+    const bool          connection_[DIRECTION_MAX]; // True when LP exists in adjacent node
+    const unsigned int  index_;                     // Unique LP ID
  
-    std::string compute_spread(); //Function to Spread the heat to adjacent cells
+    std::string find_cell( direction_t direction ); // Find adjacent cell in a certain direction
 }
 
 #endif
