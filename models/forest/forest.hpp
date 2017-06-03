@@ -20,7 +20,7 @@ enum status_t {
 
 WARPED_DEFINE_LP_STATE_STRUCT(ForestState) {
 
-    status_t        burn_status;
+    status_t        burn_status_;
     unsigned int    heat_content_;
 };
 
@@ -94,8 +94,8 @@ public:
             index_(index) {
 
         /* Initialize the state variables */
-        state_.burning_status_ = UNBURNT;
-        state_.heat_content_ = 0;
+        state_.burn_status_     = UNBURNT;
+        state_.heat_content_    = 0;
     }
             
     virtual std::vector<std::shared_ptr<warped::Event> > initializeLP() override;
