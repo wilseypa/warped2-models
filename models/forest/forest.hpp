@@ -44,7 +44,8 @@ enum direction_t {
     SOUTH,
     SOUTH_WEST,
     WEST,
-    NORTH_WEST
+    NORTH_WEST,
+    DIRECTION_MAX
 };
 
 /* Class Definition of a forest fire event */
@@ -114,6 +115,7 @@ protected:
     const unsigned int peak_threshold_; //threshold of heat reached by the fire before it stops growing
     const unsigned int radiation_fraction_; //Percent of heat radiation released at each event
     const unsigned int burnout_threshold_; //Threshold of Heat that the lp needs to reach to burn out
+    const bool connection_[DIRECTION_MAX]; // True when LP exists in adjacent node
     const unsigned int index_; //The identifier used by the model to distinguish between LPs
  
     std::string compute_spread(); //Function to Spread the heat to adjacent cells

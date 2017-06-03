@@ -5,22 +5,23 @@
 #include "forest.hpp"
 #include "tclap/ValueArg.h"
 
+#define IGNITION_DELAY      1
+#define RADIATION_DELAY     1
+#define RADIATION_INTERVAL  5
+
+
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(ForestEvent)
 
 std::vector<std::shared_ptr<warped::Event> > Forest::initializeLP() {
 
     std::vector<std::shared_ptr<warped::Event> > events;
 
-    /* For all of the cells in the forest, if heat content exceeds 
-       ignition threshold, start the ignition process */
-    for (unsigned int i = 0; i < size_x_*size_y_; i++) {
-        if (state_.heat_content_ >= ignition_threshold_) {
-            events.emplace_back(new ForestEvent {name_, IGNITION, 1}
-        }
+    /* If heat content exceeds ignition threshold, schedule ignition */
+    if (state_.heat_content_ >= ignition_threshold_) {
+        events.emplace_back( new ForestEvent {name_, IGNITION, IGNITION_DELAY} );
     }
     return events;
 }
-
 
 inline std::string Forest::lp_name(const unsigned int lp_index){
 
@@ -38,57 +39,59 @@ std::vector<std::shared_ptr<warped::Event> > Forest::receiveEvent(const warped::
 
             if (this->state_.burn_status_ == BURNT_OUT) break;
 
-            state_.heat_content_ = state_.heat_content_ + received_event.heat_content_;
+            state_.heat_content_ += received_event.heat_content_;
 
-            /* If there is enough heat and the vegtation is unburnt Schedule ignition */
-            if (state_.heat_content_ >= ignition_threshold_ && 
-                                        state_.burn_status == UNBURNT) {
-                unsigned int ignition_time = received_event.ts_ + 1;
-                response_events.emplace_back(
-                        new ForestEvent {name, IGNITION, ignition_time });
+            /* If heat exceeds ignition threshold and vegtation is unburnt, schedule ignition */
+            if ( (state_.burn_status_ == UNBURNT) && 
+                    (state_.heat_content_ >= ignition_threshold_) ) {
+                response_events.emplace_back( 
+                    new ForestEvent {name, IGNITION, received_event.ts_ + IGNITION_DELAY} );
             }
         } break;
 
         case RADIATION_TIMER: {
 
-            unsigned int heat_radiated_out = state_.heat_content_ * radiation_fraction_;
+            unsigned int heat_radiated_out = 
+                std::static_cast<unsigned int> (state_.heat_content_ * radiation_fraction_);
             state_.heat_content_ -= heat_radiated_out;
 
-            /* Schedule Radiation events for each of the eight surrounding LPs */
+            /* Schedule radiation events for surrounding LPs */
+            for( auto direction = NORTH; direction < DIRECTION_MAX; direction++) {
+                if (!connection_[direction]) continue;
+                response_events.emplace_back( new ForestEvent {compute_spread(direction), 
+                                    RADIATION, heat_radiated_out/DIRECTION_MAX, 
+                                            received_event.ts_ + RADIATION_DELAY} );
+            }
 
-            for(direction = NORTH; direction < 8; direction++){
-            name = compute_spread(direction)
-            unsigned int radiation_time = received_event.ts_ + 1;
-            response_events.emplace_back(new ForestEvent { name, RADIATION, heat_radiated_out/8, 
-                                                                            radiation_time });
+            /* Check if cell has burnt out */
+            if (state_.heat_content_ <= burnout_threshold_) {
+                state_.burn_status_ = BURNT_OUT;
+
+            } else { /* Else schedule next radiation */
+                response_events.emplace_back( new ForestEvent {name_, 
+                        RADIATION_TIMER, received_event.ts_ + RADIATION_INTERVAL} );
             }
-            
-            if(state_.heat_content_ <= burnout_threshold){
-            state_.burn_status_ = BURNT_OUT
-            }
-            else{
-            unsigned int radiation_timer = recieved_event.ts + 5;
-            response_events.emplace_back(new ForestEvent {name_, RADIATION_TIMER,
-                                                                           radiation_timer });
-            }
-            break;
-        }
+        } break;
+
         case IGNITION: {
-            state_.burn_status_=GROWTH;
+
+            state_.burn_status_= GROWTH;
+
             /* Schedule Peak Event */
-            unsigned int peak_time = received_event.ts + ((peak_threshold_ - ignition_threshold_) / heat_rate_);
-            response_events.emplace_back(new ForestEvent {name_, PEAK, peak_time });
-            break;
-        }
+            unsigned int peak_time = received_event.ts_ + 
+                        ((peak_threshold_ - ignition_threshold_) / heat_rate_);
+            response_events.emplace_back( new ForestEvent {name_, PEAK, peak_time} );
+        } break;
+
         case PEAK: {
+
             state_.burn_status_ = DECAY;
             state_.heat_content_ = state_.heat_content_ + (peak_threshold_ - ignition_threshold_);
+
             /* Schedule first Radiation Timer */
-            unsigned int radiation_timer = recieved_event.ts_ + 5;
-            response_events.emplace_back(new ForestEvent {name_, RADIATION_TIMER, 
-                                                                          radiation_timer });
-            break;
-        }
+            response_events.emplace_back( 
+                    new ForestEvent {name_, RADIATION_TIMER, received_event.ts_} );
+        } break;
     }
     return response_events;
 }
