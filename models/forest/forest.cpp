@@ -85,7 +85,7 @@ std::vector<std::shared_ptr<warped::Event> > Forest::receiveEvent(const warped::
 
         case PEAK: {
 
-            state_.heat_content_ = state_.heat_content_ + (peak_threshold_ - ignition_threshold_);
+            state_.heat_content_ += peak_threshold_ - ignition_threshold_;
 
             /* Schedule first Radiation Timer */
             response_events.emplace_back( 
@@ -154,42 +154,55 @@ std::string Forest::find_cell( direction_t direction ) {
 
 int main(int argc, char *argv[]) {
 
-    std::string config_filename = "map_hawaii.bmp";
-    unsigned int heat_rate = 100;
-    double radiation_fraction_ = 0.05;
-    unsigned int burnout_threshold = 50;
-    unsigned int burn_start_x = 500;
-    unsigned int burn_start_y = 501;
+    /* Set the default values for the simulation arguments */
+    std::string     vegetation_map      = "map_hawaii.bmp";
+    unsigned int    heat_rate           = 100;
+    double          radiation_fraction  = 0.05;
+    unsigned int    burnout_threshold   = 50;
+    unsigned int    fire_origin_x       = 500;
+    unsigned int    fire_origin_y       = 501;
 
-    TCLAP::ValueArg<std::string> config_arg("m", "map", "Forest model vegetation config", 
-                                                                false, config_filename, "string");
-    TCLAP::ValueArg<unsigned int> heat_rate_arg("h", "heat-rate", "Speed of growth of the fire",
-                                                                false, heat_rate, "unsigned int");
-    TCLAP::ValueArg<double> radiation_fraction_arg("r", "radiation-percent", 
-             "Percent of Heat released every timstamp", false, radiation_fraction, "double");
-    TCLAP::ValueArg<unsigned int> burnout_threshold_arg("b", "burnout-threshold",
-                                    "Amount of heat needed for a cell to burn out", false, 
-                                                               burnout_threshold, "unsigned int");
-    TCLAP::ValueArg<unsigned int> burn_start_x_arg("x", "burn-start-x",
-                                                     "x coordinate of the start of fire", false,
-                                                                    burn_start_x, "unsigned int");
-    TCLAP::ValueArg<unsigned int> burn_start_y_arg("y", "burn-start-y",
-                                                     "y coordinate of the start of fire", false,
-                                                                    burn_start_y, "unsigned int");
+    /* Read any simulation arguments (if provided) */
+    TCLAP::ValueArg<std::string> vegetation_map_arg( "v", "vegetation-map", "Vegetation map",
+                                                    false, vegetation_map, "string" );
 
-    std::vector<TCLAP::Arg*> args = {&config_arg, &heat_rate_arg,
-                                        &radiation_fraction_arg, &burnout_threshold_arg,
-                                                    &burn_start_x_arg, &burn_start_y_arg};
+    TCLAP::ValueArg<unsigned int> heat_rate_arg( "h", "heat-rate", "Rate of fire growth",
+                                                    false, heat_rate, "unsigned int" );
 
-    config_filename = config_arg.getValue();
-    heat_rate = heat_rate_arg.getValue();
-    radiation_fraction = radiation_fraction_arg.getValue();
-    burnout_threshold = burnout_threshold.getValue();
-    burn_start_x = burn_start_x.getValue();
-    burn_start_y = burn_start_y.getValue();
+    TCLAP::ValueArg<double> radiation_fraction_arg( "r", "radiation-fraction",
+                                                    "Fraction of heat radiated out",
+                                                    false, radiation_fraction, "double" );
+
+    TCLAP::ValueArg<unsigned int> burnout_threshold_arg( "b", "burnout-threshold",
+                                                    "Heat left in a cell after it burns out",
+                                                    false, burnout_threshold, "unsigned int" );
+
+    TCLAP::ValueArg<unsigned int> fire_origin_x_arg( "x", "fire-origin-x",
+                                                    "X-coordinate for origin of fire",
+                                                    false, fire_origin_x, "unsigned int" );
+
+    TCLAP::ValueArg<unsigned int> fire_origin_y_arg( "y", "fire-origin-y",
+                                                    "Y-coordinate for origin of fire",
+                                                    false, fire_origin_y, "unsigned int" );
+
+    std::vector<TCLAP::Arg*> args = {   &vegetation_map_arg,
+                                        &heat_rate_arg,
+                                        &radiation_fraction_arg,
+                                        &burnout_threshold_arg,
+                                        &fire_origin_x_arg,
+                                        &fire_origin_y_arg
+                                    };
+
+    vegetation_map      = vegetation_map_arg.getValue();
+    heat_rate           = heat_rate_arg.getValue();
+    radiation_fraction  = radiation_fraction_arg.getValue();
+    burnout_threshold   = burnout_threshold.getValue();
+    fire_origin_x       = fire_origin_x_arg.getValue();
+    fire_origin_y       = fire_origin_y_arg.getValue();
 
     warped::Simulation forest_sim {"Forest Simulation", argc, argv, args};
 
+    /* Read the vegetation map */
     FILE *fp = fopen(img_name.c_str(), "rb");
     if (!fp) throw "Incorrect name of vegetation map";
 
@@ -198,8 +211,8 @@ int main(int argc, char *argv[]) {
     fread(info, sizeof(unsigned char), 54, fp);
 
     /* Extract image height and width from header */
-    width  = *(unsigned int *)&info[18];
-    height = *(unsigned int *)&info[22];
+    auto width  = *(unsigned int *)&info[18];
+    auto height = *(unsigned int *)&info[22];
 
     unsigned int row_padded = (width*3 + 3) & (~3);
     unsigned char *data = new unsigned char[row_padded];
@@ -212,7 +225,8 @@ int main(int argc, char *argv[]) {
 
         for(unsigned int j = 0; j < width*3; j += 3) {
 
-            unsigned int index = i*width + j/3; 
+            unsigned int index = i*width + j/3;
+
             /* Placeholder equations for threshold calculation */
             unsigned int ignition_threshold = 
                 std::static_cast<unsigned int>(data[j] + data[j+1] + data[j+2]);
@@ -242,16 +256,15 @@ int main(int argc, char *argv[]) {
     }
 
     forest_sim.simulate(lp_pointers);
-    
-    unsigned int cells_burned = 0;
 
+    /* Post-simulation model statistics */
+    unsigned int cells_burnt_cnt = 0;
     for(auto& lp: lps){
-        if( lp.state_.burn_status == BURNT_OUT ){
-            cells_burned++;
+        if( lp.state_.burn_status == BURNT_OUT ) {
+            cells_burnt_cnt++;
         }
     }
-
-    std::cout<<"Total trees burned: " << cells_burned << std::endl;
+    std::cout << "Total cells burnt = " << cells_burnt_cnt << std::endl;
 
     return 0;
 
