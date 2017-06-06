@@ -159,9 +159,66 @@ std::string Forest::find_cell( direction_t direction ) {
     return lp_name( new_x + new_y * size_x_ );
 }
 
-bool neighbor_conn( direction_t direction, unsigned char **combustible_map   ) {
+bool Forest::neighbor_conn( direction_t direction, unsigned char **combustible_map   ) {
 
-    return true; //TODO
+    unsigned int new_x = 0, new_y = 0;
+    unsigned int current_y = index_ / size_x_;
+    unsigned int current_x = index_ % size_x_;
+
+    switch( direction ) {
+
+        case NORTH: {
+            new_x = current_x;
+            new_y = (current_y + size_y_ - 1) % size_y_;
+        } break;
+
+        case NORTH_EAST: {
+            new_x = (current_x + 1) % size_x_;
+            new_y = (current_y + size_y_ - 1) % size_y_;
+        } break;
+
+        case EAST: {
+            new_x = (current_x + 1) % size_x_;
+            new_y = current_y;
+        } break;
+
+        case SOUTH_EAST: {
+            new_x = (current_x + 1) % size_x_;
+            new_y = (current_y + 1) % size_y_;
+        } break;
+
+        case SOUTH: {
+            new_x = current_x;
+            new_y = (current_y + 1) % size_y_;
+        } break;
+
+        case SOUTH_WEST: {
+            new_x = (current_x + size_x_ - 1) % size_x_;
+            new_y = (current_y + 1) % size_y_;
+        } break;
+
+        case WEST: {
+            new_x = (current_x + size_x_ - 1) % size_x_;
+            new_y = current_y;
+        } break;
+
+     case NORTH_WEST: {
+            new_x = (current_x + size_x_ - 1) % size_x_;
+            new_y = (current_y + size_y_ - 1) % size_y_;
+        } break;
+
+        default: {
+            std::cerr << "Invalid move direction " << direction << std::endl;
+            assert(0);
+        }
+    }
+
+    if(combustible_map[new_x][new_y] == 0){
+        return false;
+    }
+    else{
+        return true;
+    }
 }
 
 int main(int argc, char *argv[]) {
