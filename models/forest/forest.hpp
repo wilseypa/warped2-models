@@ -55,8 +55,11 @@ public:
                 const forest_event_t type,
                 const unsigned int heat_content,
                 const unsigned int timestamp)
-        : receiver_name_(receiver_name), type_(type), ts_(timestamp) {}
-        
+        :   receiver_name_(receiver_name),
+            type_(type),
+            heat_content_(heat_content),
+            ts_(timestamp) {}
+
     const std::string& receiverName() const { return receiver_name_; }
     unsigned int timestamp() const { return ts_; }
 
@@ -71,21 +74,21 @@ public:
 
 class Forest : public warped::LogicalProcess{
 public:
-    Forest( const std::string& name,
-            const unsigned int size_x,    
-            const unsigned int size_y,    
+    Forest( const unsigned int size_x,
+            const unsigned int size_y,
+            const unsigned char *combustible_map[],
             const unsigned int ignition_threshold,
             const unsigned int heat_rate,
             const unsigned int peak_threshold,
             const unsigned int radiation_fraction,
             const unsigned int burnout_threshold,
+            const unsigned int heat_content,
             const unsigned int index    )
-                
-        :   LogicalProcess(name),
+
+        :   LogicalProcess(lp_name(index)),
             state_(),
-            rng_(new std::default_random_engine(index)),
-            size_x_(size_x),    
-            size_y_(size_y),   
+            size_x_(size_x),
+            size_y_(size_y),
             ignition_threshold_(ignition_threshold),
             heat_rate_(heat_rate),
             peak_threshold_(peak_threshold),
@@ -95,18 +98,22 @@ public:
 
         /* Initialize the state variables */
         state_.burn_status_     = UNBURNT;
-        state_.heat_content_    = 0;
+        state_.heat_content_    = heat_content;
+
+        /* Populate the connection_matrix */
+        for (unsigned int direction = NORTH; direction < DIRECTION_MAX; direction++) {
+            connection_[direction] = neighbor_conn( (direction_t)direction, combustible_map );
+        }
     }
-            
+
     virtual std::vector<std::shared_ptr<warped::Event> > initializeLP() override;
     virtual std::vector<std::shared_ptr<warped::Event> > receiveEvent(const warped::Event&);
     virtual warped::LPState& getState() { return this->state_; }
-            
+
     ForestState state_;
-    static inline std::string lp_name(const unsigned int);
+    static inline std::string lp_name( const unsigned int );
 
 protected:
-    std::shared_ptr<std::default_random_engine> rng_;
     const unsigned int  size_x_;                    // Width of the vegetation grid
     const unsigned int  size_y_;                    // Height of the vegetation grid
     const unsigned int  ignition_threshold_;        // Min heat content needed to ignite an LP
@@ -116,8 +123,11 @@ protected:
     const unsigned int  burnout_threshold_;         // Heat content threshold for a burnt out LP
     const bool          connection_[DIRECTION_MAX]; // True when LP exists in adjacent node
     const unsigned int  index_;                     // Unique LP ID
- 
+
     std::string find_cell( direction_t direction ); // Find adjacent cell in a certain direction
-}
+
+    // Find whether connection exits to a neighbor
+    bool neighbor_conn( direction_t direction, unsigned char **combustible_map );
+};
 
 #endif

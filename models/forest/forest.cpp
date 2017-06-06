@@ -1,14 +1,19 @@
 /* Implementation of a Forest Fire Simulation */
 
 #include <cassert>
+#include <cstring>
 #include <random>
 #include "forest.hpp"
 #include "tclap/ValueArg.h"
 
-#define IGNITION_DELAY      1
-#define RADIATION_DELAY     1
-#define RADIATION_INTERVAL  5
+/* Event timer delays */
+#define IGNITION_DELAY              1
+#define RADIATION_DELAY             1
+#define RADIATION_INTERVAL          5
 
+/* Combustion parameters */
+#define PEAK_TO_IGN_THRES_RATIO     2
+#define INITIAL_HEAT_CONTENT        20
 
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(ForestEvent)
 
@@ -18,7 +23,7 @@ std::vector<std::shared_ptr<warped::Event> > Forest::initializeLP() {
 
     /* If heat content exceeds ignition threshold, schedule ignition */
     if (state_.heat_content_ >= ignition_threshold_) {
-        events.emplace_back( new ForestEvent {name_, IGNITION, IGNITION_DELAY} );
+        events.emplace_back( new ForestEvent {lp_name(index_), IGNITION, 0, IGNITION_DELAY} );
     }
     return events;
 }
@@ -44,23 +49,24 @@ std::vector<std::shared_ptr<warped::Event> > Forest::receiveEvent(const warped::
             /* If heat exceeds ignition threshold and vegtation is unburnt, schedule ignition */
             if ( (state_.burn_status_ == UNBURNT) && 
                     (state_.heat_content_ >= ignition_threshold_) ) {
-                response_events.emplace_back( 
-                    new ForestEvent {name, IGNITION, received_event.ts_ + IGNITION_DELAY} );
+                response_events.emplace_back( new ForestEvent {lp_name(index_),
+                                IGNITION, 0, received_event.ts_ + IGNITION_DELAY} );
             }
         } break;
 
         case RADIATION_TIMER: {
 
             unsigned int heat_radiated_out = 
-                std::static_cast<unsigned int> (state_.heat_content_ * radiation_fraction_);
+                static_cast<unsigned int> (state_.heat_content_ * radiation_fraction_);
             state_.heat_content_ -= heat_radiated_out;
 
             /* Schedule radiation events for surrounding LPs */
-            for( auto direction = NORTH; direction < DIRECTION_MAX; direction++ ) {
+            for (unsigned int direction = NORTH; direction < DIRECTION_MAX; direction++) {
                 if (!connection_[direction]) continue;
-                response_events.emplace_back( new ForestEvent {find_cell(direction), 
-                                    RADIATION, heat_radiated_out/DIRECTION_MAX, 
-                                            received_event.ts_ + RADIATION_DELAY} );
+                response_events.emplace_back(
+                                    new ForestEvent {find_cell( (direction_t)direction ), 
+                                            RADIATION, heat_radiated_out/DIRECTION_MAX, 
+                                                    received_event.ts_ + RADIATION_DELAY} );
             }
 
             /* Check if cell has burnt out */
@@ -68,7 +74,7 @@ std::vector<std::shared_ptr<warped::Event> > Forest::receiveEvent(const warped::
                 state_.burn_status_ = BURNT_OUT;
 
             } else { /* Else schedule next radiation */
-                response_events.emplace_back( new ForestEvent {name_, 
+                response_events.emplace_back( new ForestEvent {lp_name(index_),
                         RADIATION_TIMER, received_event.ts_ + RADIATION_INTERVAL} );
             }
         } break;
@@ -80,7 +86,7 @@ std::vector<std::shared_ptr<warped::Event> > Forest::receiveEvent(const warped::
             /* Schedule Peak Event */
             unsigned int peak_time = received_event.ts_ + 
                         ((peak_threshold_ - ignition_threshold_) / heat_rate_);
-            response_events.emplace_back( new ForestEvent {name_, PEAK, peak_time} );
+            response_events.emplace_back( new ForestEvent {lp_name(index_), PEAK, 0, peak_time} );
         } break;
 
         case PEAK: {
@@ -89,7 +95,7 @@ std::vector<std::shared_ptr<warped::Event> > Forest::receiveEvent(const warped::
 
             /* Schedule first Radiation Timer */
             response_events.emplace_back( 
-                    new ForestEvent {name_, RADIATION_TIMER, received_event.ts_} );
+                    new ForestEvent {lp_name(index_), RADIATION_TIMER, 0, received_event.ts_} );
         } break;
     }
     return response_events;
@@ -151,14 +157,18 @@ std::string Forest::find_cell( direction_t direction ) {
     return lp_name( new_x + new_y * size_x_ );
 }
 
+bool neighbor_conn( direction_t direction, unsigned char **combustible_map   ) {
+
+    return true; //TODO
+}
 
 int main(int argc, char *argv[]) {
 
     /* Set the default values for the simulation arguments */
     std::string     vegetation_map      = "map_hawaii.bmp";
-    unsigned int    heat_rate           = 100;
+    unsigned int    heat_rate           = 15;
     double          radiation_fraction  = 0.05;
-    unsigned int    burnout_threshold   = 50;
+    unsigned int    burnout_threshold   = INITIAL_HEAT_CONTENT;
     unsigned int    fire_origin_x       = 500;
     unsigned int    fire_origin_y       = 501;
 
@@ -203,7 +213,7 @@ int main(int argc, char *argv[]) {
     warped::Simulation forest_sim {"Forest Simulation", argc, argv, args};
 
     /* Read the vegetation map */
-    FILE *fp = fopen(img_name.c_str(), "rb");
+    FILE *fp = fopen(vegetation_map.c_str(), "rb");
     if (!fp) throw "Incorrect name of vegetation map";
 
     /* Read the 54-byte header */
@@ -211,56 +221,85 @@ int main(int argc, char *argv[]) {
     fread(info, sizeof(unsigned char), 54, fp);
 
     /* Extract image height and width from header */
-    auto width  = *(unsigned int *)&info[18];
-    auto height = *(unsigned int *)&info[22];
+    unsigned int width  = 0, height = 0;
+    memcpy( &width, &info[18], sizeof(unsigned int) );
+    memcpy( &height, &info[22], sizeof(unsigned int) );
 
     unsigned int row_padded = (width*3 + 3) & (~3);
     unsigned char *data = new unsigned char[row_padded];
 
-    std::vector<Forest> lps;
+    /* Combustible map can have a value [0, 255], higher value means more combustible */
+    unsigned char **combustible_map = new unsigned char*[height];
 
-    for( unsigned int i = 0; i < height; i++ ) {
+    /* Verify the combustion index visually */
+    FILE *combustion_fp = fopen("combustion_index.map", "wb");
 
+    for (unsigned int i = 0; i < height; i++) {
+
+        combustible_map[i] = new unsigned char[width];
         fread(data, sizeof(unsigned char), row_padded, fp);
 
         for(unsigned int j = 0; j < width*3; j += 3) {
 
-            unsigned int index = i*width + j/3;
+            /* blue = data[j], green = data[j+1], red = data[j+2] */
+            /* Combustion weighted function - red > green >> blue */
+            combustible_map[i][j/3] = (data[j] + 8*data[j+1] + 9*data[j+2] ) / 18;
 
-            /* Placeholder equations for threshold calculation */
-            unsigned int ignition_threshold = 
-                std::static_cast<unsigned int>(data[j] + data[j+1] + data[j+2]);
-            unsigned int peak_threshold = ignition_threshold * 2;
-
-            /* Set The black squares ignition threshold to an unreachable number */
-            if(ignition_threshold == 0  && peak_threshold == 0){
-                ignition_threshold = 1000000;
-                peak_threshold = 10000000;
-            }   
-
-            std::string name = Forest::lp_name(index);
-            lps.emplace_back(name, width, height, ignition_threshold, heat_rate, 
-                                     peak_threshold, radiation_fraction, burnout_threshold, index);
- 
-            /* If the LP being created is the start of the fire then give it intial heat content */
-            if(i == burn_start_x && j == burn_start_y){
-                state_.heat_content_ = ignition_threshold_ + 10;
+            /* Set combustion index to 0 if combustion index is low */
+            /* OR combustion index and blue are both high - indicative of white areas */
+            if ( (combustible_map[i][j/3] < 100) || 
+                    (combustible_map[i][j/3] > 200 && data[j] > 200) ) {
+                combustible_map[i][j/3] = 0;
             }
+            fwrite(&combustible_map[i][j/3], sizeof(unsigned char), 1, combustion_fp);
         }
     }
     fclose(fp);
+    fclose(combustion_fp);
+
+    /* Create the LPs */
+    std::vector<Forest> lps;
+    for (unsigned int i = 0; i < height; i++) {
+        for (unsigned int j = 0; j < width; j++) {
+
+            if (!combustible_map[i][j]) continue;
+
+            /* Placeholder equations for threshold calculation */
+            unsigned int ignition_threshold = (unsigned int) combustible_map[i][j];
+            unsigned int peak_threshold     = ignition_threshold * PEAK_TO_IGN_THRES_RATIO;
+ 
+            /* Impart the initial heat content */
+            unsigned int heat_content = INITIAL_HEAT_CONTENT;
+            /* Heat content at fire's origin equals ignition point */
+            if ( (i == fire_origin_x) && (j == fire_origin_y) ){
+                heat_content = ignition_threshold;
+            }
+
+            unsigned int index = i*width + j;
+            lps.emplace_back(   width,
+                                height,
+                                combustible_map,
+                                ignition_threshold,
+                                heat_rate,
+                                peak_threshold,
+                                radiation_fraction,
+                                burnout_threshold,
+                                heat_content,
+                                index
+                            );
+        }
+    }
 
     std::vector<warped::LogicalProcess*> lp_pointers;
     for (auto& lp : lps) {
         lp_pointers.push_back(&lp);
     }
-
     forest_sim.simulate(lp_pointers);
 
     /* Post-simulation model statistics */
     unsigned int cells_burnt_cnt = 0;
     for(auto& lp: lps){
-        if( lp.state_.burn_status == BURNT_OUT ) {
+        if( lp.state_.burn_status_ == BURNT_OUT ) {
             cells_burnt_cnt++;
         }
     }
