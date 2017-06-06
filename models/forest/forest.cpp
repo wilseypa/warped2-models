@@ -23,7 +23,7 @@ std::vector<std::shared_ptr<warped::Event> > Forest::initializeLP() {
 
     /* If heat content exceeds ignition threshold, schedule ignition */
     if (state_.heat_content_ >= ignition_threshold_) {
-        events.emplace_back( new ForestEvent {lp_name(index_), IGNITION, 0, IGNITION_DELAY} );
+        events.emplace_back( new ForestEvent{lp_name(index_), IGNITION, 0, IGNITION_DELAY} );
     }
     return events;
 }
@@ -49,8 +49,9 @@ std::vector<std::shared_ptr<warped::Event> > Forest::receiveEvent(const warped::
             /* If heat exceeds ignition threshold and vegtation is unburnt, schedule ignition */
             if ( (state_.burn_status_ == UNBURNT) && 
                     (state_.heat_content_ >= ignition_threshold_) ) {
-                response_events.emplace_back( new ForestEvent {lp_name(index_),
-                                IGNITION, 0, received_event.ts_ + IGNITION_DELAY} );
+                unsigned int next_ts = received_event.ts_ + IGNITION_DELAY;
+                response_events.emplace_back(
+                        new ForestEvent{lp_name(index_), IGNITION, 0, next_ts} );
             }
         } break;
 
@@ -61,12 +62,12 @@ std::vector<std::shared_ptr<warped::Event> > Forest::receiveEvent(const warped::
             state_.heat_content_ -= heat_radiated_out;
 
             /* Schedule radiation events for surrounding LPs */
+            unsigned int next_ts = received_event.ts_ + RADIATION_DELAY;
             for (unsigned int direction = NORTH; direction < DIRECTION_MAX; direction++) {
                 if (!connection_[direction]) continue;
                 response_events.emplace_back(
-                                    new ForestEvent {find_cell( (direction_t)direction ), 
-                                            RADIATION, heat_radiated_out/DIRECTION_MAX, 
-                                                    received_event.ts_ + RADIATION_DELAY} );
+                            new ForestEvent{find_cell( (direction_t)direction ), 
+                                    RADIATION, heat_radiated_out/DIRECTION_MAX, next_ts} );
             }
 
             /* Check if cell has burnt out */
@@ -74,8 +75,9 @@ std::vector<std::shared_ptr<warped::Event> > Forest::receiveEvent(const warped::
                 state_.burn_status_ = BURNT_OUT;
 
             } else { /* Else schedule next radiation */
-                response_events.emplace_back( new ForestEvent {lp_name(index_),
-                        RADIATION_TIMER, received_event.ts_ + RADIATION_INTERVAL} );
+                next_ts = received_event.ts_ + RADIATION_INTERVAL;
+                response_events.emplace_back(
+                        new ForestEvent{lp_name(index_), RADIATION_TIMER, 0, next_ts} );
             }
         } break;
 
@@ -86,7 +88,7 @@ std::vector<std::shared_ptr<warped::Event> > Forest::receiveEvent(const warped::
             /* Schedule Peak Event */
             unsigned int peak_time = received_event.ts_ + 
                         ((peak_threshold_ - ignition_threshold_) / heat_rate_);
-            response_events.emplace_back( new ForestEvent {lp_name(index_), PEAK, 0, peak_time} );
+            response_events.emplace_back( new ForestEvent{lp_name(index_), PEAK, 0, peak_time} );
         } break;
 
         case PEAK: {
@@ -95,7 +97,7 @@ std::vector<std::shared_ptr<warped::Event> > Forest::receiveEvent(const warped::
 
             /* Schedule first Radiation Timer */
             response_events.emplace_back( 
-                    new ForestEvent {lp_name(index_), RADIATION_TIMER, 0, received_event.ts_} );
+                    new ForestEvent{lp_name(index_), RADIATION_TIMER, 0, received_event.ts_} );
         } break;
     }
     return response_events;
@@ -206,7 +208,7 @@ int main(int argc, char *argv[]) {
     vegetation_map      = vegetation_map_arg.getValue();
     heat_rate           = heat_rate_arg.getValue();
     radiation_fraction  = radiation_fraction_arg.getValue();
-    burnout_threshold   = burnout_threshold.getValue();
+    burnout_threshold   = burnout_threshold_arg.getValue();
     fire_origin_x       = fire_origin_x_arg.getValue();
     fire_origin_y       = fire_origin_y_arg.getValue();
 

@@ -76,7 +76,7 @@ class Forest : public warped::LogicalProcess{
 public:
     Forest( const unsigned int size_x,
             const unsigned int size_y,
-            const unsigned char *combustible_map[],
+            unsigned char **combustible_map,
             const unsigned int ignition_threshold,
             const unsigned int heat_rate,
             const unsigned int peak_threshold,
