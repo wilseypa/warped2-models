@@ -159,52 +159,106 @@ std::string Forest::find_cell( direction_t direction ) {
     return lp_name( new_x + new_y * size_x_ );
 }
 
-bool Forest::neighbor_conn( direction_t direction, unsigned char **combustible_map   ) {
+bool Forest::neighbor_conn( direction_t direction, unsigned char **combustible_map ) {
 
     unsigned int new_x = 0, new_y = 0;
     unsigned int current_y = index_ / size_x_;
     unsigned int current_x = index_ % size_x_;
 
+    /* Eliminate the boundary situations */
+    /* If LP is in the first row */
+    if (!current_y) {
+
+        /* NW, N and NE don't exist for the first row */
+        if (direction == NORTH_WEST || direction == NORTH || direction == NORTH_EAST) {
+            return false;
+        }
+
+        /* SW and W don't exist for LP at beginning of the first row */
+        if (!current_x && (direction == SOUTH_WEST || direction == WEST)) {
+            return false;
+        }
+
+        /* E and SE don't exist for LP at end of the first row */
+        if ((current_x == size_x_-1) && (direction == EAST || direction == SOUTH_EAST)) {
+            return false;
+        }
+    }
+
+    /* If LP is in the last row */
+    if (current_y == size_y_-1) {
+
+        /* SE, S and SW don't exist for the last row */
+        if (direction == SOUTH_EAST || direction == SOUTH || direction == SOUTH_WEST) {
+            return false;
+        }
+
+        /* W and NW don't exist for LP at beginning of the last row */
+        if (!current_x && (direction == WEST || direction == NORTH_WEST)) {
+            return false;
+        }
+
+        /* NE and E don't exist for LP at end of the last row */
+        if ((current_x == size_x_-1) && (direction == NORTH_EAST || direction == EAST)) {
+            return false;
+        }
+    }
+
+    /* If LP is in the first column and not on the first or last rows */
+    /* SW, W and NW don't exist for the first column */
+    if (!current_x && 
+            (direction == SOUTH_WEST || direction == WEST || direction == NORTH_WEST)) {
+        return false;
+    }
+
+    /* If LP is in the last column and not on the first or last rows */
+    /* NE, E and SE don't exist for the first column */
+    if ((current_x == size_x_-1) && 
+            (direction == NORTH_EAST || direction == EAST || direction == SOUTH_EAST)) {
+        return false;
+    }
+
+    /* Else LP is not looking for a neighbor outside of the grid limits */
     switch( direction ) {
 
         case NORTH: {
             new_x = current_x;
-            new_y = (current_y + size_y_ - 1) % size_y_;
+            new_y = current_y - 1;
         } break;
 
         case NORTH_EAST: {
-            new_x = (current_x + 1) % size_x_;
-            new_y = (current_y + size_y_ - 1) % size_y_;
+            new_x = current_x + 1;
+            new_y = current_y - 1;
         } break;
 
         case EAST: {
-            new_x = (current_x + 1) % size_x_;
+            new_x = current_x + 1;
             new_y = current_y;
         } break;
 
         case SOUTH_EAST: {
-            new_x = (current_x + 1) % size_x_;
-            new_y = (current_y + 1) % size_y_;
+            new_x = current_x + 1;
+            new_y = current_y + 1;
         } break;
 
         case SOUTH: {
             new_x = current_x;
-            new_y = (current_y + 1) % size_y_;
+            new_y = current_y + 1;
         } break;
 
         case SOUTH_WEST: {
-            new_x = (current_x + size_x_ - 1) % size_x_;
-            new_y = (current_y + 1) % size_y_;
+            new_x = current_x - 1;
+            new_y = current_y + 1;
         } break;
 
         case WEST: {
-            new_x = (current_x + size_x_ - 1) % size_x_;
+            new_x = current_x - 1;
             new_y = current_y;
         } break;
 
-     case NORTH_WEST: {
-            new_x = (current_x + size_x_ - 1) % size_x_;
-            new_y = (current_y + size_y_ - 1) % size_y_;
+        case NORTH_WEST: {
+            new_x = current_x - 1;
+            new_y = current_y - 1;
         } break;
 
         default: {
@@ -213,12 +267,10 @@ bool Forest::neighbor_conn( direction_t direction, unsigned char **combustible_m
         }
     }
 
-    if(combustible_map[new_x][new_y] == 0){
-        return false;
-    }
-    else{
-        return true;
-    }
+    /* If no LP exists for that grid position */
+    if (!combustible_map[new_x][new_y]) return false;
+
+    return true;
 }
 
 int main(int argc, char *argv[]) {
