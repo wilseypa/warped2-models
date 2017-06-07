@@ -329,7 +329,7 @@ int main(int argc, char *argv[]) {
 
     /* Read the 54-byte header */
     unsigned char info[54];
-    if ( !fread(info, sizeof(unsigned char), 54, fp) ) throw "Can't read the BMP header";
+    (void) fread(info, sizeof(unsigned char), 54, fp);
 
     /* Extract image height and width from header */
     unsigned int width  = 0, height = 0;
@@ -348,7 +348,7 @@ int main(int argc, char *argv[]) {
     for (unsigned int i = 0; i < height; i++) {
 
         combustible_map[i] = new unsigned char[width];
-        fread(data, sizeof(unsigned char), row_padded, fp);
+        (void) fread(data, sizeof(unsigned char), row_padded, fp);
 
         for(unsigned int j = 0; j < width*3; j += 3) {
 
@@ -362,9 +362,7 @@ int main(int argc, char *argv[]) {
                     (combustible_map[i][j/3] > 200 && data[j] > 200) ) {
                 combustible_map[i][j/3] = 0;
             }
-            if ( !fwrite(&combustible_map[i][j/3], sizeof(unsigned char), 1, combustion_fp) ) {
-                throw "Couldn't write the filtered image";
-            }
+            (void) fwrite(&combustible_map[i][j/3], sizeof(unsigned char), 1, combustion_fp);
         }
     }
     fclose(fp);
