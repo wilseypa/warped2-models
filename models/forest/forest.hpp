@@ -121,7 +121,7 @@ protected:
     const unsigned int  peak_threshold_;            // Max heat content threshold of an LP
     const unsigned int  radiation_fraction_;        // Heat fraction radiated out by a burning LP
     const unsigned int  burnout_threshold_;         // Heat content threshold for a burnt out LP
-    const bool          connection_[DIRECTION_MAX]; // True when LP exists in adjacent node
+    bool                connection_[DIRECTION_MAX]; // True when LP exists in adjacent node
     const unsigned int  index_;                     // Unique LP ID
 
     std::string find_cell( direction_t direction ); // Find adjacent cell in a certain direction

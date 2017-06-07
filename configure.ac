@@ -33,5 +33,6 @@ AC_CONFIG_FILES([models/airport/Makefile])
 AC_CONFIG_FILES([models/epidemic/Makefile])
 AC_CONFIG_FILES([models/traffic/Makefile])
 AC_CONFIG_FILES([models/volcano/Makefile])
+AC_CONFIG_FILES([models/forest/Makefile])
 
 AC_OUTPUT
