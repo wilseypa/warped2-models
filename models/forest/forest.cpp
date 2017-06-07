@@ -329,7 +329,7 @@ int main(int argc, char *argv[]) {
 
     /* Read the 54-byte header */
     unsigned char info[54];
-    fread(info, sizeof(unsigned char), 54, fp);
+    if ( !fread(info, sizeof(unsigned char), 54, fp) ) throw "Can't read the BMP header";
 
     /* Extract image height and width from header */
     unsigned int width  = 0, height = 0;
@@ -362,7 +362,9 @@ int main(int argc, char *argv[]) {
                     (combustible_map[i][j/3] > 200 && data[j] > 200) ) {
                 combustible_map[i][j/3] = 0;
             }
-            fwrite(&combustible_map[i][j/3], sizeof(unsigned char), 1, combustion_fp);
+            if ( !fwrite(&combustible_map[i][j/3], sizeof(unsigned char), 1, combustion_fp) ) {
+                throw "Couldn't write the filtered image";
+            }
         }
     }
     fclose(fp);
