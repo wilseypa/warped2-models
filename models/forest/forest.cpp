@@ -285,7 +285,7 @@ int main(int argc, char *argv[]) {
     TCLAP::ValueArg<std::string> vegetation_map_arg( "v", "vegetation-map", "Vegetation map",
                                                     false, vegetation_map, "string" );
 
-    TCLAP::ValueArg<unsigned int> heat_rate_arg( "h", "heat-rate", "Rate of fire growth",
+    TCLAP::ValueArg<unsigned int> heat_rate_arg( "g", "heat-rate", "Rate of fire growth",
                                                     false, heat_rate, "unsigned int" );
 
     TCLAP::ValueArg<double> radiation_fraction_arg( "r", "radiation-fraction",
@@ -327,7 +327,8 @@ int main(int argc, char *argv[]) {
 
     /* Read the 54-byte header */
     unsigned char info[54];
-    std::fread(info, sizeof(unsigned char), 54, fp);
+    auto size = fread(info, sizeof(unsigned char), 54, fp);
+    if (size != 54) assert(0);
 
     /* Extract image height and width from header */
     unsigned int width  = 0, height = 0;
@@ -340,13 +341,11 @@ int main(int argc, char *argv[]) {
     /* Combustible map can have a value [0, 255], higher value means more combustible */
     unsigned char **combustible_map = new unsigned char*[height];
 
-    /* Verify the combustion index visually */
-    FILE *combustion_fp = fopen("combustion_index.map", "wb");
-
     for (unsigned int i = 0; i < height; i++) {
 
         combustible_map[i] = new unsigned char[width];
-        std::fread(data, sizeof(unsigned char), row_padded, fp);
+        size = fread(data, sizeof(unsigned char), row_padded, fp);
+        if (size != row_padded) assert(0);
 
         for(unsigned int j = 0; j < width*3; j += 3) {
 
@@ -356,15 +355,20 @@ int main(int argc, char *argv[]) {
 
             /* Set combustion index to 0 if combustion index is low */
             /* OR combustion index and blue are both high - indicative of white areas */
-            if ( (combustible_map[i][j/3] < 100) || 
+            if ( (combustible_map[i][j/3] < 50) || 
                     (combustible_map[i][j/3] > 200 && data[j] > 200) ) {
                 combustible_map[i][j/3] = 0;
             }
-            std::fwrite(&combustible_map[i][j/3], sizeof(unsigned char), 1, combustion_fp);
         }
     }
     fclose(fp);
-    fclose(combustion_fp);
+
+    /* Verify the combustion index visually */
+    fp = fopen("combustion_index.pgm", "wb");
+    if (!fp) throw "Couldn't create filtered vegetation map";
+    fprintf(fp, "P5\n %s\n %d\n %d\n %d\n", "# Filtered Vegetation Map", width, height, 255);
+    fwrite(combustible_map, sizeof(combustible_map), 1, fp);
+    fclose(fp);
 
     /* Create the LPs */
     std::vector<Forest> lps;
