@@ -355,8 +355,8 @@ int main(int argc, char *argv[]) {
 
             /* Set combustion index to 0 if combustion index is low */
             /* OR combustion index and blue are both high - indicative of white areas */
-            if ( (combustible_map[i][j/3] < 50) || 
-                    (combustible_map[i][j/3] > 200 && data[j] > 200) ) {
+            if ( (combustible_map[i][j/3] < 50) ||
+                    (combustible_map[i][j/3] > 200  && data[j] > 200) ) {
                 combustible_map[i][j/3] = 0;
             }
         }
@@ -364,11 +364,17 @@ int main(int argc, char *argv[]) {
     fclose(fp);
 
     /* Verify the combustion index visually */
-    fp = fopen("combustion_index.pgm", "wb");
-    if (!fp) throw "Couldn't create filtered vegetation map";
-    fprintf(fp, "P5\n %s\n %d\n %d\n %d\n", "# Filtered Vegetation Map", width, height, 255);
-    fwrite(combustible_map, sizeof(combustible_map), 1, fp);
-    fclose(fp);
+    FILE *image = fopen("combustion_index.pgm", "wb");
+    fprintf(image, "P5\n %s\n %d\n %d\n %d\n", "# Filtered Vegetation Map", width, height, 255);
+
+    for(unsigned int i = 0; i<height; i++){
+        for(unsigned int j = 0; j<width; j++){
+            fwrite(&combustible_map[i][j], sizeof(unsigned char), 1, image);
+        }
+    }
+
+    fclose(image);
+
 
     /* Create the LPs */
     std::vector<Forest> lps;
