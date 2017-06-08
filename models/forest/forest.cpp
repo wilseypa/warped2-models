@@ -363,6 +363,18 @@ int main(int argc, char *argv[]) {
     }
     fclose(fp);
 
+    for(unsigned int row = 0; row < height/2; ++row){
+        for(unsigned int column = 0; column < width; ++column){
+            // each column from the first half is swapped
+            // with it correspondent from the second half
+            unsigned char tmp = combustible_map[row][column];
+            combustible_map[row][column] = combustible_map[height - row - 1][column];
+            combustible_map[height - row - 1][column] = tmp;
+        }
+    }
+    
+
+
     /* Verify the combustion index visually */
     FILE *image = fopen("combustion_index.pgm", "wb");
     fprintf(image, "P5\n %s\n %d\n %d\n %d\n", "# Filtered Vegetation Map", width, height, 255);
