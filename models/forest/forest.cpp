@@ -1,8 +1,6 @@
 /* Implementation of a Forest Fire Simulation */
 
 #include <cassert>
-#include <cstring>
-#include <random>
 #include "forest.hpp"
 #include "tclap/ValueArg.h"
 
@@ -329,7 +327,7 @@ int main(int argc, char *argv[]) {
 
     /* Read the 54-byte header */
     unsigned char info[54];
-    (void) fread(info, sizeof(unsigned char), 54, fp);
+    std::fread(info, sizeof(unsigned char), 54, fp);
 
     /* Extract image height and width from header */
     unsigned int width  = 0, height = 0;
@@ -348,7 +346,7 @@ int main(int argc, char *argv[]) {
     for (unsigned int i = 0; i < height; i++) {
 
         combustible_map[i] = new unsigned char[width];
-        (void) fread(data, sizeof(unsigned char), row_padded, fp);
+        std::fread(data, sizeof(unsigned char), row_padded, fp);
 
         for(unsigned int j = 0; j < width*3; j += 3) {
 
@@ -362,7 +360,7 @@ int main(int argc, char *argv[]) {
                     (combustible_map[i][j/3] > 200 && data[j] > 200) ) {
                 combustible_map[i][j/3] = 0;
             }
-            (void) fwrite(&combustible_map[i][j/3], sizeof(unsigned char), 1, combustion_fp);
+            std::fwrite(&combustible_map[i][j/3], sizeof(unsigned char), 1, combustion_fp);
         }
     }
     fclose(fp);
