@@ -363,6 +363,7 @@ int main(int argc, char *argv[]) {
     }
     fclose(fp);
 
+    /* Re-orienting the gray scale picture */
     for(unsigned int row = 0; row < height/2; ++row){
         for(unsigned int column = 0; column < width; ++column){
             // each column from the first half is swapped
