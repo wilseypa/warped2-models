@@ -357,6 +357,11 @@ int main(int argc, char *argv[]) {
             /* OR combustion index and blue are both high - indicative of white areas */
             if ( (combustible_map[i][j/3] < 50) ||
                     (combustible_map[i][j/3] > 200  && data[j] > 200) ) {
+                /* Ensuring the dark green Pixels are not turned to black */ 
+                if(data[j+1] >= 50 && data[j+1] <= 105 && data[j] < 55 && data[j+2] < 55){
+                    continue;
+                }
+
                 combustible_map[i][j/3] = 0;
             }
         }
@@ -431,12 +436,11 @@ int main(int argc, char *argv[]) {
     /* Post-simulation model statistics */
     unsigned int cells_burnt_cnt = 0;
     for(auto& lp: lps){
-        if( lp.state_.burn_status_ == BURNT_OUT ) {
+        if( lp.state_.burn_status_ == UNBURNT) {
             cells_burnt_cnt++;
         }
     }
     std::cout << "Total cells burnt = " << cells_burnt_cnt << std::endl;
 
     return 0;
-
 }
