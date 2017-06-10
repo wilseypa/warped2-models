@@ -341,10 +341,10 @@ int main(int argc, char *argv[]) {
     /* Combustible map can have a value [0, 255], higher value means more combustible */
     unsigned char **combustible_map = new unsigned char*[height];
 
-    for (unsigned int i = 0; i < height; i++) {
+    for (unsigned int i = height-1; i < height; i--) {
 
         combustible_map[i] = new unsigned char[width];
-        size = fread(data, sizeof(unsigned char), row_padded, fp);
+        auto size = fread(data, sizeof(unsigned char), row_padded, fp);
         if (size != row_padded) assert(0);
 
         for(unsigned int j = 0; j < width*3; j += 3) {
@@ -368,31 +368,15 @@ int main(int argc, char *argv[]) {
     }
     fclose(fp);
 
-    /* Re-orienting the gray scale picture */
-    for(unsigned int row = 0; row < height/2; ++row){
-        for(unsigned int column = 0; column < width; ++column){
-            // each column from the first half is swapped
-            // with it correspondent from the second half
-            unsigned char tmp = combustible_map[row][column];
-            combustible_map[row][column] = combustible_map[height - row - 1][column];
-            combustible_map[height - row - 1][column] = tmp;
-        }
-    }
-    
-
-
     /* Verify the combustion index visually */
-    FILE *image = fopen("combustion_index.pgm", "wb");
-    fprintf(image, "P5\n %s\n %d\n %d\n %d\n", "# Filtered Vegetation Map", width, height, 255);
-
-    for(unsigned int i = 0; i<height; i++){
-        for(unsigned int j = 0; j<width; j++){
-            fwrite(&combustible_map[i][j], sizeof(unsigned char), 1, image);
-        }
+    std::ofstream os( "filtered_vegetation_map.pgm",
+            std::ios_base::out | std::ios_base::binary | std::ios_base::trunc );
+    if (!os) assert(0);
+    os << "P5\n" << width << " " << height << "\n255\n";
+    for (unsigned int i = 0; i < height; i++) {
+        os.write( reinterpret_cast<const char*>(combustible_map[i]), width );
     }
-
-    fclose(image);
-
+    os.close();
 
     /* Create the LPs */
     std::vector<Forest> lps;
@@ -435,8 +419,8 @@ int main(int argc, char *argv[]) {
 
     /* Post-simulation model statistics */
     unsigned int cells_burnt_cnt = 0;
-    for(auto& lp: lps){
-        if( lp.state_.burn_status_ == UNBURNT) {
+    for (auto& lp: lps){
+        if (lp.state_.burn_status_ == BURNT_OUT) {
             cells_burnt_cnt++;
         }
     }
