@@ -3,6 +3,8 @@
 #include <cassert>
 #include "forest.hpp"
 #include "tclap/ValueArg.h"
+#include <fstream>
+#include <sstream>
 
 /* Event timer delays */
 #define IGNITION_DELAY              1
@@ -274,15 +276,15 @@ bool Forest::neighbor_conn( direction_t direction, unsigned char **combustible_m
 int main(int argc, char *argv[]) {
 
     /* Set the default values for the simulation arguments */
-    std::string     vegetation_map      = "map_hawaii.bmp";
+    std::string     vegetation_map      = "last-pic.pgm";
     unsigned int    heat_rate           = 15;
     double          radiation_fraction  = 0.05;
     unsigned int    burnout_threshold   = INITIAL_HEAT_CONTENT;
-    unsigned int    fire_origin_x       = 500;
-    unsigned int    fire_origin_y       = 501;
+    unsigned int    fire_origin_x       = 260;
+    unsigned int    fire_origin_y       = 260;
 
     /* Read any simulation arguments (if provided) */
-    TCLAP::ValueArg<std::string> vegetation_map_arg( "v", "vegetation-map", "Vegetation map",
+    TCLAP::ValueArg<std::string> vegetation_map_arg( "", "vegetation-map", "Vegetation map",
                                                     false, vegetation_map, "string" );
 
     TCLAP::ValueArg<unsigned int> heat_rate_arg( "g", "heat-rate", "Rate of fire growth",
@@ -321,67 +323,66 @@ int main(int argc, char *argv[]) {
 
     warped::Simulation forest_sim {"Forest Simulation", argc, argv, args};
 
-    /* Read the vegetation map */
-    FILE *fp = fopen(vegetation_map.c_str(), "rb");
-    if (!fp) throw "Incorrect name of vegetation map";
 
-    /* Read the 54-byte header */
-    unsigned char info[54];
-    auto size = fread(info, sizeof(unsigned char), 54, fp);
-    if (size != 54) assert(0);
 
-    /* Extract image height and width from header */
-    unsigned int width  = 0, height = 0;
-    memcpy( &width, &info[18], sizeof(unsigned int) );
-    memcpy( &height, &info[22], sizeof(unsigned int) );
 
-    unsigned int row_padded = (width*3 + 3) & (~3);
-    unsigned char *data = new unsigned char[row_padded];
 
-    /* Combustible map can have a value [0, 255], higher value means more combustible */
-    unsigned char **combustible_map = new unsigned char*[height];
+    unsigned int row = 0, col = 0, numrows = 0, numcols = 0;
+    std::string comment;
+    std::ifstream infile(vegetation_map);
+    std::stringstream ss;
+    std::string inputLine = "";
 
-    for (unsigned int i = height-1; i < height; i--) {
+    /* First line : version */
+    getline(infile,inputLine);
+    std::cout << "Version : " << inputLine << std::endl;
 
-        combustible_map[i] = new unsigned char[width];
-        auto size = fread(data, sizeof(unsigned char), row_padded, fp);
-        if (size != row_padded) assert(0);
+    ss << infile.rdbuf();
+    ss >> comment;
+ 
+    /* Some png files have comments in their header
+    and others do not, Checking for comment */
+    if(comment[0] == '#'){
+        /* Retrieving the Comment */
+        std::cout << "Comment : " << comment << std::endl;
+        /* Third line : size */
+        ss << infile.rdbuf();
+        ss >> numcols >> numrows;
+        std::cout << numcols << " columns and " << numrows << " rows" << std::endl;
+    }
+    else{
+        /* No comment so Second line : size */
+        ss >> numcols >> numrows;
+        numrows = numcols;
+        numcols = std::stoi(comment);
+        std::cout << numcols << " columns and " << numrows << " rows" << std::endl;
+    }
 
-        for(unsigned int j = 0; j < width*3; j += 3) {
-
-            /* blue = data[j], green = data[j+1], red = data[j+2] */
-            /* Combustion weighted function - red > green >> blue */
-            combustible_map[i][j/3] = (data[j] + 8*data[j+1] + 9*data[j+2] ) / 18;
+    unsigned char **combustible_map = new unsigned char*[numrows];
+    // Following lines : data
+    for(row = 0; row < numrows; ++row){
+        combustible_map[row] = new unsigned char[numcols];
+        for (col = 0; col < numcols; ++col){
+            ss >> combustible_map[row][col];
+            //std::cout << (int)combustible_map[row][col] << std::endl;
 
             /* Set combustion index to 0 if combustion index is low */
             /* OR combustion index and blue are both high - indicative of white areas */
-            if ( (combustible_map[i][j/3] < 50) ||
-                    (combustible_map[i][j/3] > 200  && data[j] > 200) ) {
-                /* Ensuring the dark green Pixels are not turned to black */ 
-                if(data[j+1] >= 50 && data[j+1] <= 105 && data[j] < 55 && data[j+2] < 55){
-                    continue;
-                }
-
-                combustible_map[i][j/3] = 0;
+            if ( (combustible_map[row][col] < 50) ||
+                          (combustible_map[row][col] > 230)){
+                combustible_map[row][col] = 0;
             }
+
         }
     }
-    fclose(fp);
+    infile.close();
 
-    /* Verify the combustion index visually */
-    std::ofstream os( "filtered_vegetation_map.pgm",
-            std::ios_base::out | std::ios_base::binary | std::ios_base::trunc );
-    if (!os) assert(0);
-    os << "P5\n" << width << " " << height << "\n255\n";
-    for (unsigned int i = 0; i < height; i++) {
-        os.write( reinterpret_cast<const char*>(combustible_map[i]), width );
-    }
-    os.close();
+
 
     /* Create the LPs */
     std::vector<Forest> lps;
-    for (unsigned int i = 0; i < height; i++) {
-        for (unsigned int j = 0; j < width; j++) {
+    for (unsigned int i = 0; i < numrows; i++) {
+        for (unsigned int j = 0; j < numcols; j++) {
 
             if (!combustible_map[i][j]) continue;
 
@@ -396,9 +397,9 @@ int main(int argc, char *argv[]) {
                 heat_content = ignition_threshold;
             }
 
-            unsigned int index = i*width + j;
-            lps.emplace_back(   width,
-                                height,
+            unsigned int index = i*numcols + j;
+            lps.emplace_back(   numcols,
+                                numrows,
                                 combustible_map,
                                 ignition_threshold,
                                 heat_rate,
