@@ -368,16 +368,31 @@ int main(int argc, char *argv[]) {
 
             /* Set combustion index to 0 if combustion index is low */
             /* OR combustion index and blue are both high - indicative of white areas */
-            if ( (combustible_map[row][col] < 50) ||
-                          (combustible_map[row][col] > 230)){
+            if ( (combustible_map[row][col] < 10) ||
+                          (combustible_map[row][col] > 250)){
                 combustible_map[row][col] = 0;
             }
+
+            if ( (combustible_map[row][col] < 80) &&
+                          (combustible_map[row][col] > 70)){
+                combustible_map[row][col] = 255;
+            }
+
 
         }
     }
     infile.close();
 
 
+    /* Verify the combustion index visually */
+    std::ofstream os( "filtered_vegetation_map.pgm",
+           std::ios_base::out | std::ios_base::binary | std::ios_base::trunc );
+    if (!os) assert(0);
+        os << "P5\n" << numcols << " " << numrows << "\n255\n";
+        for (unsigned int i = 0; i < numrows; i++) {
+            os.write( reinterpret_cast<const char*>(combustible_map[i]), numcols );
+        }
+    os.close(); 
 
     /* Create the LPs */
     std::vector<Forest> lps;
