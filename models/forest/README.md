@@ -12,8 +12,8 @@ forest fire mode was developed using heat diffusion, with the idea that each LP 
 map will ignite only when its heat content reaches a certain threshold determined by pixel in 
 the vegetation that correlates to the respective LP.
 
-1. Vegetation maps
-    - Reading the pixel value and assigning its attributes to an LP
+1. Wildfire Susceptibility maps
+    - Reading the gray scale pixel value and assigning its attributes to an LP
     Pixel values will affect
     + Ignition threshold -  the amount of heat needed by an LP to ignite
     + Peak threshold - the amount of heat the LP needs to reach before it starts to decay
