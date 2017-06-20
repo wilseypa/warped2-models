@@ -276,7 +276,7 @@ bool Forest::neighbor_conn( direction_t direction, unsigned char **combustible_m
 int main(int argc, char *argv[]) {
 
     /* Set the default values for the simulation arguments */
-    std::string     vegetation_map      = "last-pic.pgm";
+    std::string     vegetation_map      = "Wildfire_Risk.ppm";
     unsigned int    heat_rate           = 15;
     double          radiation_fraction  = 0.05;
     unsigned int    burnout_threshold   = INITIAL_HEAT_CONTENT;
@@ -328,47 +328,42 @@ int main(int argc, char *argv[]) {
 
 
     unsigned int row = 0, col = 0, numrows = 0, numcols = 0;
-    std::string comment;
     std::ifstream infile(vegetation_map);
     std::stringstream ss;
     std::string inputLine = "";
+    std::string comment;
 
     /* First line : version */
     getline(infile,inputLine);
     std::cout << "Version : " << inputLine << std::endl;
 
-    ss << infile.rdbuf();
-    ss >> comment;
- 
+    getline(infile,inputLine); 
     /* Some png files have comments in their header
     and others do not, Checking for comment */
-    if(comment[0] == '#'){
+    if(inputLine[0] == '#'){
         /* Retrieving the Comment */
-        std::cout << "Comment : " << comment << std::endl;
+        std::cout << "Comment : " << inputLine << std::endl;
         /* Third line : size */
         ss << infile.rdbuf();
         ss >> numcols >> numrows;
-        std::cout << numcols << " columns and " << numrows << " rows" << std::endl;
+        
+        std::cout << numcols<< " columns and " << numrows << " rows" << std::endl;
     }
     else{
-        /* No comment so Second line : size */
-        ss >> numcols >> numrows;
-        numrows = numcols;
-        numcols = std::stoi(comment);
-        std::cout << numcols << " columns and " << numrows << " rows" << std::endl;
+        std::cout<<"The File format does is not a P6 format" <<std::endl;
     }
 
     unsigned char **combustible_map = new unsigned char*[numrows];
     // Following lines : data
     for(row = 0; row < numrows; ++row){
         combustible_map[row] = new unsigned char[numcols];
-        for (col = 0; col < numcols; ++col){
+        for (col = 0; col < numcols * 3; col+=3){
             ss >> combustible_map[row][col];
-            //std::cout << (int)combustible_map[row][col] << std::endl;
+//            std::cout << (int)combustible_map[row][col] << std::endl;
 
             /* Set combustion index to 0 if combustion index is low */
             /* OR combustion index and blue are both high - indicative of white areas */
-            if ( (combustible_map[row][col] < 10) ||
+/*            if ( (combustible_map[row][col] < 10) ||
                           (combustible_map[row][col] > 250)){
                 combustible_map[row][col] = 0;
             }
@@ -377,7 +372,7 @@ int main(int argc, char *argv[]) {
                           (combustible_map[row][col] > 70)){
                 combustible_map[row][col] = 255;
             }
-
+*/
 
         }
     }
