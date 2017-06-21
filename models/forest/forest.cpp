@@ -273,6 +273,7 @@ bool Forest::neighbor_conn( direction_t direction, unsigned char **combustible_m
     return true;
 }
 
+
 int main(int argc, char *argv[]) {
 
     /* Set the default values for the simulation arguments */
@@ -389,6 +390,8 @@ int main(int argc, char *argv[]) {
         }
     os.close(); 
 
+
+
     /* Create the LPs */
     std::vector<Forest> lps;
     for (unsigned int i = 0; i < numrows; i++) {
@@ -403,7 +406,17 @@ int main(int argc, char *argv[]) {
             /* Impart the initial heat content */
             unsigned int heat_content = INITIAL_HEAT_CONTENT;
             /* Heat content at fire's origin equals ignition point */
-            if ( (i == fire_origin_x) && (j == fire_origin_y) ){
+            /* Starts the fire at the specified origin and at the eight LPs adjacent to it */
+            if ( (i == fire_origin_x && j == fire_origin_y)|| /* Original Pixel */
+                 (i == fire_origin_x && j == fire_origin_y - 1)||/* North */
+                 (i == fire_origin_x + 1 && j == fire_origin_y - 1)|| /* Northeast */
+                 (i == fire_origin_x + 1 && j == fire_origin_y)||/* East */
+                 (i == fire_origin_x + 1 && j == fire_origin_y + 1)||/* Southeast */
+                 (i == fire_origin_x && j == fire_origin_y + 1)||/* South */
+                 (i == fire_origin_x - 1 && j == fire_origin_y + 1)||/* Southwest */
+                 (i == fire_origin_x - 1 && j == fire_origin_y)||/* West */
+                 (i == fire_origin_x - 1 && j == fire_origin_y - 1)){ /* Northwest */
+                 
                 heat_content = ignition_threshold;
             }
 
