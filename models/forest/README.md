@@ -38,3 +38,7 @@ triggered signifying that the fire has burned out.
 
 ##References :
 
+Rougly based upon the Rothermel wildfire spread model
+
+[1] Scott, Joe H. 2012. Introduction to Wildfire Behavior Modeling. National Interagency
+Fuels, Fire, & Vegetation Technology Transfer. Available: www.niftt.gov.
