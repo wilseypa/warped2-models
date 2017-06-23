@@ -433,12 +433,28 @@ int main(int argc, char *argv[]) {
     wildfire_sim.simulate(lp_pointers);
 
     /* Post-simulation model statistics */
+    auto status_map = new ppm(size_y, size_x);
     unsigned int cells_burnt_cnt = 0;
     for (auto& lp: lps) {
-        if (lp.state_.burn_status_ == BURNT_OUT) {
+        auto status = lp.state_.burn_status_;
+        auto i = lp.index_;
+        if (status == BURNT_OUT) {
             cells_burnt_cnt++;
+            status_map->r[i] = 255;
+            status_map->g[i] = 255;
+            status_map->b[i] = 255;
+
+        } else if (status == BURNING) {
+            status_map->r[i] = 255;
+
+        } else { /* status == UNBURNT */
+            status_map->r[i] = lp.ignition_threshold_;
+            status_map->g[i] = 255;
         }
     }
+    status_map->write("post_wildfire_status.ppm");
+    delete status_map;
+
     std::cout << "Total cells burnt = " << cells_burnt_cnt << std::endl;
 
     return 0;

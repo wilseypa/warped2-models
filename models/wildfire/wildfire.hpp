@@ -111,7 +111,6 @@ public:
     CellState state_;
     static inline std::string lp_name( const unsigned int );
 
-protected:
     const unsigned int  size_x_;                    // Width of the vegetation grid
     const unsigned int  size_y_;                    // Height of the vegetation grid
     const unsigned int  ignition_threshold_;        // Min heat content needed to ignite an LP
