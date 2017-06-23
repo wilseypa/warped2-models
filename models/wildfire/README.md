@@ -12,7 +12,7 @@ heat diffusion across cells or LPs starting from the origin of the fire. Cells i
 when its heat content reaches a certain ignition threshold (calculated using pixel 
 color of that cell on the vegetation map).
 
-The model is loosely-based on the Rothermel Wildfire Spread Model.
+The model is loosely-based on the Rothermel Wildfire Spread Model [1].
 
 ## Details : ##
 
