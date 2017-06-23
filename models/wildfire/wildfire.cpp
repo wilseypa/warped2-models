@@ -4,8 +4,6 @@
 #include "wildfire.hpp"
 #include "ppm.hpp"
 #include "tclap/ValueArg.h"
-#include <fstream>
-#include <sstream>
 
 /* Event timer delays */
 #define IGNITION_DELAY              1
@@ -15,6 +13,7 @@
 /* Combustion parameters */
 #define PEAK_TO_IGN_THRES_RATIO     3
 #define INITIAL_HEAT_CONTENT        20
+#define ORIGIN_RADIUS               1
 
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(CellEvent)
 
@@ -339,28 +338,43 @@ int main(int argc, char *argv[]) {
         if (!col) {
             combustible_map[row] = new unsigned char[size_y];
         }
-        combustible_map[row][col] =
-            (9*vegetation->r[i] + 5*vegetation->g[i] + vegetation->b[i]) / 15;
 
-        /* Filter unwanted pixels by setting combustion index to 0 if :
-           1. pixel is black
-           2. pixel is white i.e. high combustion index and high blue
-           3. pixel indiates rocks i.e. highly reddish
-           4. pixel indicates other non-vegetative features suchas pink for houses
+        /*  Filter unwanted pixels by setting combustion index to 0 if :
+                1. pixel is black
+                2. pixel is white
+                3. pixel indiates rocks i.e. highly reddish
+                4. pixel indicates other non-vegetative features suchas pink for houses
+                5. pixel indicates water i.e. highly blue
+            Else,
+                Use <Red,Green> weighted function to calculate combustion index
          */
-        if (combustible_map[row][col] < 10) {
+        if (        (vegetation->r[i] < 20 ) &&
+                    (vegetation->g[i] < 20 ) &&
+                    (vegetation->b[i] < 20 )    ) {
             combustible_map[row][col] = 0;
         
-        } else if ( (combustible_map[row][col] > 200) && (vegetation->b[i] > 200) ) {
-            combustible_map[row][col] = 0;
-
-        } else if ( (combustible_map[row][col] > 50) && (vegetation->r[i] > 200) ) {
+        } else if ( (vegetation->r[i] > 200) &&
+                    (vegetation->g[i] > 200) &&
+                    (vegetation->b[i] > 200)    ) {
             combustible_map[row][col] = 0;
 
         } else if ( (vegetation->r[i] > 200) &&
-                    (vegetation->g[i] < 10 ) &&
+                    (vegetation->g[i] < 20 ) &&
+                    (vegetation->b[i] < 20 )    ) {
+            combustible_map[row][col] = 0;
+
+        } else if ( (vegetation->r[i] > 200) &&
+                    (vegetation->g[i] < 20 ) &&
                     (vegetation->b[i] > 200)    ) {
             combustible_map[row][col] = 0;
+
+        } else if ( (vegetation->r[i] < 20 ) &&
+                    (vegetation->g[i] < 20 ) &&
+                    (vegetation->b[i] > 200)    ) {
+            combustible_map[row][col] = 0;
+
+        } else {
+            combustible_map[row][col] = (9*vegetation->r[i] + 7*vegetation->g[i]) / 16;
         }
     }
     delete vegetation;
@@ -388,18 +402,12 @@ int main(int argc, char *argv[]) {
  
             /* Impart the initial heat content */
             unsigned int heat_content = INITIAL_HEAT_CONTENT;
+
             /* Heat content at fire's origin equals ignition point */
-            /* Starts the fire at the specified origin and at the eight LPs adjacent to it */
-            if ( (i == fire_origin_x && j == fire_origin_y)|| /* Original Pixel */
-                 (i == fire_origin_x && j == fire_origin_y - 1)||/* North */
-                 (i == fire_origin_x + 1 && j == fire_origin_y - 1)|| /* Northeast */
-                 (i == fire_origin_x + 1 && j == fire_origin_y)||/* East */
-                 (i == fire_origin_x + 1 && j == fire_origin_y + 1)||/* Southeast */
-                 (i == fire_origin_x && j == fire_origin_y + 1)||/* South */
-                 (i == fire_origin_x - 1 && j == fire_origin_y + 1)||/* Southwest */
-                 (i == fire_origin_x - 1 && j == fire_origin_y)||/* West */
-                 (i == fire_origin_x - 1 && j == fire_origin_y - 1)){ /* Northwest */
-                 
+            /* Origin of fire is a square patch whose center is a configurable parameter */
+            unsigned int diff_x = std::abs(i-fire_origin_x);
+            unsigned int diff_y = std::abs(j-fire_origin_y);
+            if ( (diff_x <= ORIGIN_RADIUS) && (diff_y <= ORIGIN_RADIUS) ) {
                 heat_content = ignition_threshold;
             }
 
@@ -426,7 +434,7 @@ int main(int argc, char *argv[]) {
 
     /* Post-simulation model statistics */
     unsigned int cells_burnt_cnt = 0;
-    for (auto& lp: lps){
+    for (auto& lp: lps) {
         if (lp.state_.burn_status_ == BURNT_OUT) {
             cells_burnt_cnt++;
         }
