@@ -433,8 +433,9 @@ int main(int argc, char *argv[]) {
     wildfire_sim.simulate(lp_pointers);
 
     /* Post-simulation model statistics */
+    /* Also print the post-wildfire vegetation map */
     auto status_map = new ppm(size_y, size_x);
-    unsigned int cells_burnt_cnt = 0;
+    unsigned int cells_burnt_cnt = 0, cells_burning_cnt = 0;
     for (auto& lp: lps) {
         auto status = lp.state_.burn_status_;
         auto i = lp.index_;
@@ -445,6 +446,7 @@ int main(int argc, char *argv[]) {
             status_map->b[i] = 255;
 
         } else if (status == BURNING) {
+            cells_burning_cnt++;
             status_map->r[i] = 255;
 
         } else { /* status == UNBURNT */
@@ -455,7 +457,15 @@ int main(int argc, char *argv[]) {
     status_map->write("post_wildfire_status.ppm");
     delete status_map;
 
-    std::cout << "Total cells burnt = " << cells_burnt_cnt << std::endl;
+    std::cout << "Wildfire Statistics :" << std::endl;
+
+    float cells_burning_frac = static_cast<float>(cells_burning_cnt) / lps.size();
+    std::cout << "\tCells burning = " << cells_burning_frac*100 << "%" << std::endl;
+
+    float cells_burnt_frac = static_cast<float>(cells_burnt_cnt) / lps.size();
+    std::cout << "\tCells burnt   = " <<   cells_burnt_frac*100 << "%" << std::endl;
+
+    std::cout << std::endl;
 
     return 0;
 }
