@@ -270,6 +270,7 @@ bool Cell::neighbor_conn( direction_t direction, unsigned char **combustible_map
     /* If no LP exists for that grid position */
     if (!combustible_map[new_x][new_y]) return false;
 
+
     return true;
 }
 
@@ -315,6 +316,8 @@ int main(int argc, char *argv[]) {
                                         &fire_origin_y_arg
                                     };
 
+    warped::Simulation wildfire_sim {"Wildfire Simulation", argc, argv, args};
+ 
     vegetation_map      = vegetation_map_arg.getValue();
     heat_rate           = heat_rate_arg.getValue();
     radiation_fraction  = radiation_fraction_arg.getValue();
@@ -322,7 +325,6 @@ int main(int argc, char *argv[]) {
     fire_origin_x       = fire_origin_x_arg.getValue();
     fire_origin_y       = fire_origin_y_arg.getValue();
 
-    warped::Simulation wildfire_sim {"Wildfire Simulation", argc, argv, args};
 
     /* Read the vegetation map */
     auto vegetation = new ppm();
