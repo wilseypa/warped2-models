@@ -13,7 +13,7 @@
 #define RADIATION_INTERVAL          5
 
 /* Combustion parameters */
-#define PEAK_TO_IGN_THRES_RATIO     2
+#define PEAK_TO_IGN_THRES_RATIO     3
 #define INITIAL_HEAT_CONTENT        20
 
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(CellEvent)
@@ -278,7 +278,7 @@ bool Cell::neighbor_conn( direction_t direction, unsigned char **combustible_map
 int main(int argc, char *argv[]) {
 
     /* Set the default values for the simulation arguments */
-    std::string     vegetation_map      = "Wildfire_Risk.ppm";
+    std::string     vegetation_map      = "test_vegetation_map.ppm";
     unsigned int    heat_rate           = 15;
     double          radiation_fraction  = 0.05;
     unsigned int    burnout_threshold   = INITIAL_HEAT_CONTENT;
@@ -286,7 +286,7 @@ int main(int argc, char *argv[]) {
     unsigned int    fire_origin_y       = 260;
 
     /* Read any simulation arguments (if provided) */
-    TCLAP::ValueArg<std::string> vegetation_map_arg( "", "vegetation-map", "Vegetation map",
+    TCLAP::ValueArg<std::string> vegetation_map_arg( "m", "vegetation-map", "Vegetation map",
                                                     false, vegetation_map, "string" );
 
     TCLAP::ValueArg<unsigned int> heat_rate_arg( "g", "heat-rate", "Rate of fire growth",
@@ -325,78 +325,60 @@ int main(int argc, char *argv[]) {
 
     warped::Simulation wildfire_sim {"Wildfire Simulation", argc, argv, args};
 
+    /* Read the vegetation map */
+    auto vegetation = new ppm();
+    vegetation->read(vegetation_map);
+    unsigned int size_y = vegetation->width;
+    unsigned int size_x = vegetation->height;
 
+    /* Populate the combustion map */
+    unsigned char **combustible_map = new unsigned char*[size_x];
+    for (unsigned int i = 0; i < vegetation->size; i++) {
+        unsigned int row = i / size_y;
+        unsigned int col = i % size_y;
+        if (!col) {
+            combustible_map[row] = new unsigned char[size_y];
+        }
+        combustible_map[row][col] =
+            (9*vegetation->r[i] + 5*vegetation->g[i] + vegetation->b[i]) / 15;
 
-
-
-    unsigned int row = 0, col = 0, numrows = 0, numcols = 0;
-    std::ifstream infile(vegetation_map);
-    std::stringstream ss;
-    std::string inputLine = "";
-    std::string comment;
-
-    /* First line : version */
-    getline(infile,inputLine);
-    std::cout << "Version : " << inputLine << std::endl;
-
-    getline(infile,inputLine); 
-    /* Some png files have comments in their header
-    and others do not, Checking for comment */
-    if(inputLine[0] == '#'){
-        /* Retrieving the Comment */
-        std::cout << "Comment : " << inputLine << std::endl;
-        /* Third line : size */
-        ss << infile.rdbuf();
-        ss >> numcols >> numrows;
+        /* Filter unwanted pixels by setting combustion index to 0 if :
+           1. pixel is black
+           2. pixel is white i.e. high combustion index and high blue
+           3. pixel indiates rocks i.e. highly reddish
+           4. pixel indicates other non-vegetative features suchas pink for houses
+         */
+        if (combustible_map[row][col] < 10) {
+            combustible_map[row][col] = 0;
         
-        std::cout << numcols<< " columns and " << numrows << " rows" << std::endl;
-    }
-    else{
-        std::cout<<"The File format does is not a P6 format" <<std::endl;
-    }
+        } else if ( (combustible_map[row][col] > 200) && (vegetation->b[i] > 200) ) {
+            combustible_map[row][col] = 0;
 
-    unsigned char **combustible_map = new unsigned char*[numrows];
-    // Following lines : data
-    for(row = 0; row < numrows; ++row){
-        combustible_map[row] = new unsigned char[numcols];
-        for (col = 0; col < numcols * 3; col+=3){
-            ss >> combustible_map[row][col];
-//            std::cout << (int)combustible_map[row][col] << std::endl;
+        } else if ( (combustible_map[row][col] > 50) && (vegetation->r[i] > 200) ) {
+            combustible_map[row][col] = 0;
 
-            /* Set combustion index to 0 if combustion index is low */
-            /* OR combustion index and blue are both high - indicative of white areas */
-/*            if ( (combustible_map[row][col] < 10) ||
-                          (combustible_map[row][col] > 250)){
-                combustible_map[row][col] = 0;
-            }
-
-            if ( (combustible_map[row][col] < 80) &&
-                          (combustible_map[row][col] > 70)){
-                combustible_map[row][col] = 255;
-            }
-*/
-
+        } else if ( (vegetation->r[i] > 200) &&
+                    (vegetation->g[i] < 10 ) &&
+                    (vegetation->b[i] > 200)    ) {
+            combustible_map[row][col] = 0;
         }
     }
-    infile.close();
-
+    delete vegetation;
 
     /* Verify the combustion index visually */
-    std::ofstream os( "filtered_vegetation_map.pgm",
+    std::ofstream ofs( "filtered_vegetation_map.pgm",
            std::ios_base::out | std::ios_base::binary | std::ios_base::trunc );
-    if (!os) assert(0);
-        os << "P5\n" << numcols << " " << numrows << "\n255\n";
-        for (unsigned int i = 0; i < numrows; i++) {
-            os.write( reinterpret_cast<const char*>(combustible_map[i]), numcols );
-        }
-    os.close(); 
-
-
+    if (!ofs) assert(0);
+    ofs << "P5\n" << size_y << " " << size_x << "\n255\n";
+    for (unsigned int i = 0; i < size_x; i++) {
+        ofs.write( reinterpret_cast<const char*>(combustible_map[i]), size_y );
+    }
+    ofs.close();
 
     /* Create the LPs */
     std::vector<Cell> lps;
-    for (unsigned int i = 0; i < numrows; i++) {
-        for (unsigned int j = 0; j < numcols; j++) {
+    for (unsigned int i = 0; i < size_x; i++) {
+        for (unsigned int j = 0; j < size_y; j++) {
 
             if (!combustible_map[i][j]) continue;
 
@@ -421,9 +403,9 @@ int main(int argc, char *argv[]) {
                 heat_content = ignition_threshold;
             }
 
-            unsigned int index = i*numcols + j;
-            lps.emplace_back(   numcols,
-                                numrows,
+            unsigned int index = i*size_y + j;
+            lps.emplace_back(   size_x,
+                                size_y,
                                 combustible_map,
                                 ignition_threshold,
                                 heat_rate,

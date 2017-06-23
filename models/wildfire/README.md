@@ -49,6 +49,6 @@ To be updated
 [1] Scott, Joe H. 2012. Introduction to Wildfire Behavior Modeling. National Interagency
 Fuels, Fire, & Vegetation Technology Transfer. Available: www.niftt.gov.
 
-[2] PPM Read/Write libraries were taken from https://github.com/sol-prog/Perlin\_Noise
+[2] PPM Read/Write libraries were taken from https://github.com/sol-prog/Perlin_Noise
 (released under GPL v3 license)
 
