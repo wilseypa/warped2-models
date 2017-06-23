@@ -270,7 +270,6 @@ bool Cell::neighbor_conn( direction_t direction, unsigned char **combustible_map
     /* If no LP exists for that grid position */
     if (!combustible_map[new_x][new_y]) return false;
 
-
     return true;
 }
 
@@ -282,8 +281,8 @@ int main(int argc, char *argv[]) {
     unsigned int    heat_rate           = 15;
     double          radiation_fraction  = 0.05;
     unsigned int    burnout_threshold   = INITIAL_HEAT_CONTENT;
-    unsigned int    fire_origin_x       = 260;
-    unsigned int    fire_origin_y       = 260;
+    unsigned int    fire_origin_x       = 700;
+    unsigned int    fire_origin_y       = 600;
 
     /* Read any simulation arguments (if provided) */
     TCLAP::ValueArg<std::string> vegetation_map_arg( "m", "vegetation-map", "Vegetation map",

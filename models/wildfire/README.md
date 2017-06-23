@@ -1,11 +1,11 @@
-#WILDFIRE : A WARPED simulation kernel application
+# WILDFIRE : A WARPED simulation kernel application #
 
 Authors : Caleb van Haaren, Mark Minutolo, Sounak Gupta <br>
 High Performance Computing Laboratory <br>
 Dept of ECECS, PO Box 210030 <br>
 Cincinnati, OH  45221--0030 <br>
 
-##Introduction :
+## Introduction : ##
 
 This model simulates the spread of wildfire in a forest. This wildfire spread models 
 heat diffusion across cells or LPs starting from the origin of the fire. Cells ignite 
@@ -14,7 +14,7 @@ color of that cell on the vegetation map).
 
 The model is loosely-based on the Rothermel Wildfire Spread Model.
 
-##Details :
+## Details : ##
 
 1. Vegetation Map
     - Reads the pixel value and assigns burn attributes to the corresponding cell
@@ -39,25 +39,28 @@ heat radiating out from its neighboring cells. It remains UNBURNT otherwise.
 below a burnout threshold.
 
 
-##Configuration :
+## Configuration : ##
 
 User can adjust the following parameters:
 
     1. Wildfire susceptibility map (Default: "test_vegetation_map.ppm")
-        note: This input picture must be a P6 ppm file.
+       Note: This input picture must be a P6 PPM Binary file.
 
     2. Heat rate, amount of heat that an LP increases every timestamp in its "Growth" state
-        (Default: 15)
-    3. Radiation fraction, the percentage of an LP's heat content that is released every five
-        timestamps during the "Decay" state (Default: 0.05)
+       (Default: 15)
+
+    3. Radiation fraction, the percentage of an LP's heat content that is released every 
+       five timestamps during the "Decay" state (Default: 0.05)
+
     4. Burnout threshold, the threshold of heat that a burning LP must reach in order to be
-        considered "Burnt out" (Default: 20)
-    5. Fire origin x, the x cooridinate of the start of the fire (Default: 260)
-    6. Fire origin y, the y cooridinate of the start of the fire (Default: 260)
+       considered "Burnt out" (Default: 20)
+
+    5. Fire origin x, the x cooridinate of the start of the fire (Default: 700)
+
+    6. Fire origin y, the y cooridinate of the start of the fire (Default: 600)
 
 
-
-##References :
+## References : ##
 
 [1] Scott, Joe H. 2012. Introduction to Wildfire Behavior Modeling. National Interagency
 Fuels, Fire, & Vegetation Technology Transfer. Available: www.niftt.gov.
