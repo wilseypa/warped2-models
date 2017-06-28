@@ -11,8 +11,8 @@
 #define RADIATION_INTERVAL          5
 
 /* Combustion parameters */
-#define PEAK_TO_IGN_THRES_RATIO     3
-#define INITIAL_HEAT_CONTENT        20
+#define PEAK_TO_IGN_THRES_RATIO     20
+#define INITIAL_HEAT_CONTENT        150
 #define ORIGIN_RADIUS               1
 
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(CellEvent)
@@ -59,7 +59,9 @@ std::vector<std::shared_ptr<warped::Event> > Cell::receiveEvent(const warped::Ev
 
             unsigned int heat_radiated_out = 
                 static_cast<unsigned int> (state_.heat_content_ * radiation_fraction_);
-            state_.heat_content_ -= heat_radiated_out;
+            unsigned int directional_heat_radiated_out =
+                    (heat_radiated_out > DIRECTION_MAX) ? heat_radiated_out/DIRECTION_MAX : 1;
+            state_.heat_content_ -= DIRECTION_MAX * directional_heat_radiated_out;
 
             /* Schedule radiation events for surrounding LPs */
             unsigned int next_ts = received_event.ts_ + RADIATION_DELAY;
@@ -67,7 +69,7 @@ std::vector<std::shared_ptr<warped::Event> > Cell::receiveEvent(const warped::Ev
                 if (!connection_[direction]) continue;
                 response_events.emplace_back(
                             new CellEvent{find_cell( (direction_t)direction ), 
-                                    RADIATION, heat_radiated_out/DIRECTION_MAX, next_ts} );
+                                    RADIATION, directional_heat_radiated_out, next_ts} );
             }
 
             /* Check if cell has burnt out */
@@ -105,50 +107,50 @@ std::vector<std::shared_ptr<warped::Event> > Cell::receiveEvent(const warped::Ev
 
 std::string Cell::find_cell( direction_t direction ) {
 
-    unsigned int new_x = 0, new_y = 0;
-    unsigned int current_y = index_ / size_x_;
-    unsigned int current_x = index_ % size_x_;
+    unsigned int new_row = 0, new_col = 0;
+    unsigned int current_row = index_ / num_cols_;
+    unsigned int current_col = index_ % num_cols_;
 
     switch( direction ) {
 
         case NORTH: {
-            new_x = current_x;
-            new_y = (current_y + size_y_ - 1) % size_y_;
+            new_row = (current_row + num_rows_ - 1) % num_rows_;
+            new_col = current_col;
         } break;
 
         case NORTH_EAST: {
-            new_x = (current_x + 1) % size_x_;
-            new_y = (current_y + size_y_ - 1) % size_y_;
+            new_row = (current_row + num_rows_ - 1) % num_rows_;
+            new_col = (current_col + 1) % num_cols_;
         } break;
 
         case EAST: {
-            new_x = (current_x + 1) % size_x_;
-            new_y = current_y;
+            new_row = current_row;
+            new_col = (current_col + 1) % num_cols_;
         } break;
 
         case SOUTH_EAST: {
-            new_x = (current_x + 1) % size_x_;
-            new_y = (current_y + 1) % size_y_;
+            new_row = (current_row + 1) % num_rows_;
+            new_col = (current_col + 1) % num_cols_;
         } break;
 
         case SOUTH: {
-            new_x = current_x;
-            new_y = (current_y + 1) % size_y_;
+            new_row = (current_row + 1) % num_rows_;
+            new_col = current_col;
         } break;
 
         case SOUTH_WEST: {
-            new_x = (current_x + size_x_ - 1) % size_x_;
-            new_y = (current_y + 1) % size_y_;
+            new_row = (current_row + 1) % num_rows_;
+            new_col = (current_col + num_cols_ - 1) % num_cols_;
         } break;
 
         case WEST: {
-            new_x = (current_x + size_x_ - 1) % size_x_;
-            new_y = current_y;
+            new_row = current_row;
+            new_col = (current_col + num_cols_ - 1) % num_cols_;
         } break;
 
         case NORTH_WEST: {
-            new_x = (current_x + size_x_ - 1) % size_x_;
-            new_y = (current_y + size_y_ - 1) % size_y_;
+            new_row = (current_row + num_rows_ - 1) % num_rows_;
+            new_col = (current_col + num_cols_ - 1) % num_cols_;
         } break;
 
         default: {
@@ -156,18 +158,18 @@ std::string Cell::find_cell( direction_t direction ) {
             assert(0);
         }
     }
-    return lp_name( new_x + new_y * size_x_ );
+    return lp_name( new_col + new_row * num_cols_ );
 }
 
 bool Cell::neighbor_conn( direction_t direction, unsigned char **combustible_map ) {
 
-    unsigned int new_x = 0, new_y = 0;
-    unsigned int current_y = index_ / size_x_;
-    unsigned int current_x = index_ % size_x_;
+    unsigned int new_row = 0, new_col = 0;
+    unsigned int current_row = index_ / num_cols_;
+    unsigned int current_col = index_ % num_cols_;
 
     /* Eliminate the boundary situations */
     /* If LP is in the first row */
-    if (!current_y) {
+    if (!current_row) {
 
         /* NW, N and NE don't exist for the first row */
         if (direction == NORTH_WEST || direction == NORTH || direction == NORTH_EAST) {
@@ -175,18 +177,18 @@ bool Cell::neighbor_conn( direction_t direction, unsigned char **combustible_map
         }
 
         /* SW and W don't exist for LP at beginning of the first row */
-        if (!current_x && (direction == SOUTH_WEST || direction == WEST)) {
+        if (!current_col && (direction == SOUTH_WEST || direction == WEST)) {
             return false;
         }
 
         /* E and SE don't exist for LP at end of the first row */
-        if ((current_x == size_x_-1) && (direction == EAST || direction == SOUTH_EAST)) {
+        if ((current_col == num_cols_-1) && (direction == EAST || direction == SOUTH_EAST)) {
             return false;
         }
     }
 
     /* If LP is in the last row */
-    if (current_y == size_y_-1) {
+    if (current_row == num_rows_-1) {
 
         /* SE, S and SW don't exist for the last row */
         if (direction == SOUTH_EAST || direction == SOUTH || direction == SOUTH_WEST) {
@@ -194,26 +196,26 @@ bool Cell::neighbor_conn( direction_t direction, unsigned char **combustible_map
         }
 
         /* W and NW don't exist for LP at beginning of the last row */
-        if (!current_x && (direction == WEST || direction == NORTH_WEST)) {
+        if (!current_col && (direction == WEST || direction == NORTH_WEST)) {
             return false;
         }
 
         /* NE and E don't exist for LP at end of the last row */
-        if ((current_x == size_x_-1) && (direction == NORTH_EAST || direction == EAST)) {
+        if ((current_col == num_cols_-1) && (direction == NORTH_EAST || direction == EAST)) {
             return false;
         }
     }
 
     /* If LP is in the first column and not on the first or last rows */
     /* SW, W and NW don't exist for the first column */
-    if (!current_x && 
+    if (!current_col && 
             (direction == SOUTH_WEST || direction == WEST || direction == NORTH_WEST)) {
         return false;
     }
 
     /* If LP is in the last column and not on the first or last rows */
     /* NE, E and SE don't exist for the first column */
-    if ((current_x == size_x_-1) && 
+    if ((current_col == num_cols_-1) && 
             (direction == NORTH_EAST || direction == EAST || direction == SOUTH_EAST)) {
         return false;
     }
@@ -222,43 +224,43 @@ bool Cell::neighbor_conn( direction_t direction, unsigned char **combustible_map
     switch( direction ) {
 
         case NORTH: {
-            new_x = current_x;
-            new_y = current_y - 1;
+            new_row = current_row - 1;
+            new_col = current_col;
         } break;
 
         case NORTH_EAST: {
-            new_x = current_x + 1;
-            new_y = current_y - 1;
+            new_row = current_row - 1;
+            new_col = current_col + 1;
         } break;
 
         case EAST: {
-            new_x = current_x + 1;
-            new_y = current_y;
+            new_row = current_row;
+            new_col = current_col + 1;
         } break;
 
         case SOUTH_EAST: {
-            new_x = current_x + 1;
-            new_y = current_y + 1;
+            new_row = current_row + 1;
+            new_col = current_col + 1;
         } break;
 
         case SOUTH: {
-            new_x = current_x;
-            new_y = current_y + 1;
+            new_row = current_row + 1;
+            new_col = current_col;
         } break;
 
         case SOUTH_WEST: {
-            new_x = current_x - 1;
-            new_y = current_y + 1;
+            new_row = current_row + 1;
+            new_col = current_col - 1;
         } break;
 
         case WEST: {
-            new_x = current_x - 1;
-            new_y = current_y;
+            new_row = current_row;
+            new_col = current_col - 1;
         } break;
 
         case NORTH_WEST: {
-            new_x = current_x - 1;
-            new_y = current_y - 1;
+            new_row = current_row - 1;
+            new_col = current_col - 1;
         } break;
 
         default: {
@@ -268,7 +270,7 @@ bool Cell::neighbor_conn( direction_t direction, unsigned char **combustible_map
     }
 
     /* If no LP exists for that grid position */
-    if (!combustible_map[new_x][new_y]) return false;
+    if (!combustible_map[new_row][new_col]) return false;
 
     return true;
 }
@@ -279,10 +281,10 @@ int main(int argc, char *argv[]) {
     /* Set the default values for the simulation arguments */
     std::string     vegetation_map      = "test_vegetation_map.ppm";
     unsigned int    heat_rate           = 15;
-    double          radiation_fraction  = 0.05;
+    double          radiation_fraction  = 0.25;
     unsigned int    burnout_threshold   = INITIAL_HEAT_CONTENT;
-    unsigned int    fire_origin_x       = 700;
-    unsigned int    fire_origin_y       = 600;
+    unsigned int    fire_origin_row     = 700;
+    unsigned int    fire_origin_col     = 600;
 
     /* Read any simulation arguments (if provided) */
     TCLAP::ValueArg<std::string> vegetation_map_arg( "m", "vegetation-map", "Vegetation map",
@@ -299,20 +301,20 @@ int main(int argc, char *argv[]) {
                                                     "Heat left in a cell after it burns out",
                                                     false, burnout_threshold, "unsigned int" );
 
-    TCLAP::ValueArg<unsigned int> fire_origin_x_arg( "x", "fire-origin-x",
-                                                    "X-coordinate for origin of fire",
-                                                    false, fire_origin_x, "unsigned int" );
+    TCLAP::ValueArg<unsigned int> fire_origin_row_arg( "R", "fire-origin-row",
+                                                    "row index for origin of fire",
+                                                    false, fire_origin_row, "unsigned int" );
 
-    TCLAP::ValueArg<unsigned int> fire_origin_y_arg( "y", "fire-origin-y",
-                                                    "Y-coordinate for origin of fire",
-                                                    false, fire_origin_y, "unsigned int" );
+    TCLAP::ValueArg<unsigned int> fire_origin_col_arg( "C", "fire-origin-col",
+                                                    "column index for origin of fire",
+                                                    false, fire_origin_col, "unsigned int" );
 
     std::vector<TCLAP::Arg*> args = {   &vegetation_map_arg,
                                         &heat_rate_arg,
                                         &radiation_fraction_arg,
                                         &burnout_threshold_arg,
-                                        &fire_origin_x_arg,
-                                        &fire_origin_y_arg
+                                        &fire_origin_row_arg,
+                                        &fire_origin_col_arg
                                     };
 
     warped::Simulation wildfire_sim {"Wildfire Simulation", argc, argv, args};
@@ -321,23 +323,23 @@ int main(int argc, char *argv[]) {
     heat_rate           = heat_rate_arg.getValue();
     radiation_fraction  = radiation_fraction_arg.getValue();
     burnout_threshold   = burnout_threshold_arg.getValue();
-    fire_origin_x       = fire_origin_x_arg.getValue();
-    fire_origin_y       = fire_origin_y_arg.getValue();
+    fire_origin_row     = fire_origin_row_arg.getValue();
+    fire_origin_col     = fire_origin_col_arg.getValue();
 
 
     /* Read the vegetation map */
     auto vegetation = new ppm();
     vegetation->read(vegetation_map);
-    unsigned int size_y = vegetation->width;
-    unsigned int size_x = vegetation->height;
+    unsigned int num_rows = vegetation->height;
+    unsigned int num_cols = vegetation->width;
 
     /* Populate the combustion map */
-    unsigned char **combustible_map = new unsigned char*[size_x];
+    unsigned char **combustible_map = new unsigned char*[num_rows];
     for (unsigned int i = 0; i < vegetation->size; i++) {
-        unsigned int row = i / size_y;
-        unsigned int col = i % size_y;
+        unsigned int row = i / num_cols;
+        unsigned int col = i % num_cols;
         if (!col) {
-            combustible_map[row] = new unsigned char[size_y];
+            combustible_map[row] = new unsigned char[num_cols];
         }
 
         /*  Filter unwanted pixels by setting combustion index to 0 if :
@@ -375,7 +377,7 @@ int main(int argc, char *argv[]) {
             combustible_map[row][col] = 0;
 
         } else {
-            combustible_map[row][col] = (9*vegetation->r[i] + 7*vegetation->g[i]) / 16;
+            combustible_map[row][col] = (2*vegetation->r[i] + 11*vegetation->g[i]) / 13;
         }
     }
     delete vegetation;
@@ -384,37 +386,37 @@ int main(int argc, char *argv[]) {
     std::ofstream ofs( "filtered_vegetation_map.pgm",
            std::ios_base::out | std::ios_base::binary | std::ios_base::trunc );
     if (!ofs) assert(0);
-    ofs << "P5\n" << size_y << " " << size_x << "\n255\n";
-    for (unsigned int i = 0; i < size_x; i++) {
-        ofs.write( reinterpret_cast<const char*>(combustible_map[i]), size_y );
+    ofs << "P5\n" << num_cols << " " << num_rows << "\n255\n";
+    for (unsigned int i = 0; i < num_rows; i++) {
+        ofs.write( reinterpret_cast<const char*>(combustible_map[i]), num_cols );
     }
     ofs.close();
 
     /* Create the LPs */
     std::vector<Cell> lps;
-    for (unsigned int i = 0; i < size_x; i++) {
-        for (unsigned int j = 0; j < size_y; j++) {
+    for (unsigned int i = 0; i < num_rows; i++) {
+        for (unsigned int j = 0; j < num_cols; j++) {
 
             if (!combustible_map[i][j]) continue;
 
             /* Placeholder equations for threshold calculation */
             unsigned int ignition_threshold = (unsigned int) combustible_map[i][j];
             unsigned int peak_threshold     = ignition_threshold * PEAK_TO_IGN_THRES_RATIO;
- 
+
             /* Impart the initial heat content */
             unsigned int heat_content = INITIAL_HEAT_CONTENT;
 
             /* Heat content at fire's origin equals ignition point */
             /* Origin of fire is a square patch whose center is a configurable parameter */
-            unsigned int diff_x = std::abs(i-fire_origin_x);
-            unsigned int diff_y = std::abs(j-fire_origin_y);
-            if ( (diff_x <= ORIGIN_RADIUS) && (diff_y <= ORIGIN_RADIUS) ) {
+            unsigned int diff_row = std::abs(i-fire_origin_row);
+            unsigned int diff_col = std::abs(j-fire_origin_col);
+            if ( (diff_row <= ORIGIN_RADIUS) && (diff_col <= ORIGIN_RADIUS) ) {
                 heat_content = ignition_threshold;
             }
 
-            unsigned int index = i*size_y + j;
-            lps.emplace_back(   size_x,
-                                size_y,
+            unsigned int index = i*num_cols + j;
+            lps.emplace_back(   num_rows,
+                                num_cols,
                                 combustible_map,
                                 ignition_threshold,
                                 heat_rate,
@@ -435,7 +437,7 @@ int main(int argc, char *argv[]) {
 
     /* Post-simulation model statistics */
     /* Also print the post-wildfire vegetation map */
-    auto status_map = new ppm(size_y, size_x);
+    auto status_map = new ppm(num_cols, num_rows);
     unsigned int cells_burnt_cnt = 0, cells_burning_cnt = 0;
     for (auto& lp: lps) {
         auto status = lp.state_.burn_status_;
@@ -460,11 +462,16 @@ int main(int argc, char *argv[]) {
 
     std::cout << "Wildfire Statistics :" << std::endl;
 
+    std::cout << "\t" << lps.size() << " sq. units of vegetation found in an area of " 
+                                    << num_rows * num_cols << " sq. units" << std::endl;
+
     float cells_burning_frac = static_cast<float>(cells_burning_cnt) / lps.size();
-    std::cout << "\tCells burning = " << cells_burning_frac*100 << "%" << std::endl;
+    std::cout << "\tVegetation currently burning = " 
+                                    << cells_burning_frac*100 << "%" << std::endl;
 
     float cells_burnt_frac = static_cast<float>(cells_burnt_cnt) / lps.size();
-    std::cout << "\tCells burnt   = " <<   cells_burnt_frac*100 << "%" << std::endl;
+    std::cout << "\tVegetation already burnt     = " 
+                                    << cells_burnt_frac*100 << "%" << std::endl;
 
     std::cout << std::endl;
 

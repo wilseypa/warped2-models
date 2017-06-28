@@ -72,21 +72,21 @@ public:
 
 class Cell : public warped::LogicalProcess{
 public:
-    Cell( const unsigned int size_x,
-            const unsigned int size_y,
-            unsigned char **combustible_map,
+    Cell(   const unsigned int num_rows,
+            const unsigned int num_cols,
+            unsigned char      **combustible_map,
             const unsigned int ignition_threshold,
             const unsigned int heat_rate,
             const unsigned int peak_threshold,
-            const unsigned int radiation_fraction,
+            const double       radiation_fraction,
             const unsigned int burnout_threshold,
             const unsigned int heat_content,
-            const unsigned int index    )
+            const unsigned int index            )
 
         :   LogicalProcess(lp_name(index)),
             state_(),
-            size_x_(size_x),
-            size_y_(size_y),
+            num_rows_(num_rows),
+            num_cols_(num_cols),
             ignition_threshold_(ignition_threshold),
             heat_rate_(heat_rate),
             peak_threshold_(peak_threshold),
@@ -111,12 +111,12 @@ public:
     CellState state_;
     static inline std::string lp_name( const unsigned int );
 
-    const unsigned int  size_x_;                    // Width of the vegetation grid
-    const unsigned int  size_y_;                    // Height of the vegetation grid
+    const unsigned int  num_rows_;                  // Number of rows in the vegetation grid
+    const unsigned int  num_cols_;                  // Number of columns in the vegetation grid
     const unsigned int  ignition_threshold_;        // Min heat content needed to ignite an LP
     const unsigned int  heat_rate_;                 // Speed at which the fire grows in an LP
     const unsigned int  peak_threshold_;            // Max heat content threshold of an LP
-    const unsigned int  radiation_fraction_;        // Heat fraction radiated out by a burning LP
+    const double        radiation_fraction_;        // Heat fraction radiated out by a burning LP
     const unsigned int  burnout_threshold_;         // Heat content threshold for a burnt out LP
     bool                connection_[DIRECTION_MAX]; // True when LP exists in adjacent node
     const unsigned int  index_;                     // Unique LP ID
