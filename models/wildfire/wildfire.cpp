@@ -1,6 +1,7 @@
 /* Implementation of a Wildfire Simulation */
 
 #include <cassert>
+#include <locale>
 #include "wildfire.hpp"
 #include "ppm.hpp"
 #include "tclap/ValueArg.h"
@@ -11,7 +12,7 @@
 #define RADIATION_INTERVAL          5
 
 /* Combustion parameters */
-#define PEAK_TO_IGN_THRES_RATIO     20
+#define PEAK_TO_IGN_THRES_RATIO     10
 #define INITIAL_HEAT_CONTENT        150
 #define ORIGIN_RADIUS               1
 
@@ -281,7 +282,7 @@ int main(int argc, char *argv[]) {
     /* Set the default values for the simulation arguments */
     std::string     vegetation_map      = "test_vegetation_map.ppm";
     unsigned int    heat_rate           = 15;
-    double          radiation_fraction  = 0.25;
+    double          radiation_fraction  = 0.50;
     unsigned int    burnout_threshold   = INITIAL_HEAT_CONTENT;
     unsigned int    fire_origin_row     = 700;
     unsigned int    fire_origin_col     = 600;
@@ -462,15 +463,16 @@ int main(int argc, char *argv[]) {
 
     std::cout << "Wildfire Statistics :" << std::endl;
 
+    std::cout.imbue(std::locale(""));
     std::cout << "\t" << lps.size() << " sq. units of vegetation found in an area of " 
                                     << num_rows * num_cols << " sq. units" << std::endl;
 
     float cells_burning_frac = static_cast<float>(cells_burning_cnt) / lps.size();
-    std::cout << "\tVegetation currently burning = " 
+    std::cout << "\tVegetation currently burning \t= "
                                     << cells_burning_frac*100 << "%" << std::endl;
 
     float cells_burnt_frac = static_cast<float>(cells_burnt_cnt) / lps.size();
-    std::cout << "\tVegetation already burnt     = " 
+    std::cout << "\tVegetation already burnt \t= "
                                     << cells_burnt_frac*100 << "%" << std::endl;
 
     std::cout << std::endl;
