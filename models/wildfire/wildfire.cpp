@@ -13,7 +13,7 @@
 
 /* Combustion parameters */
 #define PEAK_TO_IGN_THRES_RATIO     10
-#define INITIAL_HEAT_CONTENT        150
+#define INITIAL_HEAT_CONTENT        30
 #define ORIGIN_RADIUS               1
 
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(CellEvent)
@@ -346,9 +346,8 @@ int main(int argc, char *argv[]) {
         /*  Filter unwanted pixels by setting combustion index to 0 if :
                 1. pixel is black
                 2. pixel is white
-                3. pixel indiates rocks i.e. highly reddish
-                4. pixel indicates other non-vegetative features suchas pink for houses
-                5. pixel indicates water i.e. highly blue
+                3. pixel indicates other non-vegetative features suchas pink for houses
+                4. pixel indicates water i.e. highly blue
             Else,
                 Use <Red,Green> weighted function to calculate combustion index
          */
@@ -373,7 +372,7 @@ int main(int argc, char *argv[]) {
             combustible_map[row][col] = 0;
 
         } else {
-            combustible_map[row][col] = (abs(12*vegetation->r[i] - 2 * vegetation->g[i])) / 14;
+            combustible_map[row][col] = (vegetation->r[i] + 6*vegetation->g[i]) / 7;
         }
     }
     delete vegetation;
@@ -396,7 +395,7 @@ int main(int argc, char *argv[]) {
             if (!combustible_map[i][j]) continue;
 
             /* Placeholder equations for threshold calculation */
-            unsigned int ignition_threshold = 255 - (unsigned int) combustible_map[i][j];
+            unsigned int ignition_threshold = (unsigned int) combustible_map[i][j];
             unsigned int peak_threshold     = ignition_threshold * PEAK_TO_IGN_THRES_RATIO;
 
             /* Impart the initial heat content */
@@ -438,6 +437,12 @@ int main(int argc, char *argv[]) {
     for (auto& lp: lps) {
         auto status = lp.state_.burn_status_;
         auto i = lp.index_;
+
+        /* Post-wildfire status color codes :
+             1. burnt-out cells -> white
+             2. burning cells   -> red
+             3. unburnt cells   -> light yellow to green (high to low combustion index)
+         */
         if (status == BURNT_OUT) {
             cells_burnt_cnt++;
             status_map->r[i] = 255;
@@ -449,7 +454,7 @@ int main(int argc, char *argv[]) {
             status_map->r[i] = 255;
 
         } else { /* status == UNBURNT */
-            status_map->r[i] = abs(255 - lp.ignition_threshold_);
+            status_map->r[i] = 255 - lp.ignition_threshold_;
             status_map->g[i] = 200;
         }
     }
