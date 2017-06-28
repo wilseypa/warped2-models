@@ -282,7 +282,7 @@ int main(int argc, char *argv[]) {
     /* Set the default values for the simulation arguments */
     std::string     vegetation_map      = "test_vegetation_map.ppm";
     unsigned int    heat_rate           = 15;
-    double          radiation_fraction  = 0.50;
+    double          radiation_fraction  = 0.5;
     unsigned int    burnout_threshold   = INITIAL_HEAT_CONTENT;
     unsigned int    fire_origin_row     = 700;
     unsigned int    fire_origin_col     = 600;
@@ -364,11 +364,6 @@ int main(int argc, char *argv[]) {
 
         } else if ( (vegetation->r[i] > 200) &&
                     (vegetation->g[i] < 20 ) &&
-                    (vegetation->b[i] < 20 )    ) {
-            combustible_map[row][col] = 0;
-
-        } else if ( (vegetation->r[i] > 200) &&
-                    (vegetation->g[i] < 20 ) &&
                     (vegetation->b[i] > 200)    ) {
             combustible_map[row][col] = 0;
 
@@ -378,7 +373,7 @@ int main(int argc, char *argv[]) {
             combustible_map[row][col] = 0;
 
         } else {
-            combustible_map[row][col] = (2*vegetation->r[i] + 11*vegetation->g[i]) / 13;
+            combustible_map[row][col] = (abs(12*vegetation->r[i] - 2 * vegetation->g[i])) / 14;
         }
     }
     delete vegetation;
@@ -401,7 +396,7 @@ int main(int argc, char *argv[]) {
             if (!combustible_map[i][j]) continue;
 
             /* Placeholder equations for threshold calculation */
-            unsigned int ignition_threshold = (unsigned int) combustible_map[i][j];
+            unsigned int ignition_threshold = 255 - (unsigned int) combustible_map[i][j];
             unsigned int peak_threshold     = ignition_threshold * PEAK_TO_IGN_THRES_RATIO;
 
             /* Impart the initial heat content */
@@ -454,8 +449,8 @@ int main(int argc, char *argv[]) {
             status_map->r[i] = 255;
 
         } else { /* status == UNBURNT */
-            status_map->r[i] = lp.ignition_threshold_;
-            status_map->g[i] = 255;
+            status_map->r[i] = abs(255 - lp.ignition_threshold_);
+            status_map->g[i] = 200;
         }
     }
     status_map->write("post_wildfire_status.ppm");
