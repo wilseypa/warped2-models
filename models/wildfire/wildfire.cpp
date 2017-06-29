@@ -372,12 +372,19 @@ int main(int argc, char *argv[]) {
             combustible_map[row][col] = 0;
 
         } else {
+            /* Note :   Combustibility inversely proportional to combustion index.
+                        Highly combustible cells will have low combustion index.
+                        This will directly imply low ignition threshold.
+             */
             combustible_map[row][col] = (vegetation->r[i] + 6*vegetation->g[i]) / 7;
         }
     }
     delete vegetation;
 
-    /* Verify the combustion index visually */
+    /* Verify the combustion index visually
+       Black -> non-vegetation
+       Dark grey to white -> high to low combustibility
+     */
     std::ofstream ofs( "filtered_vegetation_map.pgm",
            std::ios_base::out | std::ios_base::binary | std::ios_base::trunc );
     if (!ofs) assert(0);
@@ -441,7 +448,8 @@ int main(int argc, char *argv[]) {
         /* Post-wildfire status color codes :
              1. burnt-out cells -> white
              2. burning cells   -> red
-             3. unburnt cells   -> light yellow to green (high to low combustion index)
+             3. unburnt cells   -> light yellow (highly combustible)
+                                -> green (not easily combustible)
          */
         if (status == BURNT_OUT) {
             cells_burnt_cnt++;
