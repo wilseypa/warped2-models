@@ -13,7 +13,7 @@
 
 /* Combustion parameters */
 #define PEAK_TO_IGN_THRES_RATIO     10
-#define INITIAL_HEAT_CONTENT        30
+#define INITIAL_HEAT_CONTENT        10
 #define ORIGIN_RADIUS               1
 
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(CellEvent)
@@ -348,8 +348,11 @@ int main(int argc, char *argv[]) {
                 2. pixel is white
                 3. pixel indicates other non-vegetative features suchas pink for houses
                 4. pixel indicates water i.e. highly blue
-            Else,
-                Use <Red,Green> weighted function to calculate combustion index
+                5. pixel indicates Dark Green i.e. unlikely to burn
+                6. pixel indicates Yellow/Orange i.e. likely to burn            
+                Else, pixel indicates red i.e. very likely to burn
+            Numbers 5,6 and Else:
+                Use <Red,Green,Blue> weighted functions to calculate combustion index
          */
         if (        (vegetation->r[i] < 20 ) &&
                     (vegetation->g[i] < 20 ) &&
@@ -371,8 +374,18 @@ int main(int argc, char *argv[]) {
                     (vegetation->b[i] > 200)    ) {
             combustible_map[row][col] = 0;
 
+        } else if ( (vegetation->r[i] < 100 ) &&
+                    (vegetation->g[i] > 150) &&
+                    (vegetation->b[i] < 20 )   ) {            
+            combustible_map[row][col] = (vegetation->g[i] + 2*255)/3;
+
+        } else if ( (vegetation->r[i] > 250) &&
+                    (vegetation->g[i] > 100) &&
+                    (vegetation->b[i] < 20 )   ) {
+            combustible_map[row][col] = (3*vegetation->g[i] + 2*vegetation->b[i]) / 5;
+       
         } else {
-            combustible_map[row][col] = (vegetation->r[i] + 6*vegetation->g[i]) / 7;
+            combustible_map[row][col] = (vegetation->r[i] + 6*vegetation->g[i]) / 7;            
         }
     }
     delete vegetation;
