@@ -12,8 +12,6 @@
 #define RADIATION_INTERVAL          5
 
 /* Combustion parameters */
-#define PEAK_TO_IGN_THRES_RATIO     10
-#define INITIAL_HEAT_CONTENT        10
 #define ORIGIN_RADIUS               1
 
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(CellEvent)
@@ -90,7 +88,7 @@ std::vector<std::shared_ptr<warped::Event> > Cell::receiveEvent(const warped::Ev
 
             /* Schedule Peak Event */
             unsigned int peak_time = received_event.ts_ + 
-                        ((peak_threshold_ - ignition_threshold_) / heat_rate_);
+                        ((peak_threshold_ - ignition_threshold_) / growth_rate_);
             response_events.emplace_back( new CellEvent{lp_name(index_), PEAK, 0, peak_time} );
         } break;
 
@@ -280,23 +278,29 @@ bool Cell::neighbor_conn( direction_t direction, unsigned char **combustible_map
 int main(int argc, char *argv[]) {
 
     /* Set the default values for the simulation arguments */
-    std::string     vegetation_map      = "test_vegetation_map.ppm";
-    unsigned int    heat_rate           = 15;
-    double          radiation_fraction  = 0.5;
-    unsigned int    burnout_threshold   = INITIAL_HEAT_CONTENT;
-    unsigned int    fire_origin_row     = 700;
-    unsigned int    fire_origin_col     = 600;
+    std::string  vegetation_map      = "test_vegetation_map.ppm";
+    double       radiation_fraction  = 0.5;
+    unsigned int ambient_heat        = 0;
+    unsigned int peak_threshold      = 600;
+    unsigned int burnout_threshold   = 50;
+    unsigned int fire_origin_row     = 700;
+    unsigned int fire_origin_col     = 600;
 
     /* Read any simulation arguments (if provided) */
     TCLAP::ValueArg<std::string> vegetation_map_arg( "m", "vegetation-map", "Vegetation map",
                                                     false, vegetation_map, "string" );
 
-    TCLAP::ValueArg<unsigned int> heat_rate_arg( "g", "heat-rate", "Rate of fire growth",
-                                                    false, heat_rate, "unsigned int" );
-
     TCLAP::ValueArg<double> radiation_fraction_arg( "r", "radiation-fraction",
                                                     "Fraction of heat radiated out",
                                                     false, radiation_fraction, "double" );
+
+    TCLAP::ValueArg<unsigned int> ambient_heat_arg( "a", "ambient-heat",
+                                                    "Ambient heat in a cell",
+                                                    false, ambient_heat, "unsigned int" );
+
+    TCLAP::ValueArg<unsigned int> peak_threshold_arg( "p", "peak-threshold",
+                                                    "Peak heat content of a cell",
+                                                    false, peak_threshold, "unsigned int" );
 
     TCLAP::ValueArg<unsigned int> burnout_threshold_arg( "b", "burnout-threshold",
                                                     "Heat left in a cell after it burns out",
@@ -311,8 +315,9 @@ int main(int argc, char *argv[]) {
                                                     false, fire_origin_col, "unsigned int" );
 
     std::vector<TCLAP::Arg*> args = {   &vegetation_map_arg,
-                                        &heat_rate_arg,
                                         &radiation_fraction_arg,
+                                        &ambient_heat_arg,
+                                        &peak_threshold_arg,
                                         &burnout_threshold_arg,
                                         &fire_origin_row_arg,
                                         &fire_origin_col_arg
@@ -321,18 +326,29 @@ int main(int argc, char *argv[]) {
     warped::Simulation wildfire_sim {"Wildfire Simulation", argc, argv, args};
  
     vegetation_map      = vegetation_map_arg.getValue();
-    heat_rate           = heat_rate_arg.getValue();
     radiation_fraction  = radiation_fraction_arg.getValue();
+    ambient_heat        = ambient_heat_arg.getValue();
+    peak_threshold      = peak_threshold_arg.getValue();
     burnout_threshold   = burnout_threshold_arg.getValue();
     fire_origin_row     = fire_origin_row_arg.getValue();
     fire_origin_col     = fire_origin_col_arg.getValue();
 
+    /* Ensure that peak and burnout threshold entries are valid */
+    assert( peak_threshold > 255 );
+    assert( peak_threshold > burnout_threshold );
+
+    /* Ensure that radiation_fraction is < 1 */
+    assert( radiation_fraction < 1.0 );
 
     /* Read the vegetation map */
     auto vegetation = new ppm();
     vegetation->read(vegetation_map);
     unsigned int num_rows = vegetation->height;
     unsigned int num_cols = vegetation->width;
+
+    /* Ensure that fire origin row and column is valid */
+    assert( fire_origin_row < num_rows );
+    assert( fire_origin_col < num_cols );
 
     /* Populate the combustion map */
     unsigned char **combustible_map = new unsigned char*[num_rows];
@@ -343,22 +359,26 @@ int main(int argc, char *argv[]) {
             combustible_map[row] = new unsigned char[num_cols];
         }
 
-        /*  Filter unwanted pixels by setting combustion index to 0 if :
-                1. pixel is black
-                2. pixel is white
-                3. pixel indicates other non-vegetative features suchas pink for houses
-                4. pixel indicates water i.e. highly blue
-                5. pixel indicates Dark Green i.e. unlikely to burn
-                6. pixel indicates Yellow/Orange i.e. likely to burn            
-                Else, pixel indicates red i.e. very likely to burn
-            Numbers 5,6 and Else:
-                Use <Red,Green,Blue> weighted functions to calculate combustion index
+        /* Note :
+                1. Combustibility proportional to Combustion Index(CI).
+                2. Highly combustible cells will have high CI (max value = 255).
+                3. CI = 0 means non-combustible.
+                4. Ignition Threshold = 256 - CI
+
+           Filter pixels by setting combustion index(CI) as follows :
+                1. pixel is black (CI = 0)
+                2. pixel is white (CI = 0)
+                3. pixel indicates other non-vegetative features e.g. pink for houses (CI = 0)
+                4. pixel indicates water i.e. highly blue (CI = 0)
+                5. pixel indicates dark green i.e. unlikely to burn (CI = 256 - g)
+                6. pixel indicates yellow/orange i.e. likely to burn (CI = 256 - g)
+                7. pixel indicates red i.e. very likely to burn (CI = r)
          */
         if (        (vegetation->r[i] < 20 ) &&
                     (vegetation->g[i] < 20 ) &&
                     (vegetation->b[i] < 20 )    ) {
             combustible_map[row][col] = 0;
-        
+
         } else if ( (vegetation->r[i] > 200) &&
                     (vegetation->g[i] > 200) &&
                     (vegetation->b[i] > 200)    ) {
@@ -374,29 +394,25 @@ int main(int argc, char *argv[]) {
                     (vegetation->b[i] > 200)    ) {
             combustible_map[row][col] = 0;
 
-        } else if ( (vegetation->r[i] < 100 ) &&
+        } else if ( (vegetation->r[i] < 100) &&
                     (vegetation->g[i] > 150) &&
-                    (vegetation->b[i] < 20 )   ) {            
-            combustible_map[row][col] = (vegetation->g[i] + 2*255)/3;
+                    (vegetation->b[i] < 20 )    ) {
+            combustible_map[row][col] = 256 - vegetation->g[i];
 
         } else if ( (vegetation->r[i] > 250) &&
                     (vegetation->g[i] > 100) &&
-                    (vegetation->b[i] < 20 )   ) {
-            combustible_map[row][col] = (3*vegetation->g[i] + 2*vegetation->b[i]) / 5;
-       
+                    (vegetation->b[i] < 20 )    ) {
+            combustible_map[row][col] = 256 - vegetation->g[i];
+
         } else {
-            /* Note :   Combustibility inversely proportional to combustion index.
-                        Highly combustible cells will have low combustion index.
-                        This will directly imply low ignition threshold.
-             */
-            combustible_map[row][col] = (vegetation->r[i] + 6*vegetation->g[i]) / 7;            
+            combustible_map[row][col] = vegetation->r[i];
         }
     }
     delete vegetation;
 
-    /* Verify the combustion index visually
-       Black -> non-vegetation
-       Dark grey to white -> high to low combustibility
+    /*  Verify the combustion index visually
+            Black         -> non-vegetation
+            White to Grey -> high to low combustibility
      */
     std::ofstream ofs( "filtered_vegetation_map.pgm",
            std::ios_base::out | std::ios_base::binary | std::ios_base::trunc );
@@ -414,12 +430,14 @@ int main(int argc, char *argv[]) {
 
             if (!combustible_map[i][j]) continue;
 
-            /* Placeholder equations for threshold calculation */
-            unsigned int ignition_threshold = (unsigned int) combustible_map[i][j];
-            unsigned int peak_threshold     = ignition_threshold * PEAK_TO_IGN_THRES_RATIO;
+            /* Ignition threshold */
+            unsigned int ignition_threshold = 256 - combustible_map[i][j];
 
-            /* Impart the initial heat content */
-            unsigned int heat_content = INITIAL_HEAT_CONTENT;
+            /* Note : Initial heat content of a cell equals ambient heat content*/
+            unsigned int heat_content = ambient_heat;
+
+            /* Growth Rate */
+            unsigned int growth_rate = (combustible_map[i][j]+3) / 3;
 
             /* Heat content at fire's origin equals ignition point */
             /* Origin of fire is a square patch whose center is a configurable parameter */
@@ -434,7 +452,7 @@ int main(int argc, char *argv[]) {
                                 num_cols,
                                 combustible_map,
                                 ignition_threshold,
-                                heat_rate,
+                                growth_rate,
                                 peak_threshold,
                                 radiation_fraction,
                                 burnout_threshold,

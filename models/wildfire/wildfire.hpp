@@ -76,7 +76,7 @@ public:
             const unsigned int num_cols,
             unsigned char      **combustible_map,
             const unsigned int ignition_threshold,
-            const unsigned int heat_rate,
+            const unsigned int growth_rate,
             const unsigned int peak_threshold,
             const double       radiation_fraction,
             const unsigned int burnout_threshold,
@@ -88,7 +88,7 @@ public:
             num_rows_(num_rows),
             num_cols_(num_cols),
             ignition_threshold_(ignition_threshold),
-            heat_rate_(heat_rate),
+            growth_rate_(growth_rate),
             peak_threshold_(peak_threshold),
             radiation_fraction_(radiation_fraction),
             burnout_threshold_(burnout_threshold),
@@ -114,7 +114,7 @@ public:
     const unsigned int  num_rows_;                  // Number of rows in the vegetation grid
     const unsigned int  num_cols_;                  // Number of columns in the vegetation grid
     const unsigned int  ignition_threshold_;        // Min heat content needed to ignite an LP
-    const unsigned int  heat_rate_;                 // Speed at which the fire grows in an LP
+    const unsigned int  growth_rate_;               // Speed at which the fire grows in an LP
     const unsigned int  peak_threshold_;            // Max heat content threshold of an LP
     const double        radiation_fraction_;        // Heat fraction radiated out by a burning LP
     const unsigned int  burnout_threshold_;         // Heat content threshold for a burnt out LP
