@@ -366,43 +366,29 @@ int main(int argc, char *argv[]) {
                 4. Ignition Threshold = 256 - CI
 
            Filter pixels by setting combustion index(CI) as follows :
-                1. pixel is black (CI = 0)
-                2. pixel is white (CI = 0)
-                3. pixel indicates other non-vegetative features e.g. pink for houses (CI = 0)
-                4. pixel indicates water i.e. highly blue (CI = 0)
-                5. pixel indicates dark green i.e. unlikely to burn (CI = 256 - g)
-                6. pixel indicates yellow/orange i.e. likely to burn (CI = 256 - g)
-                7. pixel indicates red i.e. very likely to burn (CI = r)
+                1. Eliminate black (CI = 0)
+                2. Eliminate any color with a high blue content i.e. white, blue, pink (CI = 0)
+                3. Identify dark green i.e. unlikely to burn (CI = r)
+                4. Identify yellow/orange i.e. likely to burn (CI = g)
+                5. Identify red i.e. very likely to burn (CI = r)
          */
         if (        (vegetation->r[i] < 20 ) &&
                     (vegetation->g[i] < 20 ) &&
                     (vegetation->b[i] < 20 )    ) {
             combustible_map[row][col] = 0;
 
-        } else if ( (vegetation->r[i] > 200) &&
-                    (vegetation->g[i] > 200) &&
-                    (vegetation->b[i] > 200)    ) {
-            combustible_map[row][col] = 0;
-
-        } else if ( (vegetation->r[i] > 200) &&
-                    (vegetation->g[i] < 20 ) &&
-                    (vegetation->b[i] > 200)    ) {
-            combustible_map[row][col] = 0;
-
-        } else if ( (vegetation->r[i] < 20 ) &&
-                    (vegetation->g[i] < 20 ) &&
-                    (vegetation->b[i] > 200)    ) {
+        } else if   (vegetation->b[i] > 200)      {
             combustible_map[row][col] = 0;
 
         } else if ( (vegetation->r[i] < 100) &&
                     (vegetation->g[i] > 150) &&
                     (vegetation->b[i] < 20 )    ) {
-            combustible_map[row][col] = 256 - vegetation->g[i];
+            combustible_map[row][col] = vegetation->r[i];
 
-        } else if ( (vegetation->r[i] > 250) &&
+        } else if ( (vegetation->r[i] > 200) &&
                     (vegetation->g[i] > 100) &&
                     (vegetation->b[i] < 20 )    ) {
-            combustible_map[row][col] = 256 - vegetation->g[i];
+            combustible_map[row][col] = vegetation->g[i];
 
         } else {
             combustible_map[row][col] = vegetation->r[i];
