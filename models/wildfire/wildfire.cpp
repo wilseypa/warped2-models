@@ -360,38 +360,35 @@ int main(int argc, char *argv[]) {
         }
 
         /* Note :
-                1. Combustibility proportional to Combustion Index(CI).
-                2. Highly combustible cells will have high CI (max value = 255).
-                3. CI = 0 means non-combustible.
-                4. Ignition Threshold = 256 - CI
+            1. Combustibility proportional to Combustion Index(CI)
+            2. Highly combustible cells will have high CI (max value = 255)
+            3. CI = 0 means non-combustible
 
-           Filter pixels by setting combustion index(CI) as follows :
-                1. Eliminate black (CI = 0)
-                2. Eliminate any color with a high blue content i.e. white, blue, pink (CI = 0)
-                3. Identify dark green i.e. unlikely to burn (CI = r)
-                4. Identify yellow/orange i.e. likely to burn (CI = g)
-                5. Identify red i.e. very likely to burn (CI = r)
+            Categorize the rest using RGB to YCbCr conversion functions
+            a. black, blue, white, pink do not burn
+            b. green is less likely to burn
+            c. yellow/orange is likely to burn
+            d. red is very likely to burn
          */
-        if (        (vegetation->r[i] < 20 ) &&
-                    (vegetation->g[i] < 20 ) &&
-                    (vegetation->b[i] < 20 )    ) {
+        unsigned int Y  =   0.299*(double)vegetation->r[i]
+                          + 0.587*(double)vegetation->g[i]
+                          + 0.114*(double)vegetation->b[i];
+
+        unsigned int Cb =   128
+                          - 0.169*(double)vegetation->r[i]
+                          - 0.331*(double)vegetation->g[i]
+                          + 0.500*(double)vegetation->b[i];
+
+        unsigned int Cr =   128
+                          + 0.500*(double)vegetation->r[i]
+                          - 0.419*(double)vegetation->g[i]
+                          - 0.081*(double)vegetation->b[i];
+
+        if (Cb > 100 || Y < 20) {
             combustible_map[row][col] = 0;
-
-        } else if   (vegetation->b[i] > 200)      {
-            combustible_map[row][col] = 0;
-
-        } else if ( (vegetation->r[i] < 100) &&
-                    (vegetation->g[i] > 150) &&
-                    (vegetation->b[i] < 20 )    ) {
-            combustible_map[row][col] = vegetation->r[i];
-
-        } else if ( (vegetation->r[i] > 200) &&
-                    (vegetation->g[i] > 100) &&
-                    (vegetation->b[i] < 20 )    ) {
-            combustible_map[row][col] = vegetation->g[i];
 
         } else {
-            combustible_map[row][col] = vegetation->r[i];
+            combustible_map[row][col] = std::max(Cr, Y);
         }
     }
     delete vegetation;
@@ -416,7 +413,7 @@ int main(int argc, char *argv[]) {
 
             if (!combustible_map[i][j]) continue;
 
-            /* Ignition threshold */
+            /* Ignition threshold = 256 - CI */
             unsigned int ignition_threshold = 256 - combustible_map[i][j];
 
             /* Note : Initial heat content of a cell equals ambient heat content*/
