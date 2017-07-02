@@ -278,7 +278,7 @@ bool Cell::neighbor_conn( direction_t direction, unsigned char **combustible_map
 int main(int argc, char *argv[]) {
 
     /* Set the default values for the simulation arguments */
-    std::string  vegetation_map      = "test_vegetation_map.ppm";
+    std::string  vegetation_map      = "test_map_1.ppm";
     double       radiation_fraction  = 0.5;
     unsigned int ambient_heat        = 0;
     unsigned int peak_threshold      = 600;
@@ -384,11 +384,11 @@ int main(int argc, char *argv[]) {
                           - 0.419*(double)vegetation->g[i]
                           - 0.081*(double)vegetation->b[i];
 
-        if (Cb > 100 || Y < 20) {
+        if (Y < 10 || Y > 240 || Cb > 128) {
             combustible_map[row][col] = 0;
 
         } else {
-            combustible_map[row][col] = std::max(Cr, Y);
+            combustible_map[row][col] = Cr;
         }
     }
     delete vegetation;
