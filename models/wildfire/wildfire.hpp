@@ -45,7 +45,7 @@ enum direction_t {
     DIRECTION_MAX
 };
 
-/* Class Definition of a Wildfire event */
+/*! Class Definition of a Wildfire event */
 class CellEvent : public warped::Event {
 public:
     CellEvent() = default;
@@ -61,15 +61,16 @@ public:
     const std::string& receiverName() const { return receiver_name_; }
     unsigned int timestamp() const { return ts_; }
 
-    std::string receiver_name_;
-    cell_event_t type_;
-    unsigned int heat_content_;
-    unsigned int ts_;
+    std::string receiver_name_; /*! Name of the LP that is recieving the event */
+    cell_event_t type_; /*! The type of event being sent */
+    unsigned int heat_content_; /*! Heat being sent in the event */
+    unsigned int ts_; /*! Timestamp used by the kernel that identifies when the event takes place */
 
     WARPED_REGISTER_SERIALIZABLE_MEMBERS(cereal::base_class<warped::Event>(this), 
                                             receiver_name_, type_, heat_content_, ts_)
 };
 
+/*! Class that will hold all of the attributes of the LP's */
 class Cell : public warped::LogicalProcess{
 public:
     Cell(   const unsigned int num_rows,
@@ -104,26 +105,33 @@ public:
         }
     }
 
+    /*! Function to start the fire by comparing the heat content of the LP with
+      that LP's ignition threshold */
     virtual std::vector<std::shared_ptr<warped::Event> > initializeLP() override;
+
+    /*! Function that will handle all events being sent to and from LP's */
     virtual std::vector<std::shared_ptr<warped::Event> > receiveEvent(const warped::Event&);
+
+    /*! Returns the state of Burn that the LP in */
     virtual warped::LPState& getState() { return this->state_; }
 
     CellState state_;
+    /*! Simple function that returns the name of an LP using th index*/
     static inline std::string lp_name( const unsigned int );
 
-    const unsigned int  num_rows_;                  // Number of rows in the vegetation grid
-    const unsigned int  num_cols_;                  // Number of columns in the vegetation grid
-    const unsigned int  ignition_threshold_;        // Min heat content needed to ignite an LP
-    const unsigned int  growth_rate_;               // Speed at which the fire grows in an LP
-    const unsigned int  peak_threshold_;            // Max heat content threshold of an LP
-    const double        radiation_fraction_;        // Heat fraction radiated out by a burning LP
-    const unsigned int  burnout_threshold_;         // Heat content threshold for a burnt out LP
-    bool                connection_[DIRECTION_MAX]; // True when LP exists in adjacent node
-    const unsigned int  index_;                     // Unique LP ID
+    const unsigned int  num_rows_;                  /*! Number of rows in the vegetation grid */
+    const unsigned int  num_cols_;                  /*! Number of columns in the vegetation grid*/
+    const unsigned int  ignition_threshold_;        /*! Minimum  heat content needed to ignite an LP*/
+    const unsigned int  growth_rate_;               /*! Speed at which the fire grows in an LP */
+    const unsigned int  peak_threshold_;            /*! Maximum heat content threshold of an LP*/
+    const double        radiation_fraction_;        /*! Percentage of heat  radiated out by a burning LP*/
+    const unsigned int  burnout_threshold_;         /*! Heat content threshold for a burnt out LP*/
+    bool                connection_[DIRECTION_MAX]; /*! Boolean that returns true when an LP exists in adjacent node*/
+    const unsigned int  index_;                     /*! Unique LP number that is used by the kernel to find an certain LP */
 
-    std::string find_cell( direction_t direction ); // Find adjacent cell in a certain direction
+    std::string find_cell( direction_t direction ); /*! Function to find an adjacent cell in a certain direction */
 
-    // Find whether connection exits to a neighbor
+    /*! Function to find whether connection exits to a neighbor in a certain given direction */
     bool neighbor_conn( direction_t direction, unsigned char **combustible_map );
 };
 

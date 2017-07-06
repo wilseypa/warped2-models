@@ -1,6 +1,6 @@
 # WILDFIRE : A WARPED simulation kernel application #
 
-Authors : Caleb van Haaren, Mark Minutolo, Sounak Gupta <br>
+Authors : Caleb van Haaren, Mark Minutolo, Sounak Besu <br>
 High Performance Computing Laboratory <br>
 Dept of ECECS, PO Box 210030 <br>
 Cincinnati, OH  45221--0030 <br>
