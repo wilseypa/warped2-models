@@ -52,6 +52,9 @@ User can adjust the following parameters:
     3. Radiation fraction, the percentage of an LP's heat content that is released every 
        five timestamps during the "Decay" state (Default: 0.05)
 
+    4. Ambient heat, the amount of heat each cell has at the beginning of the simulation. 
+       This can be used to simulate a hot day (Default: 0)
+
     4. Burnout threshold, the threshold of heat that a burning LP must reach in order to be
        considered "Burnt out" (Default: 20)
 
