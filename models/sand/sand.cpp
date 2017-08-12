@@ -4,7 +4,7 @@
 
 #include "warped.hpp"
 #include "sand.hpp"
-
+#include "ppm.hpp"
 #include "tclap/ValueArg.h"
 
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(SandEvent)
@@ -136,6 +136,18 @@ int main(int argc, const char **argv) {
     }
 
     simulation.simulate(lp_pointers);
+
+    auto lattice = new ppm(num_cells_x, num_cells_y);
+
+    for (auto& lp : lps) {
+        auto i = lp.index_;
+        lattice->r[i] = 10 * lp.state_.z_ % 255;
+        lattice->g[i] = 10 * lp.state_.z_ % 255;
+        lattice->b[i] = 10 * lp.state_.z_ % 255;
+    }
+
+    lattice->write("output_lattice.ppm");
+    delete lattice;
 
     return 0;
 }

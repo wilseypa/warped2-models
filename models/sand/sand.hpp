@@ -51,9 +51,9 @@ public:
 
         :   LogicalProcess(name),
             state_(),
+            index_(index),
             num_cells_x_(num_cells_x),
             num_cells_y_(num_cells_y),
-            index_(index),
             z_threshold_(z_threshold) {
 
         /* Initialize the state variable */
@@ -67,11 +67,11 @@ public:
     virtual std::vector<std::shared_ptr<warped::Event> > receiveEvent(const warped::Event&);
 
     SandState state_;
+    unsigned int index_;
 
 protected:
     unsigned int num_cells_x_;
     unsigned int num_cells_y_;
-    unsigned int index_;
     unsigned int z_threshold_;
 
     unsigned int neighbor( unsigned int index, direction_t direction );
