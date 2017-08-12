@@ -40,21 +40,21 @@ public:
 };
 
 
-class Site : public warped::LogicalProcess {
+class Vertex : public warped::LogicalProcess {
 public:
-    Site(   const std::string&  name,
+    Vertex( const std::string&  name,
             unsigned int        num_cells_x,
             unsigned int        num_cells_y,
             unsigned int        index,
             unsigned int        z,
-            unsigned int        z_threshold     )
+            unsigned int        stability_threshold     )
 
         :   LogicalProcess(name),
             state_(),
             index_(index),
             num_cells_x_(num_cells_x),
             num_cells_y_(num_cells_y),
-            z_threshold_(z_threshold) {
+            stability_threshold_(stability_threshold) {
 
         /* Initialize the state variable */
         state_.z_ = z;
@@ -72,7 +72,7 @@ public:
 protected:
     unsigned int num_cells_x_;
     unsigned int num_cells_y_;
-    unsigned int z_threshold_;
+    unsigned int stability_threshold_;
 
     unsigned int neighbor( unsigned int index, direction_t direction );
 
