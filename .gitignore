@@ -2,6 +2,7 @@
 *.slo
 *.lo
 *.o
+*_sim
 
 # Libraries
 *.lib
