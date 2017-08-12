@@ -14,16 +14,24 @@ WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(SandEvent)
 
 std::string node_name (unsigned int index) {
 
-    return std::string("Node_") + std::to_string(index);
+    return std::string("Vertex_") + std::to_string(index);
 }
 
 std::vector<std::shared_ptr<warped::Event> > Vertex::initializeLP() {
 
     std::vector<std::shared_ptr<warped::Event>> events;
 
-    /* If z-value exceeds threshold, send an event to itself and 4 neighbors */
-    if (state_.z_ >= stability_threshold_) {
-        events.emplace_back( new SandEvent {node_name(this->index_)                 , TS_INTERVAL} );
+    /* If there is no grain of sand */
+    if (!state_.sandpile_height_) return events;
+
+    /* If the pile is still stable */
+    if (state_.sandpile_height_ < 3) {
+        state_.sandpile_height_++;
+        events.emplace_back( new SandEvent {node_name(this->index_), TS_INTERVAL} );
+
+    } else { /* If the pile is unstable */
+        state_.sandpile_height_ = 0;
+        state_.collapse_cnt_++;
         events.emplace_back( new SandEvent {node_name(neighbor(this->index_, UP))   , TS_INTERVAL} );
         events.emplace_back( new SandEvent {node_name(neighbor(this->index_, RIGHT)), TS_INTERVAL} );
         events.emplace_back( new SandEvent {node_name(neighbor(this->index_, DOWN)) , TS_INTERVAL} );
@@ -39,17 +47,17 @@ std::vector<std::shared_ptr<warped::Event> > Vertex::receiveEvent(const warped::
 
     std::vector<std::shared_ptr<warped::Event>> events;
 
-    /* If self-event, decrease the z-value by 4 */
-    if (node_event.receiver_name_ == node_name(this->index_)) {
-        state_.z_ -= 4;
+    /* Grow the sand pile */
+    state_.sandpile_height_++;
 
-    } else { /* Event received from a neighbor, increment the z-value by 1 */
-        state_.z_ += 1;
-    }
+    /* If the pile is still stable */
+    if (state_.sandpile_height_ < 3) {
+        state_.sandpile_height_++;
+        events.emplace_back( new SandEvent {node_name(this->index_), event_ts} );
 
-    /* If z-value exceeds threshold, send an event to itself and 4 neighbors */
-    if (state_.z_ >= stability_threshold_) {
-        events.emplace_back( new SandEvent {node_name(this->index_)                 , event_ts} );
+    } else { /* If the pile is unstable */
+        state_.sandpile_height_ = 0;
+        state_.collapse_cnt_++;
         events.emplace_back( new SandEvent {node_name(neighbor(this->index_, UP))   , event_ts} );
         events.emplace_back( new SandEvent {node_name(neighbor(this->index_, RIGHT)), event_ts} );
         events.emplace_back( new SandEvent {node_name(neighbor(this->index_, DOWN)) , event_ts} );
@@ -62,28 +70,28 @@ std::vector<std::shared_ptr<warped::Event> > Vertex::receiveEvent(const warped::
 unsigned int Vertex::neighbor( unsigned int index, direction_t direction ) {
 
     unsigned int new_x = 0, new_y = 0;
-    unsigned int current_y = index / num_cells_x_;
-    unsigned int current_x = index % num_cells_x_;
+    unsigned int current_y = index / grid_dimension_;
+    unsigned int current_x = index % grid_dimension_;
 
     switch(direction) {
         case LEFT: {
-            new_x = (current_x + num_cells_x_ - 1) % num_cells_x_;
+            new_x = (current_x + grid_dimension_ - 1) % grid_dimension_;
             new_y = current_y;
         } break;
 
         case RIGHT: {
-            new_x = (current_x + 1) % num_cells_x_;
+            new_x = (current_x + 1) % grid_dimension_;
             new_y = current_y;
         } break;
 
         case DOWN: {
             new_x = current_x;
-            new_y = (current_y + num_cells_y_ - 1) % num_cells_y_;
+            new_y = (current_y + 1) % grid_dimension_;
         } break;
 
         case UP: {
             new_x = current_x;
-            new_y = (current_y + 1) % num_cells_y_;
+            new_y = (current_y + grid_dimension_ - 1) % grid_dimension_;
         } break;
 
         default: {
@@ -92,50 +100,33 @@ unsigned int Vertex::neighbor( unsigned int index, direction_t direction ) {
         }
     }
 
-    return (new_x + new_y * num_cells_x_);
+    return (new_x + new_y * grid_dimension_);
 }
 
 int main(int argc, const char **argv) {
 
-    /* Set the default values for the arguments */
-    unsigned int num_cells_x            = 1000;
-    unsigned int num_cells_y            = 1000;
-    unsigned int stability_threshold    = 4;
-    unsigned int z_at_center            = 300;
+    /* Set the default values for the argument */
+    unsigned int grid_dimension = 1000;
 
-    /* Read the arguments */
-    TCLAP::ValueArg<unsigned int> num_cells_x_arg("x", "num-cells-x",
-                    "Width of sandpile grid", false, num_cells_x, "unsigned int");
-    TCLAP::ValueArg<unsigned int> num_cells_y_arg("y", "num-cells-y",
-                    "Height of sandpile grid", false, num_cells_y, "unsigned int");
-    TCLAP::ValueArg<unsigned int> stability_threshold_arg("s", "stability-threshold",
-                    "Threshold of Z-value", false, stability_threshold, "unsigned int");
-    TCLAP::ValueArg<unsigned int> z_at_center_arg("z", "z-at-center",
-                    "Z-value at center of the grid", false, z_at_center, "unsigned int");
-
-    std::vector<TCLAP::Arg*> cmd_line_args =    {   &num_cells_x_arg,
-                                                    &num_cells_y_arg,
-                                                    &stability_threshold_arg,
-                                                    &z_at_center_arg
-                                                };
+    /* Read the argument */
+    TCLAP::ValueArg<unsigned int> grid_dimension_arg("d", "grid-dimension",
+                    "Dimension of the square sandpile grid", false, grid_dimension, "unsigned int");
+    std::vector<TCLAP::Arg*> cmd_line_args = { &grid_dimension_arg };
     warped::Simulation simulation {"Abelian Sandpile Simulation", argc, argv, cmd_line_args};
-    num_cells_x         = num_cells_x_arg.getValue();
-    num_cells_y         = num_cells_y_arg.getValue();
-    stability_threshold = stability_threshold_arg.getValue();
-    z_at_center         = z_at_center_arg.getValue();
+    grid_dimension = grid_dimension_arg.getValue();
 
     /* Create the LPs */
     std::vector<Vertex> lps;
     std::vector<warped::LogicalProcess*> lp_pointers;
 
-    unsigned int total_cells  = num_cells_x * num_cells_y;
-    unsigned int center_index = (num_cells_x / 2) * num_cells_y + (num_cells_y / 2);
+    unsigned int vertex_cnt   = grid_dimension * grid_dimension;
+    unsigned int center_index = (vertex_cnt / 2) - ((grid_dimension % 2) ? 0 : (grid_dimension / 2));
 
-    for (unsigned int i = 0; i < total_cells; i++) {
+    for (unsigned int i = 0; i < vertex_cnt; i++) {
 
-        /* Note: Initially, only the center has a slope */
-        unsigned int z = (i == center_index) ? z_at_center : 0;
-        lps.emplace_back(node_name(i), num_cells_x, num_cells_y, i, z, stability_threshold);
+        /* Note: Initially, only the center has a grain of sand */
+        unsigned int sandpile_height = (i == center_index) ? 1 : 0;
+        lps.emplace_back(node_name(i), grid_dimension, i, sandpile_height);
     }
 
     for (auto& lp : lps) {
@@ -144,34 +135,42 @@ int main(int argc, const char **argv) {
 
     simulation.simulate(lp_pointers);
 
-    /* Post-processing : Print fractal image of the output */
-    auto lattice = new ppm(num_cells_x, num_cells_y);
+    /* Post-processing : Print fractal image of the grid */
+    auto grid = new ppm(grid_dimension, grid_dimension);
 
     for (auto& lp : lps) {
         auto i = lp.index_;
-        if (lp.state_.z_ > 255) {
-            lattice->r[i] = 255;
-            lattice->g[i] = 255;
-            lattice->b[i] = 255;
+        if (lp.state_.sandpile_height_ == 3) { // Vertex will topple immediately, mark WHITE */
+            grid->r[i] = 255;
+            grid->g[i] = 255;
+            grid->b[i] = 255;
 
-        } else if (lp.state_.z_ >= 128) {
-            lattice->r[i] = lp.state_.z_;
-            lattice->g[i] = 0;
-            lattice->b[i] = 0;
+        } else if (lp.state_.sandpile_height_ == 2) { /* Vertex will topple after WHITE, mark RED */
+            grid->r[i] = 255;
+            grid->g[i] = 0;
+            grid->b[i] = 0;
 
-        } else if (lp.state_.z_ >= stability_threshold) {
-            lattice->r[i] = 0;
-            lattice->g[i] = 128 + lp.state_.z_;
-            lattice->b[i] = 0;
+        } else if (lp.state_.sandpile_height_ == 1) { /* Vertex will topple after RED, mark YELLOW */
+            grid->r[i] = 255;
+            grid->g[i] = 255;
+            grid->b[i] = 0;
 
         } else {
-            lattice->r[i] = 0;
-            lattice->g[i] = 0;
-            lattice->b[i] = 0;
+            /* If the vertex has collapsed before, mark PINK */
+            if (lp.state_.collapse_cnt_) {
+                grid->r[i] = 255;
+                grid->g[i] = 0;
+                grid->b[i] = 255;
+
+            } else { /* If vertex has never collapsed, mark BLACK */
+                grid->r[i] = 0;
+                grid->g[i] = 0;
+                grid->b[i] = 0;
+            }
         }
     }
-    lattice->write("output_lattice.ppm");
-    delete lattice;
+    grid->write("output_grid.ppm");
+    delete grid;
 
     return 0;
 }

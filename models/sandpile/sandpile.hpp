@@ -6,9 +6,10 @@
 
 #include "warped.hpp"
 
-WARPED_DEFINE_LP_STATE_STRUCT(SandState) {
+WARPED_DEFINE_LP_STATE_STRUCT(VertexState) {
 
-    unsigned int z_;
+    unsigned int sandpile_height_ = 0;
+    unsigned int collapse_cnt_ = 0;
 };
 
 enum direction_t {
@@ -43,21 +44,17 @@ public:
 class Vertex : public warped::LogicalProcess {
 public:
     Vertex( const std::string&  name,
-            unsigned int        num_cells_x,
-            unsigned int        num_cells_y,
+            unsigned int        grid_dimension,
             unsigned int        index,
-            unsigned int        z,
-            unsigned int        stability_threshold     )
+            unsigned int        sandpile_height )
 
         :   LogicalProcess(name),
             state_(),
             index_(index),
-            num_cells_x_(num_cells_x),
-            num_cells_y_(num_cells_y),
-            stability_threshold_(stability_threshold) {
+            grid_dimension_(grid_dimension) {
 
-        /* Initialize the state variable */
-        state_.z_ = z;
+        /* Initialize the pile height (state variable) */
+        state_.sandpile_height_ = sandpile_height;
     }
 
     virtual warped::LPState& getState() { return state_; }
@@ -66,13 +63,11 @@ public:
 
     virtual std::vector<std::shared_ptr<warped::Event> > receiveEvent(const warped::Event&);
 
-    SandState state_;
+    VertexState state_;
     unsigned int index_;
 
 protected:
-    unsigned int num_cells_x_;
-    unsigned int num_cells_y_;
-    unsigned int stability_threshold_;
+    unsigned int grid_dimension_;
 
     unsigned int neighbor( unsigned int index, direction_t direction );
 
