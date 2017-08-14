@@ -1,18 +1,18 @@
-#TRAFFIC: A WARPED simulation kernel application
+# TRAFFIC: A WARPED simulation kernel application
 
 Experimental Computing Laboratory <br>
 Dept of ECECS, PO Box 210030 <br>
 Cincinnati, OH  45221--0030 <br>
 
-##Introduction :
+## Introduction :
 
-This simulation model simulates the traffic movement in a busy city. 
-Each intersection is a simulation object which has a fixed place on 
-a traffic grid. Vehicles can move from one intersection to the other 
-- this is simulated via event diffusion from one simulation object 
+This simulation model simulates the traffic movement in a busy city.
+Each intersection is a simulation object which has a fixed place on
+a traffic grid. Vehicles can move from one intersection to the other
+- this is simulated via event diffusion from one simulation object
 to the other on the traffic grid. [1]
 
-##Configuration :
+## Configuration :
 
 User can adjust the following parameters :
 
@@ -21,8 +21,7 @@ User can adjust the following parameters :
 3. Number of cars per intersection (Default: 25)
 4. Mean interval (Default: 400)
 
-##References :
+## References :
 
-[1] Ported from the ROSS traffic model 
+[1] Ported from the ROSS traffic model
 (https://github.com/carothersc/ROSS-Models/tree/master/traffic)
-
