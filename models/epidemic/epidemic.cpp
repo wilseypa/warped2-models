@@ -282,6 +282,7 @@ int main(int argc, const char** argv) {
         }
         lp.populateTravelDistances(temp_travel_map);
     }
+    delete graph;
 
     std::vector<warped::LogicalProcess*> lp_pointers;
     for (auto& lp : lps) {
