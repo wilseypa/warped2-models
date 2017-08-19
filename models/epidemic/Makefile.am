@@ -2,7 +2,7 @@ bin_PROGRAMS = epidemic_sim
 
 epidemic_sim_SOURCES = \
     Person.hpp \
-    WattsStrogatzModel.hpp \
+    Graph.hpp \
     DiffusionNetwork.hpp \
     DiseaseModel.hpp \
     epidemic.hpp \

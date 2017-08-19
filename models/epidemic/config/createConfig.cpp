@@ -5,9 +5,13 @@
 /** Config Settings - edit to get the desired settings **/
 
 /* Diffusion parameter */
-// Watts-Strogatz model parameters
-#define K                                   8
-#define BETA                                0.1
+// Graph type - Watts-Strogatz, Barabasi-Albert
+#define GRAPH_TYPE                          "Watts-Strogatz"
+
+// Watts-Strogatz graph parameters  - k (param 1), beta (param 2)
+// Barabasi-Albert graph parameters - m (param 1),    a (param 2)
+#define PARAM_1                             8
+#define PARAM_2                             0.1
 
 /* Disease parameters */
 #define TRANSMISSIBILITY                    0.12
@@ -63,8 +67,9 @@ int main( int argc, char *argv[] ) {
     }
 
     // Write the diffusion parameters
-    config_stream << K              << ",";
-    config_stream << BETA           << std::endl;
+    config_stream << GRAPH_TYPE << ",";
+    config_stream << PARAM_1    << ",";
+    config_stream << PARAM_2    << std::endl;
 
     // Write the disease parameters
     config_stream << TRANSMISSIBILITY                   << std::endl;

@@ -23,7 +23,8 @@ This model contains four parts [1]:
 + A set of interacting entities.
 
 + A network graph that shows the interaction structure of entities.
-  Currently 'WattsStrogatz' model [3] is supported.
+  Currently 'WattsStrogatz' [3] and 'BarabasiAlbert' [4] graphs are 
+  supported.
 
 + A reaction process, called within-host progression, which models the
   progress of the disease in an individual entity.
@@ -49,3 +50,7 @@ IEEE Press, Piscataway, NJ, USA, , Article 37 , 12 pages.
 
 [3] D.J. Watts and S.H. Strogatz. Collective dynamics of 'small-world' networks.
 Nature 393, 440-442 (1998).
+
+[4] Albert-László Barabási, Réka Albert. Emergence of scaling in random networks.
+Science 286(5439), 509-512 (1999).
+

@@ -7,10 +7,14 @@ following command:
     g++ --std=c++11 createConfig.cpp;./a.out <config_filename>
 
 
-1. Diffusion parameters (uses Watts-Strogatz model)
-    1. Number of links per node (K). Default value is 8. 
-    2. Probability of link swaps (BETA). Default value is 0.1. 
-       (small world networks have values <= 0.1)
+1. Diffusion parameters
+    1. Graph Type can be either Watts-Strogatz or Barabasi-Albert
+    2. Param 1 - default value is 8.
+         Watts-Strogatz  : Number of links per node (K).
+         Barabasi-Albert : Maximum degree of each node (m).
+    3. Param 2 - default value is 0.1
+         Watts-Strogatz  : Probability of link swaps (BETA). Small world networks have values <= 0.1.
+         Barabasi-Albert : Probability Exponent (a).
 2. Disease parameters
     1. Disease transmission probability. Default value is 0.12.
     2. Dwell time in Latent state. Default value is 200 timestamps.

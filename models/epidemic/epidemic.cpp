@@ -1,6 +1,6 @@
 #include <fstream>
 #include "epidemic.hpp"
-#include "WattsStrogatzModel.hpp"
+#include "Graph.hpp"
 #include "tclap/ValueArg.h"
 
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(EpidemicEvent)
@@ -99,10 +99,9 @@ int main(int argc, const char** argv) {
     // Diffusion model
     getline(config_stream, buffer);
     pos = buffer.find(delimiter);
-    token = buffer.substr(0, pos);
-    unsigned int k = (unsigned int) std::stoul(token);
+    std::string graph_type = buffer.substr(0, pos);
     buffer.erase(0, pos + delimiter.length());
-    float beta = std::stof(buffer);
+    std::string diffusion_params(buffer);
 
     // Disease model
     getline(config_stream, buffer);
@@ -244,18 +243,37 @@ int main(int argc, const char** argv) {
     }
     config_stream.close();
 
-    // Create the Watts-Strogatz model
-    auto ws = std::make_shared<WattsStrogatzModel>(k, beta);
+    // Create the Network Graph
     std::vector<std::string> nodes;
     for (auto& lp : lps) {
         nodes.push_back(lp.getLocationName());
     }
-    ws->populateNodes(nodes);
-    ws->mapNodes();
+
+    Graph *graph = nullptr;
+    if (graph_type == "Watts-Strogatz") { // If the choice is Watts-Strogatz
+        pos = diffusion_params.find(delimiter);
+        token = diffusion_params.substr(0, pos);
+        unsigned int k = (unsigned int) std::stoul(token);
+        diffusion_params.erase(0, pos + delimiter.length());
+        double beta = std::stod(diffusion_params);
+        graph = new WattsStrogatz(nodes, k, beta);
+
+    } else if (graph_type == "Barabasi-Albert") { // If the choice is Barabasi-Albert
+        pos = diffusion_params.find(delimiter);
+        token = diffusion_params.substr(0, pos);
+        unsigned int m = (unsigned int) std::stoul(token);
+        diffusion_params.erase(0, pos + delimiter.length());
+        double a = std::stod(diffusion_params);
+        graph = new BarabasiAlbert(nodes, m, a);
+
+    } else { // Invalid choice
+        std::cerr << "Invalid choice of diffusion network." << std::endl;
+        return 0;
+    }
 
     // Create the travel map
     for (auto& lp : lps) {
-        std::vector<std::string> connections = ws->fetchNodeLinks(lp.getLocationName());
+        std::vector<std::string> connections = graph->adjacencyList(lp.getLocationName());
         std::map<std::string, unsigned int> temp_travel_map;
         for (auto& link : connections) {
             auto travel_map_iter = travel_map.find(link);
