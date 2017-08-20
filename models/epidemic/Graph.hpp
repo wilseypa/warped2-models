@@ -140,7 +140,7 @@ public:
                 unsigned int i = (unsigned int) node_dist(generator);
                 double p = ((double) degree[i]) / total_degrees;
                 p = pow(p, a);
-                double r = (unsigned int) r_dist(generator);
+                double r = r_dist(generator);
                 if (p >= r) continue; // no new edge is created
 
                 /* New edge is created if it already doesn't exist */
