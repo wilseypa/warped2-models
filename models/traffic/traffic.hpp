@@ -93,6 +93,16 @@ public:
     const std::string& receiverName() const { return receiver_name_; }
     unsigned int timestamp() const { return ts_; }
 
+    unsigned int size() const {
+        return  receiver_name_.length() +
+                sizeof(type_) +
+                sizeof(x_to_go_) +
+                sizeof(y_to_go_) +
+                sizeof(arrived_from_) +
+                sizeof(current_lane_) +
+                sizeof(ts_);
+    }
+
     std::string receiver_name_;
     traffic_event_t type_;
 	int x_to_go_;

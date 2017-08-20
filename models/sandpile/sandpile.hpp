@@ -33,6 +33,10 @@ public:
 
     unsigned int timestamp() const { return event_ts_; }
 
+    unsigned int size() const {
+        return receiver_name_.length() + sizeof(event_ts_);
+    }
+
     std::string     receiver_name_;
     unsigned int    event_ts_;
 

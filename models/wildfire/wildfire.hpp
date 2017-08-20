@@ -61,6 +61,13 @@ public:
     const std::string& receiverName() const { return receiver_name_; }
     unsigned int timestamp() const { return ts_; }
 
+    unsigned int size() const {
+        return  receiver_name_.length() +
+                sizeof(type_) +
+                sizeof(heat_content_) +
+                sizeof(ts_);
+    }
+
     std::string receiver_name_; /*! Name of the LP that is recieving the event */
     cell_event_t type_; /*! The type of event being sent */
     unsigned int heat_content_; /*! Heat being sent in the event */

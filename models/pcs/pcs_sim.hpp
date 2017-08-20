@@ -62,6 +62,15 @@ public:
 
     unsigned int timestamp() const { return event_ts_; }
 
+    unsigned int size() const {
+        return  receiver_name_.length() +
+                sizeof(event_ts_) +
+                sizeof(complete_call_ts_) +
+                sizeof(next_call_ts_) +
+                sizeof(move_call_ts_) +
+                sizeof(method_);
+    }
+
     std::string     receiver_name_;
     unsigned int    event_ts_;
     unsigned int    complete_call_ts_;

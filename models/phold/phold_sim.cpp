@@ -31,6 +31,10 @@ public:
     const std::string& receiverName() const { return receiver_name_; }
     unsigned int timestamp() const { return time_stamp_; }
 
+    unsigned int size() const {
+        return receiver_name_.length() + sizeof(time_stamp_);
+    }
+
     std::string receiver_name_;
     unsigned int time_stamp_;
 

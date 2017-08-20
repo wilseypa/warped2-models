@@ -66,6 +66,17 @@ public:
     const std::string& receiverName() const { return receiver_name_; }
     unsigned int timestamp() const { return loc_arrival_timestamp_; }
 
+    unsigned int size() const {
+        return  receiver_name_.length() +
+                sizeof(pid_) +
+                sizeof(susceptibility_) +
+                sizeof(vaccination_status_) +
+                sizeof(infection_state_) +
+                sizeof(loc_arrival_timestamp_) +
+                sizeof(prev_state_change_timestamp_) +
+                sizeof(event_type_);
+    }
+
     std::string receiver_name_;
     unsigned long pid_;
     double susceptibility_;

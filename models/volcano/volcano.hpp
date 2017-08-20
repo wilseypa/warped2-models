@@ -48,6 +48,16 @@ public:
     const std::string& receiverName() const { return receiver_name_; }
     unsigned int timestamp() const { return ts_; }
 
+    unsigned int size() const {
+        return  receiver_name_.length() +
+                sizeof(type_) +
+                sizeof(vel_x_) +
+                sizeof(vel_y_) +
+                sizeof(vel_z_) +
+                sizeof(origin_time_) +
+                sizeof(ts_);
+    }
+
     std::string receiver_name_;
     particle_event_t type_;
     double vel_x_;

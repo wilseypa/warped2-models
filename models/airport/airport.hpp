@@ -40,6 +40,13 @@ public:
     const std::string& receiverName() const { return receiver_name_; }
     unsigned int timestamp() const { return ts_; }
 
+    unsigned int size() const {
+        unsigned int size = receiver_name_.length() +
+                            sizeof(type_) +
+                            sizeof(ts_);
+        return size;
+    }
+
     std::string receiver_name_;
     airport_event_t type_;
     unsigned int ts_;
