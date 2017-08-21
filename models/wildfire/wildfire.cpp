@@ -3,7 +3,7 @@
 #include <cassert>
 #include <locale>
 #include "wildfire.hpp"
-#include "ppm.hpp"
+#include "ppm/ppm.hpp"
 #include "tclap/ValueArg.h"
 
 /* Event timer delays */
@@ -455,9 +455,9 @@ int main(int argc, char *argv[]) {
     /* Also print the post-wildfire vegetation map */
     auto status_map = new ppm(num_cols, num_rows);
     unsigned int cells_burnt_cnt = 0, cells_burning_cnt = 0;
+    unsigned int i = 0;
     for (auto& lp: lps) {
         auto status = lp.state_.burn_status_;
-        auto i = lp.index_;
 
         /* Post-wildfire status color codes :
              1. burnt-out cells -> white
@@ -479,6 +479,7 @@ int main(int argc, char *argv[]) {
             status_map->r[i] = 255 - lp.ignition_threshold_;
             status_map->g[i] = 200;
         }
+        i++;
     }
     status_map->write("post_wildfire_status.ppm");
     delete status_map;

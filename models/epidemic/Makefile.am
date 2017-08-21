@@ -9,3 +9,5 @@ epidemic_sim_SOURCES = \
     epidemic.cpp
 
 epidemic_sim_CPPFLAGS = -I$(top_srcdir)/deps
+
+epidemic_sim_LDADD = $(top_srcdir)/deps/ppm/libppm.la

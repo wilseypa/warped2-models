@@ -1,6 +1,7 @@
 #include <fstream>
 #include "epidemic.hpp"
 #include "Graph.hpp"
+#include "ppm/ppm.hpp"
 #include "tclap/ValueArg.h"
 
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(EpidemicEvent)
@@ -271,8 +272,9 @@ int main(int argc, const char** argv) {
         return 0;
     }
 
-    // Create the travel map
+    // Create the travel map and record initial statistics for each LP
     for (auto& lp : lps) {
+        // Create the travel map
         std::vector<std::string> connections = graph->adjacencyList(lp.getLocationName());
         std::map<std::string, unsigned int> temp_travel_map;
         for (auto& link : connections) {
@@ -281,6 +283,9 @@ int main(int argc, const char** argv) {
                                 (travel_map_iter->first, travel_map_iter->second));
         }
         lp.populateTravelDistances(temp_travel_map);
+
+        // Record the initial statistics
+
     }
     delete graph;
 

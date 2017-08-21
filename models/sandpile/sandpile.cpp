@@ -4,7 +4,7 @@
 
 #include "warped.hpp"
 #include "sandpile.hpp"
-#include "ppm.hpp"
+#include "ppm/ppm.hpp"
 #include "tclap/ValueArg.h"
 
 #define TS_INTERVAL 1 /* Timestamp interval */
@@ -149,9 +149,8 @@ int main(int argc, const char **argv) {
 
     /* Post-processing : Print fractal image of the grid */
     auto grid = new ppm(grid_dimension, grid_dimension);
-
+    unsigned int i = 0;
     for (auto& lp : lps) {
-        auto i = lp.index_;
         if (lp.state_.sandpile_height_ == 3) { /* Vertex will topple immediately, mark WHITE */
             grid->r[i] = 255;
             grid->g[i] = 255;
@@ -180,6 +179,7 @@ int main(int argc, const char **argv) {
                 grid->b[i] = 0;
             }
         }
+        i++;
     }
     grid->write("output_grid.ppm");
     delete grid;
