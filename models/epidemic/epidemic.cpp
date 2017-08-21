@@ -273,6 +273,8 @@ int main(int argc, const char** argv) {
     }
 
     // Create the travel map and record initial statistics for each LP
+    unsigned long i = 0;
+    auto heatmap = new ppm(100, (lps.size()+99)/100);
     for (auto& lp : lps) {
         // Create the travel map
         std::vector<std::string> connections = graph->adjacencyList(lp.getLocationName());
@@ -285,7 +287,12 @@ int main(int argc, const char** argv) {
         lp.populateTravelDistances(temp_travel_map);
 
         // Record the initial statistics
-
+        unsigned long population_size = 0, affected_cnt = 0;
+        lp.statistics(&population_size, &affected_cnt);
+        double frac_affected = ((double) affected_cnt) / population_size;
+        heatmap->g[i] = frac_affected * 255;
+        heatmap->b[i] = frac_affected * 255;
+        i++;
     }
     delete graph;
 
@@ -294,6 +301,18 @@ int main(int argc, const char** argv) {
         lp_pointers.push_back(&lp);
     }
     epidemic_sim.simulate(lp_pointers);
+
+    // Record final statistics for each LP
+    i = 0;
+    for (auto& lp : lps) {
+        unsigned long population_size = 0, affected_cnt = 0;
+        lp.statistics(&population_size, &affected_cnt);
+        double frac_affected = ((double) affected_cnt) / population_size;
+        heatmap->r[i] = frac_affected * 255;
+        i++;
+    }
+    heatmap->write("heatmap.ppm");
+    delete heatmap;
 
     return 0;
 }

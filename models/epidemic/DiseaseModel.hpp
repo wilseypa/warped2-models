@@ -98,7 +98,7 @@ public:
                         if (ulv_num > rand_num) {
                             person->infection_state_ = infection_state_t::LATENT;
                         } else if (urv_plus_ulv_num > rand_num) {
-                            person->infection_state_ = infection_state_t::RECOVERED;
+                            person->infection_state_ = infection_state_t::UNINFECTED;
                         } else {
                             person->infection_state_ = infection_state_t::INCUBATING;
                         }
@@ -143,7 +143,7 @@ private:
         if (person->infection_state_ == infection_state_t::ASYMPT) {
             if ((current_time - person->prev_state_change_timestamp_) 
                                             >= asympt_dwell_interval_) {
-                person->infection_state_ = infection_state_t::RECOVERED;
+                person->infection_state_ = infection_state_t::UNINFECTED;
                 person->prev_state_change_timestamp_ += asympt_dwell_interval_;
             }
         }

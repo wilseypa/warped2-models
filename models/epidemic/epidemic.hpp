@@ -137,6 +137,18 @@ public:
         diffusion_network_->populateTravelChart(travel_chart);
     }
 
+    void statistics (   unsigned long *population_size,
+                        unsigned long *affected_cnt     ) {
+
+        auto population_map = *state_->current_population_;
+        *population_size = population_map.size();
+        *affected_cnt = 0;
+        for (auto& entry : population_map) {
+            auto person = *entry.second;
+            if (person.isAffected()) (*affected_cnt)++;
+        }
+    }
+
     std::string getLocationName() {
 
         return location_name_;

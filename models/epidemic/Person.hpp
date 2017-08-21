@@ -22,6 +22,8 @@ public:
             infection_state_(infection_state), loc_arrival_timestamp_(arrival_timestamp),
             prev_state_change_timestamp_(prev_state_change_timestamp) {}
 
+    bool isAffected() { return (infection_state_ == INFECTIOUS || infection_state_ == RECOVERED); }
+
     unsigned long pid_;
     double susceptibility_;
     bool vaccination_status_;
