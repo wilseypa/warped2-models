@@ -76,7 +76,7 @@ std::vector<std::shared_ptr<warped::Event> > Location::receiveEvent(const warped
 
 int main(int argc, const char** argv) {
 
-    std::string config_filename = "model_10k.dat";
+    std::string config_filename = "model_10k_ws.dat";
     TCLAP::ValueArg<std::string> config_arg("m", "model", 
             "Epidemic model config", false, config_filename, "string");
     std::vector<TCLAP::Arg*> args = {&config_arg};
@@ -304,7 +304,7 @@ int main(int argc, const char** argv) {
     epidemic_sim.simulate(lp_pointers);
 
     // Plot the heatmaps
-    unsigned long cols = 100;
+    unsigned long cols = std::ceil( sqrt(lps.size()) );
     unsigned long rows = (lps.size()+cols-1)/cols;
     auto population_diffusion_hmap = new ppm(cols, rows);
     auto disease_growth_hmap = new ppm(cols, rows);
