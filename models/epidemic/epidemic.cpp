@@ -273,8 +273,9 @@ int main(int argc, const char** argv) {
     }
 
     // Create the travel map and record initial statistics for each LP
+    std::vector<unsigned long> initial_population( lps.size() );
+    std::vector<unsigned long> initial_affected_cnt( lps.size() );
     unsigned long i = 0;
-    auto heatmap = new ppm(100, (lps.size()+99)/100);
     for (auto& lp : lps) {
         // Create the travel map
         std::vector<std::string> connections = graph->adjacencyList(lp.getLocationName());
@@ -287,32 +288,67 @@ int main(int argc, const char** argv) {
         lp.populateTravelDistances(temp_travel_map);
 
         // Record the initial statistics
-        unsigned long population_size = 0, affected_cnt = 0;
-        lp.statistics(&population_size, &affected_cnt);
-        double frac_affected = ((double) affected_cnt) / population_size;
-        heatmap->g[i] = frac_affected * 255;
-        heatmap->b[i] = frac_affected * 255;
+        unsigned long init_popu = 0, init_affected = 0;
+        lp.statistics(&init_popu, &init_affected);
+        initial_population[i]   = init_popu;
+        initial_affected_cnt[i] = init_affected;
         i++;
     }
     delete graph;
 
+    // Simulate the epidemic
     std::vector<warped::LogicalProcess*> lp_pointers;
     for (auto& lp : lps) {
         lp_pointers.push_back(&lp);
     }
     epidemic_sim.simulate(lp_pointers);
 
+    // Plot the heatmaps
+    unsigned long cols = 100;
+    unsigned long rows = (lps.size()+cols-1)/cols;
+    auto population_diffusion_hmap = new ppm(cols, rows);
+    auto disease_growth_hmap = new ppm(cols, rows);
+
     // Record final statistics for each LP
     i = 0;
     for (auto& lp : lps) {
-        unsigned long population_size = 0, affected_cnt = 0;
-        lp.statistics(&population_size, &affected_cnt);
-        double frac_affected = ((double) affected_cnt) / population_size;
-        heatmap->r[i] = frac_affected * 255;
+        unsigned long final_population = 0, final_affected_cnt = 0;
+        lp.statistics(&final_population, &final_affected_cnt);
+
+        // If initial population >  final population, color is GREEN
+        // If initial population == final population, color is BLACK
+        // If initial population  < final population, color is RED
+        if (initial_population[i] >= final_population) {
+            double ratio = ( (double)(initial_population[i] - final_population) ) /
+                                                                    initial_population[i];
+            population_diffusion_hmap->g[i] = ratio * 255;
+
+        } else {
+            double ratio = ( (double)(final_population - initial_population[i]) ) /
+                                                                    final_population;
+            population_diffusion_hmap->r[i] = ratio * 255;
+        }
+
+        // If initial affected cnt >  final affected cnt, color is YELLOWISH GREEN
+        // If initial affected cnt == final affected cnt, color is BLACK
+        // If initial affected cnt  < final affected cnt, color is RED
+        if (initial_affected_cnt[i] >= final_affected_cnt) {
+            double ratio = ( (double)(initial_affected_cnt[i] - final_affected_cnt) ) /
+                                                                    initial_affected_cnt[i];
+            disease_growth_hmap->g[i] = ratio * 255;
+
+        } else {
+            double ratio = ( (double)(final_affected_cnt - initial_affected_cnt[i]) ) /
+                                                                    final_affected_cnt;
+            disease_growth_hmap->r[i] = ratio * 255;
+        }
         i++;
     }
-    heatmap->write("heatmap.ppm");
-    delete heatmap;
+    population_diffusion_hmap->write("population_diffusion_hmap.ppm");
+    disease_growth_hmap->write("disease_growth_hmap.ppm");
+
+    delete population_diffusion_hmap;
+    delete disease_growth_hmap;
 
     return 0;
 }
