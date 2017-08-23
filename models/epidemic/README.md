@@ -36,6 +36,22 @@ This model contains four parts [1]:
 
 Please refer to [Configuration Creator](config/) for details.
 
+## Heatmaps :
+
+The epidemic model prints out two separate heatmaps:
+
++ Population Size Change at locations : If population of a location
+  decreases during simulation, it is colored GREEN; if population
+  increases, it is colored RED; otherwise it is colored BLACK. Dark
+  areas represent areas with less change in population size after
+  the simulation. Filename is 'population\_diffusion\_hmap.ppm'.
+
++ Affected Count Change at locations : If number of affected people
+  decreases at a location during simulation, it is colored GREEN; if
+  number increases, it is colored RED; otherwise it is colored BLACK.
+  Dark areas represent areas with less change in number of infected
+  people after the simulation. Filename is 'disease\_growth\_hmap.ppm'.
+
 ## References :
 
 [1] Kalyan S Perumalla and Sudip K Seal. 2012. Discrete event modeling
