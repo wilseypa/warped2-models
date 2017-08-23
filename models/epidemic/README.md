@@ -34,7 +34,18 @@ This model contains four parts [1]:
 
 ## Configuration :
 
-Please refer to [Configuration Creator](config/) for details.
+Please refer to [Configuration Creator](config/) for details. Four
+configuration files have been uploaded into the repository for use,
+namely :
+
++ 'model\_10k\_ws.dat' (which is the default) and 'model\_10k\_ba.dat'
+  have 10,000 locations and the same configuration except the population
+  network structure. The '\_ws' tag in the file name indicates
+  'Watts-Strogatz' while '\_ba' tag indicates 'Barabasi-Albert'.
+
++ Similarly, 'model\_100k\_ws.dat' and 'model\_100k\_ba.dat' have
+  100,000 locations and the same configuration except the network
+  structure.
 
 ## Heatmaps :
 
