@@ -95,6 +95,8 @@ public:
 
     static inline std::string lpName(const unsigned int);
 
+    std::vector<std::string> adjacency_list_;
+
 protected:
     std::shared_ptr<std::default_random_engine> rng_;
     const unsigned int num_nodes_;
