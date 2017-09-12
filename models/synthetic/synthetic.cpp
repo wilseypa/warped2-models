@@ -29,14 +29,15 @@ std::vector<std::shared_ptr<warped::Event> > Synthetic::initializeLP() {
 std::vector<std::shared_ptr<warped::Event> > Synthetic::receiveEvent(const warped::Event& event) {
 
     std::vector<std::shared_ptr<warped::Event> > response_events;
+    std::exponential_distribution<double> time_expo(1.0/mean_time_);
 
-    // Check if it is an internal event
+    /* Check if event received is a self/internal timer event */
     if (event.sender_name_ == event.receiverName()) {
-        std::exponential_distribution<double> time_expo(1.0/mean_time_);
         unsigned int time = (unsigned int)std::ceil(time_expo(*rng_));
         response_events.emplace_back(new InternalEvent {time});
+        //response_events.emplace_back(new ExternalEvent {});
 
-    } else { // External event
+    } else { /* Event received from other LPs/nodes */
 
     }
 

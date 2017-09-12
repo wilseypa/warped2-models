@@ -84,7 +84,7 @@ public:
             percent_state_change_(percent_state_change),
             index_(index) {
 
-        state_.stream_(state_size_, '0');
+        state_.stream_.resize(state_size_, '0');
     }
 
     virtual std::vector<std::shared_ptr<warped::Event> > initializeLP() override;
