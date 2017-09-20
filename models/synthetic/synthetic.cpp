@@ -14,22 +14,25 @@ inline std::string Synthetic::lpName(const unsigned int lp_index) {
 
 std::vector<std::shared_ptr<warped::Event> > Synthetic::initializeLP() {
 
+    std::vector<std::shared_ptr<warped::Event> > events;
+#if 0
     // Register random number generator
     registerRNG<std::default_random_engine>(rng_);
 
     std::exponential_distribution<double> time_expo(1.0/mean_time_);
-    std::vector<std::shared_ptr<warped::Event> > events;
-
     for (unsigned int i = 0; i < num_nodes_; i++) {
         unsigned int time = (unsigned int)std::ceil(time_expo(*rng_));
         events.emplace_back(new InternalEvent {time});
     }
+#endif
     return events;
 }
 
 std::vector<std::shared_ptr<warped::Event> > Synthetic::receiveEvent(const warped::Event& event) {
 
     std::vector<std::shared_ptr<warped::Event> > response_events;
+    assert (event.sender_name_ == event.receiverName());
+#if 0
     std::exponential_distribution<double> time_expo(1.0/mean_time_);
     std::uniform_int_distribution<int> ext_node(0, adjacency_list_.size()-1);
 
@@ -45,63 +48,82 @@ std::vector<std::shared_ptr<warped::Event> > Synthetic::receiveEvent(const warpe
         response_events.emplace_back(
                 new ExternalEvent { adjacency_list_[id],
                                     1,
-                                    percent_state_size_change_,
-                                    percent_state_change_,
                                     time    });
 
     } else { /* Event received from other LPs/nodes */
 
     }
-
+#endif
     return response_events;
 }
 
 int main(int argc, const char** argv) {
 
-    unsigned int num_nodes              = 100000;
-    std::string network_type            = "Watts-Strogatz";
-    std::string network_params          = "30,0.1";
-    unsigned int mean_time              = 10;
-    unsigned int state_size             = 100;
-    double percent_state_size_change    = 5.0;
-    double percent_state_change         = 10.0;
+    unsigned int num_nodes                  = 100000;
+    std::string network                     = "Watts-Strogatz,30,0.1";
+    std::string event_processing_time       = "1000,1000";
+    std::string state_size                  = "100,100";
+    std::string event_send                  = "geometric,0.5";
 
-    TCLAP::ValueArg<unsigned int> num_nodes_arg("n", "num-nodes", "Number of nodes",
-                                                            false, num_nodes, "unsigned int");
-    TCLAP::ValueArg<std::string> network_type_arg("t", "network-type", "Network type",
-                                                            false, network_type, "string");
-    TCLAP::ValueArg<std::string> network_params_arg("p", "network-params",
-                "Multiple network params separated by ','", false, network_params, "string");
-    TCLAP::ValueArg<unsigned int> mean_time_arg("m", "mean-time", "Time to run the simulation",
-                                                            false, mean_time, "unsigned int");
-    TCLAP::ValueArg<unsigned int> state_size_arg("s", "state-size", "Size of the lp state",
-                                                            false, state_size, "unsigned int");
-    TCLAP::ValueArg<double> percent_state_size_change_arg("g", "percent-state-size-change", 
-                "Change in state size in percentage", false, percent_state_size_change, "double");
-    TCLAP::ValueArg<double> percent_state_change_arg("f", "percent-state-change",
-                "Change state in percentage", false, percent_state_change, "double");
+    TCLAP::ValueArg<unsigned int> num_nodes_arg("n", "num-nodes",
+            "Number of nodes", false, num_nodes, "unsigned int");
+    TCLAP::ValueArg<std::string> network_arg("t", "network-params",
+            "Network details - <type,param1,param2,...>", false, network, "string");
+    TCLAP::ValueArg<std::string> event_processing_time_arg("e", "event-processing-time-range",
+            "Event processing time (as floating-point calculation count) range - <min,max>",
+            false, event_processing_time, "string");
+    TCLAP::ValueArg<std::string> state_size_arg("s", "state-size-range",
+            "Size range (in bytes) for the LP state - <min,max>",
+            false, state_size, "string");
+    TCLAP::ValueArg<std::string> event_send_arg("p", "send-params",
+            "Event send details - <distribution-type,>", "false", event_send, "string");
 
-    std::vector<TCLAP::Arg*> args = {&num_nodes_arg, &mean_time_arg, &state_size_arg,
-                            &percent_state_size_change_arg, &percent_state_change_arg};
+    std::vector<TCLAP::Arg*> args = {   &num_nodes_arg,
+                                        &network_arg,
+                                        &event_processing_time_arg,
+                                        &state_size_arg,
+                                        &event_send_arg
+                                    };
 
     warped::Simulation synthetic_sim {"Synthetic Simulation", argc, argv, args};
 
     num_nodes                   = num_nodes_arg.getValue();
-    network_type                = network_type_arg.getValue();
-    network_params              = network_params_arg.getValue();
-    mean_time                   = mean_time_arg.getValue();
+    network                     = network_arg.getValue();
+    event_processing_time       = event_processing_time_arg.getValue();
     state_size                  = state_size_arg.getValue();
-    percent_state_size_change   = percent_state_size_change_arg.getValue();
-    percent_state_change        = percent_state_change_arg.getValue();
+    event_send                  = event_send_arg.getValue();
 
     std::vector<Synthetic> lps;
     std::vector<std::string> lp_names;
 
+    /* Create uniform distribution for event processing time */
+    std::string delimiter = ",";
+    size_t pos = event_processing_time.find(delimiter);
+    unsigned int min_processing_time =
+                    (unsigned int) std::stoul(event_processing_time.substr(0, pos));
+    unsigned int max_processing_time =
+                    (unsigned int) std::stoul(event_processing_time.substr(pos+1));
+    std::uniform_int_distribution<unsigned int>
+                event_processing_time_dist( min_processing_time, max_processing_time );
+
+    /* Create uniform distribution for the state size */
+    pos = state_size.find(delimiter);
+    unsigned int min_state_size = (unsigned int) std::stoul(state_size.substr(0, pos));
+    unsigned int max_state_size = (unsigned int) std::stoul(state_size.substr(pos+1));
+    std::uniform_int_distribution<unsigned int>
+                state_size_dist( min_state_size, max_state_size );
+
+    /* Create the LPs */
+    std::default_random_engine generator (num_nodes);
     for (unsigned int i = 0; i < num_nodes; i++) {
         auto name = Synthetic::lpName(i);
         lp_names.push_back(name);
-        lps.emplace_back(name, num_nodes, mean_time, state_size,
-                percent_state_size_change, percent_state_change, i);
+        lps.emplace_back(   name,
+                            num_nodes,
+                            event_processing_time_dist(generator),
+                            state_size_dist(generator),
+                            i
+                        );
     }
 
     std::vector<warped::LogicalProcess*> lp_pointers;
@@ -111,21 +133,23 @@ int main(int argc, const char** argv) {
 
     // Create the Network Graph
     Graph *graph = nullptr;
-    std::string delimiter = ",";
-    if (network_type == "Watts-Strogatz") { // If the choice is Watts-Strogatz
-        size_t pos = network_params.find(delimiter);
-        std::string token = network_params.substr(0, pos);
+    pos = network.find(delimiter);
+    std::string type = network.substr(0, pos);
+    network.erase(0, pos + delimiter.length());
+    if (type == "Watts-Strogatz") { // If the choice is Watts-Strogatz
+        pos = network.find(delimiter);
+        std::string token = network.substr(0, pos);
         unsigned int k = (unsigned int) std::stoul(token);
-        network_params.erase(0, pos + delimiter.length());
-        double beta = std::stod(network_params);
+        network.erase(0, pos + delimiter.length());
+        double beta = std::stod(network);
         graph = new WattsStrogatz(lp_names, k, beta);
 
-    } else if (network_type == "Barabasi-Albert") { // If the choice is Barabasi-Albert
-        size_t pos = network_params.find(delimiter);
-        std::string token = network_params.substr(0, pos);
+    } else if (type == "Barabasi-Albert") { // If the choice is Barabasi-Albert
+        pos = network.find(delimiter);
+        std::string token = network.substr(0, pos);
         unsigned int m = (unsigned int) std::stoul(token);
-        network_params.erase(0, pos + delimiter.length());
-        double a = std::stod(network_params);
+        network.erase(0, pos + delimiter.length());
+        double a = std::stod(network);
         graph = new BarabasiAlbert(lp_names, m, a);
 
     } else { // Invalid choice
