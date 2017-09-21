@@ -1,18 +1,18 @@
 #include <cassert>
 #include <random>
 #include "synthetic.hpp"
-#include "Graph.hpp"
+#include "network.hpp"
 #include "tclap/ValueArg.h"
 
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(InternalEvent)
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(ExternalEvent)
 
-inline std::string Synthetic::lpName(const unsigned int lp_index) {
+inline std::string Node::lpName(const unsigned int lp_index) {
 
     return std::string("Node_") + std::to_string(lp_index);
 }
 
-std::vector<std::shared_ptr<warped::Event> > Synthetic::initializeLP() {
+std::vector<std::shared_ptr<warped::Event> > Node::initializeLP() {
 
     std::vector<std::shared_ptr<warped::Event> > events;
 #if 0
@@ -28,7 +28,7 @@ std::vector<std::shared_ptr<warped::Event> > Synthetic::initializeLP() {
     return events;
 }
 
-std::vector<std::shared_ptr<warped::Event> > Synthetic::receiveEvent(const warped::Event& event) {
+std::vector<std::shared_ptr<warped::Event> > Node::receiveEvent(const warped::Event& event) {
 
     std::vector<std::shared_ptr<warped::Event> > response_events;
     assert (event.sender_name_ == event.receiverName());
@@ -93,7 +93,7 @@ int main(int argc, const char** argv) {
     state_size                  = state_size_arg.getValue();
     event_send                  = event_send_arg.getValue();
 
-    std::vector<Synthetic> lps;
+    std::vector<Node> lps;
     std::vector<std::string> lp_names;
 
     /* Create uniform distribution for event processing time */
@@ -116,7 +116,7 @@ int main(int argc, const char** argv) {
     /* Create the LPs */
     std::default_random_engine generator (num_nodes);
     for (unsigned int i = 0; i < num_nodes; i++) {
-        auto name = Synthetic::lpName(i);
+        auto name = Node::lpName(i);
         lp_names.push_back(name);
         lps.emplace_back(   name,
                             num_nodes,
@@ -131,8 +131,8 @@ int main(int argc, const char** argv) {
         lp_pointers.push_back(&lp);
     }
 
-    // Create the Network Graph
-    Graph *graph = nullptr;
+    /* Create the Network */
+    Network *ntwrk = nullptr;
     pos = network.find(delimiter);
     std::string type = network.substr(0, pos);
     network.erase(0, pos + delimiter.length());
@@ -142,7 +142,7 @@ int main(int argc, const char** argv) {
         unsigned int k = (unsigned int) std::stoul(token);
         network.erase(0, pos + delimiter.length());
         double beta = std::stod(network);
-        graph = new WattsStrogatz(lp_names, k, beta);
+        ntwrk = new WattsStrogatz(lp_names, k, beta);
 
     } else if (type == "Barabasi-Albert") { // If the choice is Barabasi-Albert
         pos = network.find(delimiter);
@@ -150,19 +150,22 @@ int main(int argc, const char** argv) {
         unsigned int m = (unsigned int) std::stoul(token);
         network.erase(0, pos + delimiter.length());
         double a = std::stod(network);
-        graph = new BarabasiAlbert(lp_names, m, a);
+        ntwrk = new BarabasiAlbert(lp_names, m, a);
 
     } else { // Invalid choice
         std::cerr << "Invalid choice of network." << std::endl;
         return 0;
     }
 
-    /* Fetch the adjacency list for each node */
     for (auto& lp : lps) {
-        lp.adjacency_list_ = graph->adjacencyList(lp.name_);
+        /* Create the send time distributions */
+        lp.send_distribution_ = new Geometric("0.5");
+
+        /* Fetch the adjacency list for each node */
+        lp.adjacency_list_ = ntwrk->adjacencyList(lp.name_);
         assert(lp.adjacency_list_.size());
     }
-    delete graph;
+    delete ntwrk;
 
     /* Simulate the synthetic model */
     synthetic_sim.simulate(lp_pointers);

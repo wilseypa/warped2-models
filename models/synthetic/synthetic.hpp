@@ -1,5 +1,5 @@
-#ifndef Synthetic_HPP_DEFINED
-#define Synthetic_HPP_DEFINED
+#ifndef SYNTHETIC_HPP_DEFINED
+#define SYNTHETIC_HPP_DEFINED
 
 #include <string>
 #include <vector>
@@ -7,8 +7,10 @@
 #include <random>
 
 #include "warped.hpp"
+#include "distribution.hpp"
 
-WARPED_DEFINE_LP_STATE_STRUCT(SyntheticState) {
+
+WARPED_DEFINE_LP_STATE_STRUCT(NodeState) {
     std::string stream_;
 };
 
@@ -56,9 +58,9 @@ public:
                                     receiver_name_, event_processing_time_, ts_)
 };
 
-class Synthetic : public warped::LogicalProcess {
+class Node : public warped::LogicalProcess {
 public:
-    Synthetic(  const std::string name,
+    Node (      const std::string name,
                 const unsigned int num_nodes,
                 const unsigned int event_processing_time,
                 const unsigned int state_size,
@@ -78,11 +80,13 @@ public:
     virtual std::vector<std::shared_ptr<warped::Event> > receiveEvent(const warped::Event&);
     virtual warped::LPState& getState() { return this->state_; }
 
-    SyntheticState state_;
+    NodeState state_;
 
     static inline std::string lpName(const unsigned int);
 
     std::vector<std::string> adjacency_list_;
+
+    std::unique_ptr<Distribution> send_distribution_;
 
 protected:
     std::shared_ptr<std::default_random_engine> rng_;
