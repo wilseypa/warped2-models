@@ -157,9 +157,16 @@ int main(int argc, const char** argv) {
         return 0;
     }
 
+    /* Parse the send distribution type and parameters */
+    pos = event_send.find(delimiter);
+    std::string distribution_type = event_send.substr(0, pos);
+    event_send.erase(0, pos + delimiter.length());
+
     for (auto& lp : lps) {
         /* Create the send time distributions */
-        lp.send_distribution_ = new Geometric("0.5");
+        if (distribution_type == "Geometric") {
+            lp.send_distribution_ = new Geometric(event_send);
+        }
 
         /* Fetch the adjacency list for each node */
         lp.adjacency_list_ = ntwrk->adjacencyList(lp.name_);

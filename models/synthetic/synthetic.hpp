@@ -86,10 +86,11 @@ public:
 
     std::vector<std::string> adjacency_list_;
 
-    std::unique_ptr<Distribution> send_distribution_;
+    Distribution *send_distribution_ = nullptr;
+
+    std::shared_ptr<std::default_random_engine> rng_;
 
 protected:
-    std::shared_ptr<std::default_random_engine> rng_;
     const unsigned int num_nodes_;
     const unsigned int event_processing_time_;
     const unsigned int state_size_;

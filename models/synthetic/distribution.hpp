@@ -1,36 +1,33 @@
 #ifndef DISTRIBUTION_HPP
 #define DISTRIBUTION_HPP
 
-#include <random>   
+#include <random>
+//#include <string>
 
 class Distribution {
 public:
-    virtual unsigned int nextTimeDelta (std::shared_ptr<std::default_random_engine> rng) = 0;
+    virtual unsigned int nextTimeDelta (std::default_random_engine rng) = 0;
 };
 
-class Geometric : public Distribution{
+class Geometric : public Distribution {
 public:
-    Geometric(std::string param) {
+    Geometric(std::string params) {
 
-        p_ = std::stod(param);
+        p_ = std::stod(params);
         if (p_ <= 0 || p_ >= 1) {
             std::cerr << "Geometric Distribution: Invalid parameter." << std::endl;
             abort();
         }
     }
 
-    unsigned int nextTimeDelta(std::shared_ptr<std::default_random_engine> rng) {
+    unsigned int nextTimeDelta (std::default_random_engine rng) {
         std::geometric_distribution<int> distribution(p_);
-        return std::abs(distribution(rng));
+        return (unsigned int)std::max(distribution(rng), 1);
     }
 
 private:
     double p_ = 0.0;
 };
 
-class Exponential : public Distribution{
-public:
-    unsigned int nextTimeDelta() {return 0;}
-};
 
 #endif
