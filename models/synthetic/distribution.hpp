@@ -2,7 +2,6 @@
 #define DISTRIBUTION_HPP
 
 #include <random>
-//#include <string>
 
 class Distribution {
 public:
@@ -21,6 +20,7 @@ public:
     }
 
     unsigned int nextTimeDelta (std::default_random_engine rng) {
+
         std::geometric_distribution<int> distribution(p_);
         return (unsigned int)std::max(distribution(rng), 1);
     }
@@ -29,5 +29,11 @@ private:
     double p_ = 0.0;
 };
 
+class Exponential : public Distribution {
+public:
+    Exponential(std::string params) {}
+
+    unsigned int nextTimeDelta (std::default_random_engine rng) {}
+};
 
 #endif

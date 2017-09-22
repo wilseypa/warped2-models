@@ -157,15 +157,23 @@ int main(int argc, const char** argv) {
         return 0;
     }
 
-    /* Parse the send distribution type and parameters */
+    /* Parse the event send distribution type and parameters */
     pos = event_send.find(delimiter);
     std::string distribution_type = event_send.substr(0, pos);
     event_send.erase(0, pos + delimiter.length());
 
     for (auto& lp : lps) {
+
         /* Create the send time distributions */
-        if (distribution_type == "Geometric") {
+        if (distribution_type == "geometric") {
             lp.send_distribution_ = new Geometric(event_send);
+
+        } else if (distribution_type == "exponential") {
+            lp.send_distribution_ = new Exponential(event_send);
+
+        } else {
+            std::cerr << "Invalid choice of event send distribution." << std::endl;
+            return 0;
         }
 
         /* Fetch the adjacency list for each node */
