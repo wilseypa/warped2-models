@@ -62,11 +62,11 @@ public:
             abort();
         }
     }
-
+/* binomial distribution returns within range of (0,t), return value + 1 to void returning 0 */
     unsigned int nextTimeDelta(std::default_random_engine rng) {
 
         std::binomial_distribution<int> distribution(t_, p_);
-        return (unsigned int)std::max(distribution(rng), 1);
+        return (unsigned int)std::max(distribution(rng), 1) + 1;
     }
 
 private:
@@ -104,7 +104,7 @@ public:
 
         n_ = std::stod(params);
         if (!n_) {
-            std::cerr << "Chi squared Distribution: Invalid parameter." << std::endl;
+            std::cerr << "Chi Squared Distribution: Invalid parameter." << std::endl;
             abort();
         }
     }
@@ -141,6 +141,30 @@ public:
 
 private:
     double first_ = 0.0, last_ = 0.0;
+};
+
+class Fisher_f : public Distribution {
+public:
+    Fisher_f (std::string params) {
+
+        std::string delimiter = ",";
+        size_t pos = params.find(delimiter);
+        m_ = std::stod(params.substr(0,pos));
+        n_ = std::stod(params.substr(pos+1));
+        if (!m_ || !n_) {
+            std::cerr << "Fisher F Distribution: Invalid parameter." << std::endl;
+            abort();
+        }
+    }
+
+    unsigned int nextTimeDelta(std::default_random_engine rng) {
+
+        std::fisher_f_distribution<double> distribution (m_, n_);
+        return (unsigned int)std::max(distribution(rng), 1.0);
+    }
+
+private:
+    double m_ = 0.0, n_ = 0.0;
 };
 
 #endif
