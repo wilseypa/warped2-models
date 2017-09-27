@@ -6,11 +6,16 @@
 class Distribution {
 public:
     virtual unsigned int nextTimeDelta (std::default_random_engine rng) = 0;
+
+protected:
+    unsigned int distri_return_;
+    unsigned int floor_     = 0;
+    unsigned int ceiling_   = 0;
 };
 
 class Geometric : public Distribution{
 public:
-    Geometric(std::string params) {
+    Geometric(std::string params, unsigned int floor_, unsigned int ceiling_) {
 
         p_ = std::stod(params);
         if (p_ <= 0 || p_ >= 1) {
@@ -22,7 +27,16 @@ public:
     unsigned int nextTimeDelta(std::default_random_engine rng) {
 
         std::geometric_distribution<int> distribution(p_);
-        return (unsigned int)std::max(distribution(rng), 1);
+        if (floor_ && !ceiling_){ /* if send time */
+            do {
+                distri_return_ = (unsigned int)std::max(distribution(rng), 1);
+            }while (distri_return_ <= floor_);
+        } else if (!floor_ && ceiling_) { // if select lp 
+            do {
+                distri_return_ = (unsigned int) std::max(distribution(rng), 1);
+            } while ( distri_return_  < floor_ || distri_return_ > ceiling_);
+        }
+        return distri_return_;
     }
 
 private:
@@ -31,7 +45,7 @@ private:
 
 class Exponential : public Distribution{
 public:
-    Exponential(std::string params) {
+    Exponential(std::string params, unsigned int floor_, unsigned int ceiling_) {
 
         lambda_ = std::stod(params);
         if (!lambda_) {
@@ -41,8 +55,18 @@ public:
     }
 
     unsigned int nextTimeDelta(std::default_random_engine rng) {
+
         std::exponential_distribution<double> distribution(lambda_);
-        return (unsigned int)std::max(distribution(rng), 1.0);
+        if (floor_ && !ceiling_){ /* if send time */
+            do {
+                distri_return_ = (unsigned int)std::max(distribution(rng), 1.0);
+            }while (distri_return_ <= floor_);
+        } else if (!floor_ && ceiling_) { // if select lp 
+            do {
+                distri_return_ = (unsigned int) std::max(distribution(rng), 1.0);
+            } while ( distri_return_  < floor_ || distri_return_ > ceiling_);
+        }
+        return distri_return_;
     }
 
 private:
@@ -51,7 +75,7 @@ private:
 
 class Binomial : public Distribution {
 public:
-    Binomial (std::string params) {
+    Binomial (std::string params, unsigned int floor_, unsigned int ceiling_) {
 
         std::string delimiter = ",";
         size_t pos = params.find(delimiter);
@@ -62,11 +86,20 @@ public:
             abort();
         }
     }
-/* binomial distribution returns within range of (0,t), return value + 1 to void returning 0 */
+    /* binomial distribution returns within range of (0,t), return value + 1 to void returning 0 */
     unsigned int nextTimeDelta(std::default_random_engine rng) {
 
         std::binomial_distribution<int> distribution(t_, p_);
-        return (unsigned int)std::max(distribution(rng), 1) + 1;
+        if (floor_ && !ceiling_){ /* if send time */
+            do {
+                distri_return_ = (unsigned int)std::max(distribution(rng), 1);
+            }while (distri_return_ <= floor_);
+        } else if (!floor_ && ceiling_) { // if select lp 
+            do {
+                distri_return_ = (unsigned int) std::max(distribution(rng), 1);
+            } while ( distri_return_  < floor_ || distri_return_ > ceiling_);
+        }
+        return distri_return_;
     }
 
 private:
@@ -76,7 +109,7 @@ private:
 
 class Cauchy : public Distribution {
 public:
-    Cauchy (std::string params) {
+    Cauchy (std::string params, unsigned int floor_, unsigned int ceiling_) {
 
         std::string delimiter = ",";
         size_t pos = params.find(delimiter);
@@ -91,7 +124,16 @@ public:
     unsigned int nextTimeDelta(std::default_random_engine rng) {
 
         std::cauchy_distribution<double> distribution(a_, b_);
-        return (unsigned int)std::max(distribution(rng), 1.0);
+        if (floor_ && !ceiling_){ /* if send time */
+            do {
+                distri_return_ = (unsigned int)std::max(distribution(rng), 1.0);
+            }while (distri_return_ <= floor_);
+        } else if (!floor_ && ceiling_) { // if select lp 
+            do {
+                distri_return_ = (unsigned int) std::max(distribution(rng), 1.0);
+            } while ( distri_return_  < floor_ || distri_return_ > ceiling_);
+        }
+        return distri_return_;
     }
 
 private:
@@ -100,7 +142,7 @@ private:
 
 class Chi_squared : public Distribution {
 public:
-    Chi_squared (std::string params) {
+    Chi_squared (std::string params, unsigned int floor_, unsigned int ceiling_) {
 
         n_ = std::stod(params);
         if (!n_) {
@@ -112,7 +154,16 @@ public:
     unsigned int nextTimeDelta(std::default_random_engine rng) {
 
         std::chi_squared_distribution<double> distribution(n_);
-        return (unsigned int)std::max(distribution(rng), 1.0);
+        if (floor_ && !ceiling_){ /* if send time */
+            do {
+                distri_return_ = (unsigned int)std::max(distribution(rng), 1.0);
+            }while (distri_return_ <= floor_);
+        } else if (!floor_ && ceiling_) { // if select lp 
+            do {
+                distri_return_ = (unsigned int) std::max(distribution(rng), 1.0);
+            } while ( distri_return_  < floor_ || distri_return_ > ceiling_);
+        }
+        return distri_return_;
     }
 
 private:
@@ -121,7 +172,7 @@ private:
 
 class Discrete : public Distribution {
 public:
-    Discrete (std::string params) {
+    Discrete (std::string params, unsigned int floor_, unsigned int ceiling_) {
 
         std::string delimiter = ",";
         size_t pos = params.find(delimiter);
@@ -136,7 +187,16 @@ public:
     unsigned int nextTimeDelta(std::default_random_engine rng) {
 
         std::discrete_distribution<int> distribution(first_, last_);
-        return (unsigned int)std::max(distribution(rng), 1);
+        if (floor_ && !ceiling_){ /* if send time */
+            do {
+                distri_return_ = (unsigned int)std::max(distribution(rng), 1);
+            }while (distri_return_ <= floor_);
+        } else if (!floor_ && ceiling_) { // if select lp 
+            do {
+                distri_return_ = (unsigned int) std::max(distribution(rng), 1);
+            } while ( distri_return_  < floor_ || distri_return_ > ceiling_);
+        }
+        return distri_return_;
     }
 
 private:
@@ -145,7 +205,7 @@ private:
 
 class Fisher_f : public Distribution {
 public:
-    Fisher_f (std::string params) {
+    Fisher_f (std::string params, unsigned int floor_, unsigned int ceiling_) {
 
         std::string delimiter = ",";
         size_t pos = params.find(delimiter);
@@ -160,7 +220,16 @@ public:
     unsigned int nextTimeDelta(std::default_random_engine rng) {
 
         std::fisher_f_distribution<double> distribution (m_, n_);
-        return (unsigned int)std::max(distribution(rng), 1.0);
+        if (floor_ && !ceiling_){ /* if send time */
+            do {
+                distri_return_ = (unsigned int)std::max(distribution(rng), 1.0);
+            }while (distri_return_ <= floor_);
+        } else if (!floor_ && ceiling_) { // if select lp 
+            do {
+                distri_return_ = (unsigned int) std::max(distribution(rng), 1.0);
+            } while ( distri_return_  < floor_ || distri_return_ > ceiling_);
+        }
+        return distri_return_;
     }
 
 private:
