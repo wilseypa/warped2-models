@@ -86,7 +86,7 @@ public:
             abort();
         }
     }
-    /* binomial distribution returns within range of (0,t), return value + 1 to void returning 0 */
+
     unsigned int nextTimeDelta(std::default_random_engine rng) {
 
         std::binomial_distribution<int> distribution(t_, p_);
@@ -234,6 +234,171 @@ public:
 
 private:
     double m_ = 0.0, n_ = 0.0;
+};
+
+class Negative_binomial : public Distribution {
+public:
+    Negative_binomial (std::string params, unsigned int floor_, unsigned int ceiling_) {
+
+        std::string delimiter = ",";
+        size_t pos = params.find(delimiter);
+        k_ = (unsigned int) std::stoul(params.substr(0,pos));
+        p_ = std::stod(params.substr(pos+1));
+        if (p_ <= 0 || p_ >= 1) {
+            std::cerr << "Negative Binomial Distribution: Invalid parameter." << std::endl;
+            abort();
+        }
+    }
+
+    unsigned int nextTimeDelta(std::default_random_engine rng) {
+
+        std::negative_binomial_distribution<int> distribution(k_, p_);
+        if (floor_ && !ceiling_){ /* if send time */
+            do {
+                distri_return_ = (unsigned int)std::max(distribution(rng), 1);
+            }while (distri_return_ <= floor_);
+        } else if (!floor_ && ceiling_) { // if select lp 
+            do {
+                distri_return_ = (unsigned int) std::max(distribution(rng), 1);
+            } while ( distri_return_  < floor_ || distri_return_ > ceiling_);
+        }
+        return distri_return_;
+    }
+
+private:
+    unsigned int k_;
+    double p_;
+};
+
+class Normal : public Distribution {
+public:
+    Normal (std::string params, unsigned int floor_, unsigned int ceiling_) {
+
+        std::string delimiter = ",";
+        size_t pos = params.find(delimiter);
+        mean_ = std::stod(params.substr(0, pos));
+        stddev_ = std::stod(params.substr(pos+1));
+        if(mean_ < 0 || !stddev_) {
+            std::cerr << "Normal Distribution: Invalid parameter" << std::endl;
+            abort();
+        }
+    }
+
+    unsigned int nextTimeDelta(std::default_random_engine rng) {
+
+        std::normal_distribution<double> distribution(mean_, stddev_);
+        if (floor_ && !ceiling_){ /* if send time */
+            do {
+                distri_return_ = (unsigned int)std::max(distribution(rng), 1.0);
+            }while (distri_return_ <= floor_);
+        } else if (!floor_ && ceiling_) { // if select lp 
+            do {
+                distri_return_ = (unsigned int) std::max(distribution(rng), 1.0);
+            } while ( distri_return_  < floor_ || distri_return_ > ceiling_);
+        }
+        return distri_return_;
+    }
+
+private:
+    double mean_ = 0.0, stddev_ = 0.0;
+};
+
+
+class Uniform_int : public Distribution {
+public:
+    Uniform_int (std::string params, unsigned int floor_, unsigned int ceiling_) {
+
+        std::string delimiter = ",";
+        size_t pos = params.find(delimiter);
+        a_ = (unsigned int)std::stoul(params.substr(0, pos));
+        b_ = (unsigned int)std::stoul(params.substr(pos+1));
+        if(a_ <= 0 || a_ >= b_) {
+            std::cerr << "Normal Distribution: Invalid parameter" << std::endl;
+            abort();
+        }
+    }
+
+    unsigned int nextTimeDelta(std::default_random_engine rng) {
+
+        std::uniform_int_distribution<int> distribution(a_, b_);
+        if (floor_ && !ceiling_){ /* if send time */
+            do {
+                distri_return_ = (unsigned int)std::max(distribution(rng), 1);
+            }while (distri_return_ <= floor_);
+        } else if (!floor_ && ceiling_) { // if select lp 
+            do {
+                distri_return_ = (unsigned int) std::max(distribution(rng), 1);
+            } while ( distri_return_  < floor_ || distri_return_ > ceiling_);
+        }
+        return distri_return_;
+    }
+
+private:
+    unsigned int a_ =0, b_ = 0;
+};
+
+        
+class Poisson : public Distribution {
+public:
+    Poisson (std::string params, unsigned int floor_, unsigned int ceiling_) {
+
+        mean_ = std::stod(params);
+        if(mean_ <= 0) {
+            std::cerr << "Normal Distribution: Invalid parameter" << std::endl;
+            abort();
+        }
+    }
+
+    unsigned int nextTimeDelta(std::default_random_engine rng) {
+
+        std::poisson_distribution<int> distribution(mean_);
+        if (floor_ && !ceiling_){ /* if send time */
+            do {
+                distri_return_ = (unsigned int)std::max(distribution(rng), 1);
+            }while (distri_return_ <= floor_);
+        } else if (!floor_ && ceiling_) { // if select lp 
+            do {
+                distri_return_ = (unsigned int) std::max(distribution(rng), 1);
+            } while ( distri_return_  < floor_ || distri_return_ > ceiling_);
+        }
+        return distri_return_;
+    }
+
+private:
+    double mean_ = 0.0;
+};
+
+class Lognormal : public Distribution {
+public:
+    Lognormal (std::string params, unsigned int floor_, unsigned int ceiling_) {
+
+        std::string delimiter = ",";
+        size_t pos = params.find(delimiter);
+        mean_ = std::stod(params.substr(0, pos));
+        stddev_ = std::stod(params.substr(pos+1));
+        if(!mean_ || stddev_ <= 0) {
+            std::cerr << "Normal Distribution: Invalid parameter" << std::endl;
+            abort();
+        }
+    }
+
+    unsigned int nextTimeDelta(std::default_random_engine rng) {
+
+        std::lognormal_distribution<double> distribution(mean_, stddev_);
+        if (floor_ && !ceiling_){ /* if send time */
+            do {
+                distri_return_ = (unsigned int)std::max(distribution(rng), 1.0);
+            }while (distri_return_ <= floor_);
+        } else if (!floor_ && ceiling_) { // if select lp 
+            do {
+                distri_return_ = (unsigned int) std::max(distribution(rng), 1.0);
+            } while ( distri_return_  < floor_ || distri_return_ > ceiling_);
+        }
+        return distri_return_;
+    }
+
+private:
+    double mean_ = 0.0, stddev_ = 0.0;
 };
 
 #endif
