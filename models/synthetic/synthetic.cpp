@@ -15,16 +15,14 @@ inline std::string Node::lpName(const unsigned int lp_index) {
 std::vector<std::shared_ptr<warped::Event> > Node::initializeLP() {
 
     std::vector<std::shared_ptr<warped::Event> > events;
-#if 0
-    // Register random number generator
+
+    /* Register random number generator */
     registerRNG<std::default_random_engine>(rng_);
 
-    std::exponential_distribution<double> time_expo(1.0/mean_time_);
     for (unsigned int i = 0; i < num_nodes_; i++) {
-        unsigned int time = (unsigned int)std::ceil(time_expo(*rng_));
+        unsigned int time = send_distribution_->nextTimeDelta(*rng_);
         events.emplace_back(new InternalEvent {time});
     }
-#endif
     return events;
 }
 
