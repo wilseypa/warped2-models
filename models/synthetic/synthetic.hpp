@@ -88,6 +88,8 @@ public:
 
     Distribution *send_distribution_ = nullptr;
 
+    Distribution *node_sel_distribution_ = nullptr; // Node select distribution
+
     std::shared_ptr<std::default_random_engine> rng_;
 
 protected:

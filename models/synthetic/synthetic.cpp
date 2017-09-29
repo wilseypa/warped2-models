@@ -61,14 +61,18 @@ int main(int argc, const char** argv) {
 
     unsigned int num_nodes                  = 100000;
     std::string network                     = "Watts-Strogatz,30,0.1";
+    std::string node_selection              = "exponential,3.5";
     std::string event_processing_time       = "1000,1000";
     std::string state_size                  = "100,100";
-    std::string event_send                  = "geometric,0.5";
+    std::string event_send                  = "geometric,0.5,10";
 
     TCLAP::ValueArg<unsigned int> num_nodes_arg("n", "num-nodes",
             "Number of nodes", false, num_nodes, "unsigned int");
     TCLAP::ValueArg<std::string> network_arg("t", "network-params",
             "Network details - <type,param1,param2,...>", false, network, "string");
+    TCLAP::ValueArg<std::string> node_selection_arg("o", "node-selection-params",
+            "Node selection details - <distribution-type,<distribution-params>>",
+            false, node_selection, "string");
     TCLAP::ValueArg<std::string> event_processing_time_arg("e", "event-processing-time-range",
             "Event processing time (as floating-point calculation count) range - <min,max>",
             false, event_processing_time, "string");
@@ -76,10 +80,12 @@ int main(int argc, const char** argv) {
             "Size range (in bytes) for the LP state - <min,max>",
             false, state_size, "string");
     TCLAP::ValueArg<std::string> event_send_arg("p", "send-params",
-            "Event send details - <distribution-type,>", "false", event_send, "string");
+            "Event send details - <distribution-type,<distribution-params>,ceiling-value>",
+            "false", event_send, "string");
 
     std::vector<TCLAP::Arg*> args = {   &num_nodes_arg,
                                         &network_arg,
+                                        &node_selection_arg,
                                         &event_processing_time_arg,
                                         &state_size_arg,
                                         &event_send_arg
@@ -89,6 +95,7 @@ int main(int argc, const char** argv) {
 
     num_nodes                   = num_nodes_arg.getValue();
     network                     = network_arg.getValue();
+    node_selection              = node_selection_arg.getValue();
     event_processing_time       = event_processing_time_arg.getValue();
     state_size                  = state_size_arg.getValue();
     event_send                  = event_send_arg.getValue();
@@ -154,7 +161,7 @@ int main(int argc, const char** argv) {
 
     } else { // Invalid choice
         std::cerr << "Invalid choice of network." << std::endl;
-        return 0;
+        abort();
     }
 
     /* Parse the event send distribution type and parameters */
@@ -171,9 +178,12 @@ int main(int argc, const char** argv) {
         } else if (distribution_type == "exponential") {
             lp.send_distribution_ = new Exponential(event_send);
 
+        } else if (distribution_type == "binomial") {
+            lp.send_distribution_ = new Binomial(event_send);
+
         } else {
             std::cerr << "Invalid choice of event send distribution." << std::endl;
-            return 0;
+            abort();
         }
 
         /* Fetch the adjacency list for each node */
@@ -181,6 +191,30 @@ int main(int argc, const char** argv) {
         assert(lp.adjacency_list_.size());
     }
     delete ntwrk;
+
+    /* Parse the node selection distribution type and parameters */
+    pos = node_selection.find(delimiter);
+    distribution_type = node_selection.substr(0, pos);
+    node_selection.erase(0, pos + delimiter.length());
+
+    for (auto& lp : lps) {
+        node_selection += "," + lp.adjacency_list_.size();
+
+        /* Create the node selection distributions */
+        if (distribution_type == "geometric") {
+            lp.node_sel_distribution_ = new Geometric(node_selection);
+
+        } else if (distribution_type == "exponential") {
+            lp.node_sel_distribution_ = new Exponential(node_selection);
+
+        } else if (distribution_type == "binomial") {
+            lp.node_sel_distribution_ = new Binomial(node_selection);
+
+        } else {
+            std::cerr << "Invalid choice of node select distribution." << std::endl;
+            abort();
+        }
+    }
 
     /* Simulate the synthetic model */
     synthetic_sim.simulate(lp_pointers);

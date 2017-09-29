@@ -15,80 +15,82 @@ protected:
 
 class Geometric : public Distribution{
 public:
-    Geometric(std::string params, unsigned int ceiling_) {
+    Geometric(std::string params) {
 
-        ceiling = ceiling_;
-        p_ = std::stod(params);
+        size_t pos = params.find(",");
+        p_ = std::stod(params.substr(0, pos));
         if (p_ <= 0 || p_ >= 1) {
             std::cerr << "Geometric Distribution: Invalid parameter." << std::endl;
             abort();
         }
+        ceiling_ = (unsigned int) std::stoul(params.substr(pos+1));
     }
 
     unsigned int nextTimeDelta(std::default_random_engine rng) {
 
         std::geometric_distribution<int> distribution(p_);
         unsigned int val = (unsigned int)distribution(rng);
-        return (ceiling_) ? val % ceiling_ : (val + FLOOR); 
-    } // since ceiling = 0 return val + FLOOR to void val = 0
-        // else val within range of 0 to ceiling -1
+        return ((ceiling_) ? val % ceiling_ : val) + FLOOR;
+    }
 
 private:
     double p_ = 0.0;
-    unsigned int ceiling = 0;
 };
 
 class Exponential : public Distribution {
 public:
-    Exponential(std::string params, unsigned int ceiling_) {
+    Exponential(std::string params) {
 
-        ceiling = ceiling_;
-        lambda_ = std::stod(params);
+        size_t pos = params.find(",");
+        lambda_  = std::stod(params.substr(0, pos));
         if (lambda_ <= 0) {
             std::cerr << "Exponential Distribution: Invalid parameter." << std::endl;
             abort();
         }
+        ceiling_ = (unsigned int) std::stoul(params.substr(pos+1));
     }
 
     unsigned int nextTimeDelta(std::default_random_engine rng) {
 
         std::exponential_distribution<double> distribution(lambda_);
         unsigned int val = (unsigned int)distribution(rng);
-        return (ceiling_) ? val % ceiling_ : (val + FLOOR);
+        return ((ceiling_) ? val % ceiling_ : val) + FLOOR;
     }
 
 private:
     double lambda_ = 0.0;
-    unsigned int ceiling = 0;
 };
 
 class Binomial : public Distribution {
 public:
-    Binomial (std::string params, unsigned int ceiling_) {
+    Binomial (std::string params) {
 
-        ceiling = ceiling_;
-        std::string delimiter = ",";
-        size_t pos = params.find(delimiter);
-        t_ = (unsigned int) std::stoul(params.substr(0,pos));
-        p_ = std::stod(params.substr(pos+1));
+        size_t pos = params.find(",");
+        p_ = std::stod(params.substr(0, pos));
         if (p_ < 0 || p_ > 1) {
-            std::cerr << "Binomial Distribution: Invalid parameter." << std::endl;
+            std::cerr << "Binomial Distribution: Invalid parameter p." << std::endl;
+            abort();
+        }
+        ceiling_ = (unsigned int) std::stoul(params.substr(pos+1));
+        if (ceiling_ <= FLOOR) {
+            std::cerr << "Binomial Distribution: Invalid ceiling value." << std::endl;
             abort();
         }
     }
 
     unsigned int nextTimeDelta(std::default_random_engine rng) {
 
-        std::binomial_distribution<int> distribution(t_, p_);
+        std::binomial_distribution<int> distribution(ceiling_-FLOOR, p_);
         unsigned int val = (unsigned int)distribution(rng);
-        return (ceiling_) ? val % ceiling_ : (val + FLOOR);
+        return val + FLOOR;
     }
 
 private:
-    unsigned int t_ = 0, ceiling = 0;
     double p_ = 0.0;
 };
 
+
+#if 0
 class Cauchy : public Distribution {
 public:
     Cauchy (std::string params, unsigned int ceiling_) {
@@ -326,5 +328,8 @@ private:
     double mean_ = 0.0, stddev_ = 0.0;
     unsigned int ceiling = 0;
 };
+
+#endif
+
 
 #endif
