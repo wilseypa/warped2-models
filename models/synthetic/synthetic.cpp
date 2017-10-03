@@ -29,29 +29,33 @@ std::vector<std::shared_ptr<warped::Event> > Node::initializeLP() {
 std::vector<std::shared_ptr<warped::Event> > Node::receiveEvent(const warped::Event& event) {
 
     std::vector<std::shared_ptr<warped::Event> > response_events;
-    assert (event.sender_name_ == event.receiverName());
-#if 0
-    std::exponential_distribution<double> time_expo(1.0/mean_time_);
-    std::uniform_int_distribution<int> ext_node(0, adjacency_list_.size()-1);
+
+    /* Register random number generator */
+    registerRNG<std::default_random_engine>(rng_);
 
     /* Check if event received is a self/internal timer event */
     if (event.sender_name_ == event.receiverName()) {
 
-        /* Restart the timer/internal event */
-        unsigned int time = (unsigned int)std::ceil(time_expo(*rng_));
-        response_events.emplace_back(new InternalEvent {time});
+        /* Restart the processing_timer/internal event */
+        unsigned int processing_time = send_distribution_->nextTimeDelta(*rng_);
+        response_events.emplace_back(new InternalEvent {processing_time});
 
         /* Send an external event to one of the nodes in its adjacency list */
-        auto id = (unsigned int) ext_node(*rng_);
+
+        /* selecting node using distribution */
+        auto id = (unsigned int) node_sel_distribution_->nextTimeDelta(*rng_);
+
+        /* Restart the timer/external event */
+        unsigned int ts = send_distribution_->nextTimeDelta(*rng_);
+
         response_events.emplace_back(
                 new ExternalEvent { adjacency_list_[id],
-                                    1,
-                                    time    });
+                                    processing_time,
+                                    ts    });
 
     } else { /* Event received from other LPs/nodes */
 
     }
-#endif
     return response_events;
 }
 
