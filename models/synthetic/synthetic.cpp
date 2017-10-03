@@ -86,15 +86,15 @@ int main(int argc, const char** argv) {
             "Event send details - <distribution-type,<distribution-params>,ceiling-value>",
             "false", event_send, "string");
 
-    std::vector<TCLAP::Arg*> args = {   &num_nodes_arg,
-                                        &network_arg,
-                                        &node_selection_arg,
-                                        &floating_point_ops_cnt_arg,
-                                        &state_size_arg,
-                                        &event_send_arg
-                                    };
+    std::vector<TCLAP::Arg*> model_args = { &num_nodes_arg,
+                                            &network_arg,
+                                            &node_selection_arg,
+                                            &floating_point_ops_cnt_arg,
+                                            &state_size_arg,
+                                            &event_send_arg
+                                          };
 
-    warped::Simulation synthetic_sim {"Synthetic Simulation", argc, argv, args};
+    warped::Simulation synthetic_sim {"Synthetic Simulation", argc, argv, model_args};
 
     num_nodes                   = num_nodes_arg.getValue();
     network                     = network_arg.getValue();
