@@ -7,7 +7,7 @@
 
 class Distribution {
 public:
-    virtual unsigned int nextTimeDelta (std::default_random_engine rng) = 0;
+    virtual unsigned int nextRandNum (std::default_random_engine rng) = 0;
 
 protected:
     unsigned int ceiling_ = 0;
@@ -26,7 +26,7 @@ public:
         ceiling_ = (unsigned int) std::stoul(params.substr(pos+1));
     }
 
-    unsigned int nextTimeDelta(std::default_random_engine rng) {
+    unsigned int nextRandNum(std::default_random_engine rng) {
 
         std::geometric_distribution<int> distribution(p_);
         unsigned int val = (unsigned int)distribution(rng);
@@ -50,7 +50,7 @@ public:
         ceiling_ = (unsigned int) std::stoul(params.substr(pos+1));
     }
 
-    unsigned int nextTimeDelta(std::default_random_engine rng) {
+    unsigned int nextRandNum(std::default_random_engine rng) {
 
         std::exponential_distribution<double> distribution(lambda_);
         unsigned int val = (unsigned int)distribution(rng);
@@ -78,7 +78,7 @@ public:
         }
     }
 
-    unsigned int nextTimeDelta(std::default_random_engine rng) {
+    unsigned int nextRandNum(std::default_random_engine rng) {
 
         std::binomial_distribution<int> distribution(ceiling_-FLOOR, p_);
         unsigned int val = (unsigned int)distribution(rng);
@@ -106,7 +106,7 @@ public:
         }
     }
 
-    unsigned int nextTimeDelta(std::default_random_engine rng) {
+    unsigned int nextRandNum(std::default_random_engine rng) {
 
         std::cauchy_distribution<double> distribution(a_, b_);
         unsigned int val = (unsigned int) distribution(rng);
@@ -130,7 +130,7 @@ public:
         }
     }
 
-    unsigned int nextTimeDelta(std::default_random_engine rng) {
+    unsigned int nextRandNum(std::default_random_engine rng) {
 
         std::chi_squared_distribution<double> distribution(n_);
         unsigned int val = (unsigned int) distribution(rng);
@@ -157,7 +157,7 @@ public:
         }
     }
 
-    unsigned int nextTimeDelta(std::default_random_engine rng) {
+    unsigned int nextRandNum(std::default_random_engine rng) {
 
         std::discrete_distribution<int> distribution(first_, last_);
         unsigned int val = (unsigned int) distribution(rng);
@@ -184,7 +184,7 @@ public:
         }
     }
 
-    unsigned int nextTimeDelta(std::default_random_engine rng) {
+    unsigned int nextRandNum(std::default_random_engine rng) {
 
         std::fisher_f_distribution<double> distribution (m_, n_);
         unsigned int val = (unsigned int) distribution(rng);
@@ -211,7 +211,7 @@ public:
         }
     }
 
-    unsigned int nextTimeDelta(std::default_random_engine rng) {
+    unsigned int nextRandNum(std::default_random_engine rng) {
 
         std::negative_binomial_distribution<int> distribution(k_, p_);
         unsigned int val = (unsigned int) distribution(rng);
@@ -238,7 +238,7 @@ public:
         }
     }
 
-    unsigned int nextTimeDelta(std::default_random_engine rng) {
+    unsigned int nextRandNum(std::default_random_engine rng) {
 
         std::normal_distribution<double> distribution(mean_, stddev_);
         unsigned int val = (unsigned int) distribution(rng);
@@ -266,7 +266,7 @@ public:
         }
     }
 
-    unsigned int nextTimeDelta(std::default_random_engine rng) {
+    unsigned int nextRandNum(std::default_random_engine rng) {
 
         std::uniform_int_distribution<int> distribution(a_, b_);
         unsigned int val = (unsigned int) distribution(rng);
@@ -290,7 +290,7 @@ public:
         }
     }
 
-    unsigned int nextTimeDelta(std::default_random_engine rng) {
+    unsigned int nextRandNum(std::default_random_engine rng) {
 
         std::poisson_distribution<int> distribution(mean_);
         unsigned int val = (unsigned int) distribution(rng);
@@ -317,7 +317,7 @@ public:
         }
     }
 
-    unsigned int nextTimeDelta(std::default_random_engine rng) {
+    unsigned int nextRandNum(std::default_random_engine rng) {
 
         std::lognormal_distribution<double> distribution(mean_, stddev_);
         unsigned int val = (unsigned int) distribution(rng);

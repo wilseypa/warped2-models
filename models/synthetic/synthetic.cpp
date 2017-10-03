@@ -20,7 +20,7 @@ std::vector<std::shared_ptr<warped::Event> > Node::initializeLP() {
     registerRNG<std::default_random_engine>(rng_);
 
     for (unsigned int i = 0; i < num_nodes_; i++) {
-        unsigned int time = send_distribution_->nextTimeDelta(*rng_);
+        unsigned int time = send_distribution_->nextRandNum(*rng_);
         events.emplace_back(new InternalEvent {time});
     }
     return events;
@@ -30,30 +30,23 @@ std::vector<std::shared_ptr<warped::Event> > Node::receiveEvent(const warped::Ev
 
     std::vector<std::shared_ptr<warped::Event> > response_events;
 
-    /* Register random number generator */
-    registerRNG<std::default_random_engine>(rng_);
-
     /* Check if event received is a self/internal timer event */
     if (event.sender_name_ == event.receiverName()) {
 
         /* Restart the processing_timer/internal event */
-        unsigned int processing_time = send_distribution_->nextTimeDelta(*rng_);
-        response_events.emplace_back(new InternalEvent {processing_time});
+        unsigned int ts = event.timestamp() + send_distribution_->nextRandNum(*rng_);
+        response_events.emplace_back(new InternalEvent {ts});
 
-        /* Send an external event to one of the nodes in its adjacency list */
-
-        /* selecting node using distribution */
-        auto id = (unsigned int) node_sel_distribution_->nextTimeDelta(*rng_);
-
-        /* Restart the timer/external event */
-        unsigned int ts = send_distribution_->nextTimeDelta(*rng_);
-
+        /* Send an external event to one of the nodes in its adjacency list.
+         * Select node using chosen distribution */
+        auto id = (unsigned int) node_sel_distribution_->nextRandNum(*rng_) - 1;
+        // Note: 1 subtracted since min value of distribution is 1.
         response_events.emplace_back(
                 new ExternalEvent { adjacency_list_[id],
-                                    processing_time,
-                                    ts    });
+                                    floating_point_ops_cnt_,
+                                    event.timestamp()+1 });
 
-    } else { /* Event received from other LPs/nodes */
+    } else { /* External Event received from other LPs/nodes */
 
     }
     return response_events;
@@ -64,7 +57,7 @@ int main(int argc, const char** argv) {
     unsigned int num_nodes                  = 100000;
     std::string network                     = "Watts-Strogatz,30,0.1";
     std::string node_selection              = "exponential,3.5";
-    std::string event_processing_time       = "1000,1000";
+    std::string floating_point_ops_cnt      = "1000,1000";
     std::string state_size                  = "100,100";
     std::string event_send                  = "geometric,0.5,10";
 
@@ -75,9 +68,10 @@ int main(int argc, const char** argv) {
     TCLAP::ValueArg<std::string> node_selection_arg("o", "node-selection-params",
             "Node selection details - <distribution-type,<distribution-params>>",
             false, node_selection, "string");
-    TCLAP::ValueArg<std::string> event_processing_time_arg("e", "event-processing-time-range",
+    TCLAP::ValueArg<std::string> floating_point_ops_cnt_arg(
+            "e", "event-processing-time-range",
             "Event processing time (as floating-point calculation count) range - <min,max>",
-            false, event_processing_time, "string");
+            false, floating_point_ops_cnt, "string");
     TCLAP::ValueArg<std::string> state_size_arg("s", "state-size-range",
             "Size range (in bytes) for the LP state - <min,max>",
             false, state_size, "string");
@@ -88,7 +82,7 @@ int main(int argc, const char** argv) {
     std::vector<TCLAP::Arg*> args = {   &num_nodes_arg,
                                         &network_arg,
                                         &node_selection_arg,
-                                        &event_processing_time_arg,
+                                        &floating_point_ops_cnt_arg,
                                         &state_size_arg,
                                         &event_send_arg
                                     };
@@ -98,22 +92,23 @@ int main(int argc, const char** argv) {
     num_nodes                   = num_nodes_arg.getValue();
     network                     = network_arg.getValue();
     node_selection              = node_selection_arg.getValue();
-    event_processing_time       = event_processing_time_arg.getValue();
+    floating_point_ops_cnt      = floating_point_ops_cnt_arg.getValue();
     state_size                  = state_size_arg.getValue();
     event_send                  = event_send_arg.getValue();
 
     std::vector<Node> lps;
     std::vector<std::string> lp_names;
 
-    /* Create uniform distribution for event processing time */
+    /* Create uniform distribution for floating point operations count */
     std::string delimiter = ",";
-    size_t pos = event_processing_time.find(delimiter);
-    unsigned int min_processing_time =
-                    (unsigned int) std::stoul(event_processing_time.substr(0, pos));
-    unsigned int max_processing_time =
-                    (unsigned int) std::stoul(event_processing_time.substr(pos+1));
+    size_t pos = floating_point_ops_cnt.find(delimiter);
+    unsigned int min_floating_point_ops_cnt =
+            (unsigned int) std::stoul(floating_point_ops_cnt.substr(0, pos));
+    unsigned int max_floating_point_ops_cnt =
+            (unsigned int) std::stoul(floating_point_ops_cnt.substr(pos+1));
     std::uniform_int_distribution<unsigned int>
-                event_processing_time_dist( min_processing_time, max_processing_time );
+            floating_point_ops_cnt_dist(    min_floating_point_ops_cnt,
+                                            max_floating_point_ops_cnt  );
 
     /* Create uniform distribution for the state size */
     pos = state_size.find(delimiter);
@@ -129,7 +124,7 @@ int main(int argc, const char** argv) {
         lp_names.push_back(name);
         lps.emplace_back(   name,
                             num_nodes,
-                            event_processing_time_dist(generator),
+                            floating_point_ops_cnt_dist(generator),
                             state_size_dist(generator),
                             i
                         );
