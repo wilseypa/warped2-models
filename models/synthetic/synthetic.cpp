@@ -47,7 +47,14 @@ std::vector<std::shared_ptr<warped::Event> > Node::receiveEvent(const warped::Ev
                                     event.timestamp()+1 });
 
     } else { /* External Event received from other LPs/nodes */
+        /* Process the event */
+        float val = 0.5;
+        for (unsigned int i = 0; i < floating_point_ops_cnt_; i++) {
+            /* A floating point operation */
+            val += i;
+        }
 
+        /* TODO: Update the state, part of future design plans */
     }
     return response_events;
 }
