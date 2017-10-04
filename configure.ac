@@ -36,5 +36,6 @@ AC_CONFIG_FILES([models/traffic/Makefile])
 AC_CONFIG_FILES([models/volcano/Makefile])
 AC_CONFIG_FILES([models/wildfire/Makefile])
 AC_CONFIG_FILES([models/sandpile/Makefile])
+AC_CONFIG_FILES([models/synthetic/Makefile])
 
 AC_OUTPUT

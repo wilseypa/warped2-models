@@ -68,23 +68,22 @@ int main(int argc, const char** argv) {
     std::string state_size                  = "100,100";
     std::string event_send                  = "geometric,0.5,10";
 
-    TCLAP::ValueArg<unsigned int> num_nodes_arg("n", "num-nodes",
+    TCLAP::ValueArg<unsigned int> num_nodes_arg("", "num-nodes",
             "Number of nodes", false, num_nodes, "unsigned int");
-    TCLAP::ValueArg<std::string> network_arg("t", "network-params",
+    TCLAP::ValueArg<std::string> network_arg("", "network-params",
             "Network details - <type,param1,param2,...>", false, network, "string");
-    TCLAP::ValueArg<std::string> node_selection_arg("o", "node-selection-params",
+    TCLAP::ValueArg<std::string> node_selection_arg("", "node-selection-params",
             "Node selection details - <distribution-type,<distribution-params>>",
             false, node_selection, "string");
-    TCLAP::ValueArg<std::string> floating_point_ops_cnt_arg(
-            "e", "event-processing-time-range",
+    TCLAP::ValueArg<std::string> floating_point_ops_cnt_arg("", "event-processing-time-range",
             "Event processing time (as floating-point calculation count) range - <min,max>",
             false, floating_point_ops_cnt, "string");
-    TCLAP::ValueArg<std::string> state_size_arg("s", "state-size-range",
+    TCLAP::ValueArg<std::string> state_size_arg("", "state-size-range",
             "Size range (in bytes) for the LP state - <min,max>",
             false, state_size, "string");
-    TCLAP::ValueArg<std::string> event_send_arg("p", "send-params",
-            "Event send details - <distribution-type,<distribution-params>,ceiling-value>",
-            "false", event_send, "string");
+    TCLAP::ValueArg<std::string> event_send_arg("", "event-send-time-delta-params",
+            "Event send time delta details - <dist-type,<dist-params>,ceiling-value>",
+            false, event_send, "string");
 
     std::vector<TCLAP::Arg*> model_args = { &num_nodes_arg,
                                             &network_arg,

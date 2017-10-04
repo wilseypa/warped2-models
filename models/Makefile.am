@@ -1,1 +1,1 @@
-SUBDIRS = phold pcs airport epidemic traffic volcano wildfire sandpile
+SUBDIRS = phold pcs airport epidemic traffic volcano wildfire sandpile synthetic
