@@ -36,10 +36,12 @@ std::vector<std::shared_ptr<warped::Event> > Node::receiveEvent(const warped::Ev
         /* Restart the processing_timer/internal event */
         unsigned int ts = event.timestamp() + send_distribution_->nextRandNum(*rng_);
         response_events.emplace_back(new InternalEvent {ts});
+//        std::cout << "ts " << ts << std::endl;
 
         /* Send an external event to one of the nodes in its adjacency list.
          * Select node using chosen distribution */
         auto id = (unsigned int) node_sel_distribution_->nextRandNum(*rng_) - 1;
+//        std::cout << "id " << id << std::endl;
         // Note: 1 subtracted since min value of distribution is 1.
         response_events.emplace_back(
                 new ExternalEvent { adjacency_list_[id],
@@ -63,10 +65,10 @@ int main(int argc, const char** argv) {
 
     unsigned int num_nodes                  = 100000;
     std::string network                     = "Watts-Strogatz,30,0.1";
-    std::string node_selection              = "exponential,3.5";
+    std::string node_selection              = "exponential,0.5";
     std::string floating_point_ops_cnt      = "1000,1000";
     std::string state_size                  = "100,100";
-    std::string event_send                  = "geometric,0.5,10";
+    std::string event_send                  = "geometric,0.1,10";
 
     TCLAP::ValueArg<unsigned int> num_nodes_arg("", "num-nodes",
             "Number of nodes", false, num_nodes, "unsigned int");
@@ -184,6 +186,33 @@ int main(int argc, const char** argv) {
         } else if (distribution_type == "binomial") {
             lp.send_distribution_ = new Binomial(event_send);
 
+        } else if (distribution_type == "cauchy") {
+            lp.send_distribution_ = new Cauchy(event_send);
+
+        } else if (distribution_type == "chi_squared") {
+            lp.send_distribution_ = new Chi_squared(event_send);
+
+        } else if (distribution_type == "discrete") {
+            lp.send_distribution_ = new Discrete(event_send);
+
+        } else if (distribution_type == "fisher_f") {
+            lp.send_distribution_ = new Fisher_f(event_send);
+
+        } else if (distribution_type == "negative_binomial") {
+            lp.send_distribution_ = new Negative_binomial(event_send);
+
+        } else if (distribution_type == "normal") {
+            lp.send_distribution_ = new Normal(event_send);
+
+        } else if (distribution_type == "uniform_int") {
+            lp.send_distribution_ = new Uniform_int(event_send);
+
+        } else if (distribution_type == "poisson") {
+            lp.send_distribution_ = new Poisson(event_send);
+
+        } else if (distribution_type == "lognormal") {
+            lp.send_distribution_ = new Lognormal(event_send);
+
         } else {
             std::cerr << "Invalid choice of event send distribution." << std::endl;
             abort();
@@ -212,6 +241,33 @@ int main(int argc, const char** argv) {
 
         } else if (distribution_type == "binomial") {
             lp.node_sel_distribution_ = new Binomial(node_selection);
+
+        } else if (distribution_type == "cauchy") {
+            lp.send_distribution_ = new Cauchy(node_selection);
+
+        } else if (distribution_type == "chi_squared") {
+            lp.send_distribution_ = new Chi_squared(node_selection);
+
+        } else if (distribution_type == "discrete") {
+            lp.send_distribution_ = new Discrete(node_selection);
+
+        } else if (distribution_type == "fisher_f") {
+            lp.send_distribution_ = new Fisher_f(node_selection);
+
+        } else if (distribution_type == "negative_binomial") {
+            lp.send_distribution_ = new Negative_binomial(node_selection);
+
+        } else if (distribution_type == "normal") {
+            lp.send_distribution_ = new Normal(node_selection);
+
+        } else if (distribution_type == "uniform_int") {
+            lp.send_distribution_ = new Uniform_int(node_selection);
+
+        } else if (distribution_type == "poisson") {
+            lp.send_distribution_ = new Poisson(node_selection);
+
+        } else if (distribution_type == "lognormal") {
+            lp.send_distribution_ = new Lognormal(node_selection);
 
         } else {
             std::cerr << "Invalid choice of node select distribution." << std::endl;
