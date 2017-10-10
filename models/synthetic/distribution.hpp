@@ -246,7 +246,7 @@ public:
             std::cerr << "Normal Distribution: Invalid parameter" << std::endl;
             abort();
         }
-        ceiling_ = std::stoul(temp.substr(pos));
+        ceiling_ = std::stoul(temp.substr(pos+1));
     }
 
     unsigned int nextRandNum(std::default_random_engine rng) {
