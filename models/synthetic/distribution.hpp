@@ -3,6 +3,11 @@
 
 #include <random>
 
+
+/*  NOTE : 
+ *
+ */
+
 #define FLOOR 1
 
 class Distribution {
@@ -120,10 +125,9 @@ private:
 };
 
 
-/* uniform_int retruns the number in range of [a,ceiling] */
-class Uniform_int : public Distribution {
+class Uniform : public Distribution {
 public:
-    Uniform_int (std::string params) {
+    Uniform (std::string params) {
 
         size_t pos = params.find(",");
         a_ = std::stoul(params.substr(0, pos));
@@ -131,7 +135,7 @@ public:
         pos = temp.find(",");
         b_ = std::stoul(temp.substr(0,pos));
         if(a_ >= b_) {
-            std::cerr << "Uniform_int Distribution: Invalid parameter" << std::endl;
+            std::cerr << "Uniform Distribution: Invalid parameter" << std::endl;
             abort();
         }
         ceiling_ = (unsigned int) std::stoul(temp.substr(pos+1));

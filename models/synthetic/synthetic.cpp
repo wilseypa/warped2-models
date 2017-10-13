@@ -187,8 +187,8 @@ int main(int argc, const char** argv) {
         } else if (distribution_type == "normal") {
             lp.send_distribution_ = new Normal(event_send);
 
-        } else if (distribution_type == "uniform_int") {
-            lp.send_distribution_ = new Uniform_int(event_send);
+        } else if (distribution_type == "uniform") {
+            lp.send_distribution_ = new Uniform(event_send);
 
         } else if (distribution_type == "poisson") {
             lp.send_distribution_ = new Poisson(event_send);
@@ -228,8 +228,8 @@ int main(int argc, const char** argv) {
         } else if (distribution_type == "normal") {
             lp.node_sel_distribution_ = new Normal(node_selection);
 
-        } else if (distribution_type == "uniform_int") {
-            lp.node_sel_distribution_ = new Uniform_int(node_selection);
+        } else if (distribution_type == "uniform") {
+            lp.node_sel_distribution_ = new Uniform(node_selection);
 
         } else if (distribution_type == "poisson") {
             lp.node_sel_distribution_ = new Poisson(node_selection);
