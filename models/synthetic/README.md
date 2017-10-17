@@ -36,20 +36,55 @@ studied using different configurations of this model :
 
 User can adjust the following parameters:
 
-    1.  Number of nodes(entities). (Default: 100000)
+    1.  Number of nodes
+        * --num-nodes 100000 (default)
 
-    2.  Network, the network connectiveities between the LPs (Default: Watts-Strogatz)
+    2.  Network details (the communication links between nodes)
+        * --network-params <network-type,<network-params>>
+            * Watts-Strogatz,30,0.1 (default)
+                * k : mean degree of connectivity (n >> k >> ln(k) >> 1)
+                * b : beta probability of link re-ordering
+            * Barabsi-Albert,30,0.1
+                * m : degree of initially connected network (>= 2)
+                * a : alpha probability of preferential attachment or bias
 
-    3.  Node selection distribution, using distribution to selete index of the LP.
-        (Default: exponential)
+    3.  Node selection details (for sending inter-node events)
+        * --node-selection-params <distribution-type,<distribution-params>>
+            * exponential,0.5 (default)
+                * lambda : average rate of occurance (> 0)
+            * geometric,0.5
+                * p : probability of success
+            * binomial,0.5
+                * p : probability of success
+            * normal,5,10
+                * distribution mean
+                * standard deviation
+            * uniform,1,10
+                * a : lower bound of range
+                * b : upper bound of range
+            * poisson,9
+                * mean
+            * lognormal,3,5
+                * mean
+                * standard deviation
 
     4.  Floating point operation counts, using floating point calculation to delay the run time.
-        (Default: 10000)
+        (Default: 1000)
+        Adjust new paramater --event-processing-time-range 1000,1000
 
-    5.  State size, size of LP state (DefaultL 100)
+    5.  State size, size of LP state. (DefaultL 100)
+        Adjust new paramater --state-size-range 1000,1000
 
-    6.  Event send distribution, event send time delta determent by the distribution
+    6.  Event send distribution, event send time delta determent by the distribution.
         (Default: geometric)
+        Adjust new paramater with possiable distribuiotn were pre-made
+        --event-send-time-delta geometric,0.5,50
+        --event-send-time-delta exponential,0.5,50
+        --event-send-time-delta binomial,0.5,50
+        --event-send-time-delta normal,5,10,50
+        --event-send-time-delta uniform,1,10,50
+        --event-send-time-delta poisson,9,50
+        --event-send-time-delta lognormal,3,5,50
 
 
 ## References : ##

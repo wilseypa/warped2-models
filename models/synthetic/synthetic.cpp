@@ -71,7 +71,7 @@ int main(int argc, const char** argv) {
     TCLAP::ValueArg<unsigned int> num_nodes_arg("", "num-nodes",
             "Number of nodes", false, num_nodes, "unsigned int");
     TCLAP::ValueArg<std::string> network_arg("", "network-params",
-            "Network details - <type,param1,param2,...>", false, network, "string");
+            "Network details - <network-type,<network-params>>", false, network, "string");
     TCLAP::ValueArg<std::string> node_selection_arg("", "node-selection-params",
             "Node selection details - <distribution-type,<distribution-params>>",
             false, node_selection, "string");

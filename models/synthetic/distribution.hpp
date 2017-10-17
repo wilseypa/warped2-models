@@ -4,8 +4,8 @@
 #include <random>
 
 
-/*  NOTE : 
- *
+/*  NOTE : the distribuitons returns the minimum value of FLOOR, and maximum valve of ceiling,
+ *  if ceiling is none zero, positive interger, or no upper bound if ceiling is zero.
  */
 
 #define FLOOR 1
