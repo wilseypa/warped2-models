@@ -38,7 +38,7 @@ User can adjust the following parameters:
 
     1.  Number of nodes
      --num-nodes 100000 (default)
-   
+>
     2.  Network details (the communication links between nodes)
     --network-params <network-type,<network-params>>
 >  Watts-Strogatz,30,0.1 (default)
