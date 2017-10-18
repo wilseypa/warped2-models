@@ -142,106 +142,21 @@ int main(int argc, const char** argv) {
     }
 
     /* Create the Network */
-    Network *ntwrk = nullptr;
-    pos = network.find(delimiter);
-    std::string type = network.substr(0, pos);
-    network.erase(0, pos + delimiter.length());
-    if (type == "Watts-Strogatz") { // If the choice is Watts-Strogatz
-        pos = network.find(delimiter);
-        std::string token = network.substr(0, pos);
-        unsigned int k = (unsigned int) std::stoul(token);
-        network.erase(0, pos + delimiter.length());
-        double beta = std::stod(network);
-        ntwrk = new WattsStrogatz(lp_names, k, beta);
-
-    } else if (type == "Barabasi-Albert") { // If the choice is Barabasi-Albert
-        pos = network.find(delimiter);
-        std::string token = network.substr(0, pos);
-        unsigned int m = (unsigned int) std::stoul(token);
-        network.erase(0, pos + delimiter.length());
-        double a = std::stod(network);
-        ntwrk = new BarabasiAlbert(lp_names, m, a);
-
-    } else { // Invalid choice
-        std::cerr << "Invalid choice of network." << std::endl;
-        abort();
-    }
-
-    /* Parse the event send distribution type and parameters */
-    pos = event_send.find(delimiter);
-    std::string distribution_type = event_send.substr(0, pos);
-    event_send.erase(0, pos + delimiter.length());
+    Network *graph = buildNetwork(network, lp_names);
 
     for (auto& lp : lps) {
-
-        /* Create the send time distributions */
-        if (distribution_type == "geometric") {
-            lp.send_distribution_ = new Geometric(event_send);
-
-        } else if (distribution_type == "exponential") {
-            lp.send_distribution_ = new Exponential(event_send);
-
-        } else if (distribution_type == "binomial") {
-            lp.send_distribution_ = new Binomial(event_send);
-
-        } else if (distribution_type == "normal") {
-            lp.send_distribution_ = new Normal(event_send);
-
-        } else if (distribution_type == "uniform") {
-            lp.send_distribution_ = new Uniform(event_send);
-
-        } else if (distribution_type == "poisson") {
-            lp.send_distribution_ = new Poisson(event_send);
-
-        } else if (distribution_type == "lognormal") {
-            lp.send_distribution_ = new Lognormal(event_send);
-
-        } else {
-            std::cerr << "Invalid choice of event send distribution." << std::endl;
-            abort();
-        }
+        /* Create the send time distribution */
+        lp.send_distribution_ = buildDist(event_send);
 
         /* Fetch the adjacency list for each node */
-        lp.adjacency_list_ = ntwrk->adjacencyList(lp.name_);
+        lp.adjacency_list_ = graph->adjacencyList(lp.name_);
         assert(lp.adjacency_list_.size());
-    }
-    delete ntwrk;
 
-    /* Parse the node selection distribution type and parameters */
-    pos = node_selection.find(delimiter);
-    distribution_type = node_selection.substr(0, pos);
-    node_selection.erase(0, pos + delimiter.length());
-
-    for (auto& lp : lps) {
+        /* Create the node selection distribution */
         node_selection += "," + std::to_string(lp.adjacency_list_.size());
-
-        /* Create the node selection distributions */
-        if (distribution_type == "geometric") {
-            lp.node_sel_distribution_ = new Geometric(node_selection);
-
-        } else if (distribution_type == "exponential") {
-            lp.node_sel_distribution_ = new Exponential(node_selection);
-
-        } else if (distribution_type == "binomial") {
-            lp.node_sel_distribution_ = new Binomial(node_selection);
-
-        } else if (distribution_type == "normal") {
-            lp.node_sel_distribution_ = new Normal(node_selection);
-
-        } else if (distribution_type == "uniform") {
-            lp.node_sel_distribution_ = new Uniform(node_selection);
-
-        } else if (distribution_type == "poisson") {
-            lp.node_sel_distribution_ = new Poisson(node_selection);
-
-        } else if (distribution_type == "lognormal") {
-            lp.node_sel_distribution_ = new Lognormal(node_selection);
-
-        } else {
-            std::cerr << "Invalid choice of node select distribution." << std::endl;
-            abort();
-        }
+        lp.node_sel_distribution_ = buildDist(node_selection);
     }
+    delete graph;
 
     /* Simulate the synthetic model */
     synthetic_sim.simulate(lp_pointers);

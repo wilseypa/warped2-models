@@ -206,6 +206,37 @@ private:
     double mean_ = 0.0, stddev_ = 0.0;
 };
 
+Distribution *buildDist (std::string params) {
 
+    std::size_t pos = params.find(",");
+    std::string distribution_type = params.substr(0, pos);
+    params.erase(0, pos+1);
+
+    if (distribution_type == "geometric") {
+        return new Geometric(params);
+
+    } else if (distribution_type == "exponential") {
+        return new Exponential(params);
+
+    } else if (distribution_type == "binomial") {
+        return new Binomial(params);
+
+    } else if (distribution_type == "normal") {
+        return new Normal(params);
+
+    } else if (distribution_type == "uniform") {
+        return new Uniform(params);
+
+    } else if (distribution_type == "poisson") {
+        return new Poisson(params);
+
+    } else if (distribution_type == "lognormal") {
+        return new Lognormal(params);
+
+    } else {
+        std::cerr << "Invalid choice of distribution." << std::endl;
+        abort();
+    }
+}
 
 #endif

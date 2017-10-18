@@ -156,4 +156,33 @@ public:
     }
 };
 
+Network *buildNetwork (std::string params, std::vector<std::string> lp_names) {
+
+    std::string delimiter = ",";
+    size_t pos = params.find(delimiter);
+    std::string type = params.substr(0, pos);
+    params.erase(0, pos + delimiter.length());
+
+    if (type == "Watts-Strogatz") { // If the choice is Watts-Strogatz
+        pos = params.find(delimiter);
+        std::string token = params.substr(0, pos);
+        unsigned int k = (unsigned int) std::stoul(token);
+        params.erase(0, pos + delimiter.length());
+        double beta = std::stod(params);
+        return new WattsStrogatz(lp_names, k, beta);
+
+    } else if (type == "Barabasi-Albert") { // If the choice is Barabasi-Albert
+        pos = params.find(delimiter);
+        std::string token = params.substr(0, pos);
+        unsigned int m = (unsigned int) std::stoul(token);
+        params.erase(0, pos + delimiter.length());
+        double a = std::stod(params);
+        return new BarabasiAlbert(lp_names, m, a);
+
+    } else { // Invalid choice
+        std::cerr << "Invalid choice of network." << std::endl;
+        abort();
+    }
+}
+
 #endif
