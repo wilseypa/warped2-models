@@ -77,17 +77,15 @@ User can adjust the following parameters:
                 mean
                 standard deviation
 
-    4.  Floating point operation counts, using floating point calculation to delay the run time.
+    4.  Floating point operations count (used to set an event processing delay)
             --event-processing-time-range 1000,1000 (default)
-            min
-            max
+            Change the values of <min,max>
 
-    5.  State size, size of LP state.
+    5.  State size (size of the LP state)
             --state-size-range 100,100 (default)
-            min
-            max
+            Change the values of <min,max>
 
-    6.  Event send distribution, event send time delta determent by the distribution.
+    6.  Event send distribution (set the send time delta)
             --event-send-time-delta <distribution-type,<distribution-params>,ceiling>
 
             ceiling : the upper bound value, set to 10 in the following distribuitons
