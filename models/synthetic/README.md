@@ -44,6 +44,7 @@ User can adjust the following parameters:
 >  Watts-Strogatz,30,0.1 (default)
 > > * k : mean degree of connectivity (n >> k >> ln(k) >> 1)
 > > * b : beta probability of link re-ordering
+
 > Barabsi-Albert,30,0.1
 > > * m : degree of initially connected network (>= 2)
 > > * a : alpha probability of preferential attachment or bias
@@ -52,18 +53,24 @@ User can adjust the following parameters:
     --node-selection-params <distribution-type,<distribution-params>>
 > exponential,0.5 (default)
 > > * lambda : average rate of occurance (> 0)
+
 > geometric,0.5
 > > * p : probability of success
+
 > binomial,0.5
 > > * p : probability of success
+
 > normal,5,10
 > > * distribution mean
 > > * standard deviation
+
 > uniform,1,10
 > > * a : lower bound of range
 > > * b : upper bound of range
+
 > poisson,9
 > > * mean (> 3)
+
 > lognormal,3,5
 > > * mean
 > > * standard deviation
@@ -81,23 +88,31 @@ User can adjust the following parameters:
     6.  Event send distribution, event send time delta determent by the distribution.
     --event-send-time-delta <distribution-type,<distribution-params>,ceiling>
 > ceiling : the upper bound value, set to 10 in the following distribuitons
+
 > geometric,0.1,10 (default)
 > > * p : probability of success
+
 > exponential,0.5,10
 > > * lambda : average rate of occurance (> 0)
+
 > binomial,0.5,10
 > > * p : probability of success
+
 > normal,5,9,10
 > > * distribution mean
 > > * standard deviation
+
 > uniform,1,9,10
 > > * a : lower bound of range
 > > * b : upper bound of range
+
 > poisson,9,10
 > > * mean (> 3)
+
 > lognormal,3,5,10
 > > * mean
 > > * standard deviation
+
 
 
 ## References : ##
