@@ -37,17 +37,18 @@ studied using different configurations of this model :
 User can adjust the following parameters:
 
     1.  Number of nodes
-     --num-nodes 100000 (default)
-> 
-    2.  Network details (the communication links between nodes)
-    --network-params <network-type,<network-params>>
->  Watts-Strogatz,30,0.1 (default)
-> > * k : mean degree of connectivity (n >> k >> ln(k) >> 1)
-> > * b : beta probability of link re-ordering
+        + --num-nodes 100000 (default)
 
-> Barabsi-Albert,30,0.1
-> > * m : degree of initially connected network (>= 2)
-> > * a : alpha probability of preferential attachment or bias
+    2.  Network details (the communication links between nodes)
+        + --network-params <network-type,<network-params>>
+
+            > Watts-Strogatz,30,0.1 (default)
+            > > * k : mean degree of connectivity (n >> k >> ln(k) >> 1)
+            > > * b : beta probability of link re-ordering
+
+            > Barabsi-Albert,30,0.1
+            > > * m : degree of initially connected network (>= 2)
+            > > * a : alpha probability of preferential attachment or bias
 
     3.  Node selection details (for sending inter-node events)
     --node-selection-params <distribution-type,<distribution-params>>
