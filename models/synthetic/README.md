@@ -19,17 +19,17 @@ distribution of event flow.
 Individual or combined effect(s) of the following features on simulation can be
 studied using different configurations of this model :
 
-1. Total number of nodes (entites) which collectively form the simulation space.
+    1. Total number of nodes (entites) which collectively form the simulation space.
 
-2. Structure of network connectivity between nodes.
+    2. Structure of network connectivity between nodes.
 
-3. Rate of events sent from a node to its adjacent nodes.
+    3. Rate of events sent from a node to its adjacent nodes.
 
-4. Distribution of events sent from a node to its adjacent nodes.
+    4. Distribution of events sent from a node to its adjacent nodes.
 
-5. Time to process an event.
+    5. Time to process an event.
 
-6. Size of the LP state.
+    6. Size of the LP state.
 
 
 ## Configuration : ##
