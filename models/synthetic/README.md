@@ -64,7 +64,7 @@ User can adjust the following parameters:
                 * b : upper bound of range
                     * a < b
             * poisson,9
-                * mean (< 3)
+                * mean (> 3)
             * lognormal,3,5
                 * mean
                 * standard deviation
@@ -81,7 +81,7 @@ User can adjust the following parameters:
 
     6.  Event send distribution, event send time delta determent by the distribution.
         * --event-send-time-delta <distribution-type,<distribution-params>,ceiling>
-            (**ceiling : the upper bound value** the number 10s down below)
+            (ceiling : the upper bound value, the number 10s down below)
             * geometric,0.1,10 (default)
                 * p : probability of success
             * exponential,0.5,10
@@ -96,7 +96,7 @@ User can adjust the following parameters:
                 * b : upper bound of range
                     * a < b
             * poisson,9,10
-                * mean (< 3)
+                * mean (> 3)
             * lognormal,3,5,10
                 * mean
                 * standard deviation
