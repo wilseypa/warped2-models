@@ -62,29 +62,44 @@ User can adjust the following parameters:
             * uniform,1,10
                 * a : lower bound of range
                 * b : upper bound of range
+                    * a < b
             * poisson,9
-                * mean
+                * mean (< 3)
             * lognormal,3,5
                 * mean
                 * standard deviation
 
     4.  Floating point operation counts, using floating point calculation to delay the run time.
-        (Default: 1000)
-        Adjust new paramater --event-processing-time-range 1000,1000
+        * --event-processing-time-range 1000,1000 (default)
+            * min
+            * max
 
-    5.  State size, size of LP state. (DefaultL 100)
-        Adjust new paramater --state-size-range 1000,1000
+    5.  State size, size of LP state.
+        * --state-size-range 100,100 (default)
+            * min
+            * max
 
     6.  Event send distribution, event send time delta determent by the distribution.
-        (Default: geometric)
-        Adjust new paramater with possiable distribuiotn were pre-made
-        --event-send-time-delta geometric,0.5,50
-        --event-send-time-delta exponential,0.5,50
-        --event-send-time-delta binomial,0.5,50
-        --event-send-time-delta normal,5,10,50
-        --event-send-time-delta uniform,1,10,50
-        --event-send-time-delta poisson,9,50
-        --event-send-time-delta lognormal,3,5,50
+        * --event-send-time-delta <distribution-type,<distribution-params>,ceiling>
+            (**ceiling : the upper bound value** the number 10s down below)
+            * geometric,0.1,10 (default)
+                * p : probability of success
+            * exponential,0.5,10
+                * lambda : average rate of occurance (> 0)
+            * binomial,0.5,10
+                * p : probability of success
+            * normal,5,9,10
+                * distribution mean
+                * standard deviation
+            * uniform,1,9,10
+                * a : lower bound of range
+                * b : upper bound of range
+                    * a < b
+            * poisson,9,10
+                * mean (< 3)
+            * lognormal,3,5,10
+                * mean
+                * standard deviation
 
 
 ## References : ##
