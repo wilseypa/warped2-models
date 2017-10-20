@@ -46,7 +46,7 @@ User can adjust the following parameters:
                 k : mean degree of connectivity (n >> k >> ln(k) >> 1)
                 b : beta probability of link re-ordering
 
-            Barabsi-Albert,30,0.1
+            Barabasi-Albert,30,0.1
                 m : degree of initially connected network (>= 2)
                 a : alpha probability of preferential attachment or bias
 
@@ -86,7 +86,7 @@ User can adjust the following parameters:
             Change the values of <min,max>
 
     6.  Event send distribution (set the send time delta)
-            --event-send-time-delta <distribution-type,<distribution-params>,ceiling>
+            --event-send-time-delta-params <distribution-type,<distribution-params>,ceiling>
 
             ceiling : the upper bound value, set to 10 in the following distribuitons
 
