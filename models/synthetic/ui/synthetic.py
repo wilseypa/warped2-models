@@ -47,13 +47,15 @@ m7.add(nt7)
 m8.add(nt8)
 
 network = IntVar()
-R1 = Radiobutton(m2, text = "Watts-strogattz", fg = "red", variable = network, value = 1, font = (None, 12))
+R1 = Radiobutton(m2, text = "Watts-strogattz", fg = "red", variable = network, value = 1, font = (None, 12), anchor = W)
 ws_mT = Label(m3, text = 'mean degree', fg = 'red', font = (None, 11))
 ws_mV = Entry(m4, bd = 2)
+ws_mV.insert(0, 30)
 ws_pT = Label(m5, text = 'probability', fg = 'red', font = (None, 11))
 ws_pV = Entry(m6, bd = 2)
+ws_pV.insert(0, 0.5)
 
-R2 = Radiobutton(m2, text = "Barabsi-Albert", fg = "green", variable = network, value = 2, font = (None, 12))
+R2 = Radiobutton(m2, text = "Barabsi-Albert", fg = "green", variable = network, value = 2, font = (None, 12), anchor = W)
 ba_mT = Label(m3, text = 'mean degree', fg = 'green', font = (None, 11))
 ba_mV = Entry(m4, bd = 2)
 ba_pT = Label(m5, text = 'probability', fg = 'green', font = (None, 11))
@@ -100,9 +102,9 @@ ns.set("1")
 
 for dist, c in DIST:
     if int(c)%2 == 0:
-        b = Radiobutton(m2, text = dist, variable = ns, value = c, fg = "green", font = (None, 11))
+        b = Radiobutton(m2, text = dist, variable = ns, value = c, fg = "green", font = (None, 11), anchor = W)
     else:
-        b = Radiobutton(m2, text = dist, variable = ns, value = c, fg = "red", font = (None, 11))
+        b = Radiobutton(m2, text = dist, variable = ns, value = c, fg = "red", font = (None, 11), anchor = W)
     m2.add(b)
 
 ns_eT = Label(m3, text = 'lambda(>0)', font = (None, 12), fg = 'red')
@@ -193,9 +195,9 @@ es = IntVar()
 
 for distr, x in Dist:
     if int(x)%2 == 0:
-        e = Radiobutton(m2, text = distr, variable = es, value = x, fg = "red", font = (None, 11))
+        e = Radiobutton(m2, text = distr, variable = es, value = x, fg = "red", font = (None, 11), anchor = W)
     else:
-        e = Radiobutton(m2, text = distr, variable = es, value = x, fg = "green", font = (None, 11))
+        e = Radiobutton(m2, text = distr, variable = es, value = x, fg = "green", font = (None, 11), anchor = W)
     m2.add(e)
 
 
@@ -293,12 +295,12 @@ m8.add(es_lncV)
 # nodes
 
 node = Label(m2, text = "Node", font = (None, 15))
-n3 = Label(m3, text = ' ')
-n4 = Label(m4, text = ' ')
-n5 = Label(m5, text = ' ')
-n6 = Label(m6, text = ' ')
-n7 = Label(m7, text = ' ')
-n8 = Label(m8, text = ' ')
+n3 = Label(m3, text = '', height = 2)
+n4 = Label(m4, text = '', height = 6)
+n5 = Label(m5, text = '', height = 6)
+n6 = Label(m6, text = '', height = 8)
+n7 = Label(m7, text = '', height = 8)
+n8 = Label(m8, text = '', height = 8)
 
 m2.add(node)
 m3.add(n3)
@@ -308,44 +310,84 @@ m6.add(n6)
 m7.add(n7)
 m8.add(n8)
 
-node1 = Label(m2, text = "Number of Nodes", fg = "blue")
-nodevar = Entry(m2, bd = 4)
+node1 = Label(m2, text = "Number of Nodes", fg = "blue", font = (None, 12))
+nodevar = Entry(m3, bd = 3)
 
 nodevar.insert(0, "100000")
 
 m2.add(node1)
-m2.add(nodevar)
+m3.add(nodevar)
 
 # state size
 
-s1 = Label(m2, text = "State Size: Min", fg = "red")
-s2 = Label(m2, text = "Max", fg = "red")
-s_min = Entry(m2, bd = 4)
-s_max = Entry(m2, bd = 4)
+ss2 = Label(m2, text = 'State Size', font = (None, 15))
+ss3 = Label(m3, text = '', height = 2)
+ss4 = Label(m4, text = '')
+ss5 = Label(m5, text = '')
+ss6 = Label(m6, text = '')
+ss7 = Label(m7, text = '')
+ss8 = Label(m8, text = '')
+
+m2.add(ss2)
+m3.add(ss3)
+#m4.add(ss4)
+m5.add(ss5)
+
+s1 = Label(m2, text = "State Size: Min", fg = "red", font = (None, 12))
+s2 = Label(m4, text = "Max", fg = "red", font = (None, 12))
+s_min = Entry(m3, bd = 3)
+s_max = Entry(m5, bd = 3)
 
 s_min.insert(0,"100")
 s_max.insert(0,"100")
 
 m2.add(s1)
-m2.add(s_min)
-m2.add(s2)
-m2.add(s_max)
+m3.add(s_min)
+m4.add(s2)
+m5.add(s_max)
 
 # floating point operation count
 
-fp1 = Label(m2, text = "Floating Point: Min", fg = "blue")
-fp2 = Label(m2, text = "Max", fg = "blue")
-fp_min = Entry(m2, bd = 4)
-fp_max = Entry(m2, bd = 4)
+fp = Label(m2, text = 'Processing delay', font = (None, 15))
+fp3 = Label(m3,text = '', height = 2)
+fp4 = Label(m4,text = '', height = 2)
+fp5 = Label(m5,text = '')
+
+m2.add(fp)
+m3.add(fp3)
+m4.add(fp4)
+m5.add(fp5)
+
+fp1 = Label(m2, text = "Floating Point: Min", fg = "blue", font = (None, 12))
+fp2 = Label(m4, text = "Max", fg = "blue", font = (None, 12))
+fp_min = Entry(m3, bd = 3)
+fp_max = Entry(m5, bd = 3)
 
 fp_min.insert(0,"1000")
 fp_max.insert(0,"1000")
 
 m2.add(fp1)
-m2.add(fp_min)
-m2.add(fp2)
-m2.add(fp_max)
+m3.add(fp_min)
+m4.add(fp2)
+m5.add(fp_max)
 
+# max sim time
+
+st2 = Label(m2, text = 'Max Simulation Time', font = (None, 15))
+st3 = Label(m3, text = '')
+st4 = Label(m4, text = '')
+st5 = Label(m5, text = '')
+
+m2.add(st2)
+m3.add(st3)
+m4.add(st4)
+m5.add(st5)
+
+stT = Label(m2, text = 'Max Time', font = (None, 12), fg = 'red')
+stV = Entry(m3, bd = 3)
+
+m2.add(stT)
+m3.add(stV)
 
 
 mainloop()
