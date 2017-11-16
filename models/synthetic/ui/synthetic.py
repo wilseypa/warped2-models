@@ -9,6 +9,95 @@ root.title("Synthetic Model")
 label = Label(root, text = 'Synthetic Model', font = (None, 20))
 label.pack()
 
+def RESET():
+    # network reset
+    network.set(1)
+    ws_mV.insert('30')
+    ws_pV.insert(0, 0.5)
+    ba_mV.insert(0, 30)
+    ba_mV.config(state = 'disabled')
+    ba_pV.insert(0, 0.5)
+    ba_pV.config(state = 'disabled')
+
+    # node selection reset
+    ns.set(1)
+    ns_eV.insert(0, 0.5)
+
+    ns_gpV.insert(0, 0.5)
+    ns_gpV.config(state = 'disabled')
+
+    ns_bpV.insert(0, 0.5)
+    ns_bpV.config(state = 'disabled')
+
+    ns_nmV.insert(0, 5)
+    ns_nmV.config(state = 'disabled')
+    ns_nsdV.insert(0, 10)
+    ns_nsdV.config(state = 'disabled')
+
+    ns_uaV.insert(0, 1)
+    ns_uaV.config(state = 'disabled')
+    ns_ubV.insert(0, 10)
+    ns_ubV.config(state = 'disabled')
+
+    ns_pV.insert(0, 9)
+    ns_pV.config(state = 'disabled')
+
+    ns_lnmV.insert(0, 3)
+    ns_lnmV.config(state = 'disabled')
+    ns_lnsdV.insert(0, 5)
+    ns_lnsdV.config(state = 'disabled')
+
+    # event send reset
+    es.set(2)
+    es_eV.insert(0, 0.5)
+    es_eV.config(state = 'disabled')
+    es_ecV.insert(0, 10)
+    es_ecV.config(state = 'disabled')
+
+    es_gpV.insert(0, 0.1)
+    es_gpV.config(state = 'disabled')
+    es_gcV.insert(0, 10)
+    es_gcV.config(state = 'disabled')
+
+    es_gpV.insert(0, 0.5)
+    es_gpV.config(state = 'disabled')
+    es_gcV.insert(0, 10)
+    es_gcV.config(state = 'disabled')
+
+    es_bpV.insert(0, 0.5)
+    es_bpV.config(state = 'disabled')
+    es_bcV.insert(0, 10)
+    es_bcV.config(state = 'disabled')
+
+    es_nmV.insert(0, 5)
+    es_nmv.config(state = 'disabled')
+    es_nsdV.insert(0, 9)
+    es_nsdV.config(state = 'disabled')
+    es_ncV.insert(0, 10)
+    es_ncV.config(state = 'disabled')
+
+    es_uaV.insert(0, 1)
+    es_uaV.config(state = 'disabled')
+    es_ubV.insert(0, 9)
+    es_ubV.config(state = 'disabled')
+    es_ucV.insert(0, 10)
+    es_ucV.config(state = 'disabled')
+
+    es_pV.insert(0, 9)
+    es_pV.config(state = 'disabled')
+    es_pcV.insert(0, 10)
+    es_pcV.config(state = 'disabled')
+
+    es_lnmV.insert(0, 3)
+    es_lnmV.config(state = 'disabled')
+    es_lnsdV.insert(0, 5)
+    es_lnsdV.config(state = 'disabled')
+    es_lncV.insert(0,10)
+    es_lncV.config(state = 'disabled')
+
+
+
+
 def sim():
     top = Toplevel()
     top.title('Simulation Command')
@@ -19,15 +108,15 @@ def sim():
     if network.get() == 1:
         output += ' --network-params Watts-Strogatz,' + ws_mV.get() + ',' + ws_pV.get()
     if network.get() == 2:
-        output += ' --network-params Barabsi-Albert,' + ws_mV.get() + ',' + ws_pV.get()
+        output += ' --network-params Barabsi-Albert,' + ba_mV.get() + ',' + ba_pV.get()
 
     # node selection
     if ns.get() == 1:
         output += ' --node-selection-params exponential,' + ns_eV.get()
     elif ns.get() == 2:
-        output += ' --node-selection-params geometic,' + ns_gV.get()
+        output += ' --node-selection-params geometic,' + ns_gpV.get()
     elif ns.get() == 3:
-        output += ' --node-selection-params binomial,' + ns_bV.get()
+        output += ' --node-selection-params binomial,' + ns_bpV.get()
     elif ns.get() == 4:
         output += ' --node-selection-params normal,' + ns_nmV.get() + ',' + ns_nsdV.get()
     elif ns.get() == 5:
@@ -39,11 +128,11 @@ def sim():
 
     # event send
     if es.get() == 1:
-        output += ' --event-send-time-delta-params exponential,' + es_eV.get() + ',' + ns_esecV.get()
+        output += ' --event-send-time-delta-params exponential,' + es_eV.get() + ',' + es_ecV.get()
     elif es.get() == 2:
         output += ' --event-send-time-delta-params geometic,' + es_gpV.get() + ',' + es_gcV.get()
     elif es.get() == 3:
-        output += ' --event-send-time-delta-params binomial,' + es_bV.get() + ',' + es_bcV.get()
+        output += ' --event-send-time-delta-params binomial,' + es_bpV.get() + ',' + es_bcV.get()
     elif es.get() == 4:
         output += ' --event-send-time-delta-params normal,' + es_nmV.get() + ',' + es_nsdV.get() + ',' + es_ncV.get()
     elif es.get() == 5:
@@ -51,7 +140,7 @@ def sim():
     elif es.get() == 6:
         output += ' --event-send-time-delta-params poisson,' + es_pV.get() + ',' + es_pcV.get()
     elif es.get() == 7:
-        output += ' --event-send-time-delta-params lognormal,' + es_lnmV.get() + ',' + es_lnsdV.get() + ',' + eslncV.get()
+        output += ' --event-send-time-delta-params lognormal,' + es_lnmV.get() + ',' + es_lnsdV.get() + ',' + es_lncV.get()
 
     Label(top, text = output).pack()
     Button(top, text = 'Copy', command= copy_b(output, top)).pack()
@@ -819,6 +908,7 @@ m5.add(st5)
 
 stT = Label(m2, text = 'Max Time', font = (None, 12), fg = 'red')
 stV = Entry(m3, bd = 3)
+stV.insert(0, 1000000)
 
 m2.add(stT)
 m3.add(stV)
