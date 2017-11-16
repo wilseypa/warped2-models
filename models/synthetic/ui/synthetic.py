@@ -11,17 +11,56 @@ label.pack()
 
 def sim():
     top = Toplevel()
-    output = './synthetic_sim --max-sim-time '
-    output += stV + ' --num-nodes ' + nodevar
-    output += ' --event-processing-time-range ' + fp_min + ',' + fp_max
-    output += ' --state-size-range ' + s_min + ',' + s_max
+    top.title('Simulation Command')
+    output = './synthetic_sim --max-sim-time ' + stV.get() + ' --num-nodes ' + nodevar.get() \
+             + ' --event-processing-time-range ' + fp_min.get() + ',' + fp_max.get() \
+             + ' --state-size-range ' + s_min.get() + ',' + s_max.get()
+    # network selection
     if network.get() == 1:
         output += ' --network-params Watts-Strogatz,' + ws_mV.get() + ',' + ws_pV.get()
     if network.get() == 2:
         output += ' --network-params Barabsi-Albert,' + ws_mV.get() + ',' + ws_pV.get()
-    m = Message(top, textvariable = output)
-    m.pack()
 
+    # node selection
+    if ns.get() == 1:
+        output += ' --node-selection-params exponential,' + ns_eV.get()
+    elif ns.get() == 2:
+        output += ' --node-selection-params geometic,' + ns_gV.get()
+    elif ns.get() == 3:
+        output += ' --node-selection-params binomial,' + ns_bV.get()
+    elif ns.get() == 4:
+        output += ' --node-selection-params normal,' + ns_nmV.get() + ',' + ns_nsdV.get()
+    elif ns.get() == 5:
+        output += ' --node-selection-params uniform,' + ns_uaV.get() + ',' + ns_ubV.get()
+    elif ns.get() == 6:
+        output += ' --node-selection-params poisson,' + ns_pV.get()
+    elif ns.get() == 7:
+        output += ' --node-selection-params lognormal,' + ns_lnmV.get() + ',' + ns_lnsdV.get()
+
+    # event send
+    if es.get() == 1:
+        output += ' --event-send-time-delta-params exponential,' + es_eV.get() + ',' + ns_esecV.get()
+    elif es.get() == 2:
+        output += ' --event-send-time-delta-params geometic,' + es_gpV.get() + ',' + es_gcV.get()
+    elif es.get() == 3:
+        output += ' --event-send-time-delta-params binomial,' + es_bV.get() + ',' + es_bcV.get()
+    elif es.get() == 4:
+        output += ' --event-send-time-delta-params normal,' + es_nmV.get() + ',' + es_nsdV.get() + ',' + es_ncV.get()
+    elif es.get() == 5:
+        output += ' --event-send-time-delta-params uniform,' + es_uaV.get() + ',' + es_ubV.get() + ',' + es_ucV.get()
+    elif es.get() == 6:
+        output += ' --event-send-time-delta-params poisson,' + es_pV.get() + ',' + es_pcV.get()
+    elif es.get() == 7:
+        output += ' --event-send-time-delta-params lognormal,' + es_lnmV.get() + ',' + es_lnsdV.get() + ',' + eslncV.get()
+
+    Label(top, text = output).pack()
+    Button(top, text = 'Copy', command= copy_b(output, top)).pack()
+
+def copy_b(output, top):
+#    clip = Tk()
+#    clip.withdraw()
+    top.clipboard_clear()
+    top.clipboard_append(output)
 
 run = Button(root, text = 'Run', command = sim)
 run.pack()
