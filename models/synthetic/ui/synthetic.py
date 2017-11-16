@@ -9,6 +9,26 @@ root.title("Synthetic Model")
 label = Label(root, text = 'Synthetic Model', font = (None, 20))
 label.pack()
 
+def sim():
+    top = Toplevel()
+    output = './synthetic_sim --max-sim-time '
+    output += stV + ' --num-nodes ' + nodevar
+    output += ' --event-processing-time-range ' + fp_min + ',' + fp_max
+    output += ' --state-size-range ' + s_min + ',' + s_max
+    if network.get() == 1:
+        output += ' --network-params Watts-Strogatz,' + ws_mV.get() + ',' + ws_pV.get()
+    if network.get() == 2:
+        output += ' --network-params Barabsi-Albert,' + ws_mV.get() + ',' + ws_pV.get()
+    m = Message(top, textvariable = output)
+    m.pack()
+
+
+run = Button(root, text = 'Run', command = sim)
+run.pack()
+
+reset = Button(root, text = 'Reset')
+reset.pack()
+
 m1 = PanedWindow()
 m1.pack(fill = BOTH, expand = 1)
 
@@ -26,7 +46,6 @@ m7 = PanedWindow(m1, orient = VERTICAL)
 m1.add(m7)
 m8 = PanedWindow(m1, orient = VERTICAL)
 m1.add(m8)
-
 
 # network
 
@@ -46,22 +65,40 @@ m6.add(nt6)
 m7.add(nt7)
 m8.add(nt8)
 
+def network_selection():
+    if network.get() == 1:
+        ws_mV.config(state = 'normal')
+        ws_pV.config(state = 'normal')
+        ba_mV.config(state = 'disabled')
+        ba_pV.config(state = 'disabled')
+
+    elif network.get() == 2:
+        ws_mV.config(state = 'disabled')
+        ws_pV.config(state = 'disabled')
+        ba_mV.config(state = 'normal')
+        ba_pV.config(state = 'normal')
+
 network = IntVar()
-R1 = Radiobutton(m2, text = "Watts-strogattz", fg = "red", variable = network, value = 1, font = (None, 12), anchor = W)
+R1 = Radiobutton(m2, text = "Watts-strogattz", fg = "red", variable = network, value = 1, font = (None, 12), anchor = W, command = network_selection)
 ws_mT = Label(m3, text = 'mean degree', fg = 'red', font = (None, 11))
-ws_mV = Entry(m4, bd = 2)
+ws_mV = Entry(m4, bd = 2)#, state = 'disabled')
 ws_mV.insert(0, 30)
 ws_pT = Label(m5, text = 'probability', fg = 'red', font = (None, 11))
-ws_pV = Entry(m6, bd = 2)
+ws_pV = Entry(m6, bd = 2)#, state = 'disabled')
 ws_pV.insert(0, 0.5)
 
-R2 = Radiobutton(m2, text = "Barabsi-Albert", fg = "green", variable = network, value = 2, font = (None, 12), anchor = W)
+R2 = Radiobutton(m2, text = "Barabsi-Albert", fg = "green", variable = network, value = 2, font = (None, 12), anchor = W, command = network_selection)
 ba_mT = Label(m3, text = 'mean degree', fg = 'green', font = (None, 11))
 ba_mV = Entry(m4, bd = 2)
+ba_mV.insert(0, 30)
+ba_mV.config(state = 'disabled')
 ba_pT = Label(m5, text = 'probability', fg = 'green', font = (None, 11))
 ba_pV = Entry(m6, bd = 2)
+ba_pV.insert(0, 0.5)
+ba_pV.config(state = 'disabled')
 
 network.set(1)
+
 
 m2.add(R1)
 m3.add(ws_mT)
@@ -88,51 +125,198 @@ m4.add(ns4)
 m5.add(ns5)
 m6.add(ns6)
 
-DIST = [("Exponential", "1"),
-        ("Geometric", "2"),
-        ("Binomial", "3"),
-        ("Normal", "4"),
-        ("Uniform", "5"),
-        ("Poisson", "6"),
-        ("Lognormal", "7"),
+DIST = [("Exponential", 1),
+        ("Geometric", 2),
+        ("Binomial", 3),
+        ("Normal", 4),
+        ("Uniform", 5),
+        ("Poisson", 6),
+        ("Lognormal", 7),
         ]
 
+def ns_selection():
+    if ns.get() == 1:
+        ns_eV.config(state = 'normal')
+
+        ns_gpV.config(state = 'disabled')
+
+        ns_bpV.config(state = 'disabled')
+
+        ns_nmV.config(state = 'disabled')
+        ns_nsdV.config(state = 'disabled')
+
+        ns_uaV.config(state = 'disabled')
+        ns_ubV.config(state = 'disabled')
+
+        ns_pV.config(state = 'disabled')
+
+        ns_lnmV.config(state = 'disabled')
+        ns_lnsdV.config(state = 'disabled')
+
+    elif ns.get() == 2:
+        ns_eV.config(state = 'disabled')
+
+        ns_gpV.config(state = 'normal')
+
+        ns_bpV.config(state = 'disabled')
+
+        ns_nmV.config(state = 'disabled')
+        ns_nsdV.config(state = 'disabled')
+
+        ns_uaV.config(state = 'disabled')
+        ns_ubV.config(state = 'disabled')
+
+        ns_pV.config(state = 'disabled')
+
+        ns_lnmV.config(state = 'disabled')
+        ns_lnsdV.config(state = 'disabled')
+
+    elif ns.get() == 3:
+        ns_eV.config(state = 'disabled')
+
+        ns_gpV.config(state = 'disabled')
+
+        ns_bpV.config(state = 'normal')
+
+        ns_nmV.config(state = 'disabled')
+        ns_nsdV.config(state = 'disabled')
+
+        ns_uaV.config(state = 'disabled')
+        ns_ubV.config(state = 'disabled')
+
+        ns_pV.config(state = 'disabled')
+
+        ns_lnmV.config(state = 'disabled')
+        ns_lnsdV.config(state = 'disabled')
+
+    elif ns.get() == 4:
+        ns_eV.config(state = 'disabled')
+
+        ns_gpV.config(state = 'disabled')
+
+        ns_bpV.config(state = 'disabled')
+
+        ns_nmV.config(state = 'normal')
+        ns_nsdV.config(state = 'normal')
+
+        ns_uaV.config(state = 'disabled')
+        ns_ubV.config(state = 'disabled')
+
+        ns_pV.config(state = 'disabled')
+
+        ns_lnmV.config(state = 'disabled')
+        ns_lnsdV.config(state = 'disabled')
+
+    elif ns.get() == 5:
+        ns_eV.config(state = 'disabled')
+
+        ns_gpV.config(state = 'disabled')
+
+        ns_bpV.config(state = 'disabled')
+
+        ns_nmV.config(state = 'disabled')
+        ns_nsdV.config(state = 'disabled')
+
+        ns_uaV.config(state = 'normal')
+        ns_ubV.config(state = 'normal')
+
+        ns_pV.config(state = 'disabled')
+
+        ns_lnmV.config(state = 'disabled')
+        ns_lnsdV.config(state = 'disabled')
+
+    elif ns.get() == 6:
+        ns_eV.config(state = 'disabled')
+
+        ns_gpV.config(state = 'disabled')
+
+        ns_bpV.config(state = 'disabled')
+
+        ns_nmV.config(state = 'disabled')
+        ns_nsdV.config(state = 'disabled')
+
+        ns_uaV.config(state = 'disabled')
+        ns_ubV.config(state = 'disabled')
+
+        ns_pV.config(state = 'normal')
+
+        ns_lnmV.config(state = 'disabled')
+        ns_lnsdV.config(state = 'disabled')
+
+    elif ns.get() == 7:
+        ns_eV.config(state = 'disabled')
+
+        ns_gpV.config(state = 'disabled')
+
+        ns_bpV.config(state = 'disabled')
+
+        ns_nmV.config(state = 'disabled')
+        ns_nsdV.config(state = 'disabled')
+
+        ns_uaV.config(state = 'disabled')
+        ns_ubV.config(state = 'disabled')
+
+        ns_pV.config(state = 'disabled')
+
+        ns_lnmV.config(state = 'normal')
+        ns_lnsdV.config(state = 'normal')
+
+
 ns = IntVar()
-ns.set("1")
+ns.set(1)
 
 for dist, c in DIST:
     if int(c)%2 == 0:
-        b = Radiobutton(m2, text = dist, variable = ns, value = c, fg = "green", font = (None, 11), anchor = W)
+        b = Radiobutton(m2, text = dist, variable = ns, value = c, fg = "green", font = (None, 11), anchor = W, command = ns_selection)
     else:
-        b = Radiobutton(m2, text = dist, variable = ns, value = c, fg = "red", font = (None, 11), anchor = W)
+        b = Radiobutton(m2, text = dist, variable = ns, value = c, fg = "red", font = (None, 11), anchor = W, command = ns_selection)
     m2.add(b)
 
 ns_eT = Label(m3, text = 'lambda(>0)', font = (None, 12), fg = 'red')
 ns_eV = Entry(m4, bd = 3)
+ns_eV.insert(0, 0.5)
 
 ns_gpT = Label(m3, text = 'probability', font = (None, 12), fg = 'green')
 ns_gpV = Entry(m4, bd = 3)
+ns_gpV.insert(0, 0.5)
+ns_gpV.config(state = 'disabled')
 
 ns_bpT = Label(m3, text = 'probability', font = (None, 12), fg = 'red')
 ns_bpV = Entry(m4, bd = 3)
+ns_bpV.insert(0, 0.5)
+ns_bpV.config(state = 'disabled')
 
 ns_nmT = Label(m3, text = 'mean', font = (None, 13), fg = 'green')
 ns_nmV = Entry(m4, bd = 3)
+ns_nmV.insert(0, 5)
+ns_nmV.config(state = 'disabled')
 ns_nsdT = Label(m5, text = 'standard deviation', font = (None, 13), fg = 'green')
 ns_nsdV = Entry(m6, bd = 3)
+ns_nsdV.insert(0, 10)
+ns_nsdV.config(state = 'disabled')
 
 ns_uaT = Label(m3, text = 'lower bound', font = (None, 13), fg = 'red')
 ns_uaV = Entry(m4, bd = 3)
+ns_uaV.insert(0, 1)
+ns_uaV.config(state = 'disabled')
 ns_ubT = Label(m5, text = 'upper bound', font = (None, 13), fg = 'red')
 ns_ubV = Entry(m6, bd = 3)
+ns_ubV.insert(0, 10)
+ns_ubV.config(state = 'disabled')
 
 ns_pT = Label(m3, text = 'mean (>3)', font = (None, 12), fg = 'green')
 ns_pV = Entry(m4, bd = 3)
+ns_pV.insert(0, 9)
+ns_pV.config(state = 'disabled')
 
 ns_lnmT = Label(m3,text = 'mean', font = (None, 13), fg = 'red')
 ns_lnmV = Entry(m4, bd = 3)
+ns_lnmV.insert(0, 3)
+ns_lnmV.config(state = 'disabled')
 ns_lnsdT = Label(m5, text = 'standard deviation', font = (None, 13), fg = 'red')
 ns_lnsdV = Entry(m6, bd = 3)
+ns_lnsdV.insert(0, 5)
+ns_lnsdV.config(state = 'disabled')
 
 ns_5 = Label(m5, text = '', height = 5)
 ns_lneT = Label(m5, text = '', height = 1)
@@ -182,66 +366,277 @@ m4.add(es4)
 m5.add(es5)
 m6.add(es6)
 
-Dist = [("Exponential", "1"),
-        ("Geometric", "2"),
-        ("Binomial", "3"),
-        ("Normal", "4"),
-        ("Uniform", "5"),
-        ("Poisson", "6"),
-        ("Lognormal", "7"),
+Dist = [("Exponential", 1),
+        ("Geometric", 2),
+        ("Binomial", 3),
+        ("Normal", 4),
+        ("Uniform", 5),
+        ("Poisson", 6),
+        ("Lognormal", 7),
         ]
 
+def es_selection():
+    if es.get() == 1:
+        es_eV.config(state = 'normal')
+        es_ecV.config(state = 'normal')
+
+        es_gpV.config(state = 'disabled')
+        es_gcV.config(state = 'disabled')
+
+        es_bpV.config(state = 'disabled')
+        es_bcV.config(state = 'disabled')
+
+        es_nmV.config(state = 'disabled')
+        es_nsdV.config(state = 'disabled')
+        es_ncV.config(state = 'disabled')
+
+        es_uaV.config(state = 'disabled')
+        es_ubV.config(state = 'disabled')
+        es_ucV.config(state = 'disabled')
+
+        es_pV.config(state = 'disabled')
+        es_pcV.config(state = 'disabled')
+
+        es_lnmV.config(state = 'disabled')
+        es_lnsdV.config(state = 'disabled')
+        es_lncV.config(state = 'disabled')
+
+    elif es.get() == 2:
+        es_eV.config(state = 'disabled')
+        es_ecV.config(state = 'disabled')
+
+        es_gpV.config(state = 'normal')
+        es_gcV.config(state = 'normal')
+
+        es_bpV.config(state = 'disabled')
+        es_bcV.config(state = 'disabled')
+
+
+        es_nmV.config(state = 'disabled')
+        es_nsdV.config(state = 'disabled')
+        es_ncV.config(state = 'disabled')
+
+        es_uaV.config(state = 'disabled')
+        es_ubV.config(state = 'disabled')
+        es_ucV.config(state = 'disabled')
+
+        es_pV.config(state = 'disabled')
+        es_pcV.config(state = 'disabled')
+
+        es_lnmV.config(state = 'disabled')
+        es_lnsdV.config(state = 'disabled')
+        es_lncV.config(state = 'disabled')
+
+    elif es.get() == 3:
+        es_eV.config(state = 'disabled')
+        es_ecV.config(state = 'disabled')
+
+        es_gpV.config(state = 'disabled')
+        es_gcV.config(state = 'disabled')
+
+        es_bpV.config(state = 'normal')
+        es_bcV.config(state = 'normal')
+
+        es_nmV.config(state = 'disabled')
+        es_nsdV.config(state = 'disabled')
+        es_ncV.config(state = 'disabled')
+
+        es_uaV.config(state = 'disabled')
+        es_ubV.config(state = 'disabled')
+        es_ucV.config(state = 'disabled')
+
+        es_pV.config(state = 'disabled')
+        es_pcV.config(state = 'disabled')
+
+        es_lnmV.config(state = 'disabled')
+        es_lnsdV.config(state = 'disabled')
+        es_lncV.config(state = 'disabled')
+
+    elif es.get() == 4:
+        es_eV.config(state = 'disabled')
+        es_ecV.config(state = 'disabled')
+
+        es_gpV.config(state = 'disabled')
+        es_gcV.config(state = 'disabled')
+
+        es_bpV.config(state = 'disabled')
+        es_bcV.config(state = 'disabled')
+
+        es_nmV.config(state = 'normal')
+        es_nsdV.config(state = 'normal')
+        es_ncV.config(state = 'normal')
+
+        es_uaV.config(state = 'disabled')
+        es_ubV.config(state = 'disabled')
+        es_ucV.config(state = 'disabled')
+
+        es_pV.config(state = 'disabled')
+        es_pcV.config(state = 'disabled')
+
+        es_lnmV.config(state = 'disabled')
+        es_lnsdV.config(state = 'disabled')
+        es_lncV.config(state = 'disabled')
+
+    elif es.get() == 5:
+        es_eV.config(state = 'disabled')
+        es_ecV.config(state = 'disabled')
+
+        es_gpV.config(state = 'disabled')
+        es_gcV.config(state = 'disabled')
+
+        es_bpV.config(state = 'disabled')
+        es_bcV.config(state = 'disabled')
+
+        es_nmV.config(state = 'disabled')
+        es_nsdV.config(state = 'disabled')
+        es_ncV.config(state = 'disabled')
+
+        es_uaV.config(state = 'normal')
+        es_ubV.config(state = 'normal')
+        es_ucV.config(state = 'normal')
+
+        es_pV.config(state = 'disabled')
+        es_pcV.config(state = 'disabled')
+
+        es_lnmV.config(state = 'disabled')
+        es_lnsdV.config(state = 'disabled')
+        es_lncV.config(state = 'disabled')
+
+    elif es.get() == 6:
+        es_eV.config(state = 'disabled')
+        es_ecV.config(state = 'disabled')
+
+        es_gpV.config(state = 'disabled')
+        es_gcV.config(state = 'disabled')
+
+        es_bpV.config(state = 'disabled')
+        es_bcV.config(state = 'disabled')
+
+        es_nmV.config(state = 'disabled')
+        es_nsdV.config(state = 'disabled')
+        es_ncV.config(state = 'disabled')
+
+        es_uaV.config(state = 'disabled')
+        es_ubV.config(state = 'disabled')
+        es_ucV.config(state = 'disabled')
+
+        es_pV.config(state = 'normal')
+        es_pcV.config(state = 'normal')
+
+        es_lnmV.config(state = 'disabled')
+        es_lnsdV.config(state = 'disabled')
+        es_lncV.config(state = 'disabled')
+
+    elif es.get() == 7:
+        es_eV.config(state = 'disabled')
+        es_ecV.config(state = 'disabled')
+
+        es_gpV.config(state = 'disabled')
+        es_gcV.config(state = 'disabled')
+
+        es_bpV.config(state = 'disabled')
+        es_bcV.config(state = 'disabled')
+
+        es_nmV.config(state = 'disabled')
+        es_nsdV.config(state = 'disabled')
+        es_ncV.config(state = 'disabled')
+
+        es_uaV.config(state = 'disabled')
+        es_ubV.config(state = 'disabled')
+
+        es_pV.config(state = 'disabled')
+        es_pcV.config(state = 'disabled')
+        es_ucV.config(state = 'disabled')
+
+        es_lnmV.config(state = 'normal')
+        es_lnsdV.config(state = 'normal')
+        es_lncV.config(state = 'normal')
+
 es = IntVar()
+es.set(2)
 
 for distr, x in Dist:
     if int(x)%2 == 0:
-        e = Radiobutton(m2, text = distr, variable = es, value = x, fg = "red", font = (None, 11), anchor = W)
+        e = Radiobutton(m2, text = distr, variable = es, value = x, fg = "red", font = (None, 11), anchor = W, command = es_selection)
     else:
-        e = Radiobutton(m2, text = distr, variable = es, value = x, fg = "green", font = (None, 11), anchor = W)
+        e = Radiobutton(m2, text = distr, variable = es, value = x, fg = "green", font = (None, 11), anchor = W, command = es_selection)
     m2.add(e)
 
 
 es_eT = Label(m3, text = 'lambda(>0)', font = (None, 12), fg = 'green')
 es_eV = Entry(m4, bd = 3)
+es_eV.insert(0, 0.5)
+es_eV.config(state = 'disabled')
 es_ecT = Label(m5, text = 'ceiling', font = (None, 12), fg = 'green')
 es_ecV = Entry(m6, bd = 3)
+es_ecV.insert(0, 10)
+es_ecV.config(state = 'disabled')
+
 
 es_gpT = Label(m3, text = 'probability', font = (None, 12), fg = 'red')
 es_gpV = Entry(m4, bd = 3)
+es_gpV.insert(0, 0.1)
 es_gcT = Label(m5, text = 'ceiling', font = (None, 12),  fg = 'red')
 es_gcV = Entry(m6, bd = 3)
+es_gcV.insert(0, 10)
 
 es_bpT = Label(m3, text = 'probability', font = (None, 12), fg = 'green')
 es_bpV = Entry(m4, bd = 3)
+es_bpV.insert(0, 0.5)
+es_bpV.config(state = 'disabled')
 es_bcT = Label(m5, text = 'ceiling', fg = 'green', font = (None, 12))
 es_bcV = Entry(m6, bd = 3)
+es_bcV.insert(0, 10)
+es_bcV.config(state = 'disabled')
 
 es_nmT = Label(m3, text = 'mean', font = (None, 13), fg = 'red')
 es_nmV = Entry(m4, bd = 3)
+es_nmV.insert(0, 5)
+es_nmV.config(state = 'disabled')
 es_nsdT = Label(m5, text = 'standard deviation', font = (None, 13), fg = 'red')
 es_nsdV = Entry(m6, bd = 3)
+es_nsdV.insert(0, 9)
+es_nsdV.config(state = 'disabled')
 es_ncT = Label(m7, text = 'ceiling', fg = 'red', font = (None, 12))
 es_ncV = Entry(m8, bd = 3)
+es_ncV.insert(0, 10)
+es_ncV.config(state = 'disabled')
 
 es_uaT = Label(m3, text = 'lower bound', font = (None, 13), fg = 'green')
 es_uaV = Entry(m4, bd = 3)
+es_uaV.insert(0, 1)
+es_uaV.config(state = 'disabled')
 es_ubT = Label(m5, text = 'upper bound', font = (None ,13), fg = 'green')
 es_ubV = Entry(m6, bd = 3)
+es_ubV.insert(0, 9)
+es_ubV.config(state = 'disabled')
 es_ucT = Label(m7, text = 'ceiling', fg = 'green', font = (None, 12))
 es_ucV = Entry(m8, bd = 3)
+es_ucV.insert(0, 10)
+es_ucV.config(state = 'disabled')
 
 
 es_pT = Label(m3, text = 'mean (>3)', font = (None, 12), fg = 'red')
 es_pV = Entry(m4, bd = 3)
+es_pV.insert(0, 9)
+es_pV.config(state = 'disabled')
 es_pcT = Label(m5, text = 'ceiling', fg = 'red', font = (None, 12))
 es_pcV = Entry(m6, bd = 3)
+es_pcV.insert(0, 10)
+es_pcV.config(state = 'disabled')
 
 es_lnmT = Label(m3,text = 'mean', font = (None, 12), fg = 'green')
 es_lnmV = Entry(m4, bd = 3)
+es_lnmV.insert(0, 3)
+es_lnmV.config(state = 'disabled')
 es_lnsdT = Label(m5, text = 'standard deviation', font = (None, 12), fg = 'green')
 es_lnsdV = Entry(m6, bd = 3)
+es_lnsdV.insert(0, 5)
+es_lnsdV.config(state = 'disabled')
 es_lncT = Label(m7, text = 'ceiling', fg = 'green', font = (None, 12))
 es_lncV = Entry(m8, bd = 3)
+es_lncV.insert(0, 10)
+es_lncV.config(state = 'disabled')
 
 
 es_7 = Label(m7, text = '', height = 28)
