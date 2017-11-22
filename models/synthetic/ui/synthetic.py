@@ -127,21 +127,22 @@ nb.grid(row = 1, column = 0)
 networkV = StringVar()
 
 network = {'Watts-Strogatz', 'Barabasi-Albert'}
+networkV.set('Watts-Strogatz')
 
 networkMenu = OptionMenu(n, networkV, *network, command = nw)
 Label(n, text = 'Network type').grid(row = 0, column = 1)
 networkMenu.grid(row = 1, column = 1)
 
-mean_degreeL = Label(n, text = '')
+mean_degreeL = Label(n, text = 'Mean Degree')
 mean_degreeL.grid(row = 1, column = 2)
-probabilityL = Label(n, text = '')
+probabilityL = Label(n, text = 'Probability')
 probabilityL.grid(row = 1, column = 4)
 mean_degree = Entry(n)
+mean_degree.insert(0, 30)
 mean_degree.grid(row = 1, column = 3)
-mean_degree.grid_remove()
 probability = Entry(n)
 probability.grid(row = 1, column = 5)
-probability.grid_remove()
+probability.insert(0, 0.1)
 
 
 # event send distribution
@@ -278,12 +279,14 @@ esM = {     'Exponential',
             'Lognormal'
         }
 
+esV.set('Geometric')
+
 esMenu = OptionMenu(es, esV, *esM, command = es_choice)
 Label(es, text = 'Event Send Time Distribution').grid(row = 0, column = 1)
 esMenu.grid(row = 1, column = 1)
 
-es_l1 = Label(es, text = '')
-es_l2 = Label(es, text = '')
+es_l1 = Label(es, text = 'Probability of Success')
+es_l2 = Label(es, text = 'Ceiling')
 es_l3 = Label(es, text = '')
 es_v1 = Entry(es)
 es_v2 = Entry(es)
@@ -294,8 +297,8 @@ es_l3.grid(row = 1, column = 6)
 es_v1.grid(row = 1, column = 3)
 es_v2.grid(row = 1, column = 5)
 es_v3.grid(row = 1, column = 7)
-es_v1.grid_remove()
-es_v2.grid_remove()
+es_v1.insert(0, 0.1)
+es_v2.insert(0, 10)
 es_v3.grid_remove()
 
 # node selection
@@ -404,11 +407,13 @@ nsM = {     'Exponential',
             'Lognormal'
         }
 
+nsV.set('Exponential')
+
 nsMenu = OptionMenu(ns, nsV, *nsM, command = ns_choice)
 Label(ns, text = 'Select Node to Send Event').grid(row = 0, column = 1)
 nsMenu.grid(row = 1, column = 1)
 
-ns_l1 = Label(ns, text = '')
+ns_l1 = Label(ns, text = 'Lambda')
 ns_l1.grid(row = 1, column = 2)
 ns_l2 = Label(ns, text = '')
 ns_l2.grid(row = 1, column = 4)
@@ -416,7 +421,7 @@ ns_v1 = Entry(ns)
 ns_v2 = Entry(ns)
 ns_v1.grid(row = 1, column = 3)
 ns_v2.grid(row = 1, column = 5)
-ns_v1.grid_remove()
+ns_v1.insert(0, 0.5)
 ns_v2.grid_remove()
 
 # push buttons
