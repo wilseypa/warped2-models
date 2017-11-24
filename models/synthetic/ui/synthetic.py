@@ -13,25 +13,8 @@ label.pack()
 nodeT = Frame(master)
 nodeT.pack()
 
-nodeconfig = Label(nodeT, text = 'Node Configeration', anchor = W, justify  = LEFT)
+nodeconfig = Label(nodeT, text = 'Node Configeration')
 nodeconfig.pack()
-
-# max sim time
-def mst_info():
-    tkMessageBox.showinfo('Max Simulation Time', 'Max simulation time for each node')
-
-mst = Frame(master)
-mst.pack()
-
-mstb = Button(mst, text = '?', command = mst_info)
-mstb.pack(side = LEFT)
-
-mstl = Label(mst, text = 'Max Simulation Time')
-mstl.pack(side = LEFT)
-
-mstv = Entry(mst, bd = 4)
-mstv.pack(side = LEFT)
-mstv.insert(0, 1000000)
 
 
 # number of nodes
@@ -68,6 +51,31 @@ s = Entry(ss, bd = 4)
 s.pack(side = LEFT)
 s.insert(0, "100,100")
 
+# time delta
+td = Frame(master)
+td.pack()
+
+tdl = Label(td, text = 'Time Delta')
+tdl.pack()
+
+# max sim time
+def mst_info():
+    tkMessageBox.showinfo('Max Simulation Time', 'Max simulation time for each node')
+
+mst = Frame(master)
+mst.pack()
+
+mstb = Button(mst, text = '?', command = mst_info)
+mstb.pack(side = LEFT)
+
+mstl = Label(mst, text = 'Max Simulation Time')
+mstl.pack(side = LEFT)
+
+mstv = Entry(mst, bd = 4)
+mstv.pack(side = LEFT)
+mstv.insert(0, 1000000)
+
+
 # floating point operation count
 def processing_delay_info():
     tkMessageBox.showinfo('Processing Delay', 'Set and event processing delay')
@@ -81,68 +89,9 @@ fpb.pack(side = LEFT)
 fp1 = Label(fp, text = "Processing Delay(Min,Max)")
 fp1.pack(side = LEFT)
 
-fp_min = Entry(fp, bd = 4)
-fp_min.pack(side = LEFT)
-fp_min.insert(0, "1000,1000")
-
-# network
-def network_info():
-    if networkV.get() == 'Watts-Strogatz':
-        tkMessageBox.showinfo('Watts-Strogatz', '')
-
-    elif networkV.get() == 'Barabasi-Albert':
-        tkMessageBox.showinfo('Barabasi-Albert', '')
-
-    else:
-        tkMessageBox.showinfo('Network', '')
-
-def nw(*args):
-    if networkV.get() == 'Watts-Strogatz':
-        mean_degreeL.config(text = 'Mean Degree')
-        probabilityL.config(text = 'Probability')
-        mean_degree.grid(row = 1, column = 3)
-        probability.grid(row = 1, column = 5)
-        mean_degree.delete(0, END)
-        probability.delete(0, END)
-        mean_degree.insert(0, 30)
-        probability.insert(0, 0.1)
-
-
-    elif networkV.get() == 'Barabasi-Albert':
-        mean_degreeL.config(text = 'Mean Degree')
-        probabilityL.config(text = 'Probability')
-        mean_degree.grid(row = 1, column = 3)
-        probability.grid(row = 1, column = 5)
-        mean_degree.delete(0, END)
-        probability.delete(0, END)
-        mean_degree.insert(0, 30)
-        probability.insert(0, 0.1)
-
-n = Frame(master)
-n.pack()
-
-nb = Button(n, text = '?', command = network_info)
-nb.grid(row = 1, column = 0)
-
-networkV = StringVar()
-
-network = {'Watts-Strogatz', 'Barabasi-Albert'}
-networkV.set('Watts-Strogatz')
-
-networkMenu = OptionMenu(n, networkV, *network, command = nw)
-Label(n, text = 'Network type').grid(row = 0, column = 1)
-networkMenu.grid(row = 1, column = 1)
-
-mean_degreeL = Label(n, text = 'Mean Degree')
-mean_degreeL.grid(row = 1, column = 2)
-probabilityL = Label(n, text = 'Probability')
-probabilityL.grid(row = 1, column = 4)
-mean_degree = Entry(n)
-mean_degree.insert(0, 30)
-mean_degree.grid(row = 1, column = 3)
-probability = Entry(n)
-probability.grid(row = 1, column = 5)
-probability.insert(0, 0.1)
+fpvar = Entry(fp, bd = 4)
+fpvar.pack(side = LEFT)
+fpvar.insert(0, "1000,1000")
 
 
 # event send distribution
@@ -302,6 +251,74 @@ es_v2.insert(0, 10)
 es_v3.grid_remove()
 
 # node selection
+nodesele = Frame(master)
+nodesele.pack()
+
+nodese = Label(nodesele, text = 'Selecte Node to Send Event')
+nodese.pack()
+
+# network
+def network_info():
+    if networkV.get() == 'Watts-Strogatz':
+        tkMessageBox.showinfo('Watts-Strogatz', '')
+
+    elif networkV.get() == 'Barabasi-Albert':
+        tkMessageBox.showinfo('Barabasi-Albert', '')
+
+    else:
+        tkMessageBox.showinfo('Network', '')
+
+def nw(*args):
+    if networkV.get() == 'Watts-Strogatz':
+        mean_degreeL.config(text = 'Mean Degree')
+        probabilityL.config(text = 'Probability')
+        mean_degree.grid(row = 1, column = 3)
+        probability.grid(row = 1, column = 5)
+        mean_degree.delete(0, END)
+        probability.delete(0, END)
+        mean_degree.insert(0, 30)
+        probability.insert(0, 0.1)
+
+
+    elif networkV.get() == 'Barabasi-Albert':
+        mean_degreeL.config(text = 'Mean Degree')
+        probabilityL.config(text = 'Probability')
+        mean_degree.grid(row = 1, column = 3)
+        probability.grid(row = 1, column = 5)
+        mean_degree.delete(0, END)
+        probability.delete(0, END)
+        mean_degree.insert(0, 30)
+        probability.insert(0, 0.1)
+
+n = Frame(master)
+n.pack()
+
+nb = Button(n, text = '?', command = network_info)
+nb.grid(row = 1, column = 0)
+
+networkV = StringVar()
+
+network = {'Watts-Strogatz', 'Barabasi-Albert'}
+networkV.set('Watts-Strogatz')
+
+networkMenu = OptionMenu(n, networkV, *network, command = nw)
+Label(n, text = 'Network type').grid(row = 0, column = 1)
+networkMenu.grid(row = 1, column = 1)
+
+mean_degreeL = Label(n, text = 'Mean Degree')
+mean_degreeL.grid(row = 1, column = 2)
+probabilityL = Label(n, text = 'Probability')
+probabilityL.grid(row = 1, column = 4)
+mean_degree = Entry(n)
+mean_degree.insert(0, 30)
+mean_degree.grid(row = 1, column = 3)
+probability = Entry(n)
+probability.grid(row = 1, column = 5)
+probability.insert(0, 0.1)
+
+
+
+# node selection
 def ns_info():
     if nsV.get() == 'Exponential':
         tkMessageBox.showinfo('Exponential', '')
@@ -429,13 +446,94 @@ ns_v2.grid_remove()
 b = Frame(master)
 b.pack()
 
+def resetB():
+    networkV.set('Watts-Strogatz')
+    mean_degree.delete(0, END)
+    probability.delete(0, END)
+    mean_degree.insert(0, 30)
+    probability.insert(0, 0.1)
+
+    esV.set('Geometric')
+    es_l1.config(text = 'Probabiity of Success')
+    es_l2.config(text = 'Ceiling')
+    es_l3.config(text = '')
+    es_v1.grid(row = 1, column = 3)
+    es_v2.grid(row = 1, column = 5)
+    es_v3.grid_remove()
+    es_v1.delete(0, END)
+    es_v2.delete(0, END)
+    es_v1.insert(0, 0.1)
+    es_v2.insert(0, 10)
+
+    nsV.set('Exponential')
+    ns_l1.config(text = 'Lambda')
+    ns_l2.config(text = '')
+    ns_v1.grid(row = 1, column = 3)
+    ns_v2.grid_remove()
+    ns_v1.delete(0, END)
+    ns_v1.insert(0, 0.5)
+
+    mstv.delete(0, END)
+    mstv.insert(0, 1000000)
+
+    nodevar.delete(0, END)
+    nodevar.insert(0, 100000)
+
+    s.delete(0, END)
+    s.insert(0, '100,100')
+
+    fpvar.delete(0, END)
+    fpvar.insert(0, '1000,1000')
+
 def run_sim():
-    subprocess.call('cd .. ; ./synthetic_sim', shell = True)
+    run_command = 'cd .. ; ./synthetic_sim --max-sim-time ' + mstv.get() + ' --num-nodes ' + nodevar.get()
+    run_command += ' --event-processing-time-range ' + fpvar.get()
+    run_command += ' --state-size-range ' + s.get()
+
+    if networkV.get() == 'Watts-Strogatz':
+        run_command += ' --network-params Watts-Strogatz,' + mean_degree.get() + ',' + probability.get()
+
+    elif networkV.get() == 'Barabasi-Albert':
+        run_command += ' --network-params Barabasi-Albert,' + mean_degree.get() + ',' + probability.get()
+
+    if esV.get() == 'Exponential':
+        run_command += ' --event-send-time-delta-params exponential,' + es_v1.get() + ',' + es_v2.get()
+    elif esV.get() == 'Geometric':
+        run_command += ' --event-send-time-delta-params geometric,' + es_v1.get() + ',' + es_v2.get()
+    elif esV.get() == 'Binomial':
+        run_command += ' --event-send-time-delta-params binomial,' + es_v1.get() + ',' + es_v2.get()
+    elif esV.get() == 'Normal':
+        run_command += ' --event-send-time-delta-params normal,' + es_v1.get() + ',' + es_v2.get() + ',' + es_v3.get()
+    elif esV.get() == 'Uniform':
+        run_command += ' --event-send-time-delta-params uniform,' + es_v1.get() + ',' + es_v2.get() + ',' + es_v3.get()
+    elif esV.get() == 'Poisson':
+        run_command += ' --event-send-time-delta-params poisson,' + es_v1.get() + ',' + es_v2.get()
+    elif esV.get() == 'Lognormal':
+        run_command += ' --event-send-time-delta-params lognormal,' + es_v1.get() + ',' + es_v2.get() + ',' + es_v3.get()
+
+    if nsV.get() == 'Exponential':
+        run_command += ' --node-selection-params exponential,' + ns_v1.get()
+    elif nsV.get() == 'Geometric':
+        run_command += ' --node-selection-params geometric,' + ns_v1.get()
+    elif nsV.get() == 'Binomial':
+        run_command += ' --node-selection-params binomial,' + ns_v1.get()
+    elif nsV.get() == 'Normal':
+        run_command += ' --node-selection-params normal,' + ns_v1.get() +  ',' + ns_v2.get()
+    elif nsV.get() == 'Uniform':
+        run_command += ' --node-selection-params uniform,' + ns_v1.get() + ',' + ns_v2.get()
+    elif nsV.get() == 'Poisson':
+        run_command += ' --node-selection-params poisson,' + ns_v1.get()
+    elif nsV.get() == 'Lognormal':
+        run_command += ' --node-selection-params lognormal,' + ns_v1.get() + ',' + ns_v2.get()
+
+    #subprocess.call('cd .. ; ./synthetic_sim', shell = True)
+    subprocess.call(run_command, shell = True)
+    #print run_command
 
 run = Button(b, text = 'RUN', command = run_sim)
 run.pack(side = LEFT)
 
-reset = Button (b, text = 'RESET')
+reset = Button (b, text = 'RESET', command = resetB)
 reset.pack(side = LEFT)
 
 mainloop()
