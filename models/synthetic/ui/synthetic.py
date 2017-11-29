@@ -19,7 +19,7 @@ nodeconfig.pack()
 
 # number of nodes
 def node_info():
-    tkMessageBox.showinfo('Numbser of Nodes', 'Number of total node will be processing')
+    tkMessageBox.showinfo('Numbser of Nodes', 'Number of total node will be processed')
 
 node = Frame(master)
 node.pack()
@@ -36,7 +36,7 @@ nodevar.insert(0, "100000")
 
 # state size
 def ss_info():
-    tkMessageBox.showinfo('State Size', 'size of each LP state')
+    tkMessageBox.showinfo('State Size', 'Size of each LP state')
 
 ss = Frame(master)
 ss.pack()
@@ -60,7 +60,7 @@ tdl.pack()
 
 # max sim time
 def mst_info():
-    tkMessageBox.showinfo('Max Simulation Time', 'Max simulation time for each node')
+    tkMessageBox.showinfo('Max Simulation Time', 'Max simulation time for each LP state')
 
 mst = Frame(master)
 mst.pack()
@@ -78,7 +78,7 @@ mstv.insert(0, 1000000)
 
 # floating point operation count
 def processing_delay_info():
-    tkMessageBox.showinfo('Processing Delay', 'Set and event processing delay')
+    tkMessageBox.showinfo('Processing Delay', 'Time delay for each events')
 
 fp = Frame(master)
 fp.pack()
@@ -96,29 +96,7 @@ fpvar.insert(0, "1000,1000")
 
 # event send distribution
 def es_info():
-    if esV.get() == 'Exponential':
-        tkMessageBox.showinfo('Exponential', '')
-
-    elif esV.get() == 'Geometric':
-        tkMessageBox.showinfo('Geometirc', '')
-
-    elif esV.get() == 'Binomial':
-        tkMessageBox.showinfo('Binomial', '')
-
-    elif esV.get() == 'Normal':
-        tkMessageBox.showinfo('Normal', '')
-
-    elif esV.get() == 'Uniform':
-        tkMessageBox.showinfo('Uniform', '')
-
-    elif esV.get() == 'Poisson':
-        tkMessageBox.showinfo('Poisson', '')
-
-    elif esV.get() == 'Lognormal':
-        tkMessageBox.showinfo('Lognormal', '')
-
-    else:
-        tkMessageBox.showinfo('Event Send Distribution', '')
+    tkMessageBox.showinfo('Event Send Distribution', '')
 
 def es_choice(*args):
     if esV.get() == 'Exponential':
@@ -214,8 +192,8 @@ def es_choice(*args):
 es = Frame(master)
 es.pack()
 
-esb = Button(es, text = '?')
-esb.grid(row = 1, column = 0)
+esb = Button(es, text = '?', command = es_info)
+esb.grid(row = 0, column = 0)
 
 esV = StringVar()
 
@@ -259,14 +237,10 @@ nodese.pack()
 
 # network
 def network_info():
-    if networkV.get() == 'Watts-Strogatz':
-        tkMessageBox.showinfo('Watts-Strogatz', '')
-
-    elif networkV.get() == 'Barabasi-Albert':
-        tkMessageBox.showinfo('Barabasi-Albert', '')
-
-    else:
-        tkMessageBox.showinfo('Network', '')
+    tkMessageBox.showinfo('Network', 'Watts-Strogatz\n  Mean Degree of Connectivity\n  (>3)\n'\
+            '  Beta Probability of Link\n  Re-Ordering\nBarabasi-Albert\n'\
+            '  Mean Degree of Connectiveity\n  (>3)\n  Alpha Probability of\n'\
+            '  Preferential Attachment\n  or Bias')
 
 def nw(*args):
     if networkV.get() == 'Watts-Strogatz':
@@ -294,7 +268,7 @@ n = Frame(master)
 n.pack()
 
 nb = Button(n, text = '?', command = network_info)
-nb.grid(row = 1, column = 0)
+nb.grid(row = 0, column = 0)
 
 networkV = StringVar()
 
@@ -320,29 +294,7 @@ probability.insert(0, 0.1)
 
 # node selection
 def ns_info():
-    if nsV.get() == 'Exponential':
-        tkMessageBox.showinfo('Exponential', '')
-
-    elif nsV.get() == 'Geometric':
-        tkMessageBox.showinfo('Geometirc', '')
-
-    elif nsV.get() == 'Binomial':
-        tkMessageBox.showinfo('Binomial', '')
-
-    elif nsV.get() == 'Normal':
-        tkMessageBox.showinfo('Normal', '')
-
-    elif nsV.get() == 'Uniform':
-        tkMessageBox.showinfo('Uniform', '')
-
-    elif nsV.get() == 'Poisson':
-        tkMessageBox.showinfo('Poisson', '')
-
-    elif nsV.get() == 'Lognormal':
-        tkMessageBox.showinfo('Lognormal', '')
-
-    else:
-        tkMessageBox.showinfo('Node Selection', '')
+    tkMessageBox.showinfo('Node Selection', '')
 
 def ns_choice(*args):
     if nsV.get() == 'Exponential':
@@ -410,8 +362,8 @@ def ns_choice(*args):
 ns = Frame(master)
 ns.pack()
 
-nsb = Button(ns, text = '?')
-nsb.grid(row = 1, column = 0)
+nsb = Button(ns, text = '?', command = ns_info)
+nsb.grid(row = 0, column = 0)
 
 nsV = StringVar()
 
@@ -491,39 +443,103 @@ def run_sim():
     run_command += ' --state-size-range ' + s.get()
 
     if networkV.get() == 'Watts-Strogatz':
+        if int(mean_degree.get()) < 4 or int(probability.get()) >= 1 or float(probability.get()) <= 0:
+            tkMessageBox.showwarning('Network','Mean Degree must be greater than 4, and'\
+                    'probability must be within range of 0 and 1!')
+            return
         run_command += ' --network-params Watts-Strogatz,' + mean_degree.get() + ',' + probability.get()
 
     elif networkV.get() == 'Barabasi-Albert':
+        if int(mean_degree.get()) < 4 and (int(probability.get()) >= 1 or float(probability.get()) <= 0):
+            tkMessageBox.showwarning('Network','Mean Degree must be greater than 4, and'\
+                    'probability must be within range of 0 and 1!')
+            return
         run_command += ' --network-params Barabasi-Albert,' + mean_degree.get() + ',' + probability.get()
 
     if esV.get() == 'Exponential':
+        if float(es_v1.get()) <= 0 or float(es_v1.get()) >= 1 or int(es_v2.get()) <= 0:
+            tkMessageBox.showwarning('Event Send Distribution','Lambda must be in range of 0 and'\
+                                     '1, and ceiling value has to be greater than 0!')
+            return
         run_command += ' --event-send-time-delta-params exponential,' + es_v1.get() + ',' + es_v2.get()
     elif esV.get() == 'Geometric':
+        if float(es_v1.get()) <= 0 or float(es_v1.get()) >= 1 or int(es_v2.get()) <= 0:
+            tkMessageBox.showwarning('Event Send Distribution', 'Probability has to be in range of'\
+                    '0 and 1, ceiling has to be greater than 0!')
+            return
         run_command += ' --event-send-time-delta-params geometric,' + es_v1.get() + ',' + es_v2.get()
     elif esV.get() == 'Binomial':
+        if float(es_v1.get()) <= 0 or float(es_v1.get()) >= 1 or int(es_v2.get()) <= 0:
+            tkMessageBox.showwarning('Event Send Distribution', 'Probability has to be in range'\
+                    ' of 0 and 1, ceiling has to be greater than 0!')
+            return
         run_command += ' --event-send-time-delta-params binomial,' + es_v1.get() + ',' + es_v2.get()
     elif esV.get() == 'Normal':
+        if float(es_v1.get()) < 0 or float(es_v2.get()) <= 0 or int(es_v3.get()) < 0:
+            tkMessageBox.showwarning('Event Send Distribution', 'Mean and ceiling have to be'\
+                    'greater than 0, and standard deviation has to be greater or equals to 0!')
+            return
         run_command += ' --event-send-time-delta-params normal,' + es_v1.get() + ',' + es_v2.get() + ',' + es_v3.get()
     elif esV.get() == 'Uniform':
+        if int(es_v1.get()) < 0 or int(es_v1.get()) >= int(es_v2.get()) or int(es_v3.get()) <= 0:
+            tkMessageBox.showwarning('Event Send Distribution', 'Lower bound and upper bound'\
+                    'has to be greater than 0, and lower bound has to be smailler than upper bound'\
+                    ', ceiling has to be greater than 0!')
+            return
         run_command += ' --event-send-time-delta-params uniform,' + es_v1.get() + ',' + es_v2.get() + ',' + es_v3.get()
     elif esV.get() == 'Poisson':
+        if int(es_v1.get()) <= 3 or int(es_v2.get()) <= 0:
+            tkMessageBox.showwarning('Event Send Distribution', 'Mean has to be greater than 3'\
+                    ', ceiling has to be greater than 0!')
+            return
         run_command += ' --event-send-time-delta-params poisson,' + es_v1.get() + ',' + es_v2.get()
     elif esV.get() == 'Lognormal':
+        if float(es_v1.get()) <= 1 or float(es_v2.get()) <= 0 or int(es_v3.get()) < 0:
+            tkMessageBox.showwarning('Event Send Distribution', 'Mean and ceiling have to be greater than 1,'\
+                    'and standard deviation has to be greater or equals to 1!')
+            return
         run_command += ' --event-send-time-delta-params lognormal,' + es_v1.get() + ',' + es_v2.get() + ',' + es_v3.get()
 
     if nsV.get() == 'Exponential':
+        if float(es_v1.get()) <= 0 or float(es_v1.get()) >= 1:
+            tkMessageBox.showwarning('Event Send Distribution','Lambda must be in range of 0 and'\
+                                     '1!')
+            return
         run_command += ' --node-selection-params exponential,' + ns_v1.get()
     elif nsV.get() == 'Geometric':
+        if float(es_v1.get()) <= 0 or float(es_v1.get()) >= 1:
+            tkMessageBox.showwarning('Event Send Distribution', 'Probability has to be in range of'\
+                    '0 and 1!')
+            return
         run_command += ' --node-selection-params geometric,' + ns_v1.get()
     elif nsV.get() == 'Binomial':
+        if float(es_v1.get()) <= 0 or float(es_v1.get()) >= 1:
+            tkMessageBox.showwarning('Event Send Distribution', 'Probability has to be in range'\
+                    ' of 0 and 1!')
+            return
         run_command += ' --node-selection-params binomial,' + ns_v1.get()
     elif nsV.get() == 'Normal':
+        if float(es_v1.get()) < 0 or float(es_v2.get()) <= 0:
+            tkMessageBox.showwarning('Event Send Distribution', 'Mean has to be'\
+                    'greater than 0, and standard deviation has to be greater or equals to 0!')
+            return
         run_command += ' --node-selection-params normal,' + ns_v1.get() +  ',' + ns_v2.get()
     elif nsV.get() == 'Uniform':
+        if int(es_v1.get()) < 0 or int(es_v1.get()) >= int(es_v2.get()):
+            tkMessageBox.showwarning('Event Send Distribution', 'Lower bound and upper bound'\
+                    'has to be greater than 0, and lower bound has to be smailler than upper bound')
+            return
         run_command += ' --node-selection-params uniform,' + ns_v1.get() + ',' + ns_v2.get()
     elif nsV.get() == 'Poisson':
+        if int(es_v1.get()) <= 3:
+            tkMessageBox.showwarning('Event Send Distribution', 'Mean has to be greater than 3')
+            return
         run_command += ' --node-selection-params poisson,' + ns_v1.get()
     elif nsV.get() == 'Lognormal':
+        if float(es_v1.get()) <= 1 or float(es_v2.get()) <= 0:
+            tkMessageBox.showwarning('Event Send Distribution', 'Mean has to be greater than 1,'
+                    'and standard deviation has to be greater or equals to 1!')
+            return
         run_command += ' --node-selection-params lognormal,' + ns_v1.get() + ',' + ns_v2.get()
 
     #subprocess.call('cd .. ; ./synthetic_sim', shell = True)
