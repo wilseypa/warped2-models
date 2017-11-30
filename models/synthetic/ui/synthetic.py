@@ -7,7 +7,7 @@ import subprocess
 master = Tk()
 master.title('Synthetic Model')
 
-label = Label (master, text = "Synthetic Model", font = (None, 15))
+label = Label(master, text = "Synthetic Model", font = (None, 15))
 label.pack()
 
 nodeT = Frame(master)
@@ -44,12 +44,19 @@ ss.pack()
 ssb = Button(ss, text = '?', command = ss_info)
 ssb.pack(side = LEFT)
 
-s1 = Label(ss, text = "State Size: (Min,Max)")
-s1.pack(side = LEFT)
+s1 = Label(ss, text = "State Size: Min")
+s2 = Label(ss, text = "Max")
 
-s = Entry(ss, bd = 4)
-s.pack(side = LEFT)
-s.insert(0, "100,100")
+s_min = Entry(ss, bd = 4)
+s_max = Entry(ss, bd = 4)
+
+s1.pack(side = LEFT)
+s_min.pack(side = LEFT)
+s2.pack(side = LEFT)
+s_max.pack(side = LEFT)
+
+s_min.insert(0, "100")
+s_max.insert(0, "100")
 
 # time delta
 td = Frame(master)
@@ -86,17 +93,31 @@ fp.pack()
 fpb = Button(fp, text = '?', command = processing_delay_info)
 fpb.pack(side = LEFT)
 
-fp1 = Label(fp, text = "Processing Delay(Min,Max)")
-fp1.pack(side = LEFT)
+fp1 = Label(fp, text = "Processing Delay: Min")
+fp2 = Label(fp, text = "Max)")
 
-fpvar = Entry(fp, bd = 4)
-fpvar.pack(side = LEFT)
-fpvar.insert(0, "1000,1000")
+fp_min = Entry(fp, bd = 4)
+fp_max = Entry(fp, bd = 4)
+
+fp1.pack(side = LEFT)
+fp_min.pack(side = LEFT)
+fp2.pack(side = LEFT)
+fp_max.pack(side = LEFT)
+fp_min.insert(0, "1000")
+fp_max.insert(0, "1000")
 
 
 # event send distribution
 def es_info():
-    tkMessageBox.showinfo('Event Send Distribution', '')
+    tkMessageBox.showinfo('Event Send Distribution',
+            '\n*Ceiling: the upper bound value (>=1)\n\n'\
+            '-Exponential\n  Lambda: average rate of\n  Occurance(>0)\n'\
+            '-Geometric\n  Probability of succes\n'\
+            '-Binomial\n  Probability of succes\n'\
+            '-Normal\n  Distribution mean\n  Standard Deviation\n'\
+            '-Uniform\n  Lower bound of range\n  Upper bound of range\n'\
+            '-Poisson\n  Distribution mean (>3)\n'\
+            '-Lognormal\n  Distribution mean\n  Standard Deviation')
 
 def es_choice(*args):
     if esV.get() == 'Exponential':
@@ -294,7 +315,14 @@ probability.insert(0, 0.1)
 
 # node selection
 def ns_info():
-    tkMessageBox.showinfo('Node Selection', '')
+    tkMessageBox.showinfo('Node Selection',
+            '-Exponential\n  Lambda: average rate of\n  Occurance(>0)\n'\
+            '-Geometric\n  Probability of succes\n'\
+            '-Binomial\n  Probability of succes\n'\
+            '-Normal\n  Distribution mean\n  Standard Deviation\n'\
+            '-Uniform\n  Lower bound of range\n  Upper bound of range\n'\
+            '-Poisson\n  Distribution mean (>3)\n'\
+            '-Lognormal\n  Distribution mean\n  Standard Deviation')
 
 def ns_choice(*args):
     if nsV.get() == 'Exponential':
@@ -439,18 +467,18 @@ def resetB():
 
 def run_sim():
     run_command = 'cd .. ; ./synthetic_sim --max-sim-time ' + mstv.get() + ' --num-nodes ' + nodevar.get()
-    run_command += ' --event-processing-time-range ' + fpvar.get()
-    run_command += ' --state-size-range ' + s.get()
+    run_command += ' --event-processing-time-range ' + fp_min.get() + ',' + fp_max.get()
+    run_command += ' --state-size-range ' + s_min.get() + ',' + s_max.get()
 
     if networkV.get() == 'Watts-Strogatz':
-        if int(mean_degree.get()) < 4 or int(probability.get()) >= 1 or float(probability.get()) <= 0:
+        if int(mean_degree.get()) < 4 or float(probability.get()) >= 1 or float(probability.get()) <= 0:
             tkMessageBox.showwarning('Network','Mean Degree must be greater than 4, and'\
                     'probability must be within range of 0 and 1!')
             return
         run_command += ' --network-params Watts-Strogatz,' + mean_degree.get() + ',' + probability.get()
 
     elif networkV.get() == 'Barabasi-Albert':
-        if int(mean_degree.get()) < 4 and (int(probability.get()) >= 1 or float(probability.get()) <= 0):
+        if int(mean_degree.get()) < 4 or float(probability.get()) >= 1 or float(probability.get()) <= 0:
             tkMessageBox.showwarning('Network','Mean Degree must be greater than 4, and'\
                     'probability must be within range of 0 and 1!')
             return
