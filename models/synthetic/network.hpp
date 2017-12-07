@@ -41,68 +41,60 @@ public:
 /* Grid Network */
 class Grid : public Network{
 public:
-    Grid(){
+    Grid( std::vector<std::string> nodes, unsigned int rows, unsigned int cols ) {
 
         /* Initialize the connection matrix */
         nodes_ = nodes;
         unsigned int num_nodes = nodes.size();
+        assert(rows*cols == num_nodes);
+
         connections_ = new bool*[num_nodes];
-        for (unsigned int index_x = 0; index_x < num_nodes; index_x++) {
-            connections_[index_x] = new bool[num_nodes];
-            for (unsigned int index_y = 0; index_y < num_nodes; index_y++) {
-                connections_[index_x][index_y] = false;
+        for (unsigned int i = 0; i < num_nodes; i++) {
+            connections_[i] = new bool[num_nodes];
+            for (unsigned int j = 0; j < num_nodes; j++) {
+                connections_[i][j] = false;
             }
         }
 
-        for (unsigned int index_x = 0; index < num_nodes; index_x++) {
-            for (unsigned int index_y = 0; index < num_nodes; index_y++) {
-                if(index_x == 0 && index_y == 0){
-                    connections_[index_x][num_nodes-1] = true;
-                    connections_[index_x][index_y+1] = true;
-                    connections_[num_nodes+1][index_y] = true;
-                    connections_[index_x+1][index_y] = true;
-                }else if(index_x == num_nodes-1 && index_y == 0){
-                    connections_[num_nodes-1][num_nodes-1] = true;
-                    connections_[num_nodes-1][index_y+1] = true;
-                    connections_[index_x-1][index_y] = true;
-                    connections_[0][index_y] = true;
-                }else if(index_x == 0 && index_y == num_nodes-1){
-                    connections_[index_x][index_y-1] = true;
-                    connections_[index_x][index_x] = true;
-                    connections_[index_y][index_y] = true;
-                    connections_[index_x+1][index_y] = true;
-                }else if(index_x == num_nodes-1 && index_y == num_nodes-1){
-                    connections_[index_x][index_y-1] = true;
-                    connections_[index_x][0] = true;
-                    connections_[index_x-1][index_y] = true;
-                    connections_[0][index_y] = true;
-                }else if(index_x == 0){
-                    connections_[index_x][index_y-1] = true;
-                    connections_[index_x][index_y+1] = true;
-                    connections_[num_nodes-1][index_y] = true;
-                    connections_[index_x+1][index_y] = true;
-                }else if(index_x == num_nodes-1){
-                    connections_[index_x][index_y-1] = true;
-                    connections_[index_x][index_y+1] = true;
-                    connections_[index_x-1][index_y] = true;
-                    connections_[0][index_y] = true;
-                }else if(index_y == 0){
-                    connections_[index_x][num_nodes-1] = true;
-                    connections_[index_x][index_y+1] = true;
-                    connections_[index_x-1][index_y] = true;
-                    connections_[index_x+1][index_y] = true;
-                }else if(index_y == num_nodes-1){
-                    connections_[index_x][index_y-1] = true;
-                    connections_[index_x][0] = true;
-                    connections_[index_x-1][index_y] = true;
-                    connections_[index_x+1][index_y] = true;
-                }else{
-                    connections_[index_x][index_y-1] = true;
-                    connections_[index_x][index_y+1] = true;
-                    connections_[index_x-1][index_y] = true;
-                    connections_[index_x+1][index_y] = true;
-                }
+        for (unsigned int i = 0; i < num_nodes; i++) {
+            unsigned int row_id = i / cols;
+            unsigned int col_id = i % cols;
+
+            if (!row_id && !col_id) { // top left corner
+                connections_[i][num_nodes-cols]   = true;
+                connections_[i][1 % cols]         = true;
+                connections_[i][cols % num_nodes] = true;
+                connections_[i][cols-1]           = true;
+
+            } else if (row_id == rows-1 && !col_id) { // bottom left corner
+
+            } else if (!row_id && col_id == cols-1) { // top right corner
+
+            } else if (row_id == rows-1 && col_id == cols-1) { // bottom right corner
+
+            } else if (!row_id) { // top edge
+
+            } else if (row_id == rows-1) { // bottom edge
+
+            } else if (!col_id) { // left edge
+                connections_[i][i-cols]   = true;
+                connections_[i][i+1]      = true;
+                connections_[i][i+cols]    = true;
+                connections_[i][i+cols-1] = true;
+
+            } else if (col_id == cols-1) { // right edge
+                connections_[i][i-cols]   = true;
+                connections_[i][i-cols+1] = true;
+                connections_[i][i+cols]    = true;
+                connections_[i][i-1]      = true;
+
+            } else { // internal node
+                connections_[i][i-cols] = true;
+                connections_[i][i+1]    = true;
+                connections_[i][i+cols] = true;
+                connections_[i][i-1]    = true;
             }
+            connections_[i][i] = false; // extra check for row/col count = 1
         }
     }
 };
@@ -232,7 +224,15 @@ Network *buildNetwork (std::string params, std::vector<std::string> lp_names) {
     std::string type = params.substr(0, pos);
     params.erase(0, pos + delimiter.length());
 
-    if (type == "Watts-Strogatz") { // If the choice is Watts-Strogatz
+    if (type == "Grid") { // If the choice is Grid
+        pos = params.find(delimiter);
+        std::string token = params.substr(0, pos);
+        unsigned int rows = (unsigned int) std::stoul(token);
+        params.erase(0, pos + delimiter.length());
+        unsigned int cols = (unsigned int) std::stoul(params);
+        return new Grid(lp_names, rows, cols);
+
+    } else if (type == "Watts-Strogatz") { // If the choice is Watts-Strogatz
         pos = params.find(delimiter);
         std::string token = params.substr(0, pos);
         unsigned int k = (unsigned int) std::stoul(token);
