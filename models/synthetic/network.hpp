@@ -38,6 +38,75 @@ public:
     }
 };
 
+/* Grid Network */
+class Grid : public Network{
+public:
+    Grid(){
+
+        /* Initialize the connection matrix */
+        nodes_ = nodes;
+        unsigned int num_nodes = nodes.size();
+        connections_ = new bool*[num_nodes];
+        for (unsigned int index_x = 0; index_x < num_nodes; index_x++) {
+            connections_[index_x] = new bool[num_nodes];
+            for (unsigned int index_y = 0; index_y < num_nodes; index_y++) {
+                connections_[index_x][index_y] = false;
+            }
+        }
+
+        for (unsigned int index_x = 0; index < num_nodes; index_x++) {
+            for (unsigned int index_y = 0; index < num_nodes; index_y++) {
+                if(index_x == 0 && index_y == 0){
+                    connections_[index_x][num_nodes-1] = true;
+                    connections_[index_x][index_y+1] = true;
+                    connections_[num_nodes+1][index_y] = true;
+                    connections_[index_x+1][index_y] = true;
+                }else if(index_x == num_nodes-1 && index_y == 0){
+                    connections_[num_nodes-1][num_nodes-1] = true;
+                    connections_[num_nodes-1][index_y+1] = true;
+                    connections_[index_x-1][index_y] = true;
+                    connections_[0][index_y] = true;
+                }else if(index_x == 0 && index_y == num_nodes-1){
+                    connections_[index_x][index_y-1] = true;
+                    connections_[index_x][index_x] = true;
+                    connections_[index_y][index_y] = true;
+                    connections_[index_x+1][index_y] = true;
+                }else if(index_x == num_nodes-1 && index_y == num_nodes-1){
+                    connections_[index_x][index_y-1] = true;
+                    connections_[index_x][0] = true;
+                    connections_[index_x-1][index_y] = true;
+                    connections_[0][index_y] = true;
+                }else if(index_x == 0){
+                    connections_[index_x][index_y-1] = true;
+                    connections_[index_x][index_y+1] = true;
+                    connections_[num_nodes-1][index_y] = true;
+                    connections_[index_x+1][index_y] = true;
+                }else if(index_x == num_nodes-1){
+                    connections_[index_x][index_y-1] = true;
+                    connections_[index_x][index_y+1] = true;
+                    connections_[index_x-1][index_y] = true;
+                    connections_[0][index_y] = true;
+                }else if(index_y == 0){
+                    connections_[index_x][num_nodes-1] = true;
+                    connections_[index_x][index_y+1] = true;
+                    connections_[index_x-1][index_y] = true;
+                    connections_[index_x+1][index_y] = true;
+                }else if(index_y == num_nodes-1){
+                    connections_[index_x][index_y-1] = true;
+                    connections_[index_x][0] = true;
+                    connections_[index_x-1][index_y] = true;
+                    connections_[index_x+1][index_y] = true;
+                }else{
+                    connections_[index_x][index_y-1] = true;
+                    connections_[index_x][index_y+1] = true;
+                    connections_[index_x-1][index_y] = true;
+                    connections_[index_x+1][index_y] = true;
+                }
+            }
+        }
+    }
+};
+
 /* Watts-Strogatz Network */
 class WattsStrogatz : public Network {
 public:

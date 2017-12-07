@@ -13,7 +13,7 @@ label.pack()
 nodeT = Frame(master)
 nodeT.pack()
 
-nodeconfig = Label(nodeT, text = 'Node Configeration')
+nodeconfig = Label(nodeT, text = 'Node Configeration', font = (None, 11))
 nodeconfig.pack()
 
 
@@ -62,7 +62,7 @@ s_max.insert(0, "100")
 td = Frame(master)
 td.pack()
 
-tdl = Label(td, text = 'Time Delta')
+tdl = Label(td, text = 'Time Delta', font = (None, 11))
 tdl.pack()
 
 # max sim time
@@ -253,7 +253,7 @@ es_v3.grid_remove()
 nodesele = Frame(master)
 nodesele.pack()
 
-nodese = Label(nodesele, text = 'Selecte Node to Send Event')
+nodese = Label(nodesele, text = 'Selecte Node to Send Event', font = (None, 11))
 nodese.pack()
 
 # network
@@ -577,7 +577,7 @@ def run_sim():
 run = Button(b, text = 'RUN', command = run_sim)
 run.pack(side = LEFT)
 
-reset = Button (b, text = 'RESET', command = resetB)
+reset = Button(b, text = 'RESET', command = resetB)
 reset.pack(side = LEFT)
 
 mainloop()
