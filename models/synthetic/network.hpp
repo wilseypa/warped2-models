@@ -67,14 +67,34 @@ public:
                 connections_[i][cols-1]           = true;
 
             } else if (row_id == rows-1 && !col_id) { // bottom left corner
+                connections_[i][i-cols] = true;
+                connections_[i][i+1] = true;
+                connections_[i][0] = true;
+                connections_[i][i+cols-1] = true;
 
             } else if (!row_id && col_id == cols-1) { // top right corner
+                connections_[i][num_nodes] = true;
+                connections_[i][0] = true;
+                connections_[i][cols % num_nodes] = true;
+                connections_[i][i-1] = true;
 
             } else if (row_id == rows-1 && col_id == cols-1) { // bottom right corner
+                connections_[i][i-cols] = true;
+                connections_[i][i-cols+1] = true;
+                connections_[i][cols] = true;
+                connections_[i][i-1] = true;
 
             } else if (!row_id) { // top edge
+                connections_[i][num_nodes-cols] = true;
+                connections_[i][i+1] = true;
+                connections_[i][i+cols-1] = true;
+                connections_[i][i-1] = true;
 
             } else if (row_id == rows-1) { // bottom edge
+                connections_[i][i+cols-1] = true;
+                connections_[i][i+1] = true;
+                connections_[i][cols] = true;
+                connections_[i][i-1] = true;
 
             } else if (!col_id) { // left edge
                 connections_[i][i-cols]   = true;
