@@ -64,6 +64,8 @@ public:
                 const unsigned int num_nodes,
                 const unsigned int floating_point_ops_cnt,
                 const unsigned int state_size,
+                const double min_state_size_change,
+                const double max_state_size_change,
                 const unsigned int index)
         :   LogicalProcess(name),
             state_(),
@@ -71,6 +73,8 @@ public:
             num_nodes_(num_nodes),
             floating_point_ops_cnt_(floating_point_ops_cnt),
             state_size_(state_size),
+            min_state_size_change_(min_state_size_change),
+            max_state_size_change_(max_state_size_change),
             index_(index) {
 
         state_.stream_.resize(state_size_, '0');
@@ -95,7 +99,9 @@ public:
 protected:
     const unsigned int num_nodes_;
     const unsigned int floating_point_ops_cnt_;
-    const unsigned int state_size_;
+    unsigned int state_size_;
+    const double min_state_size_change_;
+    const double max_state_size_change_;
     const unsigned int index_;
 };
 

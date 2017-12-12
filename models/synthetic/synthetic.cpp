@@ -50,11 +50,15 @@ std::vector<std::shared_ptr<warped::Event> > Node::receiveEvent(const warped::Ev
         /* Process the event */
         float val = 0.5;
         for (unsigned int i = 0; i < floating_point_ops_cnt_; i++) {
-            /* A floating point operation */
+            /* Dummy floating point operation */
             val += i;
         }
 
-        /* TODO: Update the state, part of future design plans */
+        /* Modify the state size */
+        std::uniform_real_distribution<double>
+                state_size_change_dist( min_state_size_change_, max_state_size_change_  );
+        state_size_ += (unsigned int)(state_size_change_dist(*rng_) * state_size_);
+        state_.stream_.resize(state_size_, '0');
     }
     return response_events;
 }
@@ -66,6 +70,7 @@ int main(int argc, const char** argv) {
     std::string node_selection              = "exponential,0.5";
     std::string floating_point_ops_cnt      = "1000,1000";
     std::string state_size                  = "100,100";
+    std::string state_size_change           = "0,0";
     std::string event_send                  = "geometric,0.1,10";
 
     TCLAP::ValueArg<unsigned int> num_nodes_arg("", "num-nodes",
@@ -81,6 +86,9 @@ int main(int argc, const char** argv) {
     TCLAP::ValueArg<std::string> state_size_arg("", "state-size-range",
             "Size range (in bytes) for the LP state - <min,max>",
             false, state_size, "string");
+    TCLAP::ValueArg<std::string> state_size_change_arg("", "state-size-change-range",
+            "Change in LP state when an event is processed ; range=(-1,1) - <min,max>",
+            false, state_size_change, "string");
     TCLAP::ValueArg<std::string> event_send_arg("", "event-send-time-delta-params",
             "Event send time delta details - <dist-type,<dist-params>,ceiling-value>",
             false, event_send, "string");
@@ -90,6 +98,7 @@ int main(int argc, const char** argv) {
                                             &node_selection_arg,
                                             &floating_point_ops_cnt_arg,
                                             &state_size_arg,
+                                            &state_size_change_arg,
                                             &event_send_arg
                                           };
 
@@ -100,6 +109,7 @@ int main(int argc, const char** argv) {
     node_selection              = node_selection_arg.getValue();
     floating_point_ops_cnt      = floating_point_ops_cnt_arg.getValue();
     state_size                  = state_size_arg.getValue();
+    state_size_change           = state_size_change_arg.getValue();
     event_send                  = event_send_arg.getValue();
 
     std::vector<Node> lps;
@@ -123,6 +133,11 @@ int main(int argc, const char** argv) {
     std::uniform_int_distribution<unsigned int>
                 state_size_dist( min_state_size, max_state_size );
 
+    /* Parse the range of state size change */
+    pos = state_size_change.find(delimiter);
+    double min_state_size_change = std::stod(state_size_change.substr(0, pos));
+    double max_state_size_change = std::stod(state_size_change.substr(pos+1));
+
     /* Create the LPs */
     std::default_random_engine generator (num_nodes);
     for (unsigned int i = 0; i < num_nodes; i++) {
@@ -132,6 +147,8 @@ int main(int argc, const char** argv) {
                             num_nodes,
                             floating_point_ops_cnt_dist(generator),
                             state_size_dist(generator),
+                            min_state_size_change,
+                            max_state_size_change,
                             i
                         );
     }
