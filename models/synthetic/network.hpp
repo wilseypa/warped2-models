@@ -38,10 +38,10 @@ public:
     }
 };
 
-/* Grid Network */
-class Grid : public Network{
+/* Flat Mesh Network */
+class FlatMesh : public Network{
 public:
-    Grid( std::vector<std::string> nodes, unsigned int rows, unsigned int cols ) {
+    FlatMesh( std::vector<std::string> nodes, unsigned int rows, unsigned int cols ) {
 
         /* Initialize the connection matrix */
         nodes_ = nodes;
@@ -233,13 +233,13 @@ Network *buildNetwork (std::string params, std::vector<std::string> lp_names) {
     std::string type = params.substr(0, pos);
     params.erase(0, pos + delimiter.length());
 
-    if (type == "Grid") { // If the choice is Grid
+    if (type == "Flat-Mesh") { // If the choice is Flat-Mesh
         pos = params.find(delimiter);
         std::string token = params.substr(0, pos);
         unsigned int rows = (unsigned int) std::stoul(token);
         params.erase(0, pos + delimiter.length());
         unsigned int cols = (unsigned int) std::stoul(params);
-        return new Grid(lp_names, rows, cols);
+        return new FlatMesh(lp_names, rows, cols);
 
     } else if (type == "Watts-Strogatz") { // If the choice is Watts-Strogatz
         pos = params.find(delimiter);
