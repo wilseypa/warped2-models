@@ -46,6 +46,8 @@ public:
         /* Initialize the connection matrix */
         nodes_ = nodes;
         unsigned int num_nodes = nodes.size();
+        assert(rows >= 2);
+        assert(cols >= 2);
         assert(rows*cols == num_nodes);
 
         connections_ = new bool*[num_nodes];
@@ -61,52 +63,40 @@ public:
             unsigned int col_id = i % cols;
 
             if (!row_id && !col_id) { // top left corner
-                connections_[i][num_nodes-cols]   = true;
-                connections_[i][1 % cols]         = true;
-                connections_[i][cols % num_nodes] = true;
-                connections_[i][cols-1]           = true;
+                connections_[i][1]      = true;
+                connections_[i][cols]   = true;
 
             } else if (row_id == rows-1 && !col_id) { // bottom left corner
                 connections_[i][i-cols] = true;
-                connections_[i][i+1] = true;
-                connections_[i][0] = true;
-                connections_[i][i+cols-1] = true;
+                connections_[i][i+1]    = true;
 
             } else if (!row_id && col_id == cols-1) { // top right corner
-                connections_[i][num_nodes] = true;
-                connections_[i][0] = true;
-                connections_[i][cols % num_nodes] = true;
-                connections_[i][i-1] = true;
+                connections_[i][i-1]    = true;
+                connections_[i][i+cols] = true;
 
             } else if (row_id == rows-1 && col_id == cols-1) { // bottom right corner
                 connections_[i][i-cols] = true;
-                connections_[i][i-cols+1] = true;
-                connections_[i][cols] = true;
-                connections_[i][i-1] = true;
+                connections_[i][i-1]    = true;
 
             } else if (!row_id) { // top edge
-                connections_[i][num_nodes-cols] = true;
-                connections_[i][i+1] = true;
-                connections_[i][i+cols-1] = true;
-                connections_[i][i-1] = true;
+                connections_[i][i+1]    = true;
+                connections_[i][i+cols] = true;
+                connections_[i][i-1]    = true;
 
             } else if (row_id == rows-1) { // bottom edge
-                connections_[i][i+cols-1] = true;
-                connections_[i][i+1] = true;
-                connections_[i][cols] = true;
-                connections_[i][i-1] = true;
+                connections_[i][i-cols] = true;
+                connections_[i][i+1]    = true;
+                connections_[i][i-1]    = true;
 
             } else if (!col_id) { // left edge
-                connections_[i][i-cols]   = true;
-                connections_[i][i+1]      = true;
-                connections_[i][i+cols]    = true;
-                connections_[i][i+cols-1] = true;
+                connections_[i][i-cols] = true;
+                connections_[i][i+1]    = true;
+                connections_[i][i+cols] = true;
 
             } else if (col_id == cols-1) { // right edge
-                connections_[i][i-cols]   = true;
-                connections_[i][i-cols+1] = true;
-                connections_[i][i+cols]    = true;
-                connections_[i][i-1]      = true;
+                connections_[i][i-cols] = true;
+                connections_[i][i+cols] = true;
+                connections_[i][i-1]    = true;
 
             } else { // internal node
                 connections_[i][i-cols] = true;
@@ -114,7 +104,6 @@ public:
                 connections_[i][i+cols] = true;
                 connections_[i][i-1]    = true;
             }
-            connections_[i][i] = false; // extra check for row/col count = 1
         }
     }
 };

@@ -42,6 +42,10 @@ User can adjust the following parameters:
     2.  Network details (the communication links between nodes)
             --network-params <network-type,<network-params>>
 
+            Grid,1000,100 (default)
+                rows : number of rows in the grid
+                cols : number of cols in the grid
+
             Watts-Strogatz,30,0.1 (default)
                 k : mean degree of connectivity (n >> k >> ln(k) >> 1)
                 b : beta probability of link re-ordering
