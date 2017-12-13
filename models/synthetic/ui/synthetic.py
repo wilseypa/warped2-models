@@ -58,6 +58,30 @@ s_max.pack(side = LEFT)
 s_min.insert(0, "100")
 s_max.insert(0, "100")
 
+# state size change
+def ssc_info():
+    tkMessageBox.showinfo('State Size Change', '')
+
+ssc = Frame(master)
+ssc.pack()
+
+sscb = Button(ssc, text = '?', command = ssc_info)
+sscb.pack(side = LEFT)
+
+sscl1 = Label(ssc, text = 'State Size Change: Min')
+sscl2 = Label(ssc, text = 'Max')
+
+ssc_min = Entry(ssc, bd = 4)
+ssc_max = Entry(ssc, bd = 4)
+
+sscl1.pack(side = LEFT)
+ssc_min.pack(side = LEFT)
+sscl2.pack(side = LEFT)
+ssc_max.pack(side = LEFT)
+
+ssc_min.insert(0, 0)
+ssc_max.insert(0, 0)
+
 # time delta
 td = Frame(master)
 td.pack()
@@ -261,7 +285,8 @@ def network_info():
     tkMessageBox.showinfo('Network', 'Watts-Strogatz\n  Mean Degree of Connectivity\n  (>3)\n'\
             '  Beta Probability of Link\n  Re-Ordering\nBarabasi-Albert\n'\
             '  Mean Degree of Connectiveity\n  (>3)\n  Alpha Probability of\n'\
-            '  Preferential Attachment\n  or Bias')
+            '  Preferential Attachment\n  or Bias\nFlat-Mesh\n  Num of rows in the mesh\n'\
+            '  Num of cols in the mesh')
 
 def nw(*args):
     if networkV.get() == 'Watts-Strogatz':
@@ -284,6 +309,16 @@ def nw(*args):
         probability.delete(0, END)
         mean_degree.insert(0, 30)
         probability.insert(0, 0.1)
+
+    elif networkV.get() == 'Flat-Mesh':
+        mean_degreeL.config(text = 'Rows')
+        probabilityL.config(text = 'Cols')
+        mean_degree.grid(row = 1, column = 3)
+        probability.grid(row = 1, column = 5)
+        mean_degree.delete(0, END)
+        probability.delete(0, END)
+        mean_degree.insert(0, 1000)
+        probability.insert(0, 100)
 
 n = Frame(master)
 n.pack()
@@ -470,6 +505,10 @@ def run_sim():
     run_command += ' --event-processing-time-range ' + fp_min.get() + ',' + fp_max.get()
     run_command += ' --state-size-range ' + s_min.get() + ',' + s_max.get()
 
+    if float(ssc_min.get()) > 1 or float(ssc_min.get()) < -1 or float(ssc_max.get()) > 1 or float(ssc_max.get()) < -1:
+        return
+    run_command += ' --state-size-change-range ' + ssc_min.get() + ',' + ssc_max.get()
+
     if networkV.get() == 'Watts-Strogatz':
         if int(mean_degree.get()) < 4 or float(probability.get()) >= 1 or float(probability.get()) <= 0:
             tkMessageBox.showwarning('Network','Mean Degree must be greater than 4, and'\
@@ -482,6 +521,9 @@ def run_sim():
             tkMessageBox.showwarning('Network','Mean Degree must be greater than 4, and'\
                     'probability must be within range of 0 and 1!')
             return
+        run_command += ' --network-params Barabasi-Albert,' + mean_degree.get() + ',' + probability.get()
+
+    elif networkV.get() == 'Flat-Mesh':
         run_command += ' --network-params Barabasi-Albert,' + mean_degree.get() + ',' + probability.get()
 
     if esV.get() == 'Exponential':

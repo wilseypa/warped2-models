@@ -29,8 +29,7 @@ studied using different configurations of this model :
 
     5. Time to process an event.
 
-    6. Size of the LP state.
-
+    6. Dynamic change in size of the LP state.
 
 ## Configuration : ##
 
@@ -89,7 +88,11 @@ User can adjust the following parameters:
             --state-size-range 100,100 (default)
             Change the values of <min,max>
 
-    6.  Event send distribution (set the send time delta)
+    6.  State size change range (dynamic state size)
+            --state-size-change-range 0,0 (default)
+            State side change within range of <-1.1>
+
+    7.  Event send distribution (set the send time delta)
             --event-send-time-delta-params <distribution-type,<distribution-params>,ceiling>
 
             ceiling : the upper bound value, set to 10 in the following distribuitons
