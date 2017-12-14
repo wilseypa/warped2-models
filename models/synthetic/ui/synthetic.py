@@ -328,7 +328,7 @@ nb.grid(row = 0, column = 0)
 
 networkV = StringVar()
 
-network = {'Watts-Strogatz', 'Barabasi-Albert'}
+network = {'Watts-Strogatz', 'Barabasi-Albert', 'Flat-Mesh'}
 networkV.set('Watts-Strogatz')
 
 networkMenu = OptionMenu(n, networkV, *network, command = nw)
@@ -524,7 +524,7 @@ def run_sim():
         run_command += ' --network-params Barabasi-Albert,' + mean_degree.get() + ',' + probability.get()
 
     elif networkV.get() == 'Flat-Mesh':
-        run_command += ' --network-params Barabasi-Albert,' + mean_degree.get() + ',' + probability.get()
+        run_command += ' --network-params Flat-Mesh,' + mean_degree.get() + ',' + probability.get()
 
     if esV.get() == 'Exponential':
         if float(es_v1.get()) <= 0 or float(es_v1.get()) >= 1 or int(es_v2.get()) <= 0:

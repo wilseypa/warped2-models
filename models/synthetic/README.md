@@ -90,7 +90,7 @@ User can adjust the following parameters:
 
     6.  State size change range (dynamic state size)
             --state-size-change-range 0,0 (default)
-            State side change within range of <-1.1>
+            State size change within range of (-1,1)
 
     7.  Event send distribution (set the send time delta)
             --event-send-time-delta-params <distribution-type,<distribution-params>,ceiling>
