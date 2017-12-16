@@ -10,7 +10,7 @@ with open('models/Makefile.am') as f:
     for lines in f:
         for words in lines.split():
             if words == '=':
-                break;
+                break
             else:
                 n+=1
 
@@ -30,12 +30,25 @@ def conf_choice():
                     read_status = True
                 continue
 
-            # filter out the white spaces
-            if not lines.strip(): continue
+            else:
+                entry_flag = False
+                # filter out the white spaces
+                if not lines.strip(): continue
 
-            print lines
+                for words in lines.split():
+                    # find the argument
+                    if '--' in words:
+                        entry_flag = True
+                        print words
+                    # entry variable attach to arg exist or not
+                    if entry_flag:
+                        if '<' in words:
+                            print words
+                # ignore argument line only save explaination
+                if '   -' not in lines:
+                    print lines
 
-    
+
 
 def run_choice():
     run_command = './models/' +  model_var.get() + '/' + model_var.get() + '_sim'
@@ -60,4 +73,3 @@ conf_button.pack(side = LEFT)
 
 
 mainloop()
-
