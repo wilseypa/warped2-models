@@ -18,9 +18,9 @@ models = lines.split()
 del models[0:n+1]
 
 def conf_choice():
-    global label = []
-    global entry = []
-    global explian = []
+    label = []
+    entry_check = []
+    explian = []
     tmp_str = ''
 
 
@@ -28,6 +28,9 @@ def conf_choice():
     run_command = './models/' +  model_var.get() + '/' + model_var.get() + '_sim --help > ' + tmpfile
     subprocess.call(run_command, shell = True)
     read_status = False
+
+    explian_flag = -1 # take off the initial string from explianation list
+
     with open(tmpfile) as f:
         for lines in f:
             # filter out the unnecessary commands before 'where'
@@ -45,27 +48,33 @@ def conf_choice():
                     # find the argument
                     if '--' in words:
                         entry_flag = True
+                        explian_flag += 1
                         label.append(words)
-                        if tmp_str:
+                        if explian_flag:
                             explian.append(tmp_str)
                             tmp_str = ''
-                        #print words
 
-                    # entry variable attach to arg exist or not
-                    if entry_flag:
-                        if '<' in words:
-                            entry.append('n')
-                            #print words
-                        else:
-                            entry.append('x')
+                # entry variable attach to arg exist or not
+                if entry_flag:
+                    if '<' in lines:
+                        entry_check.append(True)
+                        #print words
+                    else:
+                        entry_check.append(False)
+
                 # ignore argument line only save explaination
                 if '   -' not in lines:
-                    tmp_str += lines
-                    # print lines
-        print label
-        print entry
-        print explian
+                    for words in lines.split():
+                        tmp_str += words + ' '
 
+        '''
+        print len(label)
+        print label
+        print len(entry_check)
+        print entry_check
+        print len(explian)
+        print explian
+        '''
 
 
 def run_choice():
