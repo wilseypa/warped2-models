@@ -18,6 +18,12 @@ models = lines.split()
 del models[0:n+1]
 
 def conf_choice():
+    global label = []
+    global entry = []
+    global explian = []
+    tmp_str = ''
+
+
     tmpfile = '/tmp/help' + str(random.randint(0,100))
     run_command = './models/' +  model_var.get() + '/' + model_var.get() + '_sim --help > ' + tmpfile
     subprocess.call(run_command, shell = True)
@@ -39,14 +45,26 @@ def conf_choice():
                     # find the argument
                     if '--' in words:
                         entry_flag = True
-                        print words
+                        label.append(words)
+                        if tmp_str:
+                            explian.append(tmp_str)
+                            tmp_str = ''
+                        #print words
+
                     # entry variable attach to arg exist or not
                     if entry_flag:
                         if '<' in words:
-                            print words
+                            entry.append('n')
+                            #print words
+                        else:
+                            entry.append('x')
                 # ignore argument line only save explaination
                 if '   -' not in lines:
-                    print lines
+                    tmp_str += lines
+                    # print lines
+        print label
+        print entry
+        print explian
 
 
 
