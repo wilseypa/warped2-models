@@ -17,12 +17,17 @@ with open('models/Makefile.am') as f:
 models = lines.split()
 del models[0:n+1]
 
+#def button():
+    # run config
+
 def conf_choice():
+    global label
     label = []
     entry_check = []
     explian = []
     tmp_str = ''
 
+    top = Toplevel()
 
     tmpfile = '/tmp/help' + str(random.randint(0,100))
     run_command = './models/' +  model_var.get() + '/' + model_var.get() + '_sim --help > ' + tmpfile
@@ -75,6 +80,23 @@ def conf_choice():
         print len(explian)
         print explian
         '''
+
+        global check_list
+        check_list = [None]*len(label)
+        #label_list = [None]*len(label)
+        entry_list = [None]*len(label)
+        button_list = [None]*len(label)
+        check = [None]*len(label)
+
+        for i in range(0, len(label)):
+            check[i] = Checkbutton(top, variable = check_list[i]).grid(row = i, column = 0)
+            Label(top, text = label[i]).grid(row = i, column = 1)
+            entry_list[i] = Entry(top).grid(row = i, column = 2)
+            #button_list[i] = Button(top, text = '?').grid(row = i, column = 3)
+
+            config = Button(top, text = 'Run', command = button).grid(row = len(label)+1, column = 1)
+
+
 
 
 def run_choice():
