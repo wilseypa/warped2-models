@@ -17,8 +17,9 @@ with open('models/Makefile.am') as f:
 models = lines.split()
 del models[0:n+1]
 
-#def button():
+def button():
     # run config
+    print check_list
 
 def conf_choice():
     global label
@@ -82,14 +83,15 @@ def conf_choice():
         '''
 
         global check_list
-        check_list = [None]*len(label)
+        check_list = [IntVar]*len(label)
         #label_list = [None]*len(label)
         entry_list = [None]*len(label)
         button_list = [None]*len(label)
-        check = [None]*len(label)
+        check = [IntVar]*len(label)
 
         for i in range(0, len(label)):
-            check[i] = Checkbutton(top, variable = check_list[i]).grid(row = i, column = 0)
+            check[i] = Checkbutton(top).grid(row = i, column = 0)
+            #print check[i].get()
             Label(top, text = label[i]).grid(row = i, column = 1)
             entry_list[i] = Entry(top).grid(row = i, column = 2)
             #button_list[i] = Button(top, text = '?').grid(row = i, column = 3)
