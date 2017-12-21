@@ -36,7 +36,7 @@ def conf_choice():
     top = Toplevel()
     global label
     label = []
-    entry_check = []
+    entry_checks = []
     explian = []
     tmp_str = ''
 
@@ -62,6 +62,7 @@ def conf_choice():
 
             for words in lines.split():
             # find the argument
+                if '--,' in words: continue
                 if '--' in words:
                     entry_flag = True
                     explian_flag += 1
@@ -73,24 +74,17 @@ def conf_choice():
                 # entry variable attach to arg exist or not
             if entry_flag:
                 if '<' in lines:
-                    entry_check.append(True)
+                    entry_checks.append(True)
                 #print words
                 else:
-                    entry_check.append(False)
+                    entry_checks.append(False)
 
             # ignore argument line only save explaination
+            if model_var.get().upper() in lines:
+                        explian.append(tmp_str)
             if '   -' not in lines:
                 for words in lines.split():
                     tmp_str += words + ' '
-
-        '''
-        print len(label)
-        print label
-        print len(entry_check)
-        print entry_check
-        print len(explian)
-        print explian
-        '''
 
         #global check_list
         #check_list = [IntVar]*len(label)
@@ -113,24 +107,40 @@ def conf_choice():
         checks = IntVar()
         entries = StringVar()
         '''
+        frame = []
+        frame1 = []
 
         for i in range(0, len(label)):
             #check = Checkbutton(top, variable = checks[i]).grid(row = i, column = 0)
-            check = Checkbutton(win)
-            check.grid(row = i, column = 0)
+            #rows = i*2
+            a = Frame(win)
+            a.pack()
+            frame.append(a)
+            check = Checkbutton(frame[i]).grid(row = i, column = 0)
             #check.get()
             #print check[i].get()
             checks.append(check)
-            Label(win, text = label[i]).grid(row = i, column = 1)
-            #entry_list[i] = Entry(top).grid(row = i, column = 2)
-            entry = Entry(win)
-            entry.grid(row = i, column = 2)
+            Label(frame[i], text = label[i]).grid(row = i, column = 1)
+            # if command request parameters prints a entry to work with
+            if entry_checks[i]:
+                entry = Entry(frame[i]).grid(row = i, column = 2)
+            # else prints empty line
+            else:
+                Label(frame[i], text = '').grid(row = i, column = 2)
+
             entries.append(entry)
-            Button(win, text = '?').grid(row = i, column = 3)
+            #Button(win, text = '?').grid(row = i, column = 3)
+            b = Frame(win)
+            b.pack()
+            frame1.append(b)
+            Label(frame1[i], text = explian[i]).grid(row = 0, column = 0)#.pack(side = LEFT)
+            #grid(row = i, column = 2)
 
-            config = Button(win, text = 'Run', command = button).grid(row = len(label)+1, column = 1)
-
-
+        a = Frame(win)
+        a.pack()
+        frame.append(a)
+        config = Button(frame[i+1], text = 'Run', command = button).pack()#.pack(side = BOTTOM)
+        #grid(row = len(label*2)+1, column = 1)
 
 
 def run_choice():
