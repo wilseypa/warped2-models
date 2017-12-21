@@ -15,5 +15,14 @@ You can run the Autotools build without any options. These models are not typica
 
 	autoreconf -i && ./configure --with-warped=$HOME/lib/warped2 && make
 
+To run the GUI for Warped2-Models, you have to install python packages - Tkinter and Tix:
+
+    sudo apt-get install python-tk
+    sudo apt-get install tix-dev
+
+Runs python GUI:
+
+    ./gui.py
+
 # License
 The WARPED Models code in this repository is licensed under the MIT license, unless otherwise specified. The full text of the MIT license can be found in the `LICENSE.txt` file. 
