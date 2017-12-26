@@ -17,29 +17,36 @@ with open('models/Makefile.am') as f:
 
 models = lines.split()
 del models[0:n+1]
+entry_checks = []
+entries= []
+checks = []
+label = []
+entry_type = []
+
 
 def button():
     # run config
+    #print (entries.get())
+    check_index = 0
+    entry_index = 0
+    #entry = True
+    run_command = './models/' +  model_var.get() + '/' + model_var.get() + '_sim '
+    for i in range(0, len(label)):
+        if entry_checks[i]:
+            if entries[i].get():
+                run_command += label[i] + ' ' + entries[i].get() + ' '
+        else:
+            if entries[i].get():
+                run_command += label[i]
 
-    for entry in entries:
-        print entry.get()
-
-
-'''
-    for check in checks:
-        #print check.get()
-        print check
-'''
+    print run_command
+    #subprocess.call(run_command, shell = True)
 
 
 def conf_choice():
     top = Toplevel()
-    global label
-    label = []
-    entry_checks = []
     explian = []
     tmp_str = ''
-
 
     tmpfile = '/tmp/help' + str(random.randint(0,100))
     run_command = './models/' +  model_var.get() + '/' + model_var.get() + '_sim --help > ' + tmpfile
@@ -75,65 +82,61 @@ def conf_choice():
             if entry_flag:
                 if '<' in lines:
                     entry_checks.append(True)
+                    if 'int' in lines:
+                        entry_type.append('int')
+                    elif 'float' in lines:
+                        entry_type.append('float')
+                    elif 'string' in lines:
+                        entry_type.append('string')
+                    elif 'file' in lines:
+                        entry_type.append('file')
                 #print words
                 else:
                     entry_checks.append(False)
+                    entry_type.append(None)
 
             # ignore argument line only save explaination
             if model_var.get().upper() in lines:
                         explian.append(tmp_str)
             if '   -' not in lines:
+                tmp_str += lines
+
+                '''
                 for words in lines.split():
                     tmp_str += words + ' '
+                 '''
 
-        #global check_list
-        #check_list = [IntVar]*len(label)
-        #label_list = [None]*len(label)
-        #entry_list = [None]*len(label)
-        #button_list = [None]*len(label)
-        #check = [IntVar]*len(label)
         scroll = ScrolledWindow(top)
         scroll.pack()
         win = scroll.window
 
-        global checks
-        global entries
-        checks = [IntVar()]
-        entries = []
-
-        check = IntVar()
-
-        '''
-        checks = IntVar()
-        entries = StringVar()
-        '''
         frame = []
         frame1 = []
 
+
         for i in range(0, len(label)):
             #check = Checkbutton(top, variable = checks[i]).grid(row = i, column = 0)
-            #rows = i*2
             a = Frame(win)
             a.pack()
             frame.append(a)
-            check = Checkbutton(frame[i]).grid(row = i, column = 0)
-            #check.get()
-            #print check[i].get()
-            checks.append(check)
-            Label(frame[i], text = label[i]).grid(row = i, column = 1)
             # if command request parameters prints a entry to work with
             if entry_checks[i]:
-                entry = Entry(frame[i]).grid(row = i, column = 2)
+                entry = StringVar()
+                Entry(frame[i], textvariable = entry).pack(side = RIGHT)#.grid(row = i, column = 2)
+                entries.append(entry)
             # else prints empty line
             else:
-                Label(frame[i], text = '').grid(row = i, column = 2)
+                temp = IntVar()
+                check = Checkbutton(frame[i], variable = temp).pack(side = LEFT)#.grid(row = i, column = 0)
+                entries.append(temp)
+                #Label(frame[i], text = '').pack(side = RIGHT) #.grid(row = i, column = 2)
 
-            entries.append(entry)
+            Label(frame[i], text = label[i]).pack(side = LEFT)#.grid(row = i, column = 1)
             #Button(win, text = '?').grid(row = i, column = 3)
             b = Frame(win)
             b.pack()
             frame1.append(b)
-            Label(frame1[i], text = explian[i]).grid(row = 0, column = 0)#.pack(side = LEFT)
+            Label(frame1[i], text = explian[i]).pack(side = BOTTOM)#.grid(row = 0, column = 0)#.pack(side = LEFT)
             #grid(row = i, column = 2)
 
         a = Frame(win)
