@@ -23,23 +23,58 @@ checks = []
 label = []
 entry_type = []
 
+def is_int(s):
+    try:
+        int(s)
+        return True
+    except ValueError:
+        pass
+    return False
+
+def is_float(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        pass
+    return False
 
 def button():
     # run config
     #print (entries.get())
     check_index = 0
     entry_index = 0
+    error = []
     #entry = True
     run_command = './models/' +  model_var.get() + '/' + model_var.get() + '_sim '
     for i in range(0, len(label)):
         if entry_checks[i]:
             if entries[i].get():
-                run_command += label[i] + ' ' + entries[i].get() + ' '
+                if entry_type[i] == 'int':
+                    if is_int(entries[i].get()):
+                        run_command += label[i] + ' ' + entries[i].get() + ' '
+                    else:
+                        error.append(i)
+                elif entry_type[i] == 'float':
+                    if is_float(entries[i].get()):
+                        run_command += label[i] + ' ' + entries[i].get() + ' '
+                    else:
+                        error.append(i)
+                else:
+                    run_command += label[i] + ' ' + entries[i].get() + ' '
+
+
         else:
             if entries[i].get():
                 run_command += label[i]
-
-    print run_command
+    error_message = ''
+    if error:
+        for i in error:
+            error_message += label[i] + ' expect type ' + entry_type[i].upper() + '\n'
+        tkMessageBox.showerror('', error_message)
+    else:
+        subprocess.call(run_command, shell = True)
+        #print run_command
     #subprocess.call(run_command, shell = True)
 
 
@@ -85,6 +120,8 @@ def conf_choice():
                     if 'int' in lines:
                         entry_type.append('int')
                     elif 'float' in lines:
+                        entry_type.append('float')
+                    elif 'double' in lines:
                         entry_type.append('float')
                     elif 'string' in lines:
                         entry_type.append('string')
