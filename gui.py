@@ -23,14 +23,17 @@ checks = []
 label = []
 entry_type = []
 
+# type check for string integer
 def is_int(s):
     try:
-        int(s)
+        if int(s) < 0:
+            return False
         return True
     except ValueError:
         pass
     return False
 
+# type check for string for float/double
 def is_float(s):
     try:
         float(s)
@@ -41,41 +44,50 @@ def is_float(s):
 
 def button():
     # run config
-    #print (entries.get())
     check_index = 0
     entry_index = 0
     error = []
-    #entry = True
     run_command = './models/' +  model_var.get() + '/' + model_var.get() + '_sim '
     for i in range(0, len(label)):
+        # if entry list is for user enter
         if entry_checks[i]:
+            # if user entered
             if entries[i].get():
+                # if type defind  int
                 if entry_type[i] == 'int':
+                    # if type is int, add argument to the run string
                     if is_int(entries[i].get()):
-                        run_command += label[i] + ' ' + entries[i].get() + ' '
+                        run_command += label[i] + ' "' + entries[i].get() + '" '
+                    # add to the error list if not
                     else:
                         error.append(i)
+                # if type defind  float/double
                 elif entry_type[i] == 'float':
+                    # if type is float/double, add argument to the run string
                     if is_float(entries[i].get()):
-                        run_command += label[i] + ' ' + entries[i].get() + ' '
+                        run_command += label[i] + ' "' + entries[i].get() + '" '
+                    # add to the error list if not
                     else:
                         error.append(i)
+                # if not int or float/double
                 else:
-                    run_command += label[i] + ' ' + entries[i].get() + ' '
+                    run_command += label[i] + ' "' + entries[i].get() + '" '
 
-
+        # if not entry - check box
         else:
+            # if check box are take add argument to the run string
             if entries[i].get():
                 run_command += label[i]
+
     error_message = ''
     if error:
+        # prints error in the sub window if there is error in list
         for i in error:
             error_message += label[i] + ' expect type ' + entry_type[i].upper() + '\n'
         tkMessageBox.showerror('', error_message)
+    # if no error in list run the configuration
     else:
         subprocess.call(run_command, shell = True)
-        #print run_command
-    #subprocess.call(run_command, shell = True)
 
 
 def conf_choice():
@@ -146,41 +158,50 @@ def conf_choice():
         scroll = ScrolledWindow(top)
         scroll.pack()
         win = scroll.window
-
+        ''''
         frame = []
         frame1 = []
+        '''
+        a = Frame(win)
+        a.pack()
 
 
         for i in range(0, len(label)):
             #check = Checkbutton(top, variable = checks[i]).grid(row = i, column = 0)
+            #ii = i*2
+            '''
             a = Frame(win)
             a.pack()
             frame.append(a)
-            # if command request parameters prints a entry to work with
+            '''
+            # if command request parameters prints a entry
             if entry_checks[i]:
                 entry = StringVar()
-                Entry(frame[i], textvariable = entry).pack(side = RIGHT)#.grid(row = i, column = 2)
+                Entry(a, textvariable = entry).grid(row = i, column = 1)
                 entries.append(entry)
-            # else prints empty line
+            # else prints check box
             else:
                 temp = IntVar()
-                check = Checkbutton(frame[i], variable = temp).pack(side = LEFT)#.grid(row = i, column = 0)
+                check = Checkbutton(a, variable = temp).grid(row = i, column = 1
                 entries.append(temp)
                 #Label(frame[i], text = '').pack(side = RIGHT) #.grid(row = i, column = 2)
 
-            Label(frame[i], text = label[i]).pack(side = LEFT)#.grid(row = i, column = 1)
+            #Label(a, text = label[i]).grid(row = ii, column = 0)
             #Button(win, text = '?').grid(row = i, column = 3)
+            '''
             b = Frame(win)
             b.pack()
             frame1.append(b)
-            Label(frame1[i], text = explian[i]).pack(side = BOTTOM)#.grid(row = 0, column = 0)#.pack(side = LEFT)
+            '''
+            Label(a, text = explian[i]).grid(row = i, sticky = W)#.pack(side = LEFT)
             #grid(row = i, column = 2)
-
+        ''''
         a = Frame(win)
         a.pack()
         frame.append(a)
-        config = Button(frame[i+1], text = 'Run', command = button).pack()#.pack(side = BOTTOM)
-        #grid(row = len(label*2)+1, column = 1)
+        '''
+        config = Button(a, text = 'Run', command = button)#.pack()#.pack(side = BOTTOM)
+        config.grid(row = len(label)+1)
 
 
 def run_choice():
