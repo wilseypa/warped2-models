@@ -17,11 +17,7 @@ with open('models/Makefile.am') as f:
 
 models = lines.split()
 del models[0:n+1]
-entry_checks = []
-entries= []
-checks = []
-label = []
-entry_type = []
+
 
 # type check for string integer
 def is_int(s):
@@ -42,7 +38,7 @@ def is_float(s):
         pass
     return False
 
-def button():
+def run_coustomize():
     # run config
     check_index = 0
     entry_index = 0
@@ -53,6 +49,7 @@ def button():
         if entry_checks[i]:
             # if user entered
             if entries[i].get():
+                explanation[i].config(fg = 'black', relief = FLAT)
                 # if type defind  int
                 if entry_type[i] == 'int':
                     # if type is int, add argument to the run string
@@ -81,10 +78,15 @@ def button():
 
     error_message = ''
     if error:
-        # prints error in the sub window if there is error in list
+        # prints explanation in red
+        for i in error:
+            explanation[i].config(fg = 'red', relief = RAISED)
+
+        '''
         for i in error:
             error_message += label[i] + ' expect type ' + entry_type[i].upper() + '\n'
         tkMessageBox.showerror('', error_message)
+        '''
     # if no error in list run the configuration
     else:
         subprocess.call(run_command, shell = True)
@@ -94,8 +96,14 @@ def conf_choice():
     top = Toplevel()
     explian = []
     tmp_str = ''
+    global label, entry_type, entry_checks, entries, explanation
+    label = []
+    entry_type = []
+    entry_checks = []
+    entries= []
+    explanation = []
 
-    tmpfile = '/tmp/help' + str(random.randint(0,100))
+    tmpfile = '/tmp/help' + str(random.randint(0,1000))
     run_command = './models/' +  model_var.get() + '/' + model_var.get() + '_sim --help > ' + tmpfile
     subprocess.call(run_command, shell = True)
     read_status = False
@@ -144,36 +152,20 @@ def conf_choice():
                     entry_checks.append(False)
                     entry_type.append(None)
 
-            # ignore argument line only save explaination
-            if model_var.get().upper() in lines:
-                        explian.append(tmp_str)
+            # ignore argument line only save explanation
             if '   -' not in lines:
                 tmp_str += lines
-
-                '''
-                for words in lines.split():
-                    tmp_str += words + ' '
-                 '''
+            if model_var.get() + ' simulation' in lines.lower():
+                explian.append(tmp_str)
 
         scroll = ScrolledWindow(top)
         scroll.pack()
         win = scroll.window
-        ''''
-        frame = []
-        frame1 = []
-        '''
+
         a = Frame(win)
         a.pack()
 
-
         for i in range(0, len(label)):
-            #check = Checkbutton(top, variable = checks[i]).grid(row = i, column = 0)
-            #ii = i*2
-            '''
-            a = Frame(win)
-            a.pack()
-            frame.append(a)
-            '''
             # if command request parameters prints a entry
             if entry_checks[i]:
                 entry = StringVar()
@@ -182,7 +174,7 @@ def conf_choice():
             # else prints check box
             else:
                 temp = IntVar()
-                check = Checkbutton(a, variable = temp).grid(row = i, column = 1
+                check = Checkbutton(a, variable = temp).grid(row = i, column = 1)
                 entries.append(temp)
                 #Label(frame[i], text = '').pack(side = RIGHT) #.grid(row = i, column = 2)
 
@@ -193,18 +185,19 @@ def conf_choice():
             b.pack()
             frame1.append(b)
             '''
-            Label(a, text = explian[i]).grid(row = i, sticky = W)#.pack(side = LEFT)
+            exp = Label(a, text = explian[i])
+            exp.grid(row = i, sticky = W)#.pack(side = LEFT)
+            explanation.append(exp)
             #grid(row = i, column = 2)
         ''''
         a = Frame(win)
         a.pack()
         frame.append(a)
         '''
-        config = Button(a, text = 'Run', command = button)#.pack()#.pack(side = BOTTOM)
+        config = Button(a, text = 'Run', command = run_coustomize)#.pack()#.pack(side = BOTTOM)
         config.grid(row = len(label)+1)
 
-
-def run_choice():
+def run_default():
     run_command = './models/' +  model_var.get() + '/' + model_var.get() + '_sim'
     subprocess.call(run_command, shell = True)
 
@@ -219,7 +212,7 @@ modelMenu = Tkinter.OptionMenu(master, model_var, *models)
 Label(master, text = 'Choose the Simulation Model\t').pack(side = LEFT)
 modelMenu.pack(side = LEFT)
 
-run_button = Button(master, text = '  Run Default  ', command = run_choice)
+run_button = Button(master, text = '  Run Default  ', command = run_default)
 run_button.pack(side = LEFT)
 
 conf_button = Button(master, text = '  Configure  ', command = conf_choice)
