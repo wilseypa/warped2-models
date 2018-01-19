@@ -5,6 +5,7 @@
 #include "wildfire.hpp"
 #include "ppm/ppm.hpp"
 #include "tclap/ValueArg.h"
+#include <cmath>
 
 /* Event timer delays */
 #define IGNITION_DELAY              1
