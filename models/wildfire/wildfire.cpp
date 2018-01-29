@@ -7,13 +7,8 @@
 #include "tclap/ValueArg.h"
 #include <cmath>
 
-/* Event timer delays */
-#define IGNITION_DELAY              1
-#define RADIATION_DELAY             1
-#define RADIATION_INTERVAL          5
-
-/* Combustion parameters */
-#define ORIGIN_RADIUS               1
+/* Combustion parameter */
+#define ORIGIN_RADIUS   1
 
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(CellEvent)
 
@@ -23,7 +18,7 @@ std::vector<std::shared_ptr<warped::Event> > Cell::initializeLP() {
 
     /* If heat content exceeds ignition threshold, schedule ignition */
     if (state_.heat_content_ >= ignition_threshold_) {
-        events.emplace_back( new CellEvent{lp_name(index_), IGNITION, 0, IGNITION_DELAY} );
+        events.emplace_back( new CellEvent{lp_name(index_), IGNITION, 0, 1} );
     }
     return events;
 }
@@ -49,37 +44,33 @@ std::vector<std::shared_ptr<warped::Event> > Cell::receiveEvent(const warped::Ev
             /* If heat exceeds ignition threshold and vegtation is unburnt, schedule ignition */
             if ( (state_.burn_status_ == UNBURNT) && 
                     (state_.heat_content_ >= ignition_threshold_) ) {
-                unsigned int next_ts = received_event.ts_ + IGNITION_DELAY;
+                unsigned int ts = received_event.ts_ + 1;
                 response_events.emplace_back(
-                        new CellEvent{lp_name(index_), IGNITION, 0, next_ts} );
+                        new CellEvent{lp_name(index_), IGNITION, 0, ts} );
             }
         } break;
 
         case RADIATION_TIMER: {
 
-            unsigned int heat_radiated_out = 
-                static_cast<unsigned int> (state_.heat_content_ * radiation_fraction_);
-            unsigned int directional_heat_radiated_out =
-                    (heat_radiated_out > DIRECTION_MAX) ? heat_radiated_out/DIRECTION_MAX : 1;
-            state_.heat_content_ -= DIRECTION_MAX * directional_heat_radiated_out;
+            if (state_.heat_content_ <= burnout_threshold_ + DIRECTION_MAX*radiation_rate_) {
+                state_.burn_status_  = BURNT_OUT;
+                state_.heat_content_ = burnout_threshold_;
+
+            } else {
+                state_.heat_content_ -= DIRECTION_MAX*radiation_rate_;
+
+                /* Schedule the Radiation Timer */
+                unsigned int ts = received_event.ts_ + 1;
+                response_events.emplace_back( new CellEvent{lp_name(index_), RADIATION_TIMER, 0, ts} );
+            }
 
             /* Schedule radiation events for surrounding LPs */
-            unsigned int next_ts = received_event.ts_ + RADIATION_DELAY;
+            unsigned int ts = received_event.ts_ + 1;
             for (unsigned int direction = NORTH; direction < DIRECTION_MAX; direction++) {
                 if (!connection_[direction]) continue;
                 response_events.emplace_back(
                             new CellEvent{find_cell( (direction_t)direction ), 
-                                    RADIATION, directional_heat_radiated_out, next_ts} );
-            }
-
-            /* Check if cell has burnt out */
-            if (state_.heat_content_ <= burnout_threshold_) {
-                state_.burn_status_ = BURNT_OUT;
-
-            } else { /* Else schedule next radiation */
-                next_ts = received_event.ts_ + RADIATION_INTERVAL;
-                response_events.emplace_back(
-                        new CellEvent{lp_name(index_), RADIATION_TIMER, 0, next_ts} );
+                                    RADIATION, radiation_rate_, ts} );
             }
         } break;
 
@@ -88,18 +79,18 @@ std::vector<std::shared_ptr<warped::Event> > Cell::receiveEvent(const warped::Ev
             state_.burn_status_= BURNING;
 
             /* Schedule Peak Event */
-            unsigned int peak_time = received_event.ts_ + 
+            unsigned int ts = received_event.ts_ +
                         ((peak_threshold_ - ignition_threshold_) / growth_rate_);
-            response_events.emplace_back( new CellEvent{lp_name(index_), PEAK, 0, peak_time} );
+            response_events.emplace_back( new CellEvent{lp_name(index_), PEAK, 0, ts} );
         } break;
 
         case PEAK: {
 
             state_.heat_content_ += peak_threshold_ - ignition_threshold_;
 
-            /* Schedule first Radiation Timer */
-            response_events.emplace_back( 
-                    new CellEvent{lp_name(index_), RADIATION_TIMER, 0, received_event.ts_} );
+            /* Schedule the Radiation Timer */
+            unsigned int ts = received_event.ts_ + 1;
+            response_events.emplace_back( new CellEvent{lp_name(index_), RADIATION_TIMER, 0, ts} );
         } break;
     }
     return response_events;
@@ -279,21 +270,21 @@ bool Cell::neighbor_conn( direction_t direction, unsigned char **combustible_map
 int main(int argc, char *argv[]) {
 
     /* Set the default values for the simulation arguments */
-    std::string  vegetation_map      = "test_map_1.ppm";
-    double       radiation_fraction  = 0.5;
-    unsigned int ambient_heat        = 0;
+    std::string  vegetation_map      = "test_map_4.ppm";
+    unsigned int radiation_rate      = 50;
+    unsigned int ambient_heat        = 20;
     unsigned int peak_threshold      = 600;
-    unsigned int burnout_threshold   = 50;
-    unsigned int fire_origin_row     = 700;
-    unsigned int fire_origin_col     = 600;
+    unsigned int burnout_threshold   = 100;
+    unsigned int fire_origin_row     = 15;
+    unsigned int fire_origin_col     = 15;
 
     /* Read any simulation arguments (if provided) */
     TCLAP::ValueArg<std::string> vegetation_map_arg( "m", "vegetation-map", "Vegetation map",
                                                     false, vegetation_map, "string" );
 
-    TCLAP::ValueArg<double> radiation_fraction_arg( "r", "radiation-fraction",
-                                                    "Fraction of heat radiated out",
-                                                    false, radiation_fraction, "double" );
+    TCLAP::ValueArg<unsigned int> radiation_rate_arg( "r", "radiation-rate",
+                                                    "Heat radiation in a direction per unit time",
+                                                    false, radiation_rate, "unsigned int" );
 
     TCLAP::ValueArg<unsigned int> ambient_heat_arg( "a", "ambient-heat",
                                                     "Ambient heat in a cell",
@@ -316,7 +307,7 @@ int main(int argc, char *argv[]) {
                                                     false, fire_origin_col, "unsigned int" );
 
     std::vector<TCLAP::Arg*> args = {   &vegetation_map_arg,
-                                        &radiation_fraction_arg,
+                                        &radiation_rate_arg,
                                         &ambient_heat_arg,
                                         &peak_threshold_arg,
                                         &burnout_threshold_arg,
@@ -327,7 +318,7 @@ int main(int argc, char *argv[]) {
     warped::Simulation wildfire_sim {"Wildfire Simulation", argc, argv, args};
  
     vegetation_map      = vegetation_map_arg.getValue();
-    radiation_fraction  = radiation_fraction_arg.getValue();
+    radiation_rate      = radiation_rate_arg.getValue();
     ambient_heat        = ambient_heat_arg.getValue();
     peak_threshold      = peak_threshold_arg.getValue();
     burnout_threshold   = burnout_threshold_arg.getValue();
@@ -338,8 +329,8 @@ int main(int argc, char *argv[]) {
     assert( peak_threshold > 255 );
     assert( peak_threshold > burnout_threshold );
 
-    /* Ensure that radiation_fraction is < 1 */
-    assert( radiation_fraction < 1.0 );
+    /* Ensure that radiation_rate is > 5 */
+    assert( radiation_rate > 5 );
 
     /* Read the vegetation map */
     auto vegetation = new ppm();
@@ -438,7 +429,7 @@ int main(int argc, char *argv[]) {
                                 ignition_threshold,
                                 growth_rate,
                                 peak_threshold,
-                                radiation_fraction,
+                                radiation_rate,
                                 burnout_threshold,
                                 heat_content,
                                 index
@@ -456,16 +447,22 @@ int main(int argc, char *argv[]) {
     /* Also print the post-wildfire vegetation map */
     auto status_map = new ppm(num_cols, num_rows);
     unsigned int cells_burnt_cnt = 0, cells_burning_cnt = 0;
-    unsigned int i = 0;
-    for (auto& lp: lps) {
-        auto status = lp.state_.burn_status_;
+    unsigned int lp_id = 0;
+
+    for (unsigned int i = 0; i < status_map->size; i++) {
 
         /* Post-wildfire status color codes :
-             1. burnt-out cells -> white
-             2. burning cells   -> red
-             3. unburnt cells   -> light yellow (highly combustible)
+             1. non-vegetation  -> black
+             2. burnt-out cells -> white
+             3. burning cells   -> red
+             4. unburnt cells   -> light yellow (highly combustible)
                                 -> green (not easily combustible)
          */
+        if (!combustible_map[i/num_cols][i%num_cols]) continue;
+
+        auto lp = lps[lp_id++];
+        auto status = lp.state_.burn_status_;
+
         if (status == BURNT_OUT) {
             cells_burnt_cnt++;
             status_map->r[i] = 255;
@@ -480,7 +477,6 @@ int main(int argc, char *argv[]) {
             status_map->r[i] = 255 - lp.ignition_threshold_;
             status_map->g[i] = 200;
         }
-        i++;
     }
     status_map->write("post_wildfire_status.ppm");
     delete status_map;
