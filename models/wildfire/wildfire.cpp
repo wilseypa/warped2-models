@@ -52,6 +52,7 @@ std::vector<std::shared_ptr<warped::Event> > Cell::receiveEvent(const warped::Ev
 
         case RADIATION_TIMER: {
 
+            /* Check if cell is about to burn out */
             if (state_.heat_content_ <= burnout_threshold_ + DIRECTION_MAX*radiation_rate_) {
                 state_.burn_status_  = BURNT_OUT;
                 state_.heat_content_ = burnout_threshold_;
@@ -271,9 +272,9 @@ int main(int argc, char *argv[]) {
 
     /* Set the default values for the simulation arguments */
     std::string  vegetation_map      = "test_map_4.ppm";
-    unsigned int radiation_rate      = 50;
+    unsigned int radiation_rate      = 100;
     unsigned int ambient_heat        = 20;
-    unsigned int peak_threshold      = 600;
+    unsigned int peak_threshold      = 1000;
     unsigned int burnout_threshold   = 100;
     unsigned int fire_origin_row     = 15;
     unsigned int fire_origin_col     = 15;
@@ -326,11 +327,10 @@ int main(int argc, char *argv[]) {
     fire_origin_col     = fire_origin_col_arg.getValue();
 
     /* Ensure that peak and burnout threshold entries are valid */
-    assert( peak_threshold > 255 );
     assert( peak_threshold > burnout_threshold );
 
-    /* Ensure that radiation_rate is > 5 */
-    assert( radiation_rate > 5 );
+    /* Ensure that radiation_rate is >= ambient heat */
+    assert( radiation_rate >= ambient_heat );
 
     /* Read the vegetation map */
     auto vegetation = new ppm();
@@ -394,7 +394,7 @@ int main(int argc, char *argv[]) {
     if (!ofs) assert(0);
     ofs << "P5\n" << num_cols << " " << num_rows << "\n255\n";
     for (unsigned int i = 0; i < num_rows; i++) {
-        ofs.write( reinterpret_cast<const char*>(combustible_map[i]), num_cols );
+        ofs.write( reinterpret_cast<const char*>( combustible_map[i]), num_cols );
     }
     ofs.close();
 
@@ -405,8 +405,9 @@ int main(int argc, char *argv[]) {
 
             if (!combustible_map[i][j]) continue;
 
-            /* Ignition threshold = 256 - CI */
-            unsigned int ignition_threshold = 256 - combustible_map[i][j];
+            /* Ignition threshold = 500 - CI */
+            unsigned int ignition_threshold = 500 - combustible_map[i][j];
+            assert( ignition_threshold < peak_threshold );
 
             /* Note : Initial heat content of a cell equals ambient heat content*/
             unsigned int heat_content = ambient_heat;
@@ -474,7 +475,7 @@ int main(int argc, char *argv[]) {
             status_map->r[i] = 255;
 
         } else { /* status == UNBURNT */
-            status_map->r[i] = 255 - lp.ignition_threshold_;
+            status_map->r[i] = combustible_map[i/num_cols][i%num_cols];
             status_map->g[i] = 200;
         }
     }
