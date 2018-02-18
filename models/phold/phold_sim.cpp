@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <memory>
+#include <random>
 
 #include "warped.hpp"
 #include "tclap/ValueArg.h"

@@ -43,24 +43,21 @@ below a burnout threshold.
 
 User can adjust the following parameters:
 
-    1. Wildfire susceptibility map (Default: "test_vegetation_map.ppm")
+    1. Wildfire susceptibility map (Default: "test_map_4.ppm")
        Note: This input picture must be a P6 PPM Binary file.
 
-    2. Heat rate, amount of heat that an LP increases every timestamp in its "Growth" state
-       (Default: 15)
-
-    3. Radiation fraction, the percentage of an LP's heat content that is released every
-       five timestamps during the "Decay" state (Default: 0.05)
+    2. Radiation rate, the radiation from a LP in any direction per unit timestamp during 
+       the "Decay" state (Default: 50)
 
     4. Ambient heat, the amount of heat each cell has at the beginning of the simulation.
-       This can be used to simulate a hot day (Default: 0)
+       This can be used to simulate a hot day (Default: 20)
 
     4. Burnout threshold, the threshold of heat that a burning LP must reach in order to be
-       considered "Burnt out" (Default: 20)
+       considered "Burnt out" (Default: 100)
 
-    5. Fire origin x, the x cooridinate of the start of the fire (Default: 700)
+    5. Fire origin x, the x cooridinate of the start of the fire (Default: 15)
 
-    6. Fire origin y, the y cooridinate of the start of the fire (Default: 600)
+    6. Fire origin y, the y cooridinate of the start of the fire (Default: 15)
 
 
 ## References : ##
