@@ -10,6 +10,7 @@
 WARPED_DEFINE_LP_STATE_STRUCT(CellState) {
 
     double membrane_potential_;
+    unsigned int latest_update_ts_;
 };
 
 class Spike : public warped::Event {
@@ -34,11 +35,13 @@ class Cell : public warped::LogicalProcess {
 public:
 
     /* NOTE : It has been assumed that the neuron config files don't have repetitive names */
-    Cell( const std::string& name )
-        :   LogicalProcess(name), 
+    Cell( const std::string& name, double membrane_time_const )
+        :   LogicalProcess(name),
+            membrane_time_const_(membrane_time_const),
             state_() {
 
-        state_.membrane_potential_ = 0;
+        state_.membrane_potential_  = 0;
+        state_.latest_update_ts_    = 0;
     }
 
     virtual std::vector<std::shared_ptr<warped::Event> > initializeLP() override;
@@ -46,13 +49,13 @@ public:
     virtual warped::LPState& getState() { return this->state_; }
 
     void addNeighbor( std::string name, double weight ) {
-        neighbors_.push_back(std::make_pair(name, weight));
+        neighbors_.emplace(name, weight);
     }
 
-    CellState state_;
-
 protected:
-    std::vector<std::pair<std::string, double>> neighbors_;
+    double membrane_time_const_ = 0;
+    std::unordered_map<std::string, double> neighbors_;
+    CellState state_;
 };
 
 #endif // NEURON_HPP
