@@ -22,6 +22,6 @@ User can adjust the following parameters:
 
 ## References : ##
 
-[1] https://www.neuron.yale.edu/neuron/static/papers/discrete/discrete\_event\_poster.pdf
+[1] https://www.neuron.yale.edu/neuron/static/papers/discrete/discrete_event_poster.pdf
 
 [2] http://umcd.humanconnectomeproject.org/umcd/default/index
