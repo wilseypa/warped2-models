@@ -10,6 +10,9 @@ WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(Spike)
 std::vector<std::shared_ptr<warped::Event> > Cell::initializeLP() {
 
     std::vector<std::shared_ptr<warped::Event> > events;
+
+    /* TODO: Send a spike event with receive time = 1 to any one neighbor (if available) */
+
     return events;
 }
 
