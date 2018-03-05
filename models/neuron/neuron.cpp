@@ -11,8 +11,11 @@ std::vector<std::shared_ptr<warped::Event> > Cell::initializeLP() {
 
     std::vector<std::shared_ptr<warped::Event> > events;
 
-    /* TODO: Send a spike event with receive time = 1 to any one neighbor (if available) */
-
+    /* Send a spike event with receive time = 1 to any one neighbor (if available) */
+    for (auto neighbor : this->neighbors_) {
+        events.emplace_back(new Spike {neighbor.first, 1});
+        break;
+    }
     return events;
 }
 
@@ -48,7 +51,10 @@ std::vector<std::shared_ptr<warped::Event> > Cell::receiveEvent(const warped::Ev
             /* Send the refractory self-event with receive time = ts */
             response_events.emplace_back(new Spike {this->name_, ts});
 
-            /* TODO: Send spike events to all its connected neighbors with receive time = ts */
+            /* Send spike events to all its connected neighbors with receive time = ts */
+            for (auto neighbor : this->neighbors_) {
+                response_events.emplace_back(new Spike {neighbor.first, ts});
+            }
         }
     }
     return response_events;
