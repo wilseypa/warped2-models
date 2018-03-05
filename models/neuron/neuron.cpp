@@ -102,8 +102,10 @@ int main(int argc, const char** argv) {
         return 0;
     }
     std::vector<Cell> lps;
+    unsigned int row_index = 0;
     while (getline(file_stream, buffer)) {
-        lps.emplace_back(buffer, membrane_time_const, refractory_period);
+        auto name = buffer + "_" + std::to_string(row_index++);
+        lps.emplace_back(name, membrane_time_const, refractory_period);
     }
     file_stream.close();
 
@@ -114,7 +116,7 @@ int main(int argc, const char** argv) {
         std::cerr << "Invalid connection matrix file - " << buffer << std::endl;
         return 0;
     }
-    unsigned int row_index = 0;
+    row_index = 0;
     while (getline(file_stream, buffer)) {
         size_t pos = 0;
         unsigned int col_index = 0;
@@ -130,7 +132,7 @@ int main(int argc, const char** argv) {
             if ((row_index != col_index) && (weight > connection_threshold)) {
                 lps[row_index].addNeighbor(lps[col_index].name_, weight);
             }
-            buffer.substr(pos+1);
+            buffer = buffer.substr(pos+1);
             col_index++;
         }
         row_index++;
