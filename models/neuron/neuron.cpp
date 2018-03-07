@@ -2,6 +2,7 @@
 
 #include "neuron.hpp"
 #include <fstream>
+#include "ppm/ppm.hpp"
 #include "tclap/ValueArg.h"
 #include <cassert>
 
@@ -155,6 +156,30 @@ int main(int argc, const char** argv) {
     std::cout   << num_active_neurons << " out of " << lps.size()
                 << " neurons fired a total of " << num_spikes << " spikes."
                 << std::endl;
+
+    /* PPM spike heatmap setup*/
+    unsigned long cols = std::ceil( sqrt(lps.size()) );
+    unsigned long rows = (lps.size()+cols-1)/cols;
+    auto neuron_spikes_hmap = new ppm(cols, rows);
+    int i = 0;
+    int max_neuron_spikes = 0;
+    for (auto& lp : lps) {
+        i = lp.spikeCount();
+        if (i > max_neuron_spikes) {
+            max_neuron_spikes = i;
+        }
+    }
+
+    /* Color heatmap red based on ratio of lp spikes versus the lp with the most spikes*/
+    i = 0;
+    for (auto& lp : lps) {
+        double ratio = ((double)lp.Spikecount()) / max_neuron_spikes;
+        neuron_spikes_hmap->r[i] = ratio * 255;
+        i++;
+    }
+    neuron_spikes_hmap->write("neuron_spikes_hmap.ppm");
+
+    delete neuron_spikes_hmap;
 
     return 0;
 }
