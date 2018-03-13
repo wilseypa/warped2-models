@@ -147,39 +147,34 @@ int main(int argc, const char** argv) {
     }
     neuron_sim.simulate(lp_pointers);
 
-    /* Post-simulation statistics */
-    unsigned int num_active_neurons = 0, num_spikes = 0;
+    /** Post-simulation statistics **/
+
+    /* PPM spike heatmap setup*/
+    auto cols = std::ceil( sqrt(lps.size()) );
+    auto rows = (lps.size()+cols-1)/cols;
+    auto spikes_hmap = new ppm(cols, rows);
+
+    unsigned int num_active_neurons = 0, num_spikes = 0, max_spikes = 0;
     for (auto& lp : lps) {
         num_active_neurons += lp.spikeCount() ? 1 : 0;
         num_spikes += lp.spikeCount();
+        if (lp.spikeCount() > max_spikes) {max_spikes = lp.spikeCount();}
     }
     std::cout   << num_active_neurons << " out of " << lps.size()
                 << " neurons fired a total of " << num_spikes << " spikes."
                 << std::endl;
 
-    /* PPM spike heatmap setup*/
-    unsigned long cols = std::ceil( sqrt(lps.size()) );
-    unsigned long rows = (lps.size()+cols-1)/cols;
-    auto neuron_spikes_hmap = new ppm(cols, rows);
-    int i = 0;
-    int max_neuron_spikes = 0;
-    for (auto& lp : lps) {
-        i = lp.spikeCount();
-        if (i > max_neuron_spikes) {
-            max_neuron_spikes = i;
+    /* Color heatmap red based on ratio of lp spikes versus the lp with the most spikes*/
+    for (unsigned int i = 0; i < lps.size(); i++) {
+        double ratio = ((double)lps[i].spikeCount()) / max_spikes;
+        if (ratio >= 0.5) {
+            spikes_hmap->r[i] = ratio * 255;
+        } else {
+            spikes_hmap->g[i] = (1.0-ratio) * 255;
         }
     }
-
-    /* Color heatmap red based on ratio of lp spikes versus the lp with the most spikes*/
-    i = 0;
-    for (auto& lp : lps) {
-        double ratio = ((double)lp.Spikecount()) / max_neuron_spikes;
-        neuron_spikes_hmap->r[i] = ratio * 255;
-        i++;
-    }
-    neuron_spikes_hmap->write("neuron_spikes_hmap.ppm");
-
-    delete neuron_spikes_hmap;
+    spikes_hmap->write("neuron_spikes_hmap.ppm");
+    delete spikes_hmap;
 
     return 0;
 }
