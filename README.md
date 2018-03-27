@@ -1,4 +1,4 @@
-# WAPRED Simulation Models
+# WARPED Simulation Models
 Simulation models for the WARPED Parallel & Distributed Discrete Simulation Library
 
 # Building
