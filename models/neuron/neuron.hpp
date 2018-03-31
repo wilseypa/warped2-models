@@ -16,23 +16,39 @@ WARPED_DEFINE_LP_STATE_STRUCT(CellState) {
     double membrane_potential_;
     unsigned int latest_update_ts_;
     unsigned int num_spikes_;
+    std::unordered_map<std::string, double> neighbors_;
 };
 
-class Spike : public warped::Event {
-public:
-    Spike() = default;
+enum cell_event_t {
 
-    Spike(const std::string& receiver_cell, const unsigned int timestamp)
-        : receiver_cell_(receiver_cell), ts_(timestamp) {}
+    SPIKE,
+    UPDATE
+};
+
+class CellEvent : public warped::Event {
+public:
+    CellEvent() = default;
+    CellEvent(  const std::string& receiver_cell,
+                const cell_event_t type,
+                const unsigned int timestamp    )
+        :   receiver_cell_(receiver_cell),
+            type_(type),
+            ts_(timestamp) {}
 
     const std::string& receiverName() const { return receiver_cell_; }
 
+    cell_event_t type() const { return type_; }
+
     unsigned int timestamp() const { return ts_; }
 
-    unsigned int size() const { return receiver_cell_.length() + sizeof(ts_); }
+    unsigned int size() const { return receiver_cell_.length() +
+                                sizeof(ts_) +
+                                sizeof(type_);
+    }
 
 private:
     std::string receiver_cell_;
+    cell_event_t type_;
     unsigned int ts_;
 };
 
@@ -62,12 +78,13 @@ public:
 
     unsigned int spikeCount() { return this->state_.num_spikes_; }
 
-    void addNeighbor( std::string name, double weight ) { neighbors_.emplace(name, weight); }
+    void addNeighbor( std::string name, double weight ) {
+        state_.neighbors_.emplace(name, weight);
+    }
 
 protected:
     double membrane_time_const_     = 0;
     unsigned int refractory_period_ = 0;
-    std::unordered_map<std::string, double> neighbors_;
     CellState state_;
 };
 

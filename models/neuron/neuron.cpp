@@ -6,15 +6,15 @@
 #include "tclap/ValueArg.h"
 #include <cassert>
 
-WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(Spike)
+WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(CellEvent)
 
 std::vector<std::shared_ptr<warped::Event> > Cell::initializeLP() {
 
     std::vector<std::shared_ptr<warped::Event> > events;
 
     /* Send a spike event with receive time = 1 to any one neighbor (if available) */
-    for (auto neighbor : this->neighbors_) {
-        events.emplace_back(new Spike {neighbor.first, 1});
+    for (auto neighbor : this->state_.neighbors_) {
+        events.emplace_back(new CellEvent {neighbor.first, SPIKE, 1});
         break;
     }
     return events;
@@ -23,40 +23,48 @@ std::vector<std::shared_ptr<warped::Event> > Cell::initializeLP() {
 std::vector<std::shared_ptr<warped::Event> > Cell::receiveEvent(const warped::Event& event) {
 
     std::vector<std::shared_ptr<warped::Event> > response_events;
-    auto received_event = static_cast<const Spike&>(event);
+    auto received_event = static_cast<const CellEvent&>(event);
 
-    /* Check whether it is a refractory self-event */
-    if (received_event.sender_name_ == received_event.receiverName()) {
+    switch (received_event.type()) {
+    case SPIKE:
+        /* Check whether it is a refractory self-event */
+        if (received_event.sender_name_ == received_event.receiverName()) {
 
-        this->state_.membrane_potential_    = 0;
-        this->state_.latest_update_ts_      = received_event.timestamp();
+            this->state_.membrane_potential_    = 0;
+            this->state_.latest_update_ts_      = received_event.timestamp();
 
-    } else if (this->state_.membrane_potential_ < 1.0) { /* Check if the neuron is responsive */
+        } else if (this->state_.membrane_potential_ < 1.0) { /* Check if the neuron is responsive */
 
-        /* IntFire1 : Basic Integrate and Fire Model */
-        auto it = this->neighbors_.find(event.sender_name_);
-        assert(it != this->neighbors_.end());
+            /* IntFire1 : Basic Integrate and Fire Model */
+            auto it = this->state_.neighbors_.find(event.sender_name_);
+            assert(it != this->state_.neighbors_.end());
 
-        double delta_t = received_event.timestamp() - this->state_.latest_update_ts_;
-        this->state_.membrane_potential_ *= exp(-delta_t/membrane_time_const_);
-        this->state_.membrane_potential_ += it->second;
-        this->state_.latest_update_ts_ = received_event.timestamp();
+            double delta_t = received_event.timestamp() - this->state_.latest_update_ts_;
+            this->state_.membrane_potential_ *= exp(-delta_t/membrane_time_const_);
+            this->state_.membrane_potential_ += it->second;
+            this->state_.latest_update_ts_ = received_event.timestamp();
 
-        if (this->state_.membrane_potential_ >= 1.0) {
+            if (this->state_.membrane_potential_ >= 1.0) {
 
-            this->state_.membrane_potential_ = 2.0;
-            this->state_.num_spikes_++;
+                this->state_.membrane_potential_ = 2.0;
+                this->state_.num_spikes_++;
 
-            unsigned int ts = received_event.timestamp() + this->refractory_period_;
+                unsigned int ts = received_event.timestamp() + this->refractory_period_;
 
-            /* Send the refractory self-event with receive time = ts */
-            response_events.emplace_back(new Spike {this->name_, ts});
+                /* Send the refractory self-event with receive time = ts */
+                response_events.emplace_back(new CellEvent {this->name_, SPIKE, ts});
 
-            /* Send spike events to all its connected neighbors with receive time = ts */
-            for (auto neighbor : this->neighbors_) {
-                response_events.emplace_back(new Spike {neighbor.first, ts});
+                /* Send spike events to all its connected neighbors with receive time = ts */
+                for (auto neighbor : this->state_.neighbors_) {
+                    response_events.emplace_back(new CellEvent {neighbor.first, SPIKE, ts});
+                }
             }
         }
+        break;
+
+    case UPDATE:
+        /* TODO: Fill in code for the weight-updating event */
+        break;
     }
     return response_events;
 }
@@ -130,7 +138,7 @@ int main(int argc, const char** argv) {
             /* Note: Negative weight indicates inhibitory neurons
                      Positive weight indicates excitatory neurons
              */
-            if ((row_index != col_index) && (weight > connection_threshold)) {
+            if (row_index != col_index) {
                 lps[row_index].addNeighbor(lps[col_index].name_, weight);
             }
             buffer = buffer.substr(pos+1);
