@@ -26,45 +26,46 @@ std::vector<std::shared_ptr<warped::Event> > Cell::receiveEvent(const warped::Ev
     auto received_event = static_cast<const CellEvent&>(event);
 
     switch (received_event.type()) {
-    case SPIKE:
-        /* Check whether it is a refractory self-event */
-        if (received_event.sender_name_ == received_event.receiverName()) {
+        case SPIKE: {
+            /* Check whether it is a refractory self-event */
+            if (received_event.sender_name_ == received_event.receiverName()) {
+                this->state_.membrane_potential_    = 0;
+                this->state_.latest_update_ts_      = received_event.timestamp();
 
-            this->state_.membrane_potential_    = 0;
-            this->state_.latest_update_ts_      = received_event.timestamp();
+            } else if (this->state_.membrane_potential_ < 1.0) {
+                /* Check if the neuron is responsive */
+                /* IntFire1 : Basic Integrate and Fire Model */
+                auto it = this->state_.neighbors_.find(event.sender_name_);
+                assert(it != this->state_.neighbors_.end());
 
-        } else if (this->state_.membrane_potential_ < 1.0) { /* Check if the neuron is responsive */
+                double delta_t = received_event.timestamp() - this->state_.latest_update_ts_;
+                this->state_.membrane_potential_ *= exp(-delta_t/membrane_time_const_);
+                this->state_.membrane_potential_ += it->second;
+                this->state_.latest_update_ts_ = received_event.timestamp();
 
-            /* IntFire1 : Basic Integrate and Fire Model */
-            auto it = this->state_.neighbors_.find(event.sender_name_);
-            assert(it != this->state_.neighbors_.end());
+                if (this->state_.membrane_potential_ >= 1.0) {
+                    this->state_.membrane_potential_ = 2.0;
+                    this->state_.num_spikes_++;
 
-            double delta_t = received_event.timestamp() - this->state_.latest_update_ts_;
-            this->state_.membrane_potential_ *= exp(-delta_t/membrane_time_const_);
-            this->state_.membrane_potential_ += it->second;
-            this->state_.latest_update_ts_ = received_event.timestamp();
+                    unsigned int ts = received_event.timestamp() + this->refractory_period_;
 
-            if (this->state_.membrane_potential_ >= 1.0) {
+                    /* Send the refractory self-event with receive time = ts */
+                    response_events.emplace_back(new CellEvent {this->name_, SPIKE, ts});
 
-                this->state_.membrane_potential_ = 2.0;
-                this->state_.num_spikes_++;
-
-                unsigned int ts = received_event.timestamp() + this->refractory_period_;
-
-                /* Send the refractory self-event with receive time = ts */
-                response_events.emplace_back(new CellEvent {this->name_, SPIKE, ts});
-
-                /* Send spike events to all its connected neighbors with receive time = ts */
-                for (auto neighbor : this->state_.neighbors_) {
-                    response_events.emplace_back(new CellEvent {neighbor.first, SPIKE, ts});
+                    /* Send spike events to all its connected neighbors with receive time = ts */
+                    for (auto neighbor : this->state_.neighbors_) {
+                        response_events.emplace_back(new CellEvent {neighbor.first, SPIKE, ts});
+                    }
                 }
             }
-        }
-        break;
+        } break;
 
-    case UPDATE:
-        /* TODO: Fill in code for the weight-updating event */
-        break;
+        case UPDATE_WEIGHT: {
+            /* TODO: Fill in code for the weight-updating event */
+
+        } break;
+
+        default: { assert(0); }
     }
     return response_events;
 }

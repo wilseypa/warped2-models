@@ -22,7 +22,7 @@ WARPED_DEFINE_LP_STATE_STRUCT(CellState) {
 enum cell_event_t {
 
     SPIKE,
-    UPDATE
+    UPDATE_WEIGHT
 };
 
 class CellEvent : public warped::Event {
