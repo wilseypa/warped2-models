@@ -18,8 +18,8 @@ dnl Check for libwarped
 m4_include([m4/check_lib_warped.m4])
 CHECK_LIB_WARPED
 
-m4_include([m4/check_enable_tcmalloc.m4])
-CHECK_ENABLE_TCMALLOC
+m4_include([m4/check_lib_tcmalloc.m4])
+CHECK_LIB_TCMALLOC
 
 CXXFLAGS="$CXXFLAGS -Wall -Wextra -pedantic -Werror"
 
