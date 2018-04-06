@@ -50,6 +50,74 @@ function bagProfile {
     cd ../../scripts/
 }
 
+# Run simulations for bag scheduling
+# bagRun    <testCycles> <timeoutPeriod> <model> <modelCmd> <maxSimTime>
+#           <workerThreads> <static_bag_window_size> <frac_bag_window>
+#           <gvtMethod> <gvtPeriod> <stateSavePeriod> <partitioningFile>
+function bagRun {
+    testCycles=$1
+    timeoutPeriod=$2
+    model=$3
+    modelCmd=$4
+    maxSimTime=$5
+    workerThreads=$6
+    staticBagWindowSize=$7
+    fracBagWindow=$8
+    gvtMethod=$9
+    gvtPeriod=$10
+    stateSavePeriod=$11
+    partitioningFile=$12
+
+    logFile="logs/bags.csv"
+
+    if [-e $logFile]
+    then
+        echo -e "Data will now be recorded in $logFile"
+    else
+        echo -e "New logfile $logFile created"
+        header="Model,ModelCommand,MaxSimTime,WorkerThreadCount,StaticBagWindowSize,\
+                FracBagWindow,GVTmethod,GVTperiod,StateSavePeriod,Runtime,NumObjects,\
+                NumPartitions,LocalPositiveEventsSent,RemotePositiveEventsSent,\
+                LocalNegativeEventsSent,RemoteNegativeEventsSent,PrimaryRollbacks,\
+                SecondaryRollbacks,CoastForwardedEvents,CancelledEvents,EventsProcessed,\
+                EventsCommitted,AvgMaxMemory"
+        echo $header > $logFile
+    fi
+
+    for iteration in {1..$testCycles}
+    do
+        cd ../models/$model/
+        outMsg="\n($iteration/$testCycles) $modelCmd : $workerThreads threads, \
+                bags-$partitioningFile, static bag window size: $staticBagWindowSize, \
+                fraction of bag window: $fracBagWindow, GVT: $gvtMethod-$gvtPeriod, \
+                state saving period: $stateSavePeriod, max sim time: $maxSimTime"
+        echo -e $outMsg
+        tmpFile=`tempfile`
+        runCommand="$modelCmd \
+                    --max-sim-time $maxSimTime \
+                    --time-warp-worker-threads $workerThreads \
+                    --time-warp-gvt-calculation-method $gvtMethod \
+                    --time-warp-gvt-calculation-period $gvtPeriod  \
+                    --time-warp-state-saving-period $stateSavePeriod \
+                    --time-warp-partitioning-file $partitioningFile \
+                    --time-warp-statistics-file $tmpFile"
+
+        timeout $timeoutPeriod bash -c "$runCommand" | grep -e "Simulation completed in " -e "Type of Schedule queue: "
+
+        # Parse stats
+        statsRaw=`cat $tmpFile | grep "Total,"`
+        statsRefined=`echo $statsRaw | sed -e 's/Total,//g' -e 's/\t//g' -e 's/ //g'`
+
+        rm $tmpFile
+        cd ../../scripts/
+
+        # Write to log file
+        echo "$model,$modelCmd,$maxSimTime,$workerThreads,$staticBagWindowSize,\
+                $fracBagWindow,$gvtMethod,$gvtPeriod,$stateSavePeriod,$statsRefined" >> $logFile
+        sleep 10
+    done
+}
+
 # Run simulations for chain scheduling
 # chainRun  <testCycles> <timeoutPeriod> <model> <modelCmd>
 #           <maxSimTime> <workerThreads> <scheduleQType>
@@ -78,7 +146,7 @@ function chainRun {
     else
         echo -e "New logfile $logFile created"
         header="Model,ModelCommand,MaxSimTime,WorkerThreadCount,ScheduleQType,ScheduleQCount,\
-                ChainSize,isLPmigrationON,GVTmethod,GVTperiod,Runtime,NumObjects,\
+                ChainSize,isLPmigrationON,GVTmethod,GVTperiod,StateSavePeriod,Runtime,NumObjects,\
                 LocalPositiveEventsSent,RemotePositiveEventsSent,LocalNegativeEventsSent,\
                 RemoteNegativeEventsSent,PrimaryRollbacks,SecondaryRollbacks,\
                 CoastForwardedEvents,CancelledEvents,EventsProcessed,EventsCommitted,AvgMaxMemory"
@@ -150,7 +218,7 @@ function blockRun {
     else
         echo -e "New logfile $logFile created"
         header="Model,ModelCommand,MaxSimTime,WorkerThreadCount,ScheduleQType,ScheduleQCount,\
-                BlockSize,isLPmigrationON,GVTmethod,GVTperiod,Runtime,NumObjects,\
+                BlockSize,isLPmigrationON,GVTmethod,GVTperiod,StateSavePeriod,Runtime,NumObjects,\
                 LocalPositiveEventsSent,RemotePositiveEventsSent,LocalNegativeEventsSent,\
                 RemoteNegativeEventsSent,PrimaryRollbacks,SecondaryRollbacks,\
                 CoastForwardedEvents,CancelledEvents,EventsProcessed,EventsCommitted,AvgMaxMemory"
