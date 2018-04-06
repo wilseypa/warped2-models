@@ -16,20 +16,22 @@ function build {
     mpiLibraryPath=$4
     additionalFlags=$5
 
-    echo -e "\nInstalling WARPED-2:$gitBranch with additional flags $additionalFlags"
+    echo -e "\n\nInstalling WARPED2:$gitBranch with additional flags $additionalFlags\n\n"
 
     cd $rootPath/warped2/
     git checkout $gitBranch
     autoreconf -i
     ./configure --with-mpi-includedir=$mpiIncludePath \
         --with-mpi-libdir=$mpiLibraryPath --prefix=$rootPath/installation/ $additionalFlags
-    make
+    make clean all
     make install
+
+    echo -e "\n\nBuilding WARPED2-MODELS\n\n"
 
     cd $rootPath/warped2-models/
     autoreconf -i
     ./configure --with-warped=$rootPath/installation/
-    make
+    make clean all
 
     cd $rootPath/warped2-models/scripts/
 }
@@ -64,34 +66,38 @@ function bagRun {
     staticBagWindowSize=$7
     fracBagWindow=$8
     gvtMethod=$9
-    gvtPeriod=$10
-    stateSavePeriod=$11
-    partitioningFile=$12
+    gvtPeriod=${10}
+    stateSavePeriod=${11}
+    partitioningFile=${12}
 
     logFile="logs/bags.csv"
 
-    if [-e $logFile]
+    header="Model,ModelCommand,MaxSimTime,WorkerThreadCount,StaticBagWindowSize,\
+            FracBagWindow,GVTmethod,GVTperiod,StateSavePeriod,Runtime,NumObjects,\
+            NumPartitions,LocalPositiveEventsSent,RemotePositiveEventsSent,\
+            LocalNegativeEventsSent,RemoteNegativeEventsSent,PrimaryRollbacks,\
+            SecondaryRollbacks,CoastForwardedEvents,CancelledEvents,EventsProcessed,\
+            EventsCommitted,AvgMaxMemory"
+
+    headerRefined=`echo $header | sed -e 's/\t//g' -e 's/ //g'`
+
+    if grep --quiet --no-messages $headerRefined $logFile
     then
-        echo -e "Data will now be recorded in $logFile"
+        echo -e "\nData will now be recorded in $logFile"
     else
-        echo -e "New logfile $logFile created"
-        header="Model,ModelCommand,MaxSimTime,WorkerThreadCount,StaticBagWindowSize,\
-                FracBagWindow,GVTmethod,GVTperiod,StateSavePeriod,Runtime,NumObjects,\
-                NumPartitions,LocalPositiveEventsSent,RemotePositiveEventsSent,\
-                LocalNegativeEventsSent,RemoteNegativeEventsSent,PrimaryRollbacks,\
-                SecondaryRollbacks,CoastForwardedEvents,CancelledEvents,EventsProcessed,\
-                EventsCommitted,AvgMaxMemory"
-        echo $header > $logFile
+        echo -e "\nNew logfile $logFile created"
+        echo $headerRefined >> $logFile
     fi
 
-    for iteration in {1..$testCycles}
+    for ((iteration=1; iteration <= $testCycles; iteration++))
     do
         cd ../models/$model/
-        outMsg="\n($iteration/$testCycles) $modelCmd : $workerThreads threads, \
+        outMsg="\n($iteration/testCycles) $modelCmd : $workerThreads threads, \
                 bags-$partitioningFile, static bag window size: $staticBagWindowSize, \
                 fraction of bag window: $fracBagWindow, GVT: $gvtMethod-$gvtPeriod, \
                 state saving period: $stateSavePeriod, max sim time: $maxSimTime"
         echo -e $outMsg
+
         tmpFile=`tempfile`
         runCommand="$modelCmd \
                     --max-sim-time $maxSimTime \
@@ -104,16 +110,16 @@ function bagRun {
 
         timeout $timeoutPeriod bash -c "$runCommand" | grep -e "Simulation completed in "
 
-        # Parse stats
         statsRaw=`cat $tmpFile | grep "Total,"`
-        statsRefined=`echo $statsRaw | sed -e 's/Total,//g' -e 's/\t//g' -e 's/ //g'`
-
         rm $tmpFile
         cd ../../scripts/
 
+        # Parse stats
         # Write to log file
-        echo "$model,$modelCmd,$maxSimTime,$workerThreads,$staticBagWindowSize,\
-                $fracBagWindow,$gvtMethod,$gvtPeriod,$stateSavePeriod,$statsRefined" >> $logFile
+        totalStats="$model,$modelCmd,$maxSimTime,$workerThreads,$staticBagWindowSize,\
+                    $fracBagWindow,$gvtMethod,$gvtPeriod,$stateSavePeriod,$statsRaw"
+        statsRefined=`echo $totalStats | sed -e 's/Total,//g' -e 's/\t//g' -e 's/ //g'`
+        echo $statsRefined >> $logFile
         sleep 10
     done
 }
@@ -133,27 +139,30 @@ function chainRun {
     scheduleQType=$7
     scheduleQCount=$8
     chainSize=$9
-    isLpMigrationOn=$10
-    gvtMethod=$11
-    gvtPeriod=$12
-    stateSavePeriod=$13
+    isLpMigrationOn=${10}
+    gvtMethod=${11}
+    gvtPeriod=${12}
+    stateSavePeriod=${13}
 
     logFile="logs/chains.csv"
 
-    if [-e $logFile]
+    header="Model,ModelCommand,MaxSimTime,WorkerThreadCount,ScheduleQType,ScheduleQCount,\
+            ChainSize,isLPmigrationON,GVTmethod,GVTperiod,StateSavePeriod,Runtime,NumObjects,\
+            LocalPositiveEventsSent,RemotePositiveEventsSent,LocalNegativeEventsSent,\
+            RemoteNegativeEventsSent,PrimaryRollbacks,SecondaryRollbacks,\
+            CoastForwardedEvents,CancelledEvents,EventsProcessed,EventsCommitted,AvgMaxMemory"
+
+    headerRefined=`echo $header | sed -e 's/\t//g' -e 's/ //g'`
+
+    if grep --quiet --no-messages $headerRefined $logFile
     then
-        echo -e "Data will now be recorded in $logFile"
+        echo -e "\nData will now be recorded in $logFile"
     else
-        echo -e "New logfile $logFile created"
-        header="Model,ModelCommand,MaxSimTime,WorkerThreadCount,ScheduleQType,ScheduleQCount,\
-                ChainSize,isLPmigrationON,GVTmethod,GVTperiod,StateSavePeriod,Runtime,NumObjects,\
-                LocalPositiveEventsSent,RemotePositiveEventsSent,LocalNegativeEventsSent,\
-                RemoteNegativeEventsSent,PrimaryRollbacks,SecondaryRollbacks,\
-                CoastForwardedEvents,CancelledEvents,EventsProcessed,EventsCommitted,AvgMaxMemory"
-        echo $header > $logFile
+        echo -e "\nNew logfile $logFile created"
+        echo $headerRefined >> $logFile
     fi
 
-    for iteration in {1..$testCycles}
+    for ((iteration=1; iteration <= $testCycles; iteration++))
     do
         cd ../models/$model/
         outMsg="\n($iteration/$testCycles) $modelCmd : $workerThreads threads, \
@@ -161,6 +170,7 @@ function chainRun {
                 is LP migration on: $isLpMigrationOn, GVT: $gvtMethod-$gvtPeriod, \
                 state saving period: $stateSavePeriod, max sim time: $maxSimTime"
         echo -e $outMsg
+
         tmpFile=`tempfile`
         runCommand="$modelCmd \
                     --max-sim-time $maxSimTime \
@@ -175,17 +185,17 @@ function chainRun {
 
         timeout $timeoutPeriod bash -c "$runCommand" | grep -e "Simulation completed in " -e "Type of Schedule queue: "
 
-        # Parse stats
         statsRaw=`cat $tmpFile | grep "Total,"`
-        statsRefined=`echo $statsRaw | sed -e 's/Total,//g' -e 's/\t//g' -e 's/ //g'`
-
         rm $tmpFile
         cd ../../scripts/
 
+        # Parse stats
         # Write to log file
-        echo "$model,$modelCmd,$maxSimTime,$workerThreads,$scheduleQType,\
-                $scheduleQCount,$chainSize,$isLpMigrationOn,$gvtMethod,\
-                $gvtPeriod,$stateSavePeriod,$statsRefined" >> $logFile
+        totalStats="$model,$modelCmd,$maxSimTime,$workerThreads,$scheduleQType,\
+                    $scheduleQCount,$chainSize,$isLpMigrationOn,$gvtMethod,\
+                    $gvtPeriod,$stateSavePeriod,$statsRaw"
+        statsRefined=`echo $totalStats | sed -e 's/Total,//g' -e 's/\t//g' -e 's/ //g'`
+        echo $statsRefined >> $logFile
         sleep 10
     done
 }
@@ -205,27 +215,30 @@ function blockRun {
     scheduleQType=$7
     scheduleQCount=$8
     blockSize=$9
-    isLpMigrationOn=$10
-    gvtMethod=$11
-    gvtPeriod=$12
-    stateSavePeriod=$13
+    isLpMigrationOn=${10}
+    gvtMethod=${11}
+    gvtPeriod=${12}
+    stateSavePeriod=${13}
 
     logFile="logs/blocks.csv"
 
-    if [-e $logFile]
+    header="Model,ModelCommand,MaxSimTime,WorkerThreadCount,ScheduleQType,ScheduleQCount,\
+            BlockSize,isLPmigrationON,GVTmethod,GVTperiod,StateSavePeriod,Runtime,NumObjects,\
+            LocalPositiveEventsSent,RemotePositiveEventsSent,LocalNegativeEventsSent,\
+            RemoteNegativeEventsSent,PrimaryRollbacks,SecondaryRollbacks,\
+            CoastForwardedEvents,CancelledEvents,EventsProcessed,EventsCommitted,AvgMaxMemory"
+
+    headerRefined=`echo $header | sed -e 's/\t//g' -e 's/ //g'`
+
+    if grep --quiet --no-messages $headerRefined $logFile
     then
-        echo -e "Data will now be recorded in $logFile"
+        echo -e "\nData will now be recorded in $logFile"
     else
-        echo -e "New logfile $logFile created"
-        header="Model,ModelCommand,MaxSimTime,WorkerThreadCount,ScheduleQType,ScheduleQCount,\
-                BlockSize,isLPmigrationON,GVTmethod,GVTperiod,StateSavePeriod,Runtime,NumObjects,\
-                LocalPositiveEventsSent,RemotePositiveEventsSent,LocalNegativeEventsSent,\
-                RemoteNegativeEventsSent,PrimaryRollbacks,SecondaryRollbacks,\
-                CoastForwardedEvents,CancelledEvents,EventsProcessed,EventsCommitted,AvgMaxMemory"
-        echo $header > $logFile
+        echo -e "\nNew logfile $logFile created"
+        echo $headerRefined >> $logFile
     fi
 
-    for iteration in {1..$testCycles}
+    for ((iteration=1; iteration <= $testCycles; iteration++))
     do
         cd ../models/$model/
         outMsg="\n($iteration/$testCycles) $modelCmd : $workerThreads threads, \
@@ -233,6 +246,7 @@ function blockRun {
                 is LP migration on: $isLpMigrationOn, GVT: $gvtMethod-$gvtPeriod, \
                 state saving period: $stateSavePeriod, max sim time: $maxSimTime"
         echo -e $outMsg
+
         tmpFile=`tempfile`
         runCommand="$modelCmd \
                     --max-sim-time $maxSimTime \
@@ -247,17 +261,17 @@ function blockRun {
 
         timeout $timeoutPeriod bash -c "$runCommand" | grep -e "Simulation completed in " -e "Type of Schedule queue: "
 
-        # Parse stats
         statsRaw=`cat $tmpFile | grep "Total,"`
-        statsRefined=`echo $statsRaw | sed -e 's/Total,//g' -e 's/\t//g' -e 's/ //g'`
-
         rm $tmpFile
         cd ../../scripts/
 
+        # Parse stats
         # Write to log file
-        echo "$model,$modelCmd,$maxSimTime,$workerThreads,$scheduleQType,\
-                $scheduleQCount,$blockSize,$isLpMigrationOn,$gvtMethod,\
-                $gvtPeriod,$stateSavePeriod,$statsRefined" >> $logFile
+        totalStats="$model,$modelCmd,$maxSimTime,$workerThreads,$scheduleQType,\
+                    $scheduleQCount,$blockSize,$isLpMigrationOn,$gvtMethod,\
+                    $gvtPeriod,$stateSavePeriod,$statsRaw"
+        statsRefined=`echo $totalStats | sed -e 's/Total,//g' -e 's/\t//g' -e 's/ //g'`
+        echo $statsRefined >> $logFile
         sleep 10
     done
 }
@@ -277,26 +291,29 @@ function scheduleQRun {
     scheduleQType=$7
     scheduleQCount=$8
     isLpMigrationOn=$9
-    gvtMethod=$10
-    gvtPeriod=$11
-    stateSavePeriod=$12
+    gvtMethod=${10}
+    gvtPeriod=${11}
+    stateSavePeriod=${12}
 
     logFile="logs/scheduleq.csv"
 
-    if [-e $logFile]
+    header="Model,ModelCommand,MaxSimTime,WorkerThreadCount,ScheduleQType,ScheduleQCount,\
+            isLPmigrationON,GVTmethod,GVTperiod,StateSavePeriod,Runtime,NumObjects,\
+            LocalPositiveEventsSent,RemotePositiveEventsSent,LocalNegativeEventsSent,\
+            RemoteNegativeEventsSent,PrimaryRollbacks,SecondaryRollbacks,\
+            CoastForwardedEvents,CancelledEvents,EventsProcessed,EventsCommitted,AvgMaxMemory"
+
+    headerRefined=`echo $header | sed -e 's/\t//g' -e 's/ //g'`
+
+    if grep --quiet --no-messages $headerRefined $logFile
     then
-        echo -e "Data will now be recorded in $logFile"
+        echo -e "\nData will now be recorded in $logFile"
     else
-        echo -e "New logfile $logFile created"
-        header="Model,ModelCommand,MaxSimTime,WorkerThreadCount,ScheduleQType,ScheduleQCount,\
-                isLPmigrationON,GVTmethod,GVTperiod,StateSavePeriod,Runtime,NumObjects,\
-                LocalPositiveEventsSent,RemotePositiveEventsSent,LocalNegativeEventsSent,\
-                RemoteNegativeEventsSent,PrimaryRollbacks,SecondaryRollbacks,\
-                CoastForwardedEvents,CancelledEvents,EventsProcessed,EventsCommitted,AvgMaxMemory"
-        echo $header > $logFile
+        echo -e "\nNew logfile $logFile created"
+        echo $headerRefined >> $logFile
     fi
 
-    for iteration in {1..$testCycles}
+    for ((iteration=1; iteration <= $testCycles; iteration++))
     do
         cd ../models/$model/
         outMsg="\n($iteration/$testCycles) $modelCmd : $workerThreads threads, \
@@ -304,6 +321,7 @@ function scheduleQRun {
                 GVT: $gvtMethod-$gvtPeriod, state saving period: $stateSavePeriod, \
                 max sim time: $maxSimTime"
         echo -e $outMsg
+
         tmpFile=`tempfile`
         runCommand="$modelCmd \
                     --max-sim-time $maxSimTime \
@@ -317,17 +335,17 @@ function scheduleQRun {
 
         timeout $timeoutPeriod bash -c "$runCommand" | grep -e "Simulation completed in " -e "Type of Schedule queue: "
 
-        # Parse stats
         statsRaw=`cat $tmpFile | grep "Total,"`
-        statsRefined=`echo $statsRaw | sed -e 's/Total,//g' -e 's/\t//g' -e 's/ //g'`
-
         rm $tmpFile
         cd ../../scripts/
 
+        # Parse stats
         # Write to log file
-        echo "$model,$modelCmd,$maxSimTime,$workerThreads,$scheduleQType,\
-                $scheduleQCount,$isLpMigrationOn,$gvtMethod,$gvtPeriod,\
-                $stateSavePeriod,$statsRefined" >> $logFile
+        totalStats="$model,$modelCmd,$maxSimTime,$workerThreads,$scheduleQType,\
+                    $scheduleQCount,$isLpMigrationOn,$gvtMethod,$gvtPeriod,\
+                    $stateSavePeriod,$statsRaw"
+        statsRefined=`echo $totalStats | sed -e 's/Total,//g' -e 's/\t//g' -e 's/ //g'`
+        echo $statsRefined >> $logFile
         sleep 10
     done
 }
