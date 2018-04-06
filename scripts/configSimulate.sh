@@ -16,22 +16,30 @@ function build {
     mpiLibraryPath=$4
     additionalFlags=$5
 
-    echo -e "\n\nInstalling WARPED2:$gitBranch with additional flags $additionalFlags\n\n"
+    garbageSearch="cincinnati"
+
+    echo -e "\nInstalling WARPED2:$gitBranch"
+    if [ -n $additionalFlags ]
+    then
+        echo -e " with additional flags `$additionalFlags`"
+    fi
+    echo -e "\n"
 
     cd $rootPath/warped2/
     git checkout $gitBranch
-    autoreconf -i
+    autoreconf -i | grep $garbageSearch
     ./configure --with-mpi-includedir=$mpiIncludePath \
-        --with-mpi-libdir=$mpiLibraryPath --prefix=$rootPath/installation/ $additionalFlags
-    make clean all
-    make install
+        --with-mpi-libdir=$mpiLibraryPath --prefix=$rootPath/installation/ \
+        $additionalFlags | grep $garbageSearch
+    make -s clean all | grep $garbageSearch
+    make install | grep $garbageSearch
 
-    echo -e "\n\nBuilding WARPED2-MODELS\n\n"
+    echo -e "\nBuilding WARPED2-MODELS\n"
 
     cd $rootPath/warped2-models/
-    autoreconf -i
-    ./configure --with-warped=$rootPath/installation/
-    make clean all
+    autoreconf -i | grep $garbageSearch
+    ./configure --with-warped=$rootPath/installation/ | grep $garbageSearch
+    make -s clean all | grep $garbageSearch
 
     cd $rootPath/warped2-models/scripts/
 }
@@ -92,7 +100,7 @@ function bagRun {
     for ((iteration=1; iteration <= $testCycles; iteration++))
     do
         cd ../models/$model/
-        outMsg="\n($iteration/testCycles) $modelCmd : $workerThreads threads, \
+        outMsg="\n($iteration/$testCycles) $modelCmd : $workerThreads threads, \
                 bags-$partitioningFile, static bag window size: $staticBagWindowSize, \
                 fraction of bag window: $fracBagWindow, GVT: $gvtMethod-$gvtPeriod, \
                 state saving period: $stateSavePeriod, max sim time: $maxSimTime"
