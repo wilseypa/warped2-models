@@ -18,12 +18,12 @@ function build {
 
     garbageSearch="cincinnati"
 
-    echo -e "\nInstalling WARPED2:$gitBranch"
-    if [ -n $additionalFlags ]
+    if [ "$additionalFlags" != "" ]
     then
-        echo -e " with additional flags `$additionalFlags`"
+        echo -e "Installing WARPED2:$gitBranch with additional flag(s) $additionalFlags"
+    else
+        echo -e "Installing WARPED2:$gitBranch"
     fi
-    echo -e "\n"
 
     cd $rootPath/warped2/
     git checkout $gitBranch
@@ -34,7 +34,7 @@ function build {
     make -s clean all | grep $garbageSearch
     make install | grep $garbageSearch
 
-    echo -e "\nBuilding WARPED2-MODELS\n"
+    echo -e "Building WARPED2-MODELS"
 
     cd $rootPath/warped2-models/
     autoreconf -i | grep $garbageSearch
@@ -134,9 +134,9 @@ function bagRun {
 
 # Run simulations for chain scheduling
 # chainRun  <testCycles> <timeoutPeriod> <model> <modelCmd>
-#           <maxSimTime> <workerThreads> <scheduleQType>
-#           <scheduleQCount> <chainSize> <isLpMigrationOn>
-#           <gvtMethod> <gvtPeriod> <stateSavePeriod>
+#           <maxSimTime> <workerThreads> <scheduleQCount>
+#           <chainSize> <isLpMigrationOn> <gvtMethod>
+#           <gvtPeriod> <stateSavePeriod>
 function chainRun {
     testCycles=$1
     timeoutPeriod=$2
@@ -144,21 +144,20 @@ function chainRun {
     modelCmd=$4
     maxSimTime=$5
     workerThreads=$6
-    scheduleQType=$7
-    scheduleQCount=$8
-    chainSize=$9
-    isLpMigrationOn=${10}
-    gvtMethod=${11}
-    gvtPeriod=${12}
-    stateSavePeriod=${13}
+    scheduleQCount=$7
+    chainSize=$8
+    isLpMigrationOn=$9
+    gvtMethod=${10}
+    gvtPeriod=${11}
+    stateSavePeriod=${12}
 
     logFile="logs/chains.csv"
 
-    header="Model,ModelCommand,MaxSimTime,WorkerThreadCount,ScheduleQType,ScheduleQCount,\
-            ChainSize,isLPmigrationON,GVTmethod,GVTperiod,StateSavePeriod,Runtime,NumObjects,\
+    header="Model,ModelCommand,MaxSimTime,WorkerThreadCount,ScheduleQCount,ChainSize,\
+            isLPmigrationON,GVTmethod,GVTperiod,StateSavePeriod,Runtime,NumObjects,\
             LocalPositiveEventsSent,RemotePositiveEventsSent,LocalNegativeEventsSent,\
-            RemoteNegativeEventsSent,PrimaryRollbacks,SecondaryRollbacks,\
-            CoastForwardedEvents,CancelledEvents,EventsProcessed,EventsCommitted,AvgMaxMemory"
+            RemoteNegativeEventsSent,PrimaryRollbacks,SecondaryRollbacks,CoastForwardedEvents,\
+            CancelledEvents,EventsProcessed,EventsCommitted,AvgMaxMemory"
 
     headerRefined=`echo $header | sed -e 's/\t//g' -e 's/ //g'`
 
@@ -210,9 +209,9 @@ function chainRun {
 
 # Run simulations for block scheduling
 # blockRun  <testCycles> <timeoutPeriod> <model> <modelCmd>
-#           <maxSimTime> <workerThreads> <scheduleQType>
-#           <scheduleQCount> <blockSize> <isLpMigrationOn>
-#           <gvtMethod> <gvtPeriod> <stateSavePeriod>
+#           <maxSimTime> <workerThreads> <scheduleQCount>
+#           <blockSize> <isLpMigrationOn> <gvtMethod>
+#           <gvtPeriod> <stateSavePeriod>
 function blockRun {
     testCycles=$1
     timeoutPeriod=$2
@@ -220,21 +219,20 @@ function blockRun {
     modelCmd=$4
     maxSimTime=$5
     workerThreads=$6
-    scheduleQType=$7
-    scheduleQCount=$8
-    blockSize=$9
-    isLpMigrationOn=${10}
-    gvtMethod=${11}
-    gvtPeriod=${12}
-    stateSavePeriod=${13}
+    scheduleQCount=$7
+    blockSize=$8
+    isLpMigrationOn=$9
+    gvtMethod=${10}
+    gvtPeriod=${11}
+    stateSavePeriod=${12}
 
     logFile="logs/blocks.csv"
 
-    header="Model,ModelCommand,MaxSimTime,WorkerThreadCount,ScheduleQType,ScheduleQCount,\
-            BlockSize,isLPmigrationON,GVTmethod,GVTperiod,StateSavePeriod,Runtime,NumObjects,\
+    header="Model,ModelCommand,MaxSimTime,WorkerThreadCount,ScheduleQCount,BlockSize,\
+            isLPmigrationON,GVTmethod,GVTperiod,StateSavePeriod,Runtime,NumObjects,\
             LocalPositiveEventsSent,RemotePositiveEventsSent,LocalNegativeEventsSent,\
-            RemoteNegativeEventsSent,PrimaryRollbacks,SecondaryRollbacks,\
-            CoastForwardedEvents,CancelledEvents,EventsProcessed,EventsCommitted,AvgMaxMemory"
+            RemoteNegativeEventsSent,PrimaryRollbacks,SecondaryRollbacks,CoastForwardedEvents,\
+            CancelledEvents,EventsProcessed,EventsCommitted,AvgMaxMemory"
 
     headerRefined=`echo $header | sed -e 's/\t//g' -e 's/ //g'`
 
@@ -267,7 +265,7 @@ function blockRun {
                     --time-warp-state-saving-period $stateSavePeriod \
                     --time-warp-statistics-file $tmpFile"
 
-        timeout $timeoutPeriod bash -c "$runCommand" | grep -e "Simulation completed in " -e "Type of Schedule queue: "
+        timeout $timeoutPeriod bash -c "$runCommand" | grep -e "Simulation completed in "
 
         statsRaw=`cat $tmpFile | grep "Total,"`
         rm $tmpFile
@@ -275,9 +273,8 @@ function blockRun {
 
         # Parse stats
         # Write to log file
-        totalStats="$model,$modelCmd,$maxSimTime,$workerThreads,$scheduleQType,\
-                    $scheduleQCount,$blockSize,$isLpMigrationOn,$gvtMethod,\
-                    $gvtPeriod,$stateSavePeriod,$statsRaw"
+        totalStats="$model,$modelCmd,$maxSimTime,$workerThreads,$scheduleQCount,$blockSize,\
+                    $isLpMigrationOn,$gvtMethod,$gvtPeriod,$stateSavePeriod,$statsRaw"
         statsRefined=`echo $totalStats | sed -e 's/Total,//g' -e 's/\t//g' -e 's/ //g'`
         echo $statsRefined >> $logFile
         sleep 10
