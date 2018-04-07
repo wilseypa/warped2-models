@@ -113,6 +113,7 @@ function bagRun {
                     --time-warp-gvt-calculation-method $gvtMethod \
                     --time-warp-gvt-calculation-period $gvtPeriod  \
                     --time-warp-state-saving-period $stateSavePeriod \
+                    --time-warp-partitioning-type profile-guided \
                     --time-warp-partitioning-file $partitioningFile \
                     --time-warp-statistics-file $tmpFile"
 
