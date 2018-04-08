@@ -20,9 +20,9 @@ function build {
 
     if [ "$additionalFlags" != "" ]
     then
-        echo -e "Installing WARPED2:$gitBranch with additional flag(s) $additionalFlags"
+        echo -e "\nInstalling WARPED2:$gitBranch with additional flag(s) $additionalFlags"
     else
-        echo -e "Installing WARPED2:$gitBranch"
+        echo -e "\nInstalling WARPED2:$gitBranch"
     fi
 
     cd $rootPath/warped2/
