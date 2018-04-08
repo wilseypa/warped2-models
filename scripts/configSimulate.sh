@@ -42,6 +42,7 @@ function build {
     make -s clean all | grep $garbageSearch
 
     cd $rootPath/warped2-models/scripts/
+    sleep 10
 }
 
 # Create the Louvain partition profile for bags
@@ -58,6 +59,7 @@ function bagProfile {
             --sequential-statistics-type "louvain" --sequential-statistics-file $fileName
 
     cd ../../scripts/
+    sleep 10
 }
 
 # Run simulations for bag scheduling
@@ -123,12 +125,22 @@ function bagRun {
         rm $tmpFile
         cd ../../scripts/
 
-        # Parse stats
-        # Write to log file
-        totalStats="$model,$modelCmd,$maxSimTime,$workerThreads,$staticBagWindowSize,\
-                    $fracBagWindow,$gvtMethod,$gvtPeriod,$stateSavePeriod,$statsRaw"
-        statsRefined=`echo $totalStats | sed -e 's/Total,//g' -e 's/\t//g' -e 's/ //g'`
-        echo $statsRefined >> $logFile
+        if [ "$statsRaw" != "" ]
+        then
+            # Parse stats
+            # Write to log file
+            totalStats="$model,$modelCmd,$maxSimTime,$workerThreads,$staticBagWindowSize,\
+                        $fracBagWindow,$gvtMethod,$gvtPeriod,$stateSavePeriod,$statsRaw"
+            statsRefined=`echo $totalStats | sed -e 's/Total,//g' -e 's/\t//g' -e 's/ //g'`
+            echo $statsRefined >> $logFile
+        else
+            errMsg="bagRun 1 $timeoutPeriod $model \"$modelCmd\" $maxSimTime \
+                    $workerThreads $staticBagWindowSize $fracBagWindow $gvtMethod \
+                    $gvtPeriod $stateSavePeriod $partitioningFile"
+            errMsgRefined=`echo $errMsg | sed -e 's/\t//g'`
+            echo $errMsgRefined >> $errlogFile
+        fi
+
         sleep 10
     done
 }
@@ -197,13 +209,23 @@ function chainRun {
         rm $tmpFile
         cd ../../scripts/
 
-        # Parse stats
-        # Write to log file
-        totalStats="$model,$modelCmd,$maxSimTime,$workerThreads,$scheduleQType,\
-                    $scheduleQCount,$chainSize,$isLpMigrationOn,$gvtMethod,\
-                    $gvtPeriod,$stateSavePeriod,$statsRaw"
-        statsRefined=`echo $totalStats | sed -e 's/Total,//g' -e 's/\t//g' -e 's/ //g'`
-        echo $statsRefined >> $logFile
+        if [ "$statsRaw" != "" ]
+        then
+            # Parse stats
+            # Write to log file
+            totalStats="$model,$modelCmd,$maxSimTime,$workerThreads,$scheduleQType,\
+                        $scheduleQCount,$chainSize,$isLpMigrationOn,$gvtMethod,\
+                        $gvtPeriod,$stateSavePeriod,$statsRaw"
+            statsRefined=`echo $totalStats | sed -e 's/Total,//g' -e 's/\t//g' -e 's/ //g'`
+            echo $statsRefined >> $logFile
+        else
+            errMsg="chainRun 1 $timeoutPeriod $model \"$modelCmd\" $maxSimTime \
+                    $workerThreads $scheduleQCount $chainSize $isLpMigrationOn \
+                    $gvtMethod $gvtPeriod $stateSavePeriod"
+            errMsgRefined=`echo $errMsg | sed -e 's/\t//g'`
+            echo $errMsgRefined >> $errlogFile
+        fi
+
         sleep 10
     done
 }
@@ -272,12 +294,22 @@ function blockRun {
         rm $tmpFile
         cd ../../scripts/
 
-        # Parse stats
-        # Write to log file
-        totalStats="$model,$modelCmd,$maxSimTime,$workerThreads,$scheduleQCount,$blockSize,\
-                    $isLpMigrationOn,$gvtMethod,$gvtPeriod,$stateSavePeriod,$statsRaw"
-        statsRefined=`echo $totalStats | sed -e 's/Total,//g' -e 's/\t//g' -e 's/ //g'`
-        echo $statsRefined >> $logFile
+        if [ "$statsRaw" != "" ]
+        then
+            # Parse stats
+            # Write to log file
+            totalStats="$model,$modelCmd,$maxSimTime,$workerThreads,$scheduleQCount,$blockSize,\
+                        $isLpMigrationOn,$gvtMethod,$gvtPeriod,$stateSavePeriod,$statsRaw"
+            statsRefined=`echo $totalStats | sed -e 's/Total,//g' -e 's/\t//g' -e 's/ //g'`
+            echo $statsRefined >> $logFile
+        else
+            errMsg="blockRun 1 $timeoutPeriod $model \"$modelCmd\" $maxSimTime \
+                    $workerThreads $scheduleQCount $blockSize $isLpMigrationOn \
+                    $gvtMethod $gvtPeriod $stateSavePeriod"
+            errMsgRefined=`echo $errMsg | sed -e 's/\t//g'`
+            echo $errMsgRefined >> $errlogFile
+        fi
+
         sleep 10
     done
 }
@@ -345,16 +377,28 @@ function scheduleQRun {
         rm $tmpFile
         cd ../../scripts/
 
-        # Parse stats
-        # Write to log file
-        totalStats="$model,$modelCmd,$maxSimTime,$workerThreads,$scheduleQType,\
-                    $scheduleQCount,$isLpMigrationOn,$gvtMethod,$gvtPeriod,\
-                    $stateSavePeriod,$statsRaw"
-        statsRefined=`echo $totalStats | sed -e 's/Total,//g' -e 's/\t//g' -e 's/ //g'`
-        echo $statsRefined >> $logFile
+        if [ "$statsRaw" != "" ]
+        then
+            # Parse stats
+            # Write to log file
+            totalStats="$model,$modelCmd,$maxSimTime,$workerThreads,$scheduleQType,\
+                        $scheduleQCount,$isLpMigrationOn,$gvtMethod,$gvtPeriod,\
+                        $stateSavePeriod,$statsRaw"
+            statsRefined=`echo $totalStats | sed -e 's/Total,//g' -e 's/\t//g' -e 's/ //g'`
+            echo $statsRefined >> $logFile
+        else
+            errMsg="scheduleQRun 1 $timeoutPeriod $model \"$modelCmd\" $maxSimTime \
+                    $workerThreads \"$scheduleQType\" $scheduleQCount $isLpMigrationOn \
+                    $gvtMethod $gvtPeriod $stateSavePeriod"
+            errMsgRefined=`echo $errMsg | sed -e 's/\t//g'`
+            echo $errMsgRefined >> $errlogFile
+        fi
+
         sleep 10
     done
 }
+
+errlogFile="logs/errorlog.csv"
 
 trap control_c SIGINT
 
