@@ -174,7 +174,7 @@ function chainRun {
     do
         cd ../models/$model/
         outMsg="\n($iteration/$testCycles) $modelCmd : $workerThreads threads, \
-                $scheduleQCount $scheduleQType, chain size: $chainSize, \
+                $scheduleQCount schedule queue(s), chain size: $chainSize, \
                 is LP migration on: $isLpMigrationOn, GVT: $gvtMethod-$gvtPeriod, \
                 state saving period: $stateSavePeriod, max sim time: $maxSimTime"
         echo -e $outMsg
@@ -249,7 +249,7 @@ function blockRun {
     do
         cd ../models/$model/
         outMsg="\n($iteration/$testCycles) $modelCmd : $workerThreads threads, \
-                $scheduleQCount $scheduleQType, block size: $chainSize, \
+                $scheduleQCount schedule queue(s), block size: $chainSize, \
                 is LP migration on: $isLpMigrationOn, GVT: $gvtMethod-$gvtPeriod, \
                 state saving period: $stateSavePeriod, max sim time: $maxSimTime"
         echo -e $outMsg
