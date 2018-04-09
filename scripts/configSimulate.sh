@@ -196,11 +196,11 @@ function permuteConfigBag() {
 
 
 # Run simulations for chain scheduling
-# chainRun  <testCycles> <timeoutPeriod> <model> <modelCmd>
+# runChain  <testCycles> <timeoutPeriod> <model> <modelCmd>
 #           <maxSimTime> <workerThreads> <scheduleQCount>
 #           <chainSize> <isLpMigrationOn> <gvtMethod>
 #           <gvtPeriod> <stateSavePeriod>
-function chainRun {
+function runChain {
     testCycles=$1
     timeoutPeriod=$2
     model=$3
@@ -269,7 +269,7 @@ function chainRun {
             statsRefined=`echo $totalStats | sed -e 's/Total,//g' -e 's/\t//g' -e 's/ //g'`
             echo $statsRefined >> $logFile
         else
-            errMsg="chainRun 1 $timeoutPeriod $model \"$modelCmd\" $maxSimTime \
+            errMsg="runChain 1 $timeoutPeriod $model \"$modelCmd\" $maxSimTime \
                     $workerThreads $scheduleQCount $chainSize $isLpMigrationOn \
                     $gvtMethod $gvtPeriod $stateSavePeriod"
             errMsgRefined=`echo $errMsg | sed -e 's/\t//g'`
@@ -281,11 +281,11 @@ function chainRun {
 }
 
 # Run simulations for block scheduling
-# blockRun  <testCycles> <timeoutPeriod> <model> <modelCmd>
+# runBlock  <testCycles> <timeoutPeriod> <model> <modelCmd>
 #           <maxSimTime> <workerThreads> <scheduleQCount>
 #           <blockSize> <isLpMigrationOn> <gvtMethod>
 #           <gvtPeriod> <stateSavePeriod>
-function blockRun {
+function runBlock {
     testCycles=$1
     timeoutPeriod=$2
     model=$3
@@ -353,7 +353,7 @@ function blockRun {
             statsRefined=`echo $totalStats | sed -e 's/Total,//g' -e 's/\t//g' -e 's/ //g'`
             echo $statsRefined >> $logFile
         else
-            errMsg="blockRun 1 $timeoutPeriod $model \"$modelCmd\" $maxSimTime \
+            errMsg="runBlock 1 $timeoutPeriod $model \"$modelCmd\" $maxSimTime \
                     $workerThreads $scheduleQCount $blockSize $isLpMigrationOn \
                     $gvtMethod $gvtPeriod $stateSavePeriod"
             errMsgRefined=`echo $errMsg | sed -e 's/\t//g'`
@@ -364,12 +364,70 @@ function blockRun {
     done
 }
 
+# Run bulk simulations for blocks and chains
+# permuteConfigGroup  <testCycles> <timeoutPeriod> <model> <modelCmd> <arrMaxSimTime>
+#           <arrWorkerThreads> <arrScheduleQCount> <groupType> <arrGroupSize>
+#           <arrLpMigration> <arrGvtMethod> <arrGvtPeriod> <arrStateSavePeriod>
+function permuteConfigGroup() {
+    testCycles=$1
+    timeoutPeriod=$2
+    model=$3
+    modelCmd=$4
+    local -n arrMaxSimTime=$5
+    local -n arrWorkerThreads=$6
+    local -n arrScheduleQCount=$7
+    groupType=$8
+    local -n arrGroupSize=$9
+    local -n arrLpMigration=${10}
+    local -n arrGvtMethod=${11}
+    local -n arrGvtPeriod=${12}
+    local -n arrStateSavePeriod=${13}
+
+    for gvtMethod in "${arrGvtMethod[@]}"
+    do
+        for gvtPeriod in "${arrGvtPeriod[@]}"
+        do
+            for stateSavePeriod in "${arrStateSavePeriod[@]}"
+            do
+                for maxSimTime in "${arrMaxSimTime[@]}"
+                do
+                    for isLpMigrationOn in "${arrLpMigration[@]}"
+                    do
+                        for scheduleQCount in "${arrScheduleQCount[@]}"
+                        do
+                            for workerThreads in "${arrWorkerThreads[@]}"
+                            do
+                                for groupSize in "${arrGroupSize[@]}"
+                                do
+                                    if [ "$groupType" == "chain" ]
+                                    then
+                                        runChain    $testCycles $timeoutPeriod $model "$modelCmd" \
+                                                    $maxSimTime $workerThreads $scheduleQCount \
+                                                    $groupSize $isLpMigrationOn $gvtMethod \
+                                                    $gvtPeriod $stateSavePeriod
+                                    else
+                                        runBlock    $testCycles $timeoutPeriod $model "$modelCmd" \
+                                                    $maxSimTime $workerThreads $scheduleQCount \
+                                                    $groupSize $isLpMigrationOn $gvtMethod \
+                                                    $gvtPeriod $stateSavePeriod
+                                    fi
+                                done
+                            done
+                        done
+                    done
+                done
+            done
+        done
+    done
+}
+
+
 # Run simulations for STL MultiSet, Splay, LadderQ, Unsorted Bottom (Locked and Lockfree)
-# scheduleQRun  <testCycles> <timeoutPeriod> <model> <modelCmd>
+# runScheduleQ  <testCycles> <timeoutPeriod> <model> <modelCmd>
 #               <maxSimTime> <workerThreads> <scheduleQType>
 #               <scheduleQCount> <isLpMigrationOn> <gvtMethod>
 #               <gvtPeriod> <stateSavePeriod>
-function scheduleQRun {
+function runScheduleQ {
     testCycles=$1
     timeoutPeriod=$2
     model=$3
@@ -437,7 +495,7 @@ function scheduleQRun {
             statsRefined=`echo $totalStats | sed -e 's/Total,//g' -e 's/\t//g' -e 's/ //g'`
             echo $statsRefined >> $logFile
         else
-            errMsg="scheduleQRun 1 $timeoutPeriod $model \"$modelCmd\" $maxSimTime \
+            errMsg="runScheduleQ 1 $timeoutPeriod $model \"$modelCmd\" $maxSimTime \
                     $workerThreads \"$scheduleQType\" $scheduleQCount $isLpMigrationOn \
                     $gvtMethod $gvtPeriod $stateSavePeriod"
             errMsgRefined=`echo $errMsg | sed -e 's/\t//g'`
@@ -448,11 +506,50 @@ function scheduleQRun {
     done
 }
 
-# permuteConfigScheduleQ  <testCycles> <timeoutPeriod> <model>
-#           <modelCmd> <arrMaxSimTime> <arrWorkerThreads>
-#           <scheduleQType> <arrScheduleQCount> <arrLpMigrationOn>
-#           <arrGvtMethod> <arrGvtPeriod> <stateSavePeriod>
+# Run bulk simulations for stl-multiset, splay-tree, ladder-queue, unsorted-bottom and lockfree
+# permuteConfigScheduleQ  <testCycles> <timeoutPeriod> <model> <modelCmd>
+#           <arrMaxSimTime> <arrWorkerThreads> <scheduleQType> <arrScheduleQCount>
+#           <arrLpMigration> <arrGvtMethod> <arrGvtPeriod> <stateSavePeriod>
+function permuteConfigScheduleQ() {
+    testCycles=$1
+    timeoutPeriod=$2
+    model=$3
+    modelCmd=$4
+    local -n arrMaxSimTime=$5
+    local -n arrWorkerThreads=$6
+    scheduleQType=$7
+    local -n arrScheduleQCount=$8
+    local -n arrLpMigration=$9
+    local -n arrGvtMethod=${10}
+    local -n arrGvtPeriod=${11}
+    local -n arrStateSavePeriod=${12}
 
+    for gvtMethod in "${arrGvtMethod[@]}"
+    do
+        for gvtPeriod in "${arrGvtPeriod[@]}"
+        do
+            for stateSavePeriod in "${arrStateSavePeriod[@]}"
+            do
+                for maxSimTime in "${arrMaxSimTime[@]}"
+                do
+                    for isLpMigrationOn in "${arrLpMigration[@]}"
+                    do
+                        for scheduleQCount in "${arrScheduleQCount[@]}"
+                        do
+                            for workerThreads in "${arrWorkerThreads[@]}"
+                            do
+                                runScheduleQ    $testCycles $timeoutPeriod $model "$modelCmd" \
+                                                $maxSimTime $workerThreads "$scheduleQType" \
+                                                $scheduleQCount $isLpMigrationOn $gvtMethod \
+                                                $gvtPeriod $stateSavePeriod
+                            done
+                        done
+                    done
+                done
+            done
+        done
+    done
+}
 
 
 errlogFile="logs/errorlog.csv"
