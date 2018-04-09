@@ -1,11 +1,13 @@
 #!/bin/bash
 # Allows batch runs of simulations. Saves results to log files
 
+
 # run if user hits control-c
 function control_c() {
     echo -en "*** Ouch! Exiting ***\n"
     exit $?
 }
+
 
 # Install WARPED-2 and build WARPED-2 models
 # build <rootPath> <gitBranch> <mpiIncludePath> <mpiLibraryPath> <additionalFlags>
@@ -45,6 +47,7 @@ function build {
     sleep 10
 }
 
+
 # Create the Louvain partition profile for bags
 # bagProfile <model> <modelCmd> <maxSimTime> <fileName>
 function bagProfile {
@@ -62,11 +65,12 @@ function bagProfile {
     sleep 10
 }
 
-# Run simulations for bag scheduling
-# bagRun    <testCycles> <timeoutPeriod> <model> <modelCmd> <maxSimTime>
-#           <workerThreads> <static_bag_window_size> <frac_bag_window>
-#           <gvtMethod> <gvtPeriod> <stateSavePeriod> <partitioningFile>
-function bagRun {
+
+# Run certain number of iterations for a bag configuration
+# runBag    <testCycles> <timeoutPeriod> <model> <modelCmd> <maxSimTime>
+#           <workerThreads> <staticBagWindowSize> <fracBagWindow> <gvtMethod>
+#           <gvtPeriod> <stateSavePeriod> <partitioningFile>
+function runBag {
     testCycles=$1
     timeoutPeriod=$2
     model=$3
@@ -134,7 +138,7 @@ function bagRun {
             statsRefined=`echo $totalStats | sed -e 's/Total,//g' -e 's/\t//g' -e 's/ //g'`
             echo $statsRefined >> $logFile
         else
-            errMsg="bagRun 1 $timeoutPeriod $model \"$modelCmd\" $maxSimTime \
+            errMsg="runBag 1 $timeoutPeriod $model \"$modelCmd\" $maxSimTime \
                     $workerThreads $staticBagWindowSize $fracBagWindow $gvtMethod \
                     $gvtPeriod $stateSavePeriod $partitioningFile"
             errMsgRefined=`echo $errMsg | sed -e 's/\t//g'`
@@ -144,6 +148,52 @@ function bagRun {
         sleep 10
     done
 }
+
+# Run bulk simulations for bags
+# permuteConfigBag  <testCycles> <timeoutPeriod> <model> <modelCmd> <arrMaxSimTime>
+#                   <arrWorkerThreads> <arrStaticBagWindowSize> <arrFracBagWindow>
+#                   <arrGvtMethod> <arrGvtPeriod> <arrStateSavePeriod> <partitioningFile>
+function permuteConfigBag() {
+    testCycles=$1
+    timeoutPeriod=$2
+    model=$3
+    modelCmd=$4
+    local -n arrMaxSimTime=$5
+    local -n arrWorkerThreads=$6
+    local -n arrStaticBagWindowSize=$7
+    local -n arrFracBagWindow=$8
+    local -n arrGvtMethod=$9
+    local -n arrGvtPeriod=${10}
+    local -n arrStateSavePeriod=${11}
+    partitioningFile=${12}
+
+    for gvtMethod in "${arrGvtMethod[@]}"
+    do
+        for gvtPeriod in "${arrGvtPeriod[@]}"
+        do
+            for stateSavePeriod in "${arrStateSavePeriod[@]}"
+            do
+                for maxSimTime in "${arrMaxSimTime[@]}"
+                do
+                    for fracBagWindow in "${arrFracBagWindow[@]}"
+                    do
+                        for staticBagWindowSize in "${arrStaticBagWindowSize[@]}"
+                        do
+                            for workerThreads in "${arrWorkerThreads[@]}"
+                            do
+                                runBag  $testCycles $timeoutPeriod $model "$modelCmd" \
+                                        $maxSimTime $workerThreads $staticBagWindowSize \
+                                        $fracBagWindow $gvtMethod $gvtPeriod $stateSavePeriod \
+                                        $partitioningFile
+                            done
+                        done
+                    done
+                done
+            done
+        done
+    done
+}
+
 
 # Run simulations for chain scheduling
 # chainRun  <testCycles> <timeoutPeriod> <model> <modelCmd>
@@ -397,6 +447,13 @@ function scheduleQRun {
         sleep 10
     done
 }
+
+# permuteConfigScheduleQ  <testCycles> <timeoutPeriod> <model>
+#           <modelCmd> <arrMaxSimTime> <arrWorkerThreads>
+#           <scheduleQType> <arrScheduleQCount> <arrLpMigrationOn>
+#           <arrGvtMethod> <arrGvtPeriod> <stateSavePeriod>
+
+
 
 errlogFile="logs/errorlog.csv"
 
