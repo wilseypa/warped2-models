@@ -29,6 +29,7 @@ function build {
 
     cd $rootPath/warped2/
     git checkout $gitBranch
+    git pull
     autoreconf -i | grep $garbageSearch
     ./configure --with-mpi-includedir=$mpiIncludePath \
         --with-mpi-libdir=$mpiLibraryPath --prefix=$rootPath/installation/ \
