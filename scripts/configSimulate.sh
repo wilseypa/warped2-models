@@ -45,6 +45,10 @@ function build {
     make -s clean all | grep $garbageSearch
 
     cd $rootPath/warped2-models/scripts/
+
+    buildCmd="build $rootPath $gitBranch $mpiIncludePath $mpiLibraryPath \"$additionalFlags\""
+    echo $buildCmd >> $errlogFile
+
     sleep 10
 }
 
@@ -85,7 +89,7 @@ function runBag {
     stateSavePeriod=${11}
     partitioningFile=${12}
 
-    logFile="logs/bags.csv"
+    logFile="logs/bags_$hostName\.csv"
 
     header="Model,ModelCommand,MaxSimTime,WorkerThreadCount,StaticBagWindowSize,\
             FracBagWindow,GVTmethod,GVTperiod,StateSavePeriod,Runtime,NumObjects,\
@@ -215,7 +219,7 @@ function runChain {
     gvtPeriod=${11}
     stateSavePeriod=${12}
 
-    logFile="logs/chains.csv"
+    logFile="logs/chains_$hostName\.csv"
 
     header="Model,ModelCommand,MaxSimTime,WorkerThreadCount,ScheduleQCount,ChainSize,\
             isLPmigrationON,GVTmethod,GVTperiod,StateSavePeriod,Runtime,NumObjects,\
@@ -300,7 +304,7 @@ function runBlock {
     gvtPeriod=${11}
     stateSavePeriod=${12}
 
-    logFile="logs/blocks.csv"
+    logFile="logs/blocks_$hostName\.csv"
 
     header="Model,ModelCommand,MaxSimTime,WorkerThreadCount,ScheduleQCount,BlockSize,\
             isLPmigrationON,GVTmethod,GVTperiod,StateSavePeriod,Runtime,NumObjects,\
@@ -442,7 +446,7 @@ function runScheduleQ {
     gvtPeriod=${11}
     stateSavePeriod=${12}
 
-    logFile="logs/scheduleq.csv"
+    logFile="logs/scheduleq_$hostName\.csv"
 
     header="Model,ModelCommand,MaxSimTime,WorkerThreadCount,ScheduleQType,ScheduleQCount,\
             isLPmigrationON,GVTmethod,GVTperiod,StateSavePeriod,Runtime,NumObjects,\
@@ -552,8 +556,9 @@ function permuteConfigScheduleQ() {
     done
 }
 
-
-errlogFile="logs/errorlog.csv"
+hostName=`hostname`
+date=`date +"%m-%d-%y_%T"`
+errlogFile="logs/errlog_$hostName_$date\.config"
 
 trap control_c SIGINT
 
