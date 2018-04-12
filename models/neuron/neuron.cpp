@@ -6,17 +6,28 @@
 #include "tclap/ValueArg.h"
 #include <cassert>
 
+#define INIT_SPIKE_FACTOR 10
+
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(CellEvent)
 
 std::vector<std::shared_ptr<warped::Event> > Cell::initializeLP() {
 
     std::vector<std::shared_ptr<warped::Event> > events;
 
-    /* Send a spike event with receive time = 1 to any one neighbor (if available) */
+    /* Don't send any event if membrane_potential < 1 */
+    if (this->state_.membrane_potential_ < 1) { return events; }
+
+    /* Send spike events to all connected neighbors with receive time = refractory period */
     for (auto neighbor : this->state_.neighbors_) {
-        events.emplace_back(new CellEvent {neighbor.first, SPIKE, 1});
-        break;
+        auto weight = neighbor.second;
+        // TODO : Update the weight for the connected neighbors and send that
+        neighbor.second = weight;
+        events.emplace_back(new CellEvent {neighbor.first, this->refractory_period_, weight});
     }
+
+    /* Send the refractory self-event with receive time = refractory period */
+    events.emplace_back(new CellEvent {this->name_, this->refractory_period_, 0});
+
     return events;
 }
 
@@ -25,48 +36,48 @@ std::vector<std::shared_ptr<warped::Event> > Cell::receiveEvent(const warped::Ev
     std::vector<std::shared_ptr<warped::Event> > response_events;
     auto received_event = static_cast<const CellEvent&>(event);
 
-    switch (received_event.type()) {
-        case SPIKE: {
-            /* Check whether it is a refractory self-event */
-            if (received_event.sender_name_ == received_event.receiverName()) {
-                this->state_.membrane_potential_    = 0;
-                this->state_.latest_update_ts_      = received_event.timestamp();
-
-            } else if (this->state_.membrane_potential_ < 1.0) {
-                /* Check if the neuron is responsive */
-                /* IntFire1 : Basic Integrate and Fire Model */
-                auto it = this->state_.neighbors_.find(event.sender_name_);
-                assert(it != this->state_.neighbors_.end());
-
-                double delta_t = received_event.timestamp() - this->state_.latest_update_ts_;
-                this->state_.membrane_potential_ *= exp(-delta_t/membrane_time_const_);
-                this->state_.membrane_potential_ += it->second;
-                this->state_.latest_update_ts_ = received_event.timestamp();
-
-                if (this->state_.membrane_potential_ >= 1.0) {
-                    this->state_.membrane_potential_ = 2.0;
-                    this->state_.num_spikes_++;
-
-                    unsigned int ts = received_event.timestamp() + this->refractory_period_;
-
-                    /* Send the refractory self-event with receive time = ts */
-                    response_events.emplace_back(new CellEvent {this->name_, SPIKE, ts});
-
-                    /* Send spike events to all its connected neighbors with receive time = ts */
-                    for (auto neighbor : this->state_.neighbors_) {
-                        response_events.emplace_back(new CellEvent {neighbor.first, SPIKE, ts});
-                    }
-                }
-            }
-        } break;
-
-        case UPDATE_WEIGHT: {
-            /* TODO: Fill in code for the weight-updating event */
-
-        } break;
-
-        default: { assert(0); }
+    /* Check whether it is a refractory self-event */
+    if (received_event.sender_name_ == received_event.receiverName()) {
+        this->state_.membrane_potential_ = 0;
+        this->state_.latest_update_ts_ = received_event.timestamp();
+        return response_events;
     }
+
+    auto it = this->state_.neighbors_.find(received_event.sender_name_);
+    assert(it != this->state_.neighbors_.end());
+    it->second = received_event.weight_;
+    if (received_event.weight_ < 0) {
+        return response_events;
+    }
+
+    /* Check if the neuron is responsive */
+    if (this->state_.membrane_potential_ < 1.0) {
+
+        /* IntFire1 : Basic Integrate and Fire Model */
+        double delta_t = received_event.timestamp() - this->state_.latest_update_ts_;
+        this->state_.membrane_potential_ *= exp(-delta_t/membrane_time_const_);
+        this->state_.membrane_potential_ += received_event.weight_;
+        this->state_.latest_update_ts_ = received_event.timestamp();
+    }
+
+    /* Check if neuron is about to fire */
+    if (this->state_.membrane_potential_ >= 1.0) {
+
+        this->state_.num_spikes_++;
+        unsigned int ts = received_event.timestamp() + this->refractory_period_;
+
+        /* Send spike events to all connected neighbors with receive time = current time + ts */
+        for (auto neighbor : this->state_.neighbors_) {
+            auto weight = neighbor.second;
+            // TODO : Update the weight for the connected neighbors and send that
+            neighbor.second = weight;
+            response_events.emplace_back(new CellEvent {neighbor.first, ts, weight});
+        }
+
+        /* Send the refractory self-event with receive time = current time + ts */
+        response_events.emplace_back(new CellEvent {this->name_, ts, 0});
+    }
+
     return response_events;
 }
 
@@ -111,11 +122,16 @@ int main(int argc, const char** argv) {
         std::cerr << "Invalid names file - " << buffer << std::endl;
         return 0;
     }
+
+    std::default_random_engine gen;
+    std::uniform_int_distribution<int> mem_potential(0, INIT_SPIKE_FACTOR);
+
     std::vector<Cell> lps;
     unsigned int row_index = 0;
     while (getline(file_stream, buffer)) {
         auto name = buffer + "_" + std::to_string(row_index++);
-        lps.emplace_back(name, membrane_time_const, refractory_period);
+        double weight = (static_cast<double> (mem_potential(gen))) / INIT_SPIKE_FACTOR;
+        lps.emplace_back(name, membrane_time_const, refractory_period, weight);
     }
     file_stream.close();
 

@@ -19,37 +19,28 @@ WARPED_DEFINE_LP_STATE_STRUCT(CellState) {
     std::unordered_map<std::string, double> neighbors_;
 };
 
-enum cell_event_t {
-
-    SPIKE,
-    UPDATE_WEIGHT
-};
-
 class CellEvent : public warped::Event {
 public:
     CellEvent() = default;
     CellEvent(  const std::string& receiver_cell,
-                const cell_event_t type,
-                const unsigned int timestamp    )
+                const unsigned int timestamp,
+                const double weight     )
         :   receiver_cell_(receiver_cell),
-            type_(type),
-            ts_(timestamp) {}
+            ts_(timestamp),
+            weight_(weight) {}
 
     const std::string& receiverName() const { return receiver_cell_; }
 
-    cell_event_t type() const { return type_; }
-
     unsigned int timestamp() const { return ts_; }
 
-    unsigned int size() const { return receiver_cell_.length() +
-                                sizeof(ts_) +
-                                sizeof(type_);
-    }
+    unsigned int size() const { return receiver_cell_.length() + sizeof(ts_) + sizeof(weight_); }
 
-private:
     std::string receiver_cell_;
-    cell_event_t type_;
     unsigned int ts_;
+    double weight_;
+
+    WARPED_REGISTER_SERIALIZABLE_MEMBERS(
+            cereal::base_class<warped::Event>(this), receiver_cell_, ts_, weight_)
 };
 
 class Cell : public warped::LogicalProcess {
@@ -58,14 +49,15 @@ public:
     /* NOTE : It has been assumed that the neuron config files don't have repetitive names */
     Cell(   const std::string& name,
             double membrane_time_const,
-            unsigned int refractory_period  )
+            unsigned int refractory_period,
+            double membrane_potential   )
 
         :   LogicalProcess(name),
+            state_(),
             membrane_time_const_(membrane_time_const),
-            refractory_period_(refractory_period),
-            state_() {
+            refractory_period_(refractory_period) {
 
-        state_.membrane_potential_  = 0;
+        state_.membrane_potential_  = membrane_potential;
         state_.latest_update_ts_    = 0;
         state_.num_spikes_          = 0;
     }
@@ -83,9 +75,9 @@ public:
     }
 
 protected:
+    CellState state_;
     double membrane_time_const_     = 0;
     unsigned int refractory_period_ = 0;
-    CellState state_;
 };
 
 #endif // NEURON_HPP
