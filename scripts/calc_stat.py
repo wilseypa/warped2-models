@@ -3,18 +3,40 @@
 # Combines and averages the given csv file(s) using the given settings
 
 from __future__ import print_function
-import csv, sys
+import csv
+import os, sys
 import numpy as np
 import scipy.stats as sps
 import pandas as pd
 import re, shutil, tempfile
 
-
 ###### Settings go here ######
-filterAttrs = ['Model' , 'WorkerThreadCount' , 'ScheduleQCount' , 'ChainSize' , 'EventsCommitted']
-statAttrs = ['EventsProcessed' , 'Runtime']
-outFileName = 'logs/consolidated_result.csv'
-statType = ['Mean' , 'CI_Lower' , 'CI_Upper' , 'Median' , 'Lower_Quartile' , 'Upper_Quartile']
+
+filterAttrsList = [ [   'Model' , 'WorkerThreadCount' , 'ScheduleQCount'   ],
+                    [   'Model' , 'WorkerThreadCount' , 'ScheduleQType'    ],
+                    [   'Model' , 'WorkerThreadCount' , 'StateSavePeriod'  ]
+                  ]
+
+outputList      = [ 'threads_vs_scheduleq_count',
+                    'threads_vs_scheduleq_type',
+                    'threads_vs_state_save_period'
+                  ]
+
+metricList      = [ 'EventCommitmentRate',
+                    'TotalRollbacks',
+                    'Runtime',
+                    'AvgMaxMemory'
+                  ]
+
+rawDataFileName = 'scheduleq.csv'
+
+statType        = [ 'Mean',
+                    'CI_Lower',
+                    'CI_Upper',
+                    'Median',
+                    'Lower_Quartile',
+                    'Upper_Quartile'
+                  ]
 
 ###### Don't edit below here ######
 
@@ -78,38 +100,54 @@ def sed_inplace(filename, pattern, repl):
     shutil.move(tmp_file.name, filename)
 
 def main():
-    inFileName = sys.argv[1]
+
+    #dirPath = raw_input('Enter the directory path: ')
+    dirPath = sys.argv[1]
+    inFile = dirPath + "/" + rawDataFileName
+
     # Load data from csv file
-    data = pd.read_csv(inFileName)
+    data = pd.read_csv(inFile, sep=',')
 
-    # Create the filtered list
-    filterList = data.groupby(filterAttrs)
-    columnNames = list(filterAttrs)
+    data['EventCommitmentRate'] = data['EventsProcessed'] / data['EventsCommitted']
 
-    # Generate stats for EventsProcessed
-    columnNames += [statAttrs[0] + '_' + x for x in statType]
-    stat0 = filterList.apply(lambda x : statistics(x[statAttrs[0]].tolist()))
+    data['TotalRollbacks'] = data['PrimaryRollbacks'] + data['SecondaryRollbacks']
 
-    # Generate stats for Runtime
-    columnNames += [statAttrs[1] + '_' + x for x in statType]
-    stat1 = filterList.apply(lambda x : statistics(x[statAttrs[1]].tolist()))
+    for index, filterAttrs in enumerate(filterAttrsList):
 
-    # Concatenate the results
-    frames = [stat0, stat1]
-    result = pd.concat(frames, keys=filterAttrs, axis=1)
+        # Create the filtered list
+        filterList = data.groupby(filterAttrs)
+        columnNames = list(filterAttrs)
 
-    # Write to the csv
-    statFile = open(outFileName,'w')
-    for colName in columnNames:
-        statFile.write(colName + ",")
-    statFile.write("\n")
-    statFile.close()
-    result.to_csv(outFileName, mode='a', header=False, sep=',')
+        frames = []
+        for metric in metricList:
+            # Generate stats for EventsProcessed
+            columnNames += [metric + '_' + x for x in statType]
+            stats = filterList.apply(lambda x : statistics(x[metric].tolist()))
 
-    # Remove " from the newly created csv file
-    # Note: It is needed since pandas package has an unresolved bug for 
-    # quoting arg which retains the double quotes for column attributes.
-    sed_inplace(outFileName, r'"', '')
+            # Append the result
+            frames.append(stats)
+
+        result = pd.concat(frames, keys=filterAttrs, axis=1)
+
+        # Write to the csv
+        outDir = dirPath + "/stats/"
+        if not os.path.exists(outDir):
+            os.makedirs(outDir)
+        outFile = outDir + outputList[index] + ".csv"
+        statFile = open(outFile,'w')
+        for colName in columnNames:
+            statFile.write(colName + ",")
+        statFile.write("\n")
+        statFile.close()
+        result.to_csv(outFile, mode='a', header=False, sep=',')
+
+        # Remove " from the newly created csv file
+        # Note: It is needed since pandas package has an unresolved bug for 
+        # quoting arg which retains the double quotes for column attributes.
+        sed_inplace(outFile, r'"', '')
+
 
 if __name__ == "__main__":
     main()
+
+
