@@ -52,6 +52,54 @@ function build {
     sleep 10
 }
 
+# Install WARPED-2 and build WARPED-2 models for LadderQ, Unsorted Bottom and Lockfree
+# buildLadder <rootPath> <gitBranch> <mpiIncludePath> <mpiLibraryPath> <additionalFlags> <bottomSize>
+function buildLadder {
+    rootPath=$1
+    gitBranch=$2
+    mpiIncludePath=$3
+    mpiLibraryPath=$4
+    additionalFlags=$5
+    bottomSize=$6
+
+    garbageSearch="cincinnati"
+
+    if [ "$additionalFlags" != "" ]
+    then
+        echo -e "\nInstalling LadderQueue / Unsorted Bottom with flag(s) $additionalFlags"
+    else
+        echo -e "\nInstalling Lockfree Unsorted Bottom"
+    fi
+
+    echo -e "Bottom Size = $bottomSize"
+
+    cd $rootPath/warped2/
+    git checkout $gitBranch
+    git pull
+    sed -i '/#define THRESHOLD/c\#define THRESHOLD '$bottomSize'' src/LadderQueue.hpp
+    autoreconf -i | grep $garbageSearch
+    ./configure --with-mpi-includedir=$mpiIncludePath \
+        --with-mpi-libdir=$mpiLibraryPath --prefix=$rootPath/installation/ \
+        $additionalFlags | grep $garbageSearch
+    make -s clean all | grep $garbageSearch
+    make install | grep $garbageSearch
+    git checkout src/LadderQueue.hpp
+
+    echo -e "Building WARPED2-MODELS"
+
+    cd $rootPath/warped2-models/
+    autoreconf -i | grep $garbageSearch
+    ./configure --with-warped=$rootPath/installation/ | grep $garbageSearch
+    make -s clean all | grep $garbageSearch
+
+    cd $rootPath/warped2-models/scripts/
+
+    buildCmd="buildLadder $rootPath $gitBranch $mpiIncludePath $mpiLibraryPath \"$additionalFlags\" $bottomSize"
+    echo $buildCmd >> $errlogFile
+
+    sleep 10
+}
+
 
 # Create the Louvain partition profile for bags
 # bagProfile <model> <modelCmd> <maxSimTime> <fileName>
