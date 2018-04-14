@@ -12,30 +12,30 @@ import re, shutil, tempfile
 
 ###### Settings go here ######
 
-filterAttrsList = [ [   'Model' , 'WorkerThreadCount' , 'ScheduleQCount'   ],
-                    [   'Model' , 'WorkerThreadCount' , 'ScheduleQType'    ],
-                    [   'Model' , 'WorkerThreadCount' , 'StateSavePeriod'  ]
+filterAttrsList = [ [   'Model' , 'ModelCommand' , 'WorkerThreadCount' , 'ScheduleQCount'], \
+                    [   'Model' , 'ModelCommand' , 'WorkerThreadCount' , 'ScheduleQType'], \
+                    [   'Model' , 'ModelCommand' , 'WorkerThreadCount' , 'StateSavePeriod'] \
                   ]
 
-outputList      = [ 'threads_vs_scheduleq_count',
-                    'threads_vs_scheduleq_type',
-                    'threads_vs_state_save_period'
+outputList      = [ 'threads_vs_scheduleq_count', \
+                    'threads_vs_scheduleq_type', \
+                    'threads_vs_state_save_period' \
                   ]
 
-metricList      = [ 'EventCommitmentRate',
-                    'TotalRollbacks',
-                    'Runtime',
-                    'AvgMaxMemory'
+metricList      = [ 'EventCommitmentRate', \
+                    'TotalRollbacks', \
+                    'Runtime', \
+                    'AvgMaxMemory' \
                   ]
 
 rawDataFileName = 'scheduleq.csv'
 
-statType        = [ 'Mean',
-                    'CI_Lower',
-                    'CI_Upper',
-                    'Median',
-                    'Lower_Quartile',
-                    'Upper_Quartile'
+statType        = [ 'Mean', \
+                    'CI_Lower', \
+                    'CI_Upper', \
+                    'Median', \
+                    'Lower_Quartile', \
+                    'Upper_Quartile' \
                   ]
 
 ###### Don't edit below here ######
