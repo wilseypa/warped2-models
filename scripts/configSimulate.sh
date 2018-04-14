@@ -137,7 +137,7 @@ function runBag {
     stateSavePeriod=${11}
     partitioningFile=${12}
 
-    logFile="logs/bags_$hostName\.csv"
+    logFile="logs/bags_${hostName}.csv"
 
     header="Model,ModelCommand,MaxSimTime,WorkerThreadCount,StaticBagWindowSize,\
             FracBagWindow,GVTmethod,GVTperiod,StateSavePeriod,Runtime,NumObjects,\
@@ -267,7 +267,7 @@ function runChain {
     gvtPeriod=${11}
     stateSavePeriod=${12}
 
-    logFile="logs/chains_$hostName\.csv"
+    logFile="logs/chains_${hostName}.csv"
 
     header="Model,ModelCommand,MaxSimTime,WorkerThreadCount,ScheduleQCount,ChainSize,\
             isLPmigrationON,GVTmethod,GVTperiod,StateSavePeriod,Runtime,NumObjects,\
@@ -352,7 +352,7 @@ function runBlock {
     gvtPeriod=${11}
     stateSavePeriod=${12}
 
-    logFile="logs/blocks_$hostName\.csv"
+    logFile="logs/blocks_${hostName}.csv"
 
     header="Model,ModelCommand,MaxSimTime,WorkerThreadCount,ScheduleQCount,BlockSize,\
             isLPmigrationON,GVTmethod,GVTperiod,StateSavePeriod,Runtime,NumObjects,\
@@ -494,7 +494,7 @@ function runScheduleQ {
     gvtPeriod=${11}
     stateSavePeriod=${12}
 
-    logFile="logs/scheduleq_$hostName\.csv"
+    logFile="logs/scheduleq_${hostName}.csv"
 
     header="Model,ModelCommand,MaxSimTime,WorkerThreadCount,ScheduleQType,ScheduleQCount,\
             isLPmigrationON,GVTmethod,GVTperiod,StateSavePeriod,Runtime,NumObjects,\
@@ -606,7 +606,7 @@ function permuteConfigScheduleQ() {
 
 hostName=`hostname`
 date=`date +"%m-%d-%y_%T"`
-errlogFile="logs/errlog_$hostName_$date\.config"
+errlogFile="logs/errlog_${hostName}_${date}.config"
 
 trap control_c SIGINT
 
