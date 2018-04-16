@@ -1,14 +1,19 @@
 #!/usr/bin/python
 
-# Combines and averages the given csv file(s) using the given settings
+# Calculates statistics and plots the schedule queue metrics from raw data
 
 from __future__ import print_function
 import csv
 import os, sys
 import numpy as np
+import scipy as sp
 import scipy.stats as sps
 import pandas as pd
 import re, shutil, tempfile
+import itertools, operator
+import subprocess
+import Gnuplot
+import Gnuplot.funcutils
 
 ###### Settings go here ######
 
@@ -37,6 +42,7 @@ statType        = [ 'Mean', \
                     'Lower_Quartile', \
                     'Upper_Quartile' \
                   ]
+
 
 ###### Don't edit below here ######
 
@@ -99,21 +105,81 @@ def sed_inplace(filename, pattern, repl):
     shutil.copystat(filename, tmp_file.name)
     shutil.move(tmp_file.name, filename)
 
-def main():
+def getIndex(aList, text):
+    '''Returns the index of the requested text in the given list'''
+    for i,x in enumerate(aList):
+        if x == text:
+            return i
 
-    #dirPath = raw_input('Enter the directory path: ')
-    dirPath = sys.argv[1]
-    inFile = dirPath + "/" + rawDataFileName
+def plot(data, fileName, title, xaxisLabel, yaxisLabel, linePreface):
+    g = Gnuplot.Gnuplot()
+    g.title(title)
+    g("set terminal svg enhanced background rgb 'white' size 1000,800 fname 'Helvetica' fsize 16")
+    g("set key inside top right font ',12' width 1.8")
+    g("set grid")
+    g("set autoscale")
+    g.xlabel(xaxisLabel)
+    g.ylabel(yaxisLabel)
+    g('set output "' + fileName + '"')
+    d = []
+    for key in data['data']:
+        result = Gnuplot.Data(data['header'][key],data['data'][key],with_="linespoints",title=linePreface+key)
+        d.append(result)
+    g.plot(*d)
 
+def plot_stats(dirPath, fileName, xaxisLabel, keyLabel):
+    outDir = dirPath + "plots/"
+    if not os.path.exists(outDir):
+        os.makedirs(outDir)
+
+    inFile = dirPath + "stats/" + fileName + ".csv"
+    reader = csv.reader(open(inFile,'rb'))
+    header = reader.next()
+
+    # Get Column Values for use below
+    xaxis  = getIndex(header, xaxisLabel)
+    kid    = getIndex(header, keyLabel)
+
+    reader = sorted(reader, key=lambda x: int(x[xaxis]), reverse=False)
+    reader = sorted(reader, key=lambda x: x[kid], reverse=False)
+
+    linePreface = keyLabel + " = "
+
+    for metric in metricList:
+
+        columnName  = metric + "_" + statType[0]
+        columnIndex = getIndex(header, columnName)
+
+        outData = {'header':{},'data':{}}
+
+        # Populate the header
+        for kindex, kdata in itertools.groupby(reader, lambda x: x[kid]):
+            if kindex not in outData['header']:
+                outData['header'][kindex] = []
+            for xindex, data in itertools.groupby(kdata, lambda x: x[xaxis]):
+                outData['header'][kindex].append(xindex)
+
+        # Populate the statistical data
+        for xindex, data in itertools.groupby(reader, lambda x: x[xaxis]):
+            for kindex, kdata in itertools.groupby(data, lambda x: x[kid]):
+                if kindex not in outData['data']:
+                    outData['data'][kindex] = []
+                value = [item[columnIndex] for item in kdata][0]
+                outData['data'][kindex].append(value)
+
+        title = metric + " (" + statType[0] + ")"
+        outFile = outDir + fileName + "_" + metric + ".svg"
+        plot(outData, outFile, title, xaxisLabel, metric, linePreface)
+
+def calc_and_plot(dirPath):
     # Load data from csv file
+    inFile = dirPath + "/" + rawDataFileName
     data = pd.read_csv(inFile, sep=',')
 
     data['EventCommitmentRate'] = data['EventsProcessed'] / data['EventsCommitted']
-
     data['TotalRollbacks'] = data['PrimaryRollbacks'] + data['SecondaryRollbacks']
 
     for index, filterAttrs in enumerate(filterAttrsList):
-
         # Create the filtered list
         filterList = data.groupby(filterAttrs)
         columnNames = list(filterAttrs)
@@ -123,14 +189,13 @@ def main():
             # Generate stats for EventsProcessed
             columnNames += [metric + '_' + x for x in statType]
             stats = filterList.apply(lambda x : statistics(x[metric].tolist()))
-
             # Append the result
             frames.append(stats)
 
         result = pd.concat(frames, keys=filterAttrs, axis=1)
 
         # Write to the csv
-        outDir = dirPath + "/stats/"
+        outDir = dirPath + "stats/"
         if not os.path.exists(outDir):
             os.makedirs(outDir)
         outFile = outDir + outputList[index] + ".csv"
@@ -146,6 +211,13 @@ def main():
         # quoting arg which retains the double quotes for column attributes.
         sed_inplace(outFile, r'"', '')
 
+        # Plot the statistics
+        plot_stats(dirPath, outputList[index], filterAttrs[-2], filterAttrs[-1])
+
+
+def main():
+    dirPath = sys.argv[1]
+    calc_and_plot(dirPath)
 
 if __name__ == "__main__":
     main()
