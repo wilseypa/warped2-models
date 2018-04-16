@@ -321,9 +321,8 @@ function runChain {
         then
             # Parse stats
             # Write to log file
-            totalStats="$model,$modelCmd,$maxSimTime,$workerThreads,$scheduleQType,\
-                        $scheduleQCount,$chainSize,$isLpMigrationOn,$gvtMethod,\
-                        $gvtPeriod,$stateSavePeriod,$statsRaw"
+            totalStats="$model,$modelCmd,$maxSimTime,$workerThreads,$scheduleQCount,$chainSize,\
+                        $isLpMigrationOn,$gvtMethod,$gvtPeriod,$stateSavePeriod,$statsRaw"
             statsRefined=`echo $totalStats | sed -e 's/Total,//g' -e 's/\t//g' -e 's/ //g'`
             echo $statsRefined >> $logFile
         else
