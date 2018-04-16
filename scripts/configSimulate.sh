@@ -115,6 +115,10 @@ function bagProfile {
             --sequential-statistics-type "louvain" --sequential-statistics-file $fileName
 
     cd ../../scripts/
+
+    buildCmd="bagProfile $model \"$modelCmd\" $seqSimTime $fileName"
+    echo $buildCmd >> $errlogFile
+
     sleep 10
 }
 
