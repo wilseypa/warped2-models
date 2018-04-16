@@ -17,14 +17,12 @@ import Gnuplot.funcutils
 
 ###### Settings go here ######
 
-filterAttrsList = [ [   'Model' , 'ModelCommand' , 'WorkerThreadCount' , 'ScheduleQCount'], \
-                    [   'Model' , 'ModelCommand' , 'WorkerThreadCount' , 'ScheduleQType'], \
-                    [   'Model' , 'ModelCommand' , 'WorkerThreadCount' , 'StateSavePeriod'] \
+filterAttrsList = [ [   'Model' , 'ModelCommand' , 'WorkerThreadCount' , 'StaticBagWindowSize'  ], \
+                    [   'Model' , 'ModelCommand' , 'WorkerThreadCount' , 'FracBagWindow'        ] \
                   ]
 
-outputList      = [ 'threads_vs_scheduleq_count', \
-                    'threads_vs_scheduleq_type', \
-                    'threads_vs_state_save_period' \
+outputList      = [ 'threads_vs_static_bag_window_size', \
+                    'threads_vs_frac_bag_window' \
                   ]
 
 metricList      = [ 'EventCommitmentRate', \
@@ -33,7 +31,7 @@ metricList      = [ 'EventCommitmentRate', \
                     'AvgMaxMemory' \
                   ]
 
-rawDataFileName = 'scheduleq.csv'
+rawDataFileName = 'bags.csv'
 
 statType        = [ 'Mean', \
                     'CI_Lower', \
