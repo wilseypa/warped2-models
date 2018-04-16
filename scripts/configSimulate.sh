@@ -102,16 +102,16 @@ function buildLadder {
 
 
 # Create the Louvain partition profile for bags
-# bagProfile <model> <modelCmd> <maxSimTime> <fileName>
+# bagProfile <model> <modelCmd> <seqSimTime> <fileName>
 function bagProfile {
     model=$1
     modelCmd=$2
-    maxSimTime=$3
+    seqSimTime=$3
     fileName=$4
 
     cd ../models/$model/
-    echo -e "\nProfile $modelCmd , File: $fileName , Max Sim Time: $maxSimTime"
-    $modelCmd --max-sim-time $maxSimTime --simulation-type "sequential" \
+    echo -e "\nProfile $modelCmd , File: $fileName , Max Sim Time: $seqSimTime"
+    $modelCmd --max-sim-time $seqSimTime --simulation-type "sequential" \
             --sequential-statistics-type "louvain" --sequential-statistics-file $fileName
 
     cd ../../scripts/
