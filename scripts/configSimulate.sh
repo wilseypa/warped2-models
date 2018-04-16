@@ -74,6 +74,7 @@ function buildLadder {
     echo -e "Bottom Size = $bottomSize"
 
     cd $rootPath/warped2/
+    git checkout src/LadderQueue.hpp
     git checkout $gitBranch
     git pull
     sed -i '/#define THRESHOLD/c\#define THRESHOLD '$bottomSize'' src/LadderQueue.hpp
