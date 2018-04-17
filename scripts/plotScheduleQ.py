@@ -145,7 +145,9 @@ def plot_stats(dirPath, fileName, xaxisLabel, keyLabel):
     reader = sorted(reader, key=lambda x: int(x[xaxis]), reverse=False)
     reader = sorted(reader, key=lambda x: x[kid], reverse=False)
 
-    linePreface = keyLabel + " = "
+    modelId = getIndex(header, 'Model')
+    for index, data in itertools.groupby(reader, lambda x: x[modelId]):
+        model = [item[modelId] for item in data][0]
 
     for metric in metricList:
 
@@ -169,9 +171,9 @@ def plot_stats(dirPath, fileName, xaxisLabel, keyLabel):
                 value = [item[columnIndex] for item in kdata][0]
                 outData['data'][kindex].append(value)
 
-        title = metric + " (" + statType[0] + ")"
+        title = model.upper() + ' : Performance for ' + keyLabel + ' keys'
         outFile = outDir + fileName + "_" + metric + ".svg"
-        plot(outData, outFile, title, xaxisLabel, metric, linePreface)
+        plot(outData, outFile, title, xaxisLabel, metric+'('+statType[0]+')', '')
 
 def calc_and_plot(dirPath):
     # Load data from csv file
