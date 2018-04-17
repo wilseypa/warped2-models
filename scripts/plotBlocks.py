@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-# Calculates statistics and plots the schedule queue metrics from raw data
+# Calculates statistics and plots the block metrics from raw data
 
 from __future__ import print_function
 import csv
@@ -18,11 +18,11 @@ import Gnuplot.funcutils
 ###### Settings go here ######
 
 filterAttrsList = [ [   'Model' , 'ModelCommand' , 'WorkerThreadCount' , 'ScheduleQCount'   ], \
-                    [   'Model' , 'ModelCommand' , 'WorkerThreadCount' , 'ScheduleQType'    ], \
+                    [   'Model' , 'ModelCommand' , 'WorkerThreadCount' , 'BlockSize'        ] \
                   ]
 
-outputList      = [ 'scheduleq_threads_vs_count', \
-                    'scheduleq_threads_vs_type' \
+outputList      = [ 'blocks_threads_vs_scheduleq_count', \
+                    'blocks_threads_vs_block_size' \
                   ]
 
 metricList      = [ 'EventCommitmentRate', \
@@ -31,7 +31,7 @@ metricList      = [ 'EventCommitmentRate', \
                     'AvgMaxMemory' \
                   ]
 
-rawDataFileName = 'scheduleq.csv'
+rawDataFileName = 'blocks.csv'
 
 statType        = [ 'Mean', \
                     'CI_Lower', \

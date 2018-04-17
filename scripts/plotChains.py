@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-# Calculates statistics and plots the schedule queue metrics from raw data
+# Calculates statistics and plots the chain metrics from raw data
 
 from __future__ import print_function
 import csv
@@ -18,11 +18,11 @@ import Gnuplot.funcutils
 ###### Settings go here ######
 
 filterAttrsList = [ [   'Model' , 'ModelCommand' , 'WorkerThreadCount' , 'ScheduleQCount'   ], \
-                    [   'Model' , 'ModelCommand' , 'WorkerThreadCount' , 'ScheduleQType'    ], \
+                    [   'Model' , 'ModelCommand' , 'WorkerThreadCount' , 'ChainSize'        ] \
                   ]
 
-outputList      = [ 'scheduleq_threads_vs_count', \
-                    'scheduleq_threads_vs_type' \
+outputList      = [ 'chains_threads_vs_scheduleq_count', \
+                    'chains_threads_vs_chain_size' \
                   ]
 
 metricList      = [ 'EventCommitmentRate', \
@@ -31,7 +31,7 @@ metricList      = [ 'EventCommitmentRate', \
                     'AvgMaxMemory' \
                   ]
 
-rawDataFileName = 'scheduleq.csv'
+rawDataFileName = 'chains.csv'
 
 statType        = [ 'Mean', \
                     'CI_Lower', \

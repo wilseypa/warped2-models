@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-# Calculates statistics and plots the schedule queue metrics from raw data
+# Calculates statistics and plots the bag metrics from raw data
 
 from __future__ import print_function
 import csv
@@ -21,8 +21,8 @@ filterAttrsList = [ [   'Model' , 'ModelCommand' , 'WorkerThreadCount' , 'Static
                     [   'Model' , 'ModelCommand' , 'WorkerThreadCount' , 'FracBagWindow'        ] \
                   ]
 
-outputList      = [ 'threads_vs_static_bag_window_size', \
-                    'threads_vs_frac_bag_window' \
+outputList      = [ 'bags_threads_vs_static_window_size', \
+                    'bags_threads_vs_frac_window' \
                   ]
 
 metricList      = [ 'EventCommitmentRate', \
