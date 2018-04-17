@@ -175,7 +175,11 @@ def plot_stats(dirPath, fileName, xaxisLabel, keyLabel):
 
 def calc_and_plot(dirPath):
     # Load data from csv file
-    inFile = dirPath + "/" + rawDataFileName
+    inFile = dirPath + rawDataFileName
+    if not os.path.exists(inFile):
+        print('Chains raw data not available')
+        sys.exit()
+
     data = pd.read_csv(inFile, sep=',')
 
     data['EventCommitmentRate'] = data['EventsProcessed'] / data['EventsCommitted']
@@ -219,6 +223,10 @@ def calc_and_plot(dirPath):
 
 def main():
     dirPath = sys.argv[1]
+    if not os.path.exists(dirPath):
+        print('Invalid path to source')
+        sys.exit()
+
     calc_and_plot(dirPath)
 
 if __name__ == "__main__":
