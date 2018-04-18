@@ -144,12 +144,12 @@ function runBag {
 
     logFile="logs/bags_${hostName}.csv"
 
-    header="Model,ModelCommand,MaxSimTime,WorkerThreadCount,StaticBagWindowSize,\
-            FracBagWindow,GVTmethod,GVTperiod,StateSavePeriod,Runtime,NumObjects,\
-            NumPartitions,LocalPositiveEventsSent,RemotePositiveEventsSent,\
-            LocalNegativeEventsSent,RemoteNegativeEventsSent,PrimaryRollbacks,\
-            SecondaryRollbacks,CoastForwardedEvents,CancelledEvents,EventsProcessed,\
-            EventsCommitted,AvgMaxMemory"
+    header="Model,Model_Command,Max_Simulation_Time,Worker_Thread_Count,Static_Window_Size,\
+            Fraction_of_Total_Window,GVT_Method,GVT_Period,State_Save_Period,Simulation_Runtime_(secs.),\
+            Number_of_Objects,Number_of_Partitions,Local_Positive_Events_Sent,\
+            Remote_Positive_Events_Sent,Local_Negative_Events_Sent,Remote_Negative_Events_Sent,\
+            Primary_Rollbacks,Secondary_Rollbacks,Coast_Forwarded_Events,Cancelled_Events,\
+            Events_Processed,Events_Committed,Average_Memory_Usage_(MB)"
 
     headerRefined=`echo $header | sed -e 's/\t//g' -e 's/ //g'`
 
@@ -274,11 +274,12 @@ function runChain {
 
     logFile="logs/chains_${hostName}.csv"
 
-    header="Model,ModelCommand,MaxSimTime,WorkerThreadCount,ScheduleQCount,ChainSize,\
-            isLPmigrationON,GVTmethod,GVTperiod,StateSavePeriod,Runtime,NumObjects,\
-            LocalPositiveEventsSent,RemotePositiveEventsSent,LocalNegativeEventsSent,\
-            RemoteNegativeEventsSent,PrimaryRollbacks,SecondaryRollbacks,CoastForwardedEvents,\
-            CancelledEvents,EventsProcessed,EventsCommitted,AvgMaxMemory"
+    header="Model,Model_Command,Max_Simulation_Time,Worker_Thread_Count,Schedule_Queue_Count,\
+            Chain_Size,is_LP_Migration_ON,GVT_Method,GVT_Period,State_Save_Period,\
+            Simulation_Runtime_(secs.),Number_of_Objects,Local_Positive_Events_Sent,\
+            Remote_Positive_Events_Sent,Local_Negative_Events_Sent,Remote_Negative_Events_Sent,\
+            Primary_Rollbacks,Secondary_Rollbacks,Coast_Forwarded_Events,Cancelled_Events,\
+            Events_Processed,Events_Committed,Average_Memory_Usage_(MB)"
 
     headerRefined=`echo $header | sed -e 's/\t//g' -e 's/ //g'`
 
@@ -358,11 +359,12 @@ function runBlock {
 
     logFile="logs/blocks_${hostName}.csv"
 
-    header="Model,ModelCommand,MaxSimTime,WorkerThreadCount,ScheduleQCount,BlockSize,\
-            isLPmigrationON,GVTmethod,GVTperiod,StateSavePeriod,Runtime,NumObjects,\
-            LocalPositiveEventsSent,RemotePositiveEventsSent,LocalNegativeEventsSent,\
-            RemoteNegativeEventsSent,PrimaryRollbacks,SecondaryRollbacks,CoastForwardedEvents,\
-            CancelledEvents,EventsProcessed,EventsCommitted,AvgMaxMemory"
+    header="Model,Model_Command,Max_Simulation_Time,Worker_Thread_Count,Schedule_Queue_Count,\
+            Block_Size,is_LP_Migration_ON,GVT_Method,GVT_Period,State_Save_Period,\
+            Simulation_Runtime_(secs.),Number_of_Objects,Local_Positive_Events_Sent,\
+            Remote_Positive_Events_Sent,Local_Negative_Events_Sent,Remote_Negative_Events_Sent,\
+            Primary_Rollbacks,Secondary_Rollbacks,Coast_Forwarded_Events,Cancelled_Events,\
+            Events_Processed,Events_Committed,Average_Memory_Usage_(MB)"
 
     headerRefined=`echo $header | sed -e 's/\t//g' -e 's/ //g'`
 
@@ -500,11 +502,12 @@ function runScheduleQ {
 
     logFile="logs/scheduleq_${hostName}.csv"
 
-    header="Model,ModelCommand,MaxSimTime,WorkerThreadCount,ScheduleQType,ScheduleQCount,\
-            isLPmigrationON,GVTmethod,GVTperiod,StateSavePeriod,Runtime,NumObjects,\
-            LocalPositiveEventsSent,RemotePositiveEventsSent,LocalNegativeEventsSent,\
-            RemoteNegativeEventsSent,PrimaryRollbacks,SecondaryRollbacks,\
-            CoastForwardedEvents,CancelledEvents,EventsProcessed,EventsCommitted,AvgMaxMemory"
+    header="Model,Model_Command,Max_Simulation_Time,Worker_Thread_Count,Schedule_Queue_Type,\
+            Schedule_Queue_Count,is_LP_Migration_ON,GVT_Method,GVT_Period,State_Save_Period,\
+            Simulation_Runtime_(secs.),Number_of_Objects,Local_Positive_Events_Sent,\
+            Remote_Positive_Events_Sent,Local_Negative_Events_Sent,Remote_Negative_Events_Sent,\
+            Primary_Rollbacks,Secondary_Rollbacks,Coast_Forwarded_Events,Cancelled_Events,\
+            Events_Processed,Events_Committed,Average_Memory_Usage_(MB)"
 
     headerRefined=`echo $header | sed -e 's/\t//g' -e 's/ //g'`
 
