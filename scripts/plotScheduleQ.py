@@ -22,13 +22,13 @@ searchAttrsList =   [
                             'filter' : 'Schedule_Queue_Count',
                             'model'  : 'Model',
                             'lpcount': 'Number_of_Objects',
-                            'output' : 'schedule_queue_threads_vs_type_count_'  },
+                            'output' : 'threads_vs_type_key_count_'  },
 
                         {   'groupby': ['Worker_Thread_Count', 'Schedule_Queue_Count'],
                             'filter' : 'Schedule_Queue_Type',
                             'model'  : 'Model',
                             'lpcount': 'Number_of_Objects',
-                            'output' : 'schedule_queue_threads_vs_count_type_'   }
+                            'output' : 'threads_vs_count_key_type_'   }
                     ]
 
 '''
