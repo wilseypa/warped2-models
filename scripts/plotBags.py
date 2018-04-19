@@ -17,28 +17,37 @@ import Gnuplot.funcutils
 
 ###### Settings go here ######
 
-filterAttrsList = [ [   'Model' , 'ModelCommand' , 'WorkerThreadCount' , 'StaticBagWindowSize'  ], \
-                    [   'Model' , 'ModelCommand' , 'WorkerThreadCount' , 'FracBagWindow'        ] \
-                  ]
+searchAttrsList =   [
+                        {   'groupby': ['Worker_Thread_Count', 'Static_Window_Size'],
+                            'filter' : 'Fraction_of_Total_Window',
+                            'model'  : 'Model',
+                            'lpcount': 'Number_of_Objects',
+                            'output' : 'threads_vs_staticwindow_key_fractionwindow_'  },
 
-outputList      = [ 'bags_threads_vs_static_window_size', \
-                    'bags_threads_vs_frac_window' \
-                  ]
+                        {   'groupby': ['Worker_Thread_Count', 'Fraction_of_Total_Window'],
+                            'filter' : 'Static_Window_Size',
+                            'model'  : 'Model',
+                            'lpcount': 'Number_of_Objects',
+                            'output' : 'threads_vs_fractionwindow_key_staticwindow_'   }
+                    ]
 
-metricList      = [ 'EventCommitmentRate', \
-                    'TotalRollbacks', \
-                    'Runtime', \
-                    'AvgMaxMemory' \
-                  ]
+'''
+metricList      =   [   'Event_Commitment_Rate',
+                        'Total_Rollbacks',
+                        'Simulation_Runtime_(secs.)',
+                        'Average_Memory_Usage_(MB)'
+                    ]
+'''
+metricList      =   [   'Simulation_Runtime_(secs.)'  ]
 
-rawDataFileName = 'bags.csv'
+rawDataFileName = 'bags'
 
-statType        = [ 'Mean', \
-                    'CI_Lower', \
-                    'CI_Upper', \
-                    'Median', \
-                    'Lower_Quartile', \
-                    'Upper_Quartile' \
+statType        = [ 'Mean',
+                    'CI_Lower',
+                    'CI_Upper',
+                    'Median',
+                    'Lower_Quartile',
+                    'Upper_Quartile'
                   ]
 
 
@@ -113,15 +122,18 @@ def getIndex(aList, text):
         if x == text:
             return i
 
-def plot(data, fileName, title, xaxisLabel, yaxisLabel, linePreface):
+def plot(data, fileName, title, subtitle, xaxisLabel, yaxisLabel, linePreface):
+
+    # Replace '_' with ' '
     g = Gnuplot.Gnuplot()
-    g.title(title)
-    g("set terminal svg enhanced background rgb 'white' size 1000,800 fname 'Helvetica' fsize 16")
+    multiLineTitle = title.replace("_", " ") + '\\n '+ subtitle.replace("_", " ")
+    g.title(multiLineTitle)
+    g("set terminal svg noenhanced background rgb 'white' size 1000,800 fname 'Helvetica' fsize 16")
     g("set key inside top right font ',12' width 1.8")
     g("set grid")
     g("set autoscale")
-    g.xlabel(xaxisLabel)
-    g.ylabel(yaxisLabel)
+    g.xlabel(xaxisLabel.replace("_", " "))
+    g.ylabel(yaxisLabel.replace("_", " "))
     g('set output "' + fileName + '"')
     d = []
     for key in data['data']:
@@ -129,12 +141,16 @@ def plot(data, fileName, title, xaxisLabel, yaxisLabel, linePreface):
         d.append(result)
     g.plot(*d)
 
-def plot_stats(dirPath, fileName, xaxisLabel, keyLabel):
-    outDir = dirPath + "plots/"
+
+def plot_stats(dirPath, fileName, xaxisLabel, keyLabel, filterLabel, filterValue, model, lpCount):
+
+    # Create the plots directory (if necessary)
+    outDir = dirPath + 'plots/' + rawDataFileName + '/'
     if not os.path.exists(outDir):
         os.makedirs(outDir)
 
-    inFile = dirPath + "stats/" + fileName + ".csv"
+    # Read the stats csv
+    inFile = dirPath + 'stats/' + rawDataFileName + '/' + fileName + '.csv'
     reader = csv.reader(open(inFile,'rb'))
     header = reader.next()
 
@@ -145,13 +161,9 @@ def plot_stats(dirPath, fileName, xaxisLabel, keyLabel):
     reader = sorted(reader, key=lambda x: int(x[xaxis]), reverse=False)
     reader = sorted(reader, key=lambda x: x[kid], reverse=False)
 
-    modelId = getIndex(header, 'Model')
-    for index, data in itertools.groupby(reader, lambda x: x[modelId]):
-        model = [item[modelId] for item in data][0]
-
     for metric in metricList:
 
-        columnName  = metric + "_" + statType[0]
+        columnName  = metric + '_' + statType[0]
         columnIndex = getIndex(header, columnName)
 
         outData = {'header':{},'data':{}}
@@ -171,56 +183,80 @@ def plot_stats(dirPath, fileName, xaxisLabel, keyLabel):
                 value = [item[columnIndex] for item in kdata][0]
                 outData['data'][kindex].append(value)
 
-        title = model.upper() + ' : Performance of Bags for ' + keyLabel + ' keys'
-        outFile = outDir + fileName + "_" + metric + ".svg"
-        plot(outData, outFile, title, xaxisLabel, metric+'('+statType[0]+')', '')
+        # Plot the statistical data
+        title = model.upper() + ' model with ' + str("{:,}".format(lpCount)) + ' LPs'
+        subtitle = filterLabel + ' = ' + str(filterValue).upper() + ' , key = ' + keyLabel
+        outFile = outDir + fileName + "_" + metric + '.svg'
+        yaxisLabel = metric + '_(' + statType[0] + ')'
+        plot(   outData, outFile, title, subtitle, xaxisLabel, yaxisLabel, '' )
+
 
 def calc_and_plot(dirPath):
+
     # Load data from csv file
-    inFile = dirPath + rawDataFileName
+    inFile = dirPath + rawDataFileName + '.csv'
     if not os.path.exists(inFile):
-        print('Bags raw data not available')
+        print('ScheduleQ raw data not available')
         sys.exit()
 
     data = pd.read_csv(inFile, sep=',')
 
-    data['EventCommitmentRate'] = data['EventsProcessed'] / data['EventsCommitted']
-    data['TotalRollbacks'] = data['PrimaryRollbacks'] + data['SecondaryRollbacks']
+    data['Event_Commitment_Rate'] = data['Events_Processed'] / data['Events_Committed']
+    data['Total_Rollbacks'] = data['Primary_Rollbacks'] + data['Secondary_Rollbacks']
 
-    for index, filterAttrs in enumerate(filterAttrsList):
-        # Create the filtered list
-        filterList = data.groupby(filterAttrs)
-        columnNames = list(filterAttrs)
+    for searchAttrs in searchAttrsList:
+        groupbyList = searchAttrs['groupby']
+        filterName  = searchAttrs['filter']
+        model       = searchAttrs['model']
+        lpcount     = searchAttrs['lpcount']
+        output      = searchAttrs['output']
 
-        frames = []
-        for metric in metricList:
-            # Generate stats for EventsProcessed
-            columnNames += [metric + '_' + x for x in statType]
-            stats = filterList.apply(lambda x : statistics(x[metric].tolist()))
-            # Append the result
-            frames.append(stats)
+        groupbyList.append(filterName)
 
-        result = pd.concat(frames, keys=filterAttrs, axis=1)
+        # Read unique values for the filter
+        filterValues = data[filterName].unique().tolist()
 
-        # Write to the csv
-        outDir = dirPath + "stats/"
-        if not os.path.exists(outDir):
-            os.makedirs(outDir)
-        outFile = outDir + outputList[index] + ".csv"
-        statFile = open(outFile,'w')
-        for colName in columnNames:
-            statFile.write(colName + ",")
-        statFile.write("\n")
-        statFile.close()
-        result.to_csv(outFile, mode='a', header=False, sep=',')
+        # Read the model name and LP count
+        modelName = data[model].unique().tolist()
+        lpCount   = data[lpcount].unique().tolist()
 
-        # Remove " from the newly created csv file
-        # Note: It is needed since pandas package has an unresolved bug for 
-        # quoting arg which retains the double quotes for column attributes.
-        sed_inplace(outFile, r'"', '')
+        for filterValue in filterValues:
+            # Filter data for each filterValue
+            filteredData = data[data[filterName] == filterValue]
+            groupedData = filteredData.groupby(groupbyList)
+            columnNames = list(groupbyList)
 
-        # Plot the statistics
-        plot_stats(dirPath, outputList[index], filterAttrs[-2], filterAttrs[-1])
+            # Generate stats
+            frames = []
+            for metric in metricList:
+                columnNames += [metric + '_' + x for x in statType]
+                stats = groupedData.apply(lambda x : statistics(x[metric].tolist()))
+                frames.append(stats)
+
+            result = pd.concat(frames, keys=groupbyList, axis=1)
+
+            # Write to the csv
+            outDir = dirPath + 'stats/' + rawDataFileName + '/'
+            if not os.path.exists(outDir):
+                os.makedirs(outDir)
+
+            fileName = output + str(filterValue)
+            outFile = outDir + fileName + '.csv'
+            statFile = open(outFile,'w')
+            for colName in columnNames:
+                statFile.write(colName + ',')
+            statFile.write("\n")
+            statFile.close()
+            result.to_csv(outFile, mode='a', header=False, sep=',')
+
+            # Remove " from the newly created csv file
+            # Note: It is needed since pandas package has an unresolved bug for
+            # quoting arg which retains the double quotes for column attributes.
+            sed_inplace(outFile, r'"', '')
+
+            # Plot the statistics
+            plot_stats( dirPath, fileName, groupbyList[0], groupbyList[1],
+                            filterName, filterValue, modelName[0], lpCount[0] )
 
 
 def main():
