@@ -22,7 +22,7 @@ std::vector<std::shared_ptr<warped::Event> > Cell::initializeLP() {
         auto weight = neighbor.second;
         // TODO : Update the weight for the connected neighbors and send that
         neighbor.second = weight + .1;
-        events.emplace_back(new CellEvent {neighbor.first, this->refractory_period_, neighbor.second});
+        events.emplace_back(new CellEvent {neighbor.first, this->refractory_period_, weight});
     }
 
     /* Send the refractory self-event with receive time = refractory period */
@@ -72,7 +72,7 @@ std::vector<std::shared_ptr<warped::Event> > Cell::receiveEvent(const warped::Ev
             auto weight = neighbor.second;
             // TODO : Update the weight for the connected neighbors and send that
             neighbor.second = weight + .1;
-            response_events.emplace_back(new CellEvent {neighbor.first, ts, neighbor.second});
+            response_events.emplace_back(new CellEvent {neighbor.first, ts, weight});
         }
 
         /* Send the refractory self-event with receive time = current time + ts */
@@ -188,6 +188,8 @@ int main(int argc, const char** argv) {
     }
     std::cout   << num_active_neurons << " out of " << lps.size()
                 << " neurons fired a total of " << num_spikes << " spikes."
+                << std::endl
+                << "neuron with the most spikes fired " << max_spikes << " times."
                 << std::endl;
 
     /* Color heatmap red based on ratio of lp spikes versus the lp with the most spikes*/
