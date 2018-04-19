@@ -21,8 +21,8 @@ std::vector<std::shared_ptr<warped::Event> > Cell::initializeLP() {
     for (auto neighbor : this->state_.neighbors_) {
         auto weight = neighbor.second;
         // TODO : Update the weight for the connected neighbors and send that
-        neighbor.second = weight;
-        events.emplace_back(new CellEvent {neighbor.first, this->refractory_period_, weight});
+        neighbor.second = weight + .1;
+        events.emplace_back(new CellEvent {neighbor.first, this->refractory_period_, neighbor.second});
     }
 
     /* Send the refractory self-event with receive time = refractory period */
@@ -43,6 +43,7 @@ std::vector<std::shared_ptr<warped::Event> > Cell::receiveEvent(const warped::Ev
         return response_events;
     }
 
+    /* Check if there is any connection for a spike to occur*/
     auto it = this->state_.neighbors_.find(received_event.sender_name_);
     assert(it != this->state_.neighbors_.end());
     it->second = received_event.weight_;
@@ -70,8 +71,8 @@ std::vector<std::shared_ptr<warped::Event> > Cell::receiveEvent(const warped::Ev
         for (auto neighbor : this->state_.neighbors_) {
             auto weight = neighbor.second;
             // TODO : Update the weight for the connected neighbors and send that
-            neighbor.second = weight;
-            response_events.emplace_back(new CellEvent {neighbor.first, ts, weight});
+            neighbor.second = weight + .1;
+            response_events.emplace_back(new CellEvent {neighbor.first, ts, neighbor.second});
         }
 
         /* Send the refractory self-event with receive time = current time + ts */
@@ -130,8 +131,8 @@ int main(int argc, const char** argv) {
     unsigned int row_index = 0;
     while (getline(file_stream, buffer)) {
         auto name = buffer + "_" + std::to_string(row_index++);
-        double weight = (static_cast<double> (mem_potential(gen))) / INIT_SPIKE_FACTOR;
-        lps.emplace_back(name, membrane_time_const, refractory_period, weight);
+        double membrane_potential = (static_cast<double> (mem_potential(gen))) / INIT_SPIKE_FACTOR;
+        lps.emplace_back(name, membrane_time_const, refractory_period, membrane_potential);
     }
     file_stream.close();
 
