@@ -196,7 +196,7 @@ def calc_and_plot(dirPath):
     # Load data from csv file
     inFile = dirPath + rawDataFileName + '.csv'
     if not os.path.exists(inFile):
-        print('ScheduleQ raw data not available')
+        print(rawDataFileName.upper() + ' raw data not available')
         sys.exit()
 
     data = pd.read_csv(inFile, sep=',')
