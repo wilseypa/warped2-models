@@ -74,8 +74,8 @@ public:
         state_.neighbors_.emplace(name, weight);
     }
 
-protected:
     CellState state_;
+protected:
     double membrane_time_const_     = 0;
     unsigned int refractory_period_ = 0;
 };

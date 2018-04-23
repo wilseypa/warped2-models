@@ -21,7 +21,7 @@ std::vector<std::shared_ptr<warped::Event> > Cell::initializeLP() {
     for (auto neighbor : this->state_.neighbors_) {
         auto weight = neighbor.second;
         // TODO : Update the weight for the connected neighbors and send that
-        neighbor.second = weight + .1;
+        neighbor.second = weight + .01;
         events.emplace_back(new CellEvent {neighbor.first, this->refractory_period_, weight});
     }
 
@@ -71,7 +71,7 @@ std::vector<std::shared_ptr<warped::Event> > Cell::receiveEvent(const warped::Ev
         for (auto neighbor : this->state_.neighbors_) {
             auto weight = neighbor.second;
             // TODO : Update the weight for the connected neighbors and send that
-            neighbor.second = weight + .1;
+            neighbor.second = weight + .01;
             response_events.emplace_back(new CellEvent {neighbor.first, ts, weight});
         }
 
@@ -203,6 +203,14 @@ int main(int argc, const char** argv) {
     }
     spikes_hmap->write("neuron_spikes_hmap.ppm");
     delete spikes_hmap;
+
+    /* Temporary debugging statistics */
+    std::ofstream LPData;
+    LPData.open("Diagnostics/LPData.txt");
+    for (auto lp : lps) {
+        LPData << lp.state_.membrane_potential_ << " " << lp.state_.latest_update_ts_ << std::endl;
+}
+    LPData.close();
 
     return 0;
 }
