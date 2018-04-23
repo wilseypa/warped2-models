@@ -48,14 +48,16 @@ public:
 
     /* NOTE : It has been assumed that the neuron config files don't have repetitive names */
     Cell(   const std::string& name,
+            double connection_threshold,
             double membrane_time_const,
             unsigned int refractory_period,
             double membrane_potential   )
 
         :   LogicalProcess(name),
             state_(),
+            connection_threshold_(connection_threshold),
             membrane_time_const_(membrane_time_const),
-            refractory_period_(refractory_period) {
+            refractory_period_(refractory_period)   {
 
         state_.membrane_potential_  = membrane_potential;
         state_.latest_update_ts_    = 0;
@@ -75,6 +77,8 @@ public:
     }
 
     CellState state_;
+    double connection_threshold_ = 0;
+
 protected:
     double membrane_time_const_     = 0;
     unsigned int refractory_period_ = 0;

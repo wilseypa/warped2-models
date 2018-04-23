@@ -22,7 +22,7 @@ std::vector<std::shared_ptr<warped::Event> > Cell::initializeLP() {
         auto weight = neighbor.second;
         // TODO : Update the weight for the connected neighbors and send that
         neighbor.second = weight + .01;
-        events.emplace_back(new CellEvent {neighbor.first, this->refractory_period_, weight});
+        events.emplace_back(new CellEvent {neighbor.first, this->refractory_period_, neighbor.second});
     }
 
     /* Send the refractory self-event with receive time = refractory period */
@@ -47,7 +47,7 @@ std::vector<std::shared_ptr<warped::Event> > Cell::receiveEvent(const warped::Ev
     auto it = this->state_.neighbors_.find(received_event.sender_name_);
     assert(it != this->state_.neighbors_.end());
     it->second = received_event.weight_;
-    if (received_event.weight_ < 0) {
+    if (received_event.weight_ < this->connection_threshold_) {
         return response_events;
     }
 
@@ -72,7 +72,7 @@ std::vector<std::shared_ptr<warped::Event> > Cell::receiveEvent(const warped::Ev
             auto weight = neighbor.second;
             // TODO : Update the weight for the connected neighbors and send that
             neighbor.second = weight + .01;
-            response_events.emplace_back(new CellEvent {neighbor.first, ts, weight});
+            response_events.emplace_back(new CellEvent {neighbor.first, ts, neighbor.second});
         }
 
         /* Send the refractory self-event with receive time = current time + ts */
@@ -132,7 +132,7 @@ int main(int argc, const char** argv) {
     while (getline(file_stream, buffer)) {
         auto name = buffer + "_" + std::to_string(row_index++);
         double membrane_potential = (static_cast<double> (mem_potential(gen))) / INIT_SPIKE_FACTOR;
-        lps.emplace_back(name, membrane_time_const, refractory_period, membrane_potential);
+        lps.emplace_back(name, connection_threshold, membrane_time_const, refractory_period, membrane_potential);
     }
     file_stream.close();
 
@@ -205,13 +205,19 @@ int main(int argc, const char** argv) {
     delete spikes_hmap;
 
     /* Temporary debugging statistics */
-    std::ofstream LPData;
-    LPData.open("Diagnostics/LPData.txt");
+    std::ofstream LPDiag;
+    LPDiag.open("Diagnostics/LPData.txt");
     for (auto lp : lps) {
-        LPData << lp.state_.membrane_potential_ << " " << lp.state_.latest_update_ts_ << std::endl;
+        LPDiag << lp.state_.membrane_potential_ << " " << lp.state_.latest_update_ts_ << std::endl;
 }
-    LPData.close();
-
+    LPDiag.close();
+    LPDiag.open("Diagnostics/NeighborData.txt");
+    for (auto lp : lps) {
+        for (auto neighbor : lp.state_.neighbors_) {
+            LPDiag << neighbor.first << " " << neighbor.second << std::endl;
+        }
+        LPDiag << "Next LP:" << std::endl;
+    }
     return 0;
 }
 
