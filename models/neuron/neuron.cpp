@@ -195,10 +195,25 @@ int main(int argc, const char** argv) {
     /* Color heatmap red based on ratio of lp spikes versus the lp with the most spikes*/
     for (unsigned int i = 0; i < lps.size(); i++) {
         double ratio = ((double)lps[i].spikeCount()) / max_spikes;
+
+        /*Color red if the neuron spiked more than half as much as the neuron with the most spikes*/
         if (ratio >= 0.5) {
+            ratio = (ratio - 0.5) / 0.5;
             spikes_hmap->r[i] = ratio * 255;
-        } else {
-            spikes_hmap->g[i] = (1.0-ratio) * 255;
+        }
+
+        /*Color green if the neuron spiked from 25% to 75% as much as the max spiked neuron*/
+        /*Green + Red (from above) = Yellow*/
+        if (ratio >= 0.25 && ratio <= 0.75) {
+            ratio = (ratio - 0.25) / 0.5;
+            spikes_hmap->g[i] = ratio * 255;
+        }
+
+        /*Color blue if the neuron spiked from 50% to 0% as much as the max spiked neuron*/
+        /*Green (from above) + Blue should be cyan but in this map it is very dark*/
+        if (ratio < 0.5) {
+            ratio = (ratio * 2);
+            spikes_hmap->b[i] = (1.0 - ratio) * 255;
         }
     }
     spikes_hmap->write("neuron_spikes_hmap.ppm");
@@ -208,7 +223,9 @@ int main(int argc, const char** argv) {
     std::ofstream LPDiag;
     LPDiag.open("Diagnostics/LPData.txt");
     for (auto lp : lps) {
-        LPDiag << lp.state_.membrane_potential_ << " " << lp.state_.latest_update_ts_ << std::endl;
+        LPDiag << lp.state_.membrane_potential_ 
+            << " " << lp.state_.latest_update_ts_ 
+            << " " << lp.spikeCount() << std::endl;
 }
     LPDiag.close();
     LPDiag.open("Diagnostics/NeighborData.txt");
