@@ -19,9 +19,11 @@ std::vector<std::shared_ptr<warped::Event> > Cell::initializeLP() {
 
     /* Send spike events to all connected neighbors with receive time = refractory period */
     for (auto neighbor : this->state_.neighbors_) {
-        auto weight = neighbor.second;
         // TODO : Update the weight for the connected neighbors and send that
-        neighbor.second = weight + .01;
+        /* Current weight update is +1% of 1 - weight for positives and 
+           +2% of 1 + weight for negatives */
+        if (neighbor.second >= 0) neighbor.second += (1 - neighbor.second) * .01;
+        if (neighbor.second < 0) neighbor.second += (1 + neighbor.second) * .02;
         events.emplace_back(new CellEvent {neighbor.first, this->refractory_period_, neighbor.second});
     }
 
@@ -39,7 +41,7 @@ std::vector<std::shared_ptr<warped::Event> > Cell::receiveEvent(const warped::Ev
     /* Check whether it is a refractory self-event */
     if (received_event.sender_name_ == received_event.receiverName()) {
         this->state_.membrane_potential_ = 0;
-        this->state_.latest_update_ts_ = received_event.timestamp();
+        this->state_.latest_update_ts_ = received_event.timestamp() + this->refractory_period_;
         return response_events;
     }
 
@@ -57,7 +59,9 @@ std::vector<std::shared_ptr<warped::Event> > Cell::receiveEvent(const warped::Ev
         /* IntFire1 : Basic Integrate and Fire Model */
         double delta_t = received_event.timestamp() - this->state_.latest_update_ts_;
         this->state_.membrane_potential_ *= exp(-delta_t/membrane_time_const_);
-        this->state_.membrane_potential_ += received_event.weight_;
+        if (received_event.weight_ >= 0) {
+            this->state_.membrane_potential_ += received_event.weight_;
+        }
         this->state_.latest_update_ts_ = received_event.timestamp();
     }
 
@@ -69,9 +73,11 @@ std::vector<std::shared_ptr<warped::Event> > Cell::receiveEvent(const warped::Ev
 
         /* Send spike events to all connected neighbors with receive time = current time + ts */
         for (auto neighbor : this->state_.neighbors_) {
-            auto weight = neighbor.second;
             // TODO : Update the weight for the connected neighbors and send that
-            neighbor.second = weight + .01;
+            /* Current weight update is +1% of 1 - weight for positives and 
+               +2% of 1 + weight for negatives */
+            if (neighbor.second >= 0) neighbor.second += (1 - neighbor.second) * .01;
+            if (neighbor.second < 0) neighbor.second += (1 + neighbor.second) * .02;
             response_events.emplace_back(new CellEvent {neighbor.first, ts, neighbor.second});
         }
 
