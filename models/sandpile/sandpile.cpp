@@ -7,8 +7,6 @@
 #include "ppm/ppm.hpp"
 #include "tclap/ValueArg.h"
 
-#define TS_INTERVAL 1 /* Timestamp interval */
-
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(SandEvent)
 
 
@@ -21,27 +19,16 @@ std::vector<std::shared_ptr<warped::Event> > Vertex::initializeLP() {
 
     std::vector<std::shared_ptr<warped::Event>> events;
 
-    /* If there is no grain of sand */
-    if (!state_.sandpile_height_) return events;
+    /* Find the center of the grid */
+    unsigned int center_index = (this->grid_dimension_*this->grid_dimension_)/2;
+    center_index -= (this->grid_dimension_%2) ? 0 : (this->grid_dimension_/2);
 
-    /* Sandpile can't initially be at topple threshold */
-    assert (state_.sandpile_height_ < 4);
+    /* Return if not the center */
+    if (this->index_ != center_index) return events;
 
-    /* Add a grain of sand and send an update event to itself */
-    state_.sandpile_height_++;
-    events.emplace_back( new SandEvent {node_name(this->index_), TS_INTERVAL} );
-
-    /* If the sandpile is at topple threshold */
-    if (state_.sandpile_height_ == 4) {
-
-        state_.sandpile_height_ = 0;
-        state_.collapse_cnt_++;
-
-        events.emplace_back( new SandEvent {node_name(neighbor(this->index_, UP))   , TS_INTERVAL} );
-        events.emplace_back( new SandEvent {node_name(neighbor(this->index_, RIGHT)), TS_INTERVAL} );
-        events.emplace_back( new SandEvent {node_name(neighbor(this->index_, DOWN)) , TS_INTERVAL} );
-        events.emplace_back( new SandEvent {node_name(neighbor(this->index_, LEFT)) , TS_INTERVAL} );
-    }
+    /* Send a self event for center to trigger the first topple */
+    events.emplace_back( new SandEvent {node_name(this->index_), 4} );
+    state_.sandpile_height_ = 3;
 
     return events;
 }
@@ -49,7 +36,7 @@ std::vector<std::shared_ptr<warped::Event> > Vertex::initializeLP() {
 std::vector<std::shared_ptr<warped::Event> > Vertex::receiveEvent(const warped::Event& event) {
 
     auto sand_event = static_cast<const SandEvent&>(event);
-    unsigned int event_ts = sand_event.event_ts_ + TS_INTERVAL;
+    unsigned int event_ts = sand_event.event_ts_ + 1;
 
     std::vector<std::shared_ptr<warped::Event>> events;
 
@@ -59,7 +46,7 @@ std::vector<std::shared_ptr<warped::Event> > Vertex::receiveEvent(const warped::
     /*  NOTE:   Only the vertex (here center of grid) has non-empty sandpile initially.
                 It can keep getting more sand.
      */
-    if (sand_event.receiver_name_ == node_name(this->index_)) {
+    if (sand_event.sender_name_ == node_name(this->index_)) {
         events.emplace_back( new SandEvent {node_name(this->index_), event_ts} );
     }
 
@@ -131,14 +118,9 @@ int main(int argc, const char **argv) {
     std::vector<Vertex> lps;
     std::vector<warped::LogicalProcess*> lp_pointers;
 
-    unsigned int vertex_cnt   = grid_dimension * grid_dimension;
-    unsigned int center_index = (vertex_cnt / 2) - ((grid_dimension % 2) ? 0 : (grid_dimension / 2));
-
-    for (unsigned int i = 0; i < vertex_cnt; i++) {
-
-        /* Note: Initially, only the center has a grain of sand */
-        unsigned int sandpile_height = (i == center_index) ? 1 : 0;
-        lps.emplace_back(node_name(i), grid_dimension, i, sandpile_height);
+    for (unsigned int i = 0; i < grid_dimension*grid_dimension; i++) {
+        /* Note: Initially, there is no sand */
+        lps.emplace_back(node_name(i), grid_dimension, i, 0);
     }
 
     for (auto& lp : lps) {
