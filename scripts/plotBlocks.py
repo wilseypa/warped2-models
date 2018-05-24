@@ -35,10 +35,11 @@ searchAttrsList =   [
 metricList      =   [   'Event_Commitment_Rate',
                         'Total_Rollbacks',
                         'Simulation_Runtime_(secs.)',
-                        'Average_Memory_Usage_(MB)'
+                        'Average_Memory_Usage_(MB)',
+                        'Event_Processing_Rate_(kHz)'
                     ]
 '''
-metricList      =   [   'Simulation_Runtime_(secs.)'  ]
+metricList      =   [   'Event_Processing_Rate_(kHz)'  ]
 
 rawDataFileName = 'blocks'
 
@@ -131,8 +132,10 @@ def plot(data, fileName, title, subtitle, xaxisLabel, yaxisLabel, linePreface):
     g("set terminal svg noenhanced background rgb 'white' size 1000,800 fname 'Helvetica' fsize 16")
     g("set key inside top right font ',12' width 1.8")
     g("set autoscale x")
-    g("set yrange [0:120]")
-    g("set ytics 10")
+    #g("set yrange [0:120]")
+    #g("set ytics 10")
+    g("set yrange [0:800]")
+    g("set ytics 100")
     g("set grid")
     g.xlabel(xaxisLabel.replace("_", " "))
     g.ylabel(yaxisLabel.replace("_", " "))
@@ -203,8 +206,12 @@ def calc_and_plot(dirPath):
 
     data = pd.read_csv(inFile, sep=',')
 
-    data['Event_Commitment_Rate'] = data['Events_Processed'] / data['Events_Committed']
-    data['Total_Rollbacks'] = data['Primary_Rollbacks'] + data['Secondary_Rollbacks']
+    data['Event_Commitment_Rate'] = \
+            data['Events_Processed'] / data['Events_Committed']
+    data['Total_Rollbacks'] = \
+            data['Primary_Rollbacks'] + data['Secondary_Rollbacks']
+    data['Event_Processing_Rate_(kHz)'] = \
+            data['Events_Processed'] / (1000 * data['Simulation_Runtime_(secs.)'])
 
     for searchAttrs in searchAttrsList:
         groupbyList = searchAttrs['groupby']
