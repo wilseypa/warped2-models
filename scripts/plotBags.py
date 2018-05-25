@@ -32,14 +32,25 @@ searchAttrsList =   [
                     ]
 
 '''
-metricList      =   [   'Event_Commitment_Rate',
-                        'Total_Rollbacks',
-                        'Simulation_Runtime_(secs.)',
-                        'Average_Memory_Usage_(MB)',
-                        'Event_Processing_Rate_(kHz)'
-                    ]
+List of metrics available:
+
+    Event_Commitment_Rate
+    Total_Rollbacks
+    Simulation_Runtime_(secs.)
+    Average_Memory_Usage_(MB)
+    Event_Processing_Rate_(per_sec)
 '''
-metricList      =   [   'Event_Processing_Rate_(kHz)'  ]
+metricList      =   [
+                        {   'name'  : 'Event_Processing_Rate_(per_sec)',
+                            'ystart': 0,
+                            'yend'  : 800000,
+                            'ytics' : 100000    },
+
+                        {   'name'  : 'Simulation_Runtime_(secs.)',
+                            'ystart': 0,
+                            'yend'  : 120,
+                            'ytics' : 10        }
+                    ]
 
 rawDataFileName = 'bags'
 
@@ -123,7 +134,7 @@ def getIndex(aList, text):
         if x == text:
             return i
 
-def plot(data, fileName, title, subtitle, xaxisLabel, yaxisLabel, linePreface):
+def plot(data, fileName, title, subtitle, xaxisLabel, yaxisLabel, ystart, yend, ytics, linePreface):
 
     # Replace '_' with ' '
     g = Gnuplot.Gnuplot()
@@ -132,10 +143,8 @@ def plot(data, fileName, title, subtitle, xaxisLabel, yaxisLabel, linePreface):
     g("set terminal svg noenhanced background rgb 'white' size 1000,800 fname 'Helvetica' fsize 16")
     g("set key inside top right font ',12' width 1.8")
     g("set autoscale x")
-    #g("set yrange [0:120]")
-    #g("set ytics 10")
-    g("set yrange [0:800]")
-    g("set ytics 100")
+    g("set yrange [{0}:{1}]".format(unicode(ystart), unicode(yend)))
+    g("set ytics {}".format(unicode(ytics)))
     g("set grid")
     g.xlabel(xaxisLabel.replace("_", " "))
     g.ylabel(yaxisLabel.replace("_", " "))
@@ -166,7 +175,12 @@ def plot_stats(dirPath, fileName, xaxisLabel, keyLabel, filterLabel, filterValue
     reader = sorted(reader, key=lambda x: int(x[xaxis]), reverse=False)
     reader = sorted(reader, key=lambda x: x[kid], reverse=False)
 
-    for metric in metricList:
+    for param in metricList:
+
+        metric = param['name']
+        ystart = param['ystart']
+        yend   = param['yend']
+        ytics  = param['ytics']
 
         columnName  = metric + '_' + statType[0]
         columnIndex = getIndex(header, columnName)
@@ -193,7 +207,7 @@ def plot_stats(dirPath, fileName, xaxisLabel, keyLabel, filterLabel, filterValue
         subtitle = filterLabel + ' = ' + str(filterValue).upper() + ' , key = ' + keyLabel
         outFile = outDir + fileName + "_" + metric + '.svg'
         yaxisLabel = metric + '_(' + statType[0] + ')'
-        plot(   outData, outFile, title, subtitle, xaxisLabel, yaxisLabel, '' )
+        plot(outData, outFile, title, subtitle, xaxisLabel, yaxisLabel, ystart, yend, ytics, '')
 
 
 def calc_and_plot(dirPath):
@@ -210,8 +224,8 @@ def calc_and_plot(dirPath):
             data['Events_Processed'] / data['Events_Committed']
     data['Total_Rollbacks'] = \
             data['Primary_Rollbacks'] + data['Secondary_Rollbacks']
-    data['Event_Processing_Rate_(kHz)'] = \
-            data['Events_Processed'] / (1000 * data['Simulation_Runtime_(secs.)'])
+    data['Event_Processing_Rate_(per_sec)'] = \
+            data['Events_Processed'] / data['Simulation_Runtime_(secs.)']
 
     for searchAttrs in searchAttrsList:
         groupbyList = searchAttrs['groupby']
@@ -237,7 +251,8 @@ def calc_and_plot(dirPath):
 
             # Generate stats
             frames = []
-            for metric in metricList:
+            for param in metricList:
+                metric = param['name']
                 columnNames += [metric + '_' + x for x in statType]
                 stats = groupedData.apply(lambda x : statistics(x[metric].tolist()))
                 frames.append(stats)
