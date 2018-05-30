@@ -202,9 +202,13 @@ def plot_stats(dirPath, fileName, xaxisLabel, keyLabel, filterLabel, filterValue
                 value = [item[columnIndex] for item in kdata][0]
                 outData['data'][kindex].append(value)
 
+        # Plots unnecessary for hybrid configuratons
+        if filterValue != 1 and filterValue != 0:
+            continue
+
         # Plot the statistical data
         title = model.upper() + ' model with ' + str("{:,}".format(lpCount)) + ' LPs'
-        subtitle = filterLabel + ' = ' + str(filterValue).upper() + ' , key = ' + keyLabel
+        subtitle = 'key = ' + keyLabel
         outFile = outDir + fileName + "_" + metric + '.svg'
         yaxisLabel = metric + '_(' + statType[0] + ')'
         plot(outData, outFile, title, subtitle, xaxisLabel, yaxisLabel, ystart, yend, ytics, '')
