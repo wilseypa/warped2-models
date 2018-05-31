@@ -34,7 +34,7 @@ searchAttrsList =   [
 '''
 List of metrics available:
 
-    Event_Commitment_Rate
+    Event_Commitment_Ratio
     Total_Rollbacks
     Simulation_Runtime_(secs.)
     Average_Memory_Usage_(MB)
@@ -43,13 +43,18 @@ List of metrics available:
 metricList      =   [
                         {   'name'  : 'Event_Processing_Rate_(per_sec)',
                             'ystart': 0,
-                            'yend'  : 800000,
+                            'yend'  : 1000000,
                             'ytics' : 100000    },
 
                         {   'name'  : 'Simulation_Runtime_(secs.)',
                             'ystart': 0,
-                            'yend'  : 120,
-                            'ytics' : 10        }
+                            'yend'  : 150,
+                            'ytics' : 10        },
+
+                        {   'name'  : 'Event_Commitment_Ratio',
+                            'ystart': 1,
+                            'yend'  : 2,
+                            'ytics' : 0.1       }
                     ]
 
 rawDataFileName = 'chains'
@@ -158,11 +163,6 @@ def plot(data, fileName, title, subtitle, xaxisLabel, yaxisLabel, ystart, yend, 
 
 def plot_stats(dirPath, fileName, xaxisLabel, keyLabel, filterLabel, filterValue, model, lpCount):
 
-    # Create the plots directory (if necessary)
-    outDir = dirPath + 'plots/' + rawDataFileName + '/'
-    if not os.path.exists(outDir):
-        os.makedirs(outDir)
-
     # Read the stats csv
     inFile = dirPath + 'stats/' + rawDataFileName + '/' + fileName + '.csv'
     reader = csv.reader(open(inFile,'rb'))
@@ -205,6 +205,7 @@ def plot_stats(dirPath, fileName, xaxisLabel, keyLabel, filterLabel, filterValue
         # Plot the statistical data
         title = model.upper() + ' model with ' + str("{:,}".format(lpCount)) + ' LPs'
         subtitle = filterLabel + ' = ' + str(filterValue).upper() + ' , key = ' + keyLabel
+        outDir = dirPath + 'plots/' + rawDataFileName + '/'
         outFile = outDir + fileName + "_" + metric + '.svg'
         yaxisLabel = metric + '_(' + statType[0] + ')'
         plot(outData, outFile, title, subtitle, xaxisLabel, yaxisLabel, ystart, yend, ytics, '')
@@ -212,7 +213,7 @@ def plot_stats(dirPath, fileName, xaxisLabel, keyLabel, filterLabel, filterValue
         # Convert svg to pdf and delete svg
         outPDF = outDir + fileName + "_" + metric + '.pdf'
         subprocess.call(['inkscape', outFile, '--export-pdf', outPDF])
-        #subprocess.call(['rm', outFile])
+        subprocess.call(['rm', outFile])
 
 def calc_and_plot(dirPath):
 
@@ -224,12 +225,21 @@ def calc_and_plot(dirPath):
 
     data = pd.read_csv(inFile, sep=',')
 
-    data['Event_Commitment_Rate'] = \
+    data['Event_Commitment_Ratio'] = \
             data['Events_Processed'] / data['Events_Committed']
     data['Total_Rollbacks'] = \
             data['Primary_Rollbacks'] + data['Secondary_Rollbacks']
     data['Event_Processing_Rate_(per_sec)'] = \
             data['Events_Processed'] / data['Simulation_Runtime_(secs.)']
+
+    # Create the plots directory (if needed)
+    outDir = dirPath + 'plots/'
+    if not os.path.exists(outDir):
+        os.makedirs(outDir)
+
+    outName = outDir + rawDataFileName + '/'
+    subprocess.call(['rm', '-rf', outName])
+    subprocess.call(['mkdir', outName])
 
     for searchAttrs in searchAttrsList:
         groupbyList = searchAttrs['groupby']
