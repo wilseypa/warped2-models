@@ -209,6 +209,10 @@ def plot_stats(dirPath, fileName, xaxisLabel, keyLabel, filterLabel, filterValue
         yaxisLabel = metric + '_(' + statType[0] + ')'
         plot(outData, outFile, title, subtitle, xaxisLabel, yaxisLabel, ystart, yend, ytics, '')
 
+        # Convert svg to pdf and delete svg
+        outPDF = outDir + fileName + "_" + metric + '.pdf'
+        subprocess.call(['inkscape', outFile, '--export-pdf', outPDF])
+        #subprocess.call(['rm', outFile])
 
 def calc_and_plot(dirPath):
 
