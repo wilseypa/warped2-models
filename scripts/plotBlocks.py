@@ -146,16 +146,16 @@ def plot(data, fileName, title, subtitle, xaxisLabel, yaxisLabel, ystart, yend, 
     multiLineTitle = title.replace("_", " ") + '\\n '+ subtitle.replace("_", " ")
     g.title(multiLineTitle)
     g("set terminal svg noenhanced background rgb 'white' size 1000,800 fname 'Helvetica' fsize 16")
-    g("set key inside top right font ',12' width 1.8")
-    g("set autoscale x")
-    g("set yrange [{0}:{1}]".format(unicode(ystart), unicode(yend)))
-    g("set ytics {}".format(unicode(ytics)))
+    g("set key box outside center bottom horizontal font ',12' width 1.8")
+    g("set autoscale xy")
+    #g("set yrange [{0}:{1}]".format(unicode(ystart), unicode(yend)))
+    #g("set ytics {}".format(unicode(ytics)))
     g("set grid")
     g.xlabel(xaxisLabel.replace("_", " "))
     g.ylabel(yaxisLabel.replace("_", " "))
     g('set output "' + fileName + '"')
     d = []
-    for key in data['data']:
+    for key in sorted(data['data']):
         result = Gnuplot.Data(data['header'][key],data['data'][key],with_="linespoints",title=linePreface+key)
         d.append(result)
     g.plot(*d)
