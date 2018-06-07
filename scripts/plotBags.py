@@ -146,7 +146,7 @@ def plot(data, fileName, title, subtitle, xaxisLabel, yaxisLabel, ystart, yend, 
     multiLineTitle = title.replace("_", " ") + '\\n '+ subtitle.replace("_", " ")
     g.title(multiLineTitle)
     g("set terminal svg noenhanced background rgb 'white' size 1000,800 fname 'Helvetica' fsize 16")
-    g("set key box outside center bottom horizontal font ',12' width 1.8")
+    g("set key box outside center top horizontal font ',12' ")
     g("set autoscale xy")
     #g("set yrange [{0}:{1}]".format(unicode(ystart), unicode(yend)))
     #g("set ytics {}".format(unicode(ytics)))
