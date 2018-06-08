@@ -155,8 +155,10 @@ def plot(data, fileName, title, subtitle, xaxisLabel, yaxisLabel, ystart, yend, 
     g.ylabel(yaxisLabel.replace("_", " "))
     g('set output "' + fileName + '"')
     d = []
-    for key in sorted(data['data']):
-        result = Gnuplot.Data(data['header'][key],data['data'][key],with_="linespoints",title=linePreface+key)
+    for key in sorted(data[statType[0]]):
+        result = Gnuplot.Data(  data['header'][key],data[statType[0]][key],\
+                                data[statType[1]][key],data[statType[2]][key],\
+                                with_="yerrorlines",title=linePreface+key   )
         d.append(result)
     g.plot(*d)
 
@@ -182,10 +184,7 @@ def plot_stats(dirPath, fileName, xaxisLabel, keyLabel, filterLabel, filterValue
         yend   = param['yend']
         ytics  = param['ytics']
 
-        columnName  = metric + '_' + statType[0]
-        columnIndex = getIndex(header, columnName)
-
-        outData = {'header':{},'data':{}}
+        outData = {'header':{}}
 
         # Populate the header
         for kindex, kdata in itertools.groupby(reader, lambda x: x[kid]):
@@ -195,19 +194,24 @@ def plot_stats(dirPath, fileName, xaxisLabel, keyLabel, filterLabel, filterValue
                 outData['header'][kindex].append(xindex)
 
         # Populate the statistical data
-        for xindex, data in itertools.groupby(reader, lambda x: x[xaxis]):
-            for kindex, kdata in itertools.groupby(data, lambda x: x[kid]):
-                if kindex not in outData['data']:
-                    outData['data'][kindex] = []
-                value = [item[columnIndex] for item in kdata][0]
-                outData['data'][kindex].append(value)
+        for stat in statType:
+            columnName  = metric + '_' + stat
+            columnIndex = getIndex(header, columnName)
+            if stat not in outData:
+                outData[stat] = {}
+            for xindex, data in itertools.groupby(reader, lambda x: x[xaxis]):
+                for kindex, kdata in itertools.groupby(data, lambda x: x[kid]):
+                    if kindex not in outData[stat]:
+                        outData[stat][kindex] = []
+                    value = [item[columnIndex] for item in kdata][0]
+                    outData[stat][kindex].append(value)
 
         # Plot the statistical data
         title = model.upper() + ' model with ' + str("{:,}".format(lpCount)) + ' LPs'
         subtitle = filterLabel + ' = ' + str(filterValue).upper() + ' , key = ' + keyLabel
         outDir = dirPath + 'plots/' + rawDataFileName + '/'
         outFile = outDir + fileName + "_" + metric + '.svg'
-        yaxisLabel = metric + '_(' + statType[0] + ')'
+        yaxisLabel = metric + '_(C.I._=_95%)'
         plot(outData, outFile, title, subtitle, xaxisLabel, yaxisLabel, ystart, yend, ytics, '')
 
         # Convert svg to pdf and delete svg
