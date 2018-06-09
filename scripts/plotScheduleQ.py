@@ -168,7 +168,6 @@ def plot(data, fileName, title, subtitle, xaxisLabel, yaxisLabel, ystart, yend, 
         d.append(result)
     g.plot(*d)
 
-
 def plot_stats(dirPath, fileName, xaxisLabel, keyLabel, filterLabel, filterValue, model, lpCount):
 
     # Read the stats csv
