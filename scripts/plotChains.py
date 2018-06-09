@@ -39,6 +39,7 @@ List of metrics available:
     Simulation_Runtime_(secs.)
     Average_Memory_Usage_(MB)
     Event_Processing_Rate_(per_sec)
+    Speedup_w.r.t._Sequential_Simulation
 '''
 metricList      =   [
                         {   'name'  : 'Event_Processing_Rate_(per_sec)',
@@ -54,7 +55,12 @@ metricList      =   [
                         {   'name'  : 'Event_Commitment_Ratio',
                             'ystart': 1,
                             'yend'  : 2,
-                            'ytics' : 0.1       }
+                            'ytics' : 0.1       },
+
+                        {   'name'  : 'Speedup_w.r.t._Sequential_Simulation',
+                            'ystart': 0,
+                            'yend'  : 10,
+                            'ytics' : 1         }
                     ]
 
 rawDataFileName = 'chains'
@@ -217,6 +223,15 @@ def plot_stats(dirPath, fileName, xaxisLabel, keyLabel, filterLabel, filterValue
 
 def calc_and_plot(dirPath):
 
+    # Load the sequential simulation time
+    seqFile = dirPath + 'sequential.dat'
+    if not os.path.exists(seqFile):
+        print('Sequential data not available')
+        sys.exit()
+    seqFp = open(seqFile, 'r')
+    seqTime = seqFp.readline()
+    seqFp.close()
+
     # Load data from csv file
     inFile = dirPath + rawDataFileName + '.csv'
     if not os.path.exists(inFile):
@@ -231,6 +246,8 @@ def calc_and_plot(dirPath):
             data['Primary_Rollbacks'] + data['Secondary_Rollbacks']
     data['Event_Processing_Rate_(per_sec)'] = \
             data['Events_Processed'] / data['Simulation_Runtime_(secs.)']
+    data['Speedup_w.r.t._Sequential_Simulation'] = \
+            float(seqTime) / data['Simulation_Runtime_(secs.)']
 
     # Create the plots directory (if needed)
     outDir = dirPath + 'plots/'
@@ -264,14 +281,12 @@ def calc_and_plot(dirPath):
             columnNames = list(groupbyList)
 
             # Generate stats
-            frames = []
+            result = pd.DataFrame()
             for param in metricList:
                 metric = param['name']
                 columnNames += [metric + '_' + x for x in statType]
                 stats = groupedData.apply(lambda x : statistics(x[metric].tolist()))
-                frames.append(stats)
-
-            result = pd.concat(frames, keys=groupbyList, axis=1)
+                result = pd.concat([result, stats], axis=1)
 
             # Write to the csv
             outDir = dirPath + 'stats/' + rawDataFileName + '/'
