@@ -611,6 +611,31 @@ function permuteConfigScheduleQ() {
     done
 }
 
+
+# Run sequential simulation
+# runSequential <timeoutPeriod> <model> <modelCmd> <maxSimTime>
+function runSequential {
+    timeoutPeriod=$1
+    model=$2
+    modelCmd=$3
+    maxSimTime=$4
+
+    outMsg="\nSequential : $modelCmd : max sim time: $maxSimTime"
+    echo -e $outMsg
+
+    cd ../models/$model/
+    runCommand="$modelCmd --simulation-type sequential --max-sim-time $maxSimTime"
+    runTime=$(timeout $timeoutPeriod bash -c "$runCommand" | \
+                grep -e "Simulation completed in " | grep -Eo '[+-]?[0-9]+([.][0-9]+)?')
+    echo -e "Completed in $runTime seconds"
+
+    cd ../../scripts/
+    logFile="logs/sequential.dat"
+    echo $runTime > $logFile
+
+    sleep 10
+}
+
 hostName=`hostname`
 date=`date +"%m-%d-%y_%T"`
 errlogFile="logs/errlog_${date}.config"
