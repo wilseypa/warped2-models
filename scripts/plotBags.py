@@ -261,6 +261,15 @@ def calc_and_plot(dirPath):
     subprocess.call(['rm', '-rf', outName])
     subprocess.call(['mkdir', outName])
 
+    # Create the stats directory (if needed)
+    outDir = dirPath + 'stats/'
+    if not os.path.exists(outDir):
+        os.makedirs(outDir)
+
+    outName = outDir + rawDataFileName + '/'
+    subprocess.call(['rm', '-rf', outName])
+    subprocess.call(['mkdir', outName])
+
     for searchAttrs in searchAttrsList:
         groupbyList = searchAttrs['groupby']
         filterName  = searchAttrs['filter']
@@ -292,12 +301,8 @@ def calc_and_plot(dirPath):
                 result = pd.concat([result, stats], axis=1)
 
             # Write to the csv
-            outDir = dirPath + 'stats/' + rawDataFileName + '/'
-            if not os.path.exists(outDir):
-                os.makedirs(outDir)
-
             fileName = output + str(filterValue)
-            outFile = outDir + fileName + '.csv'
+            outFile = outName + fileName + '.csv'
             statFile = open(outFile,'w')
             for colName in columnNames:
                 statFile.write(colName + ',')
