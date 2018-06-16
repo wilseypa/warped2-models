@@ -3,14 +3,17 @@
 import glob
 import os, sys
 import pandas as pd
+import numpy as np
 from matplotlib import pyplot as plt
 
 ###### Settings go here ######
 
-plotDetails     =   {   'xaxis'     : 'technique',
+plotDetails     =   {   'xaxis'     : 'Scheduling-Technique',
                         'yaxis'     : 'Speedup_w.r.t._Sequential_Simulation_Mean',
                         'ylabel'    : 'Speedup',
-                        'filename'  : 'consolidated'
+                        'filename'  : 'consolidated',
+                        'sorted'    : False,
+                        'quantile'  : 0.9
                     }
 
 solutionList    =   [
@@ -48,24 +51,29 @@ def plotBar(dirPath):
     statFile = dirPath + 'stats/' + plotDetails['filename'] + '.csv'
     df = pd.read_csv(statFile)
 
-    # Build the bar plot
-    yAxisLabel = plotDetails['ylabel']
-    plt.ylabel(yAxisLabel)
-    
-    plotLabel = dirPath.rsplit('/', 2)[-2]
-    plt.title(plotLabel)
-
     xName = plotDetails['xaxis']
-    plt.xticks(range(len(df[xName])), df[xName], size='small', rotation=-90)
-
     yName = plotDetails['yaxis']
-    plt.bar(range(len(df[yName])), df[yName], align='center', width=1)
+    yAxisLabel = plotDetails['ylabel']
 
-    plt.grid(True)
+    # Sort data in descending order (if needed)
+    if plotDetails['sorted']:
+        df.sort(yName, inplace=True, ascending=False, kind='quicksort')
+
+    # Retain only the top x% of data
+    quantVal = plotDetails['quantile']
+    threshold = df[yName].quantile(quantVal)
+    df = df[df[yName] >= threshold]
+
+    # Build the bar plot
+    quantPert = str(quantVal*100)
+    plotLabel = dirPath.rsplit('/', 2)[-2].replace('_', '-').upper() + ' ' +\
+                                yAxisLabel + ' : >= ' + quantPert + 'th percentile'
+    ax = df.plot(kind='barh', title=plotLabel, grid=True, legend=False, x=xName, fontsize=5)
+    ax.set_xlabel(yAxisLabel)
     plt.tight_layout()
 
     plotFile = dirPath + 'plots/' + plotDetails['filename'] + '.pdf'
-    plt.savefig(plotFile)
+    plt.savefig(plotFile, width=0.8)
 
 
 def calc_and_plot(dirPath):
