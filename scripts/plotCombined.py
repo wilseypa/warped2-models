@@ -13,7 +13,7 @@ plotDetails     =   {   'xaxis'     : 'Scheduling-Technique',
                         'ylabel'    : 'Speedup',
                         'filename'  : 'consolidated',
                         'sorted'    : False,
-                        'quantile'  : 0.9
+                        'quantile'  : 0.95
                     }
 
 solutionList    =   [
@@ -67,7 +67,7 @@ def plotBar(dirPath):
     # Build the bar plot
     quantPert = str(quantVal*100)
     plotLabel = dirPath.rsplit('/', 2)[-2].replace('_', '-').upper() + ' ' +\
-                                yAxisLabel + ' : >= ' + quantPert + 'th percentile'
+                                yAxisLabel + ' >= ' + quantPert + 'th percentile'
     ax = df.plot(kind='barh', title=plotLabel, grid=True, legend=False, x=xName, fontsize=5)
     ax.set_xlabel(yAxisLabel)
     plt.tight_layout()

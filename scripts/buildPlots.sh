@@ -5,4 +5,5 @@
 ./plotBags.py $1
 ./plotChains.py $1
 ./plotBlocks.py $1
+./plotCombined.py $1
 
