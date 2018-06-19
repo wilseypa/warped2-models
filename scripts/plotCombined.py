@@ -8,6 +8,10 @@ from matplotlib import pyplot as plt
 
 ###### Settings go here ######
 
+threadFilter    =   {   'active'    : False,
+                        'value'     : 16
+                    }
+
 plotDetails     =   {   'xaxis'     : 'Scheduling-Technique',
                         'yaxis'     : 'Speedup_w.r.t._Sequential_Simulation_Mean',
                         'ylabel'    : 'Speedup',
@@ -68,6 +72,8 @@ def plotBar(dirPath):
     quantPert = str(quantVal*100)
     plotLabel = dirPath.rsplit('/', 2)[-2].replace('_', '-').upper() + ' ' +\
                                 yAxisLabel + ' >= ' + quantPert + 'th percentile'
+    if threadFilter['active']:
+        plotLabel += '\nwith worker thread count = ' + str(threadFilter['value'])
     ax = df.plot(kind='barh', title=plotLabel, grid=True, legend=False, x=xName, fontsize=5)
     ax.set_xlabel(yAxisLabel)
     plt.tight_layout()
@@ -98,12 +104,17 @@ def calc_and_plot(dirPath):
 
             result = pd.DataFrame(columns=[fieldX, fieldY])
             for index, row in data.iterrows():
+                if threadFilter['active'] and \
+                        data.at[index,'Worker_Thread_Count'] != threadFilter['value']:
+                    continue
                 yValue = data.at[index,fieldY]
                 xValue = solution['label']
                 for xaxisname, xaxislabel in zip(solution['xaxis'], solution['xlabel']):
                     xValue = xValue + xaxislabel + str(data.at[index,xaxisname])
                 result.loc[xValue] = [xValue, yValue]
-            result.to_csv(outFile, mode='a', index=False, header=False, sep=',')
+
+            if not result.empty:
+                result.to_csv(outFile, mode='a', index=False, header=False, sep=',')
 
     plotBar(dirPath)
 
