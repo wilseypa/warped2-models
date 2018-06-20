@@ -624,14 +624,17 @@ function runSequential {
     echo -e $outMsg
 
     cd ../models/$model/
-    runCommand="$modelCmd --simulation-type sequential --max-sim-time $maxSimTime"
-    runTime=$(timeout $timeoutPeriod bash -c "$runCommand" | \
-                grep -e "Simulation completed in " | grep -Eo '[+-]?[0-9]+([.][0-9]+)?')
-    echo -e "Completed in $runTime seconds"
+    runCommand="$modelCmd \
+                --simulation-type sequential \
+                --max-sim-time $maxSimTime"
+    result=$(timeout $timeoutPeriod bash -c "$runCommand" | \
+                grep -e "Simulation completed in " -e "Events processed: " | \
+                grep -Eo '[+-]?[0-9]+([.][0-9]+)?')
+    echo -e "$result"
 
     cd ../../scripts/
     logFile="logs/sequential.dat"
-    echo $runTime > $logFile
+    echo $result > $logFile
 
     sleep 10
 }
