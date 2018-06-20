@@ -3,5 +3,5 @@
 
 for config in config/special/* ; do
     echo $config
-    ./configSimulate $config
+    ./configSimulate.sh $config
 done
