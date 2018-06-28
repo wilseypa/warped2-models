@@ -232,7 +232,7 @@ def calc_and_plot(dirPath):
         print('Sequential data not available')
         sys.exit()
     seqFp = open(seqFile, 'r')
-    seqTime = seqFp.readline()
+    seqCount, seqTime = seqFp.readline().split()
     seqFp.close()
 
     # Load data from csv file
