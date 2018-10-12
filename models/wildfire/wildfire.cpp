@@ -417,8 +417,8 @@ int main(int argc, char *argv[]) {
 
             /* Heat content at fire's origin equals ignition point */
             /* Origin of fire is a square patch whose center is a configurable parameter */
-            unsigned int diff_row = std::abs(i-fire_origin_row);
-            unsigned int diff_col = std::abs(j-fire_origin_col);
+            unsigned int diff_row = (i>=fire_origin_row) ? i-fire_origin_row : fire_origin_row-i;
+            unsigned int diff_col = (j>=fire_origin_col) ? j-fire_origin_col : fire_origin_col-j;
             if ( (diff_row <= ORIGIN_RADIUS) && (diff_col <= ORIGIN_RADIUS) ) {
                 heat_content = ignition_threshold;
             }
