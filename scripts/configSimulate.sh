@@ -628,8 +628,8 @@ function runSequential {
                 --simulation-type sequential \
                 --max-sim-time $maxSimTime"
     result=$(timeout $timeoutPeriod bash -c "$runCommand" | \
-                grep -e "Simulation completed in " -e "Events processed: " | \
-                grep -Eo '[+-]?[0-9]+([.][0-9]+)?')
+                grep -e "Simulation completed in " -e "Events processed: " \
+                -e "LP count: " | grep -Eo '[+-]?[0-9]+([.][0-9]+)?')
     echo -e "$result"
 
     cd ../../scripts/
