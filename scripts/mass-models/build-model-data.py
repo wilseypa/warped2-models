@@ -6,23 +6,23 @@
 # Add the DES Metrics-focussed new python script that you are building into the scripts directory and also add a section in the README describing what it does and how to run it. Try to store the results inside logs.
 # Advice from Sounak ^^^
 
+# local.config will store each of the simulation model desired run time flags
+
 import os
 import sys
 import json
 import datetime
-from collections import namedtuple # Use for defining each model
 
-Model_Instance = namedtuple("Model_Instance", "name flags size runtime")
-
-all_instances = []
-
-all_instances.append(Model_Instance("pcs", "-x 1024 -y 1024", "100k", "500"))
-all_instances.append(Model_Instance("pcs", "-x 316 -y 316", "100k", "2500"))
-all_instances.append(Model_Instance("pcs", "-x 707 -y 707", "500k", "500"))
-all_instances.append(Model_Instance("pcs", "-x 1024 -y 1024", "1m", "500"))
-all_instances.append(Model_Instance("pcs", "-x 1414 -y 1414", "2m", "125"))
-all_instances.append(Model_Instance("pcs", "-x 2236 -y 2236", "5m", "80"))
-all_instances.append(Model_Instance("pcs", "-x 3162 -y 3162", "10m", "50"))
+def openConfig():
+    # Removes the first line, which is a comment on the format for adding more
+    models = []
+    with open("local.config") as f:
+        data = f.readlines()
+    data = data[1:]
+    models = [d.split(',') for d in data]
+    for m in models:
+        m[-1] = m[-1].replace("\n", "")
+    return models
 
 def writeJSON(file_name, json_data):
     with open(file_name, 'w') as outfile:
@@ -50,26 +50,53 @@ print("Building warped2-model mass simulations")
 print("Arguments: %s" % sys.argv)
 
 models = ["airport", "epidemic", "neuron", "pcs", "phold", "sandpile", "synthetic", "traffic", "volcano", "wildfire"]
-sizes = ["10k", "50k", "100k", "500k", "1m", "2m", "5m", "10m"]
-run_times = [12000, 2500, 500, 250, 100, 80, 50]
+#sizes = ["10k", "50k", "100k", "500k", "1m", "2m", "5m", "10m"]
+#run_times = [12000, 2500, 500, 250, 100, 80, 50]
 
-copy = "cp /home/kanesp/warped2-models/models/%s/%s_sim ./%s/%s_sim"
+copy = "cp /home/kanesp/warped2-models/models/%s/%s_sim ./logs/%s/%s_sim"
 
-sim_type = "--simulation-type sequential"
-stats_file = "--statistics-file stats-%s.csv"
-stats_type = "--statistics-type csv"
-sim_time = "--max-sim-time"
-trace_file = "%s%s-trace.txt"
+sim_type = " --simulation-type sequential "
+stats_file = " --statistics-file stats-%s.csv "
+stats_type = " --statistics-type csv "
+sim_time = " --max-sim-time "
+trace_file = " %s%s-trace.txt "
+
+iterations = openConfig()
+print(iterations)
 
 for m in models:
     # Create directory w/in logs for each model
-    print("mkdir %s" % m)
-#    os.system("mkdir %s" % m)
-
+    print("mkdir logs/%s" % m)
+    os.system("mkdir logs/%s" % m)
+    
     # Copy executable into the above created directory
     print(copy % (m, m, m, m))
-#    os.system(copy % (m, m, m))
+    os.system(copy % (m, m, m, m))
+
     modelJSON = defineModelSummaryJSON(m, m, m, m) # CHANGE THIS
     writeJSON("test.json", modelJSON) # CHANGE THIS
     i = 0
-    for 
+
+
+for i in iterations:
+    name = i[0]
+    flags = i[1]
+    size = i[2]
+    runtime = i[3]
+    os.system("cd logs/%s" % name)
+
+    # Run Simulation
+    sim_string = "./%s_sim " % name
+    print(sim_string)
+    sim_string += i[1]
+    sim_string += " %s %s " % (sim_time, i[3])
+    sim_string += sim_type
+    sim_string += stats_file % (name + "_" + i[2][1:])
+
+    print(sim_string)
+    quit()
+    
+os.system("rm test.json")
+print("Removed test.json")
+
+    

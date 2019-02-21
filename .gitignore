@@ -57,3 +57,6 @@ tags*
 .tags*
 src/tags*
 src/.tags*
+
+# emacs buffer files
+*~
