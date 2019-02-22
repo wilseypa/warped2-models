@@ -13,6 +13,19 @@ import sys
 import json
 import datetime
 
+def readTraceFile(file_name):
+    data = []
+    with open(file_name, 'r') as f:
+        data = f.readlines()
+    events = 0
+    LPs = 0
+    for d in data:
+        if "LP count" in d:
+            LPs = int(d.split(":")[-1])
+        if "Events processed" in d:
+            events = int(d.split(":")[-1])
+    return events, LPs
+
 def openConfig():
     # Removes the first line, which is a comment on the format for adding more
     models = []
@@ -28,17 +41,17 @@ def writeJSON(file_name, json_data):
     with open(file_name, 'w') as outfile:
         print(json.dump(json_data, outfile, indent=4, sort_keys=False))
 
-def defineModelSummaryJSON(model_name, capt_hist, file_name, format):
+def defineModelSummaryJSON(model_name, capt_hist, file_name, format, events, LPs):
     m = {}
     m["simulator_name"] = "warped2-models"
     m["model_name"] = model_name
     m["original_capture_date"] = datetime.datetime.today().strftime("%d-%m-%y")
     m["capture_history"] = capt_hist
-    m["total_lps"] = 0
+    m["total_lps"] = LPs
     m["event_data"] = {}
     m["event_data"]["file_name"] = file_name
     m["event_data"]["format"] = format
-    m["event_data"]["total_events"] = 0
+    m["event_data"]["total_events"] = events
     m["date_analyzed"] = ""
     return m
     
@@ -89,7 +102,9 @@ for i in iterations:
     sim_string += " >> " + trace_file % (name.strip(), size.strip())
     os.system(sim_string)
     print(sim_string)
-    j = defineModelSummaryJSON(name, name, "stats-" + name + "_" + size + ".csv", ".csv")
+    events, LPs = readTraceFile("%s%s-trace.txt" % (name.strip(), size.strip()))
+    print(events, LPs)
+    j = defineModelSummaryJSON(name, name, "stats-" + name + "_" + size.strip() + ".csv", ".csv", events, LPs)
     writeJSON("modelSummary.json", j)
 
 
