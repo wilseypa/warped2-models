@@ -1,0 +1,15 @@
+Simulation type: Sequential
+Statistics type: csv
+Statistics file: stats-pcs_10k.csv
+Simulation type: Sequential
+Statistics type: csv
+Statistics file: stats-pcs_10k.csv
+Simulation type: Sequential
+Statistics type: csv
+Statistics file: stats-pcs_10k.csv
+Simulation type: Sequential
+Statistics type: csv
+Statistics file: stats-pcs_10k.csv
+Simulation type: Sequential
+Statistics type: csv
+Statistics file: stats-pcs_10k.csv

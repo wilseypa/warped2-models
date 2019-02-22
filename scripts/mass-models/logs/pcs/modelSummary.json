@@ -1,0 +1,13 @@
+{
+    "total_lps": 0,
+    "model_name": "pcs",
+    "event_data": {
+        "total_events": 0,
+        "file_name": "stats-pcs_ 10k.csv",
+        "format": ".csv"
+    },
+    "simulator_name": "warped2-models",
+    "date_analyzed": "",
+    "capture_history": "pcs",
+    "original_capture_date": "22-02-19"
+}

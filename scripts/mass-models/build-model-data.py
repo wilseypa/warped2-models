@@ -55,27 +55,20 @@ models = ["airport", "epidemic", "neuron", "pcs", "phold", "sandpile", "syntheti
 
 copy = "cp /home/kanesp/warped2-models/models/%s/%s_sim ./logs/%s/%s_sim"
 
-sim_type = " --simulation-type sequential "
-stats_file = " --statistics-file stats-%s.csv "
-stats_type = " --statistics-type csv "
-sim_time = " --max-sim-time "
-trace_file = " %s%s-trace.txt "
+sim_type = "--simulation-type sequential "
+stats_file = "--statistics-file stats-%s.csv "
+stats_type = "--statistics-type csv "
+sim_time = "--max-sim-time "
+trace_file = "%s%s-trace.txt "
 
 iterations = openConfig()
-print(iterations)
 
 for m in models:
     # Create directory w/in logs for each model
-    print("mkdir logs/%s" % m)
     os.system("mkdir logs/%s" % m)
-    
-    # Copy executable into the above created directory
-    print(copy % (m, m, m, m))
+    # Copy executable to file
     os.system(copy % (m, m, m, m))
 
-    modelJSON = defineModelSummaryJSON(m, m, m, m) # CHANGE THIS
-    writeJSON("test.json", modelJSON) # CHANGE THIS
-    i = 0
 
 
 for i in iterations:
@@ -83,20 +76,25 @@ for i in iterations:
     flags = i[1]
     size = i[2]
     runtime = i[3]
+    os.chdir(os.path.join(os.getcwd(), "logs/%s" % name))
     os.system("cd logs/%s" % name)
-
     # Run Simulation
     sim_string = "./%s_sim " % name
-    print(sim_string)
+#    print(sim_string)
     sim_string += i[1]
     sim_string += " %s %s " % (sim_time, i[3])
     sim_string += sim_type
+    sim_string += " --statistics-type csv "
     sim_string += stats_file % (name + "_" + i[2][1:])
-
+    sim_string += " >> " + trace_file % (name.strip(), size.strip())
+    os.system(sim_string)
     print(sim_string)
+    j = defineModelSummaryJSON(name, name, "stats-" + name + "_" + size + ".csv", ".csv")
+    writeJSON("modelSummary.json", j)
+
+
     quit()
     
 os.system("rm test.json")
-print("Removed test.json")
 
     
