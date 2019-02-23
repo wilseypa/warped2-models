@@ -105,7 +105,7 @@ for i in iterations:
     print(sim_string)
     events, LPs = readTraceFile("%s%s-trace.txt" % (name.strip(), size.strip()))
     j = defineModelSummaryJSON(name, name, "stats-" + name + "_" + size.strip() + ".csv", ".csv", events, LPs)
-    writeJSON("modelSummary-%s.json" % size.strip(), j)
+    writeJSON("modelSummary.json", j)
 
     os.chdir(pwd)
 
