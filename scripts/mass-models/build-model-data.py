@@ -56,6 +56,7 @@ def defineModelSummaryJSON(model_name, capt_hist, file_name, format, events, LPs
     return m
     
 pwd = os.getcwd()
+os.system("mkdir logs")
 logsDir = os.path.join(pwd, "logs")
 
 print("Building warped2-model mass simulations")
@@ -63,8 +64,6 @@ print("Building warped2-model mass simulations")
 print("Arguments: %s" % sys.argv)
 
 models = ["airport", "epidemic", "neuron", "pcs", "phold", "sandpile", "synthetic", "traffic", "volcano", "wildfire"]
-#sizes = ["10k", "50k", "100k", "500k", "1m", "2m", "5m", "10m"]
-#run_times = [12000, 2500, 500, 250, 100, 80, 50]
 
 copy = "cp /home/kanesp/warped2-models/models/%s/%s_sim ./logs/%s/%s_sim"
 
@@ -83,33 +82,33 @@ for m in models:
     os.system(copy % (m, m, m, m))
 
 
-
 for i in iterations:
     name = i[0]
     flags = i[1]
     size = i[2]
     runtime = i[3]
     os.chdir(os.path.join(os.getcwd(), "logs/%s" % name))
-    os.system("cd logs/%s" % name)
+    newDir = name.strip() + "-" + size.strip()
+    os.system("mkdir %s" % newDir)
+
+    os.system("cp %s_sim %s" % (name, newDir))
+    os.chdir(newDir)
     # Run Simulation
     sim_string = "./%s_sim " % name
-#    print(sim_string)
-    sim_string += i[1]
-    sim_string += " %s %s " % (sim_time, i[3])
+    sim_string += flags
+    sim_string += " %s %s " % (sim_time, runtime)
     sim_string += sim_type
     sim_string += " --statistics-type csv "
-    sim_string += stats_file % (name + "_" + i[2][1:])
+    sim_string += stats_file % (name + "_" + size.strip())
     sim_string += " >> " + trace_file % (name.strip(), size.strip())
     os.system(sim_string)
     print(sim_string)
     events, LPs = readTraceFile("%s%s-trace.txt" % (name.strip(), size.strip()))
-    print(events, LPs)
     j = defineModelSummaryJSON(name, name, "stats-" + name + "_" + size.strip() + ".csv", ".csv", events, LPs)
-    writeJSON("modelSummary.json", j)
+    writeJSON("modelSummary-%s.json" % size.strip(), j)
 
+    os.chdir(pwd)
 
-    quit()
-    
 os.system("rm test.json")
 
     
