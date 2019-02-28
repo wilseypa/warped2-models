@@ -65,7 +65,7 @@ print("Arguments: %s" % sys.argv)
 
 models = ["airport", "epidemic", "neuron", "pcs", "phold", "sandpile", "synthetic", "traffic", "volcano", "wildfire"]
 
-copy = "cp /home/kanesp/warped2-models/models/%s/%s_sim ./logs/%s/%s_sim"
+copy = "cp ../../models/%s/%s_sim ./logs/%s/%s_sim"
 
 sim_type = "--simulation-type sequential "
 stats_file = "--statistics-file stats-%s.csv "
@@ -93,8 +93,9 @@ for i in iterations:
 
     os.system("cp %s_sim %s" % (name, newDir))
     os.chdir(newDir)
+    profileString = "CPUPROFILE=%s-%sProfile.out " % (name.strip(), size.strip())
     # Run Simulation
-    sim_string = "./%s_sim " % name
+    sim_string = profileString + " ./%s_sim " % name
     sim_string += flags
     sim_string += " %s %s " % (sim_time, runtime)
     sim_string += sim_type
