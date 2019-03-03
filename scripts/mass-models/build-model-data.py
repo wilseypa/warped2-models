@@ -94,6 +94,7 @@ for i in iterations:
     os.system("cp %s_sim %s" % (name, newDir))
     os.chdir(newDir)
     profileString = "CPUPROFILE=%s-%sProfile.out " % (name.strip(), size.strip())
+    print("CPU PROFILE FILE NAME: %s", profileString)
     # Run Simulation
     sim_string = profileString + " ./%s_sim " % name
     sim_string += flags
@@ -109,7 +110,5 @@ for i in iterations:
     writeJSON("modelSummary.json", j)
 
     os.chdir(pwd)
-
-os.system("rm test.json")
 
     
