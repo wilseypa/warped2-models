@@ -54,7 +54,21 @@ def defineModelSummaryJSON(model_name, capt_hist, file_name, format, events, LPs
     m["event_data"]["total_events"] = events
     m["date_analyzed"] = ""
     return m
-    
+
+def writeSummary(model, LPs, events, runtime, outputFileSize):
+    s = [model, LPs, events, float(events)/float(LPs), int(runtime), outputFileSize, 5.0 * float(runtime)/float(outputFileSize)]
+    s = str(s).replace("[", "")
+    s = str(s).replace("]", "")
+    with open("../../../summary-file.csv", "a") as f:
+        f.write(s)
+        f.write("\n")
+        f.close()
+
+f = open("summary-file.csv", "a")
+f.write("Model, Total LPs, Total Events, Events/LP, Runtime, Output File Size, New Runtime")
+f.write("\n")
+f.close()
+
 pwd = os.getcwd()
 os.system("mkdir logs")
 logsDir = os.path.join(pwd, "logs")
@@ -81,8 +95,9 @@ for m in models:
     # Copy executable to file
     os.system(copy % (m, m, m, m))
 
-
 for i in iterations:
+    print(i)
+    print(datetime.datetime.now())
     name = i[0]
     flags = i[1]
     size = i[2]
@@ -93,8 +108,9 @@ for i in iterations:
 
     os.system("cp %s_sim %s" % (name, newDir))
     os.chdir(newDir)
-    profileString = "CPUPROFILE=%s-%sProfile.out " % (name.strip(), size.strip())
-    print("CPU PROFILE FILE NAME: %s", profileString)
+    profileString = "CPUPROFILE=%s%sProfile.out " % (name.strip(), size.strip())
+    print("CPU PROFILE FILE NAME: %s" % profileString)
+
     # Run Simulation
     sim_string = profileString + " ./%s_sim " % name
     sim_string += flags
@@ -105,10 +121,12 @@ for i in iterations:
     sim_string += " >> " + trace_file % (name.strip(), size.strip())
     os.system(sim_string)
     print(sim_string)
+
     events, LPs = readTraceFile("%s%s-trace.txt" % (name.strip(), size.strip()))
     j = defineModelSummaryJSON(name, name, "stats-" + name + "_" + size.strip() + ".csv", ".csv", events, LPs)
     writeJSON("modelSummary.json", j)
 
+    model = "warped2-" + name.strip() + "-" + size.strip()
+    fileSize = os.path.getsize("stats-" + name + "_" + size.strip() + ".csv")/1e9
+    writeSummary(model, LPs, events, runtime, fileSize)
     os.chdir(pwd)
-
-    
