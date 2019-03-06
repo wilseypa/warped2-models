@@ -127,6 +127,17 @@ for i in iterations:
     writeJSON("modelSummary.json", j)
 
     model = "warped2-" + name.strip() + "-" + size.strip()
-    fileSize = os.path.getsize("stats-" + name + "_" + size.strip() + ".csv")/1e9
+    fileSize = 1
+    try:
+        fileSize = os.path.getsize("stats-" + name + "_" + size.strip() + ".csv")/1e9
+    except:
+        pass
+    if LPs == 0:
+        LPs = 1
+    if fileSize == 0:
+        fileSize = 1
+    if events == 0:
+        events = 1
+
     writeSummary(model, LPs, events, runtime, fileSize)
     os.chdir(pwd)

@@ -36,6 +36,4 @@ and modelSummary.json. These directories are then suited for use with the desMet
 
 
 ### Adding Configurations
-Simply add to the struct list `Model_Instance` for each configuration that you would like. The
-Model_Instance struct takes 4 arguments: name, flags, size, and runtime. The rest is taken care of
-by the script. 
+Add to the local.config file to add more simulation runs. The formatting of the file is indicated in the first line.
