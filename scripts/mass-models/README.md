@@ -11,7 +11,7 @@ by the desMetrics project for sampling, analysis, and visualizing.
 ### Running Simulations
 To run the file, I suggest using the following command:
 ```
-python3 build-model-data.py > <trace-file.txt> 2>&1 &
+python3 build-model-data.py >> <trace-file.txt> 2>&1 &
 ```
 This runs the trace in the background and will create a trace file (<trace-file.txt>) which tracks standard output and standard error for review if something were to operate incorrectly. 
 
