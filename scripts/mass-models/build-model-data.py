@@ -43,16 +43,17 @@ def writeJSON(file_name, json_data):
 
 def defineModelSummaryJSON(model_name, capt_hist, file_name, format, events, LPs):
     m = {}
-    m["simulator_name"] = "warped2-models"
-    m["model_name"] = model_name
-    m["original_capture_date"] = datetime.datetime.today().strftime("%d-%m-%y")
-    m["capture_history"] = capt_hist
-    m["total_lps"] = LPs
+    m["simulator_name"] = str("warped2-models")
+    m["model_name"] = str(model_name)
+    m["original_capture_date"] = str(datetime.datetime.today().strftime("%d-%m-%y"))
+    m["capture_history"] = [str(capt_hist)]
+    m["total_lps"] = str(LPs)
     m["event_data"] = {}
-    m["event_data"]["file_name"] = file_name
-    m["event_data"]["format"] = format
-    m["event_data"]["total_events"] = events
-    m["date_analyzed"] = ""
+    m["event_data"]["file_name"] = str(file_name)
+    m["event_data"]["format"] = str(format)
+    m["event_data"]["total_events"] = str(events)
+    m["date_analyzed"] = str("")
+    m["event_data"]["format"] = ["sLP", "rLP", "sTS", "rTS"]
     return m
 
 def writeSummary(model, LPs, events, runtime, outputFileSize):
