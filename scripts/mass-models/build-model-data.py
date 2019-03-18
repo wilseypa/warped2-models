@@ -47,13 +47,13 @@ def defineModelSummaryJSON(model_name, capt_hist, file_name, format, events, LPs
     m["model_name"] = str(model_name)
     m["original_capture_date"] = str(datetime.datetime.today().strftime("%d-%m-%y"))
     m["capture_history"] = [str(capt_hist)]
-    m["total_lps"] = str(LPs)
+    m["total_lps"] = int(LPs)
     m["event_data"] = {}
     m["event_data"]["file_name"] = str(file_name)
     m["event_data"]["format"] = str(format)
-    m["event_data"]["total_events"] = str(events)
+    m["event_data"]["total_events"] = int(events)
     m["date_analyzed"] = str("")
-    m["event_data"]["format"] = ["sLP", "rLP", "sTS", "rTS"]
+    m["event_data"]["format"] = ["sLP", "rLP", "sTS", "rTS", "sz"]
     return m
 
 def writeSummary(model, LPs, events, runtime, outputFileSize):
@@ -111,7 +111,7 @@ for i in iterations:
     os.chdir(newDir)
     profileString = "CPUPROFILE=%s%sProfile.out " % (name.strip(), size.strip())
     print("CPU PROFILE FILE NAME: %s" % profileString)
-
+    print(f"\n\nSimulation: {name}\t Size: {size}\n")
     # Run Simulation
     sim_string = profileString + " ./%s_sim " % name
     sim_string += flags
