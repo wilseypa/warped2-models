@@ -65,10 +65,23 @@ def writeSummary(model, LPs, events, runtime, outputFileSize):
         f.write("\n")
         f.close()
 
+def newConfig(name, flags, size, runtime):
+    s = [name.strip(), flags, size.strip(), int(runtime)]
+    s = str(s).replace("[", "")
+    s = s.replace("]", "")
+    s = s.replace("'", "")
+    with open("/home/kanesp/warped2-gprof/warped2-models/scripts/mass-models/new-local.config") as f:
+        f.write(s)
+        f.write("\n")
+        f.close()
+
+        
 f = open("summary-file.csv", "a")
 f.write("Model, Total LPs, Total Events, Events/LP, Runtime, Output File Size, New Runtime")
 f.write("\n")
 f.close()
+
+os.system("touch /home/kanesp/warped2-gprof/warped2-models/scripts/mass-models/new-local.config")
 
 pwd = os.getcwd()
 os.system("mkdir logs")
@@ -82,6 +95,7 @@ models = ["airport", "epidemic", "neuron", "pcs", "phold", "sandpile", "syntheti
 
 copy = "cp ../../models/%s/%s_sim ./logs/%s/%s_sim"
 
+profile_string = "CPUPROFILE=%s%sProfile.out"
 sim_type = "--simulation-type sequential "
 stats_file = "--statistics-file stats-%s.csv "
 stats_type = "--statistics-type csv "
@@ -90,11 +104,14 @@ trace_file = "%s%s-trace.txt "
 
 iterations = openConfig()
 
-for m in models:
+# Goal file size for the trace files
+goalSize = 10 *1e9
+
+#for m in models:
     # Create directory w/in logs for each model
-    os.system("mkdir logs/%s" % m)
+ #   os.system("mkdir logs/%s" % m)
     # Copy executable to file
-    os.system(copy % (m, m, m, m))
+  #  os.system(copy % (m, m, m, m))
 
 for i in iterations:
     print(i)
@@ -110,27 +127,33 @@ for i in iterations:
     os.system("cp %s_sim %s" % (name, newDir))
     os.chdir(newDir)
     profileString = "CPUPROFILE=%s%sProfile.out " % (name.strip(), size.strip())
+    
     print("CPU PROFILE FILE NAME: %s" % profileString)
-    print(f"\n\nSimulation: {name}\t Size: {size}\n")
+    print("\n\nSimulation: %s\t Size: %s\n" % (name, size))
     # Run Simulation
+#    sim_string = profileString % (name.strip(), size.strip())
+                                  
     sim_string = profileString + " ./%s_sim " % name
+#    sim_string += " %s " % flags
     sim_string += flags
     sim_string += " %s %s " % (sim_time, runtime)
     sim_string += sim_type
     sim_string += " --statistics-type csv "
     sim_string += stats_file % (name + "_" + size.strip())
-    sim_string += " >> " + trace_file % (name.strip(), size.strip())
+    sim_string += " >> trace.txt"
     os.system(sim_string)
     print(sim_string)
 
-    events, LPs = readTraceFile("%s%s-trace.txt" % (name.strip(), size.strip()))
+    events, LPs = readTraceFile("trace.txt")#readTraceFile("%s%s-trace.txt" % (name.strip(), size.strip()))
     j = defineModelSummaryJSON(name, name, "stats-" + name + "_" + size.strip() + ".csv", ".csv", events, LPs)
     writeJSON("modelSummary.json", j)
 
     model = "warped2-" + name.strip() + "-" + size.strip()
     fileSize = 1
+    newRuntime = runtime
     try:
         fileSize = os.path.getsize("stats-" + name + "_" + size.strip() + ".csv")/1e9
+        newRuntime = goalSize / fileSize * int(runtime)
     except:
         pass
     if LPs == 0:
@@ -140,5 +163,6 @@ for i in iterations:
     if events == 0:
         events = 1
 
-    writeSummary(model, LPs, events, runtime, fileSize)
+    writeSummary(model, LPs, events, newRuntime, fileSize)
+#    newConfig(name, flags, size, newRuntime)
     os.chdir(pwd)

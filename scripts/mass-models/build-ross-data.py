@@ -111,19 +111,18 @@ for i in iterations:
     os.chdir("stats-output")
 
     fileSize = 0
+    newRuntime = runtime
     try:
         fileSize = sum(os.path.getsize(f) for f in os.listdir('.') if os.path.isfile(f))
+        newRuntime = goalSize / fileSize * int(runtime)
     except:
         pass
     print("FILESIZE: " + str(fileSize))
-    newRuntime = goalSize / fileSize * int(runtime)
-    
-    if fileSize != 0:
-        newConfig(name, flags, size, newRuntime)
-    else:
-        pass
+
+    newConfig(name, flags, size, newRuntime)
     
     print(sim_string)
+    print("\n\n")
     os.chdir(pwd)
     
     
