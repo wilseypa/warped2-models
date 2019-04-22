@@ -133,6 +133,7 @@ synch = "--sync=1"
 create_stats_file = "--event-trace=1"
 stats_path = "--stats-path=./"
 stats_prefix = "stats-%s.csv"
+end = "--end=%s"
 trace_file = "trace.txt"
 
 for i in iterations:
@@ -154,6 +155,7 @@ for i in iterations:
     sim_string += " %s " % synch
     sim_string += " %s " % create_stats_file
     sim_string += " %s " % flags
+    sim_string += " %s " % (end % runtime)
     sim_string += " >> %s" % trace_file
     print(sim_string)
     os.system(sim_string)
