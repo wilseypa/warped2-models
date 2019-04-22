@@ -57,3 +57,11 @@ tags*
 .tags*
 src/tags*
 src/.tags*
+
+# emacs buffer files
+*~
+
+# warped2 files
+*.ppm
+*.dat
+*.out
