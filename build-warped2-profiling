@@ -1,0 +1,62 @@
+#!/bin/bash
+
+git clone https://github.com/wilseypa/warped2
+
+cd warped2
+autoreconf -i
+
+#
+# configure with openmpi for valgrind (seems to work only with the airport model)
+#
+
+#./configure --with-mpi-includedir=/usr/include/mpi --prefix=/home/paw/fromUC/github.com/warped2/local CXXFLAGS="-g -O3 -Wa,--gstabs -save-temps"
+
+#
+# configure with openmpi for gprof
+#
+
+# can't make it build with gcc for some reason
+#./configure --with-mpi-includedir=/usr/include/mpi --prefix=/home/paw/fromUC/github.com/warped2/local CXXFLAGS="-g -O3 -pg -no-pie"
+
+#
+# configure with openmpi for google-proftools 
+#
+
+# let's try clang....built successfully....
+./configure --with-mpi-includedir=/usr/include/mpi --prefix=/home/paw/fromUC/github.com/warped2/local CXXFLAGS='-g -O3 -Wno-inconsistent-missing-override -Wno-reserved-id-macro -Wno-keyword-macro -Wno-redundant-move -Wno-pessimizing-move -Wno-infinite-recursion' LDFLAGS='-lprofiler' CXX=clang++
+
+make -j 4 install
+cd ..
+
+git clone https://github.com/wilseypa/warped2-models
+
+cd warped2-models
+autoreconf -i
+
+#
+# configure with openmpi for valgrind
+#
+#./configure --with-warped=/home/paw/fromUC/github.com/warped2/local CXXFLAGS="-g -O3 -Wa,--gstabs -save-temps" CXX="mpicxx"
+
+
+#
+# configure with openmpi for gprof
+#
+
+##./configure --with-warped=/home/paw/fromUC/github.com/warped2/local CXXFLAGS="-g -O3 -pg" CXX="mpicxx"
+
+#
+# configure with openmpi for google-proftools
+#
+
+#### for some reason, the -Wno-unused-private-field switch appears to be ignored by the -Werror flag
+#### placed after it in the epidemic makefile anyway i just jump into the epidemic subdirectory and
+#### remove the -Werror switch for the CXXFLAGS variable, go back to the warped2-models root, type
+#### make and everything builds (ok, epidemic still throws a warning, but it builds....
+
+# tell mpicxx to use clang
+export OMPI_CXX=clang++
+./configure --with-warped=/home/paw/fromUC/github.com/warped2/local CXXFLAGS='-g -O3 -std=c++11 -Wno-inconsistent-missing-override -Wno-unused-private-field' LDFLAGS='-lprofiler' CXX=mpicxx
+
+make -j 4
+cd ..
