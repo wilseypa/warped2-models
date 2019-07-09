@@ -4,11 +4,11 @@ User can adjust the following parameters inside the macro section of
 [Config creator](createConfig.cpp) and build the config file using the 
 following command:
 
-    g++ --std=c++11 createConfig.cpp;./a.out <config_filename>
-
+- g++ --std=c++11 createConfig.cpp
+- ./a.out <output_file> <nregions> <nlocations> <population> <graph-1/0>
 
 1. Diffusion parameters
-    1. Graph Type can be either Watts-Strogatz or Barabasi-Albert
+    1. [Arg 5] Graph Type can be either Watts-Strogatz or Barabasi-Albert
     2. Param 1 - default value is 8.
          Watts-Strogatz  : Number of links per node (K).
          Barabasi-Albert : Maximum degree of each node (m).
@@ -29,16 +29,14 @@ following command:
     11. Location state refresh interval - intervals at which the disease 
         spread inside a location is re-computed. Default value is 50 timestamps.
 3. Region parameters (refer to Legend-2)
-    1. Number of regions. Default value is 1000.
-    2. Minimum number of locations per region. Default value is 10.
-    3. Maximum number of locations per region. Default value is 10.
+    1. [Arg 2] Number of regions.
+    2. [Arg 3] Number of locations per region.
 4. Location parameters (refer to Legend-3)
-    1. Minimum population of a location. Default value is 100.
-    2. Maximum population of a location. Default value is 100.
-    3. Minimum travel time to Hub. Default value is 50 timestamps. Refer to Note.
-    4. Maximum travel time to Hub. Default value is 400 timestamps. Refer to Note.
-    5. Minimum location diffusion interval. Default value is 200 timestamps.
-    6. Maximum location diffusion interval. Default value is 500 timestamps.
+    1. [Arg 4] Population of a location.
+    2. Minimum travel time to Hub. Default value is 50 timestamps. Refer to Note.
+    3. Maximum travel time to Hub. Default value is 400 timestamps. Refer to Note.
+    4. Minimum location diffusion interval. Default value is 200 timestamps.
+    5. Maximum location diffusion interval. Default value is 500 timestamps.
 
 Note:
 Travel Time<sub> location 1 => location 2</sub> = 
