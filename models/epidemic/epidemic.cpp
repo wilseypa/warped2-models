@@ -76,14 +76,40 @@ std::vector<std::shared_ptr<warped::Event> > Location::receiveEvent(const warped
 
 int main(int argc, const char** argv) {
 
-    std::string config_filename = "model_10k_ws.dat";
-    TCLAP::ValueArg<std::string> config_arg("m", "model", 
-            "Epidemic model config", false, config_filename, "string");
-    std::vector<TCLAP::Arg*> args = {&config_arg};
+    std::string config_filename     = "config.dat";
+    unsigned int num_regions        = 256;
+    unsigned int num_locations      = 64;
+    unsigned int population         = 500;
+    std::string graph_type          = "ws";
+
+    TCLAP::ValueArg<unsigned int> num_regions_arg("r", "num-regions", "Number of regions",
+                                                            false, num_regions, "unsigned int");
+    TCLAP::ValueArg<unsigned int> num_locations_arg("l", "num-locations", "Number of locations",
+                                                            false, num_locations, "unsigned int");
+    TCLAP::ValueArg<unsigned int> population_arg("p", "population", "Population",
+                                                            false, population, "unsigned int");
+    TCLAP::ValueArg<std::string> graph_type_arg( "n", "graph-type", "Graph type (ws/ba)",
+                                                            false, graph_type, "string" );
+    std::vector<TCLAP::Arg*> args = {&num_regions_arg, &num_locations_arg, &population_arg,
+                                                                &graph_type_arg};
 
     warped::Simulation epidemic_sim {"Epidemic Simulation", argc, argv, args};
 
-    config_filename = config_arg.getValue();
+    num_regions         = num_regions_arg.getValue();
+    num_locations       = num_locations_arg.getValue();
+    population          = population_arg.getValue();
+    graph_type          = graph_type_arg.getValue();
+
+    unsigned int  graph_val = (graph_type == "ws") ? 1 : 0;
+    char *args[] =  {   "config/create_config",
+                        config_filename.c_str(),
+                        std::to_string(num_regions).c_str(),
+                        std::to_string(num_locations).c_str(),
+                        std::to_string(population).c_str(),
+                        std::to_string(graph_val).c_str(),
+                        (char *) 0
+                    };
+    execv(".", args);
 
     std::ifstream config_stream;
     config_stream.open(config_filename);

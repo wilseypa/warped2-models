@@ -1,3 +1,5 @@
+SUBDIRS = config
+
 bin_PROGRAMS = epidemic_sim
 
 epidemic_sim_SOURCES = \

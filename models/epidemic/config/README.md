@@ -5,7 +5,7 @@ User can adjust the following parameters inside the macro section of
 following command:
 
 - g++ --std=c++11 createConfig.cpp
-- ./a.out <output_file> <nregions> <nlocations> <population> <graph-1/0>
+- ./a.out <outputfile> <nregions> <nlocations> <population> <graphtype 1 or 0>
 
 1. Diffusion parameters
     1. [Arg 5] Graph Type can be either Watts-Strogatz or Barabasi-Albert
