@@ -1,4 +1,5 @@
 #include <fstream>
+#include <sstream>
 #include "epidemic.hpp"
 #include "Graph.hpp"
 #include "ppm/ppm.hpp"
@@ -74,6 +75,12 @@ std::vector<std::shared_ptr<warped::Event> > Location::receiveEvent(const warped
     return events;
 }
 
+std::string toString(unsigned int num) {
+    std::ostringstream convert;
+    convert << num;
+    return convert.str();
+}
+
 int main(int argc, const char** argv) {
 
     std::string config_filename     = "config.dat";
@@ -101,15 +108,17 @@ int main(int argc, const char** argv) {
     graph_type          = graph_type_arg.getValue();
 
     unsigned int  graph_val = (graph_type == "ws") ? 1 : 0;
-    char *args[] =  {   "config/create_config",
-                        config_filename.c_str(),
-                        std::to_string(num_regions).c_str(),
-                        std::to_string(num_locations).c_str(),
-                        std::to_string(population).c_str(),
-                        std::to_string(graph_val).c_str(),
-                        (char *) 0
-                    };
-    execv(".", args);
+    std::string command   = "./config/createConfig "
+                            +   config_filename         + " "
+                            +   toString(num_regions)   + " "
+                            +   toString(num_locations) + " "
+                            +   toString(population)    + " "
+                            +   toString(graph_val);
+    std::cout << "Build the config file using the command:\n\t" << command << std::endl;
+    if (!std::system(command.c_str())) {
+        exit(EXIT_FAILURE);
+    }
+    std::cout << "Created epidemic config file: " << config_filename << std::endl;
 
     std::ifstream config_stream;
     config_stream.open(config_filename);
