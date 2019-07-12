@@ -83,7 +83,6 @@ std::string toString(unsigned int num) {
 
 int main(int argc, const char** argv) {
 
-    std::string config_filename     = "config.dat";
     unsigned int num_regions        = 256;
     unsigned int num_locations      = 64;
     unsigned int population         = 500;
@@ -107,15 +106,21 @@ int main(int argc, const char** argv) {
     population          = population_arg.getValue();
     graph_type          = graph_type_arg.getValue();
 
-    unsigned int  graph_val = (graph_type == "ws") ? 1 : 0;
-    std::string command   = "./config/createConfig "
+    unsigned int  graph_val     = (graph_type == "ws") ? 1 : 0;
+    std::string config_filename = std::string("model")
+                                + "-lp" + toString(num_regions * num_locations)
+                                + "-p"  + toString(num_regions * num_locations * population)
+                                + "-"    + graph_type
+                                + ".config";
+
+    std::string command   = "./config/create_config "
                             +   config_filename         + " "
                             +   toString(num_regions)   + " "
                             +   toString(num_locations) + " "
                             +   toString(population)    + " "
                             +   toString(graph_val);
     std::cout << "Build the config file using the command:\n\t" << command << std::endl;
-    if (!std::system(command.c_str())) {
+    if (std::system(command.c_str())) {
         exit(EXIT_FAILURE);
     }
     std::cout << "Created epidemic config file: " << config_filename << std::endl;
@@ -135,7 +140,7 @@ int main(int argc, const char** argv) {
     // Diffusion model
     getline(config_stream, buffer);
     pos = buffer.find(delimiter);
-    std::string graph_type = buffer.substr(0, pos);
+    graph_type = buffer.substr(0, pos);
     buffer.erase(0, pos + delimiter.length());
     std::string diffusion_params(buffer);
 
@@ -195,7 +200,7 @@ int main(int argc, const char** argv) {
 
     //Population
     getline(config_stream, buffer);
-    unsigned int num_regions = (unsigned int) std::stoul(buffer);
+    num_regions = (unsigned int) std::stoul(buffer);
 
     std::map<std::string, unsigned int> travel_map;
     std::vector<Location> lps;
@@ -206,7 +211,7 @@ int main(int argc, const char** argv) {
         pos = buffer.find(delimiter);
         std::string region_name = buffer.substr(0, pos);
         buffer.erase(0, pos + delimiter.length());
-        unsigned int num_locations = (unsigned int) std::stoul(buffer);
+        num_locations = (unsigned int) std::stoul(buffer);
 
         for (unsigned int location_id = 0; location_id < num_locations; location_id++) {
 

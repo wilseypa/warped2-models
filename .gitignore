@@ -3,6 +3,7 @@
 *.lo
 *.o
 *_sim
+create_config
 
 # Libraries
 *.lib
