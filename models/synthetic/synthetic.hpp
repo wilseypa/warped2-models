@@ -81,8 +81,8 @@ public:
     }
 
     virtual std::vector<std::shared_ptr<warped::Event> > initializeLP() override;
-    virtual std::vector<std::shared_ptr<warped::Event> > receiveEvent(const warped::Event&);
-    virtual warped::LPState& getState() { return this->state_; }
+    virtual std::vector<std::shared_ptr<warped::Event> > receiveEvent(const warped::Event&) override;
+    virtual warped::LPState& getState() override { return this->state_; }
 
     NodeState state_;
 

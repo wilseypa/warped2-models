@@ -54,7 +54,7 @@ public:
             num_lps_(num_lps), rng_(new std::default_random_engine(rd())),
             distribution_(distribution), distribution_mean_(distribution_mean) {}
 
-    warped::LPState& getState() { return this->state_; }
+    warped::LPState& getState() override { return this->state_; }
 
     std::vector<std::shared_ptr<warped::Event> > initializeLP() override {
 
@@ -69,7 +69,7 @@ public:
         return events;
     }
 
-    std::vector<std::shared_ptr<warped::Event>> receiveEvent(const warped::Event& event) {
+    std::vector<std::shared_ptr<warped::Event>> receiveEvent(const warped::Event& event) override {
         ++this->state_.messages_received_;
         std::vector<std::shared_ptr<warped::Event> > response_events;
         auto received_event = static_cast<const PholdEvent&>(event);

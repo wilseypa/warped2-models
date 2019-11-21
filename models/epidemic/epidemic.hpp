@@ -126,11 +126,11 @@ public:
         }
     }
 
-    virtual warped::LPState& getState() { return *state_; }
+    virtual warped::LPState& getState() override { return *state_; }
 
     virtual std::vector<std::shared_ptr<warped::Event>> initializeLP() override;
 
-    virtual std::vector<std::shared_ptr<warped::Event>> receiveEvent(const warped::Event& event);
+    virtual std::vector<std::shared_ptr<warped::Event>> receiveEvent(const warped::Event& event) override;
 
     void populateTravelDistances(std::map<std::string, unsigned int> travel_chart) {
 
