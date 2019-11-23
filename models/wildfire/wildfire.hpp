@@ -117,10 +117,10 @@ public:
     virtual std::vector<std::shared_ptr<warped::Event> > initializeLP() override;
 
     /*! Function that will handle all events being sent to and from LP's */
-    virtual std::vector<std::shared_ptr<warped::Event> > receiveEvent(const warped::Event&);
+    virtual std::vector<std::shared_ptr<warped::Event> > receiveEvent(const warped::Event&) override;
 
     /*! Returns the state of Burn that the LP in */
-    virtual warped::LPState& getState() { return this->state_; }
+    virtual warped::LPState& getState() override { return this->state_; }
 
     CellState state_;
     /*! Simple function that returns the name of an LP using th index */

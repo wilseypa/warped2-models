@@ -61,11 +61,11 @@ public:
         state_.sandpile_height_ = sandpile_height;
     }
 
-    virtual warped::LPState& getState() { return state_; }
+    virtual warped::LPState& getState() override { return state_; }
 
     virtual std::vector<std::shared_ptr<warped::Event> > initializeLP() override;
 
-    virtual std::vector<std::shared_ptr<warped::Event> > receiveEvent(const warped::Event&);
+    virtual std::vector<std::shared_ptr<warped::Event> > receiveEvent(const warped::Event&) override;
 
     VertexState state_;
     unsigned int index_;

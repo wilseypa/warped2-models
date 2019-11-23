@@ -66,9 +66,9 @@ public:
 
     virtual std::vector<std::shared_ptr<warped::Event> > initializeLP() override;
 
-    virtual std::vector<std::shared_ptr<warped::Event> > receiveEvent(const warped::Event&);
+    virtual std::vector<std::shared_ptr<warped::Event> > receiveEvent(const warped::Event&) override;
 
-    virtual warped::LPState& getState() { return this->state_; }
+    virtual warped::LPState& getState() override { return this->state_; }
 
     unsigned int spikeCount() { return this->state_.num_spikes_; }
 
