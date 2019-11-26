@@ -99,7 +99,7 @@ public:
                 unsigned int asympt_dwell_interval, float latent_infectivity, 
                 float incubating_infectivity, float infectious_infectivity, 
                 float asympt_infectivity, float prob_ulu, float prob_ulv, float prob_urv, 
-                float prob_uiv, float prob_uiu, unsigned int loc_state_refresh_interval, 
+                unsigned int loc_state_refresh_interval, 
                 unsigned int loc_diffusion_trig_interval, 
                 std::vector<std::shared_ptr<Person>> population, 
                 unsigned int travel_time_to_hub, unsigned int index)
@@ -115,7 +115,7 @@ public:
                     transmissibility, latent_dwell_interval, incubating_dwell_interval, 
                     infectious_dwell_interval, asympt_dwell_interval, latent_infectivity, 
                     incubating_infectivity, infectious_infectivity, asympt_infectivity, 
-                    prob_ulu, prob_ulv, prob_urv, prob_uiv, prob_uiu);
+                    prob_ulu, prob_ulv, prob_urv);
 
         diffusion_network_ = 
             std::make_shared<DiffusionNetwork>(travel_time_to_hub, rng_);

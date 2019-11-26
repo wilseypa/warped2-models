@@ -191,15 +191,7 @@ int main(int argc, const char** argv) {
     token = buffer.substr(0, pos);
     float prob_ulv = std::stof(token);
     buffer.erase(0, pos + delimiter.length());
-    pos = buffer.find(delimiter);
-    token = buffer.substr(0, pos);
-    float prob_urv = std::stof(token);
-    buffer.erase(0, pos + delimiter.length());
-    pos = buffer.find(delimiter);
-    token = buffer.substr(0, pos);
-    float prob_uiv = std::stof(token);
-    buffer.erase(0, pos + delimiter.length());
-    float prob_uiu = std::stof(buffer);
+    float prob_urv = std::stof(buffer);
 
     getline(config_stream, buffer);
     unsigned int location_state_refresh_interval = (unsigned int) stoul(buffer);
@@ -278,8 +270,6 @@ int main(int argc, const char** argv) {
                                     prob_ulu,
                                     prob_ulv,
                                     prob_urv,
-                                    prob_uiv,
-                                    prob_uiu,
                                     location_state_refresh_interval,
                                     diffusion_interval,
                                     population,
