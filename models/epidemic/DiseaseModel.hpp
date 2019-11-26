@@ -18,8 +18,7 @@ public:
                     unsigned int asympt_dwell_interval, 
                     float latent_infectivity, float incubating_infectivity, 
                     float infectious_infectivity, float asympt_infectivity, 
-                    float prob_ulu, float prob_ulv, float prob_urv, 
-                    float prob_uiv, float prob_uiu) 
+                    float prob_ulu, float prob_ulv, float prob_urv)
             : transmissibility_(transmissibility), 
                 latent_dwell_interval_(latent_dwell_interval), 
                 incubating_dwell_interval_(incubating_dwell_interval), 
@@ -30,8 +29,7 @@ public:
                 infectious_infectivity_(infectious_infectivity), 
                 asympt_infectivity_(asympt_infectivity), 
                 prob_ulu_(prob_ulu), prob_ulv_(prob_ulv), 
-                prob_urv_(prob_urv), prob_uiv_(prob_uiv), 
-                prob_uiu_(prob_uiu) {}
+                prob_urv_(prob_urv) {}
 
     void reaction(
             std::shared_ptr<std::map<unsigned long, std::shared_ptr<Person>>> population, 
@@ -165,8 +163,6 @@ private:
     float prob_ulu_;
     float prob_ulv_;
     float prob_urv_;
-    float prob_uiv_;
-    float prob_uiu_;
 };
 
 #endif

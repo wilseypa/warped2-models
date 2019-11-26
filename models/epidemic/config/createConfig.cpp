@@ -31,8 +31,6 @@
 #define PROB_ULU                            0.2
 #define PROB_ULV                            0.9
 #define PROB_URV                            0.5
-#define PROB_UIV                            0.1
-#define PROB_UIU                            0.3
 #define LOCATION_STATE_REFRESH_INTERVAL     50
 
 /* Location */
@@ -93,9 +91,7 @@ int main( int argc, char *argv[] ) {
     config_stream << ASYMPT_INFECTIVITY                 << std::endl;
     config_stream << PROB_ULU                           << ",";
     config_stream << PROB_ULV                           << ",";
-    config_stream << PROB_URV                           << ",";
-    config_stream << PROB_UIV                           << ",";
-    config_stream << PROB_UIU                           << std::endl;
+    config_stream << PROB_URV                           << std::endl;
     config_stream << LOCATION_STATE_REFRESH_INTERVAL    << std::endl;
 
     // Write the population parameters
