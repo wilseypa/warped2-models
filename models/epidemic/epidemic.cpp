@@ -87,7 +87,7 @@ int main(int argc, const char** argv) {
     unsigned int num_locations      = 64;
     unsigned int population         = 500;
     std::string graph_type          = "ws";
-    std::string skip_config_create  = "no";
+    std::string model_config_name   = "*";
 
     TCLAP::ValueArg<unsigned int> num_regions_arg("r", "num-regions", "Number of regions",
                                                             false, num_regions, "unsigned int");
@@ -97,10 +97,11 @@ int main(int argc, const char** argv) {
                                                             false, population, "unsigned int");
     TCLAP::ValueArg<std::string> graph_type_arg( "n", "graph-type", "Graph type (ws/ba)",
                                                             false, graph_type, "string" );
-    TCLAP::ValueArg<std::string> skip_config_create_arg( "s", "skip",
-                        "Skip config create - yes or no", false, skip_config_create, "string" );
+    TCLAP::ValueArg<std::string> model_config_name_arg( "m", "model-config",
+            "Skip config creation by providing name of the model config. No other flags needed",
+                                                            false, model_config_name, "string" );
     std::vector<TCLAP::Arg*> args = {&num_regions_arg, &num_locations_arg, &population_arg,
-                                               &graph_type_arg, &skip_config_create_arg};
+                                               &graph_type_arg, &model_config_name_arg};
 
     warped::Simulation epidemic_sim {"Epidemic Simulation", argc, argv, args};
 
@@ -108,33 +109,34 @@ int main(int argc, const char** argv) {
     num_locations       = num_locations_arg.getValue();
     population          = population_arg.getValue();
     graph_type          = graph_type_arg.getValue();
-    skip_config_create  = skip_config_create_arg.getValue();
+    model_config_name   = model_config_name_arg.getValue();
 
-    unsigned int  graph_val     = (graph_type == "ws") ? 1 : 0;
-    std::string config_filename = std::string("model")
+    if (model_config_name == "*") {
+        model_config_name =     std::string("model")
                                 + "-lp" + toString(num_regions * num_locations)
                                 + "-p"  + toString(num_regions * num_locations * population)
                                 + "-"    + graph_type
                                 + ".config";
 
-    if (skip_config_create == "no") {
+        unsigned int  graph_val = (graph_type == "ws") ? 1 : 0;
         std::string command =   "./config/create_config "
-                            +   config_filename         + " "
+                            +   model_config_name       + " "
                             +   toString(num_regions)   + " "
                             +   toString(num_locations) + " "
                             +   toString(population)    + " "
                             +   toString(graph_val);
+
         std::cout << "Build the config file using the command:\n\t" << command << std::endl;
         if (std::system(command.c_str())) {
             exit(EXIT_FAILURE);
         }
-        std::cout << "Created epidemic config file: " << config_filename << std::endl;
+        std::cout << "Created epidemic config file: " << model_config_name << std::endl;
     }
 
     std::ifstream config_stream;
-    config_stream.open(config_filename);
+    config_stream.open(model_config_name);
     if (!config_stream.is_open()) {
-        std::cerr << "Invalid configuration file - " << config_filename << std::endl;
+        std::cerr << "Invalid configuration file - " << model_config_name << std::endl;
         return 0;
     }
 
