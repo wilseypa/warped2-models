@@ -112,6 +112,10 @@ int main(int argc, const char** argv) {
     model_config_name   = model_config_name_arg.getValue();
 
     if (model_config_name == "*") {
+        std::string relative_path(argv[0]);
+        std::size_t pos = relative_path.find_last_of("/");
+        relative_path.erase(pos);
+        std::cout << relative_path << std::endl;
         model_config_name =     std::string("model")
                                 + "-lp" + toString(num_regions * num_locations)
                                 + "-p"  + toString(num_regions * num_locations * population)
@@ -119,7 +123,8 @@ int main(int argc, const char** argv) {
                                 + ".config";
 
         unsigned int  graph_val = (graph_type == "ws") ? 1 : 0;
-        std::string command =   "./config/create_config "
+        std::string command =   relative_path
+                            +   "/config/create_config "
                             +   model_config_name       + " "
                             +   toString(num_regions)   + " "
                             +   toString(num_locations) + " "
