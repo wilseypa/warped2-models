@@ -507,7 +507,8 @@ function runScheduleQ {
             Simulation_Runtime_(secs.),Number_of_Objects,Local_Positive_Events_Sent,\
             Remote_Positive_Events_Sent,Local_Negative_Events_Sent,Remote_Negative_Events_Sent,\
             Primary_Rollbacks,Secondary_Rollbacks,Coast_Forwarded_Events,Cancelled_Events,\
-            Events_Processed,Events_Committed,Average_Memory_Usage_(MB)"
+            Events_Processed,Events_Committed,Events_for_Starved_Objects,Scheduled_Events_Swapped,\
+            Average_Memory_Usage_(MB)"
 
     headerRefined=`echo $header | sed -e 's/\t//g' -e 's/ //g'`
 
