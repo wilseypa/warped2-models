@@ -1,9 +1,12 @@
 #include <fstream>
 #include <sstream>
+#include <cassert>
 #include "epidemic.hpp"
 #include "Graph.hpp"
 #include "ppm/ppm.hpp"
 #include "tclap/ValueArg.h"
+
+#define DEFAULT_MODEL_NAME "*"
 
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(EpidemicEvent)
 
@@ -87,7 +90,7 @@ int main(int argc, const char** argv) {
     unsigned int num_locations      = 64;
     unsigned int population         = 500;
     std::string graph_type          = "ws";
-    std::string model_config_name   = "*";
+    std::string model_config_name   = DEFAULT_MODEL_NAME;
 
     TCLAP::ValueArg<unsigned int> num_regions_arg("r", "num-regions", "Number of regions",
                                                             false, num_regions, "unsigned int");
@@ -98,8 +101,7 @@ int main(int argc, const char** argv) {
     TCLAP::ValueArg<std::string> graph_type_arg( "n", "graph-type", "Graph type (ws/ba)",
                                                             false, graph_type, "string" );
     TCLAP::ValueArg<std::string> model_config_name_arg( "m", "model-config",
-            "Skip config creation by providing name of the model config. No other flags needed",
-                                                            false, model_config_name, "string" );
+                        "Provide name of the model config", false, model_config_name, "string" );
     std::vector<TCLAP::Arg*> args = {&num_regions_arg, &num_locations_arg, &population_arg,
                                                &graph_type_arg, &model_config_name_arg};
 
@@ -111,16 +113,17 @@ int main(int argc, const char** argv) {
     graph_type          = graph_type_arg.getValue();
     model_config_name   = model_config_name_arg.getValue();
 
-    if (model_config_name == "*") {
+    if (model_config_name == DEFAULT_MODEL_NAME) {
+        std::cout << "Need a valid model config filename.\n";
+        exit(EXIT_FAILURE);
+    }
+
+    std::ifstream config_stream;
+    config_stream.open(model_config_name);
+    if (!config_stream.is_open()) {
         std::string relative_path(argv[0]);
         std::size_t pos = relative_path.find_last_of("/");
         relative_path.erase(pos);
-        std::cout << relative_path << std::endl;
-        model_config_name =     std::string("model")
-                                + "-lp" + toString(num_regions * num_locations)
-                                + "-p"  + toString(num_regions * num_locations * population)
-                                + "-"    + graph_type
-                                + ".config";
 
         unsigned int  graph_val = (graph_type == "ws") ? 1 : 0;
         std::string command =   relative_path
@@ -135,14 +138,14 @@ int main(int argc, const char** argv) {
         if (std::system(command.c_str())) {
             exit(EXIT_FAILURE);
         }
-        std::cout << "Created epidemic config file: " << model_config_name << std::endl;
-    }
 
-    std::ifstream config_stream;
-    config_stream.open(model_config_name);
-    if (!config_stream.is_open()) {
-        std::cerr << "Invalid configuration file - " << model_config_name << std::endl;
-        return 0;
+        std::cout << "Created new model config file: " << model_config_name << std::endl;
+        config_stream.open(model_config_name);
+        if (!config_stream.is_open()) {
+            exit(EXIT_FAILURE);
+        }
+    } else {
+        std::cout << "Using existing model config file: " << model_config_name << std::endl;
     }
 
     std::string buffer;
