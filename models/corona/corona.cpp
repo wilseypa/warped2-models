@@ -89,31 +89,12 @@ std::string toString(unsigned int num) {
 
 int main(int argc, const char** argv) {
 
-    unsigned int num_regions        = 256;
-    unsigned int num_locations      = 64;
-    unsigned int population         = 500;
-    std::string graph_type          = "ws";
     std::string model_config_name   = DEFAULT_MODEL_NAME;
 
-    TCLAP::ValueArg<unsigned int> num_regions_arg("r", "num-regions", "Number of regions",
-                                                            false, num_regions, "unsigned int");
-    TCLAP::ValueArg<unsigned int> num_locations_arg("l", "num-locations", "Number of locations",
-                                                            false, num_locations, "unsigned int");
-    TCLAP::ValueArg<unsigned int> population_arg("p", "population", "Population",
-                                                            false, population, "unsigned int");
-    TCLAP::ValueArg<std::string> graph_type_arg( "n", "graph-type", "Graph type (ws/ba)",
-                                                            false, graph_type, "string" );
     TCLAP::ValueArg<std::string> model_config_name_arg( "m", "model-config",
                         "Provide name of the model config", false, model_config_name, "string" );
-    std::vector<TCLAP::Arg*> args = {&num_regions_arg, &num_locations_arg, &population_arg,
-                                               &graph_type_arg, &model_config_name_arg};
-
-    warped::Simulation epidemic_sim {"Epidemic Simulation", argc, argv, args};
-
-    num_regions         = num_regions_arg.getValue();
-    num_locations       = num_locations_arg.getValue();
-    population          = population_arg.getValue();
-    graph_type          = graph_type_arg.getValue();
+    std::vector<TCLAP::Arg*> args = {&model_config_name_arg};
+    warped::Simulation corona_sim {"Covid-19 Pandemic Simulation", argc, argv, args};
     model_config_name   = model_config_name_arg.getValue();
 
     if (model_config_name == DEFAULT_MODEL_NAME) {
@@ -124,31 +105,7 @@ int main(int argc, const char** argv) {
     std::ifstream config_stream;
     config_stream.open(model_config_name);
     if (!config_stream.is_open()) {
-        std::string relative_path(argv[0]);
-        std::size_t pos = relative_path.find_last_of("/");
-        relative_path.erase(pos);
-
-        unsigned int  graph_val = (graph_type == "ws") ? 1 : 0;
-        std::string command =   relative_path
-                            +   "/config/create_config "
-                            +   model_config_name       + " "
-                            +   toString(num_regions)   + " "
-                            +   toString(num_locations) + " "
-                            +   toString(population)    + " "
-                            +   toString(graph_val);
-
-        std::cout << "Build the config file using the command:\n\t" << command << std::endl;
-        if (std::system(command.c_str())) {
-            exit(EXIT_FAILURE);
-        }
-
-        std::cout << "Created new model config file: " << model_config_name << std::endl;
-        config_stream.open(model_config_name);
-        if (!config_stream.is_open()) {
-            exit(EXIT_FAILURE);
-        }
-    } else {
-        std::cout << "Using existing model config file: " << model_config_name << std::endl;
+        exit(EXIT_FAILURE);
     }
 
     std::string buffer;
@@ -350,7 +307,7 @@ int main(int argc, const char** argv) {
     for (auto& lp : lps) {
         lp_pointers.push_back(&lp);
     }
-    epidemic_sim.simulate(lp_pointers);
+    corona_sim.simulate(lp_pointers);
 
     // Plot the heatmaps
     unsigned long cols = std::ceil( sqrt(lps.size()) );
