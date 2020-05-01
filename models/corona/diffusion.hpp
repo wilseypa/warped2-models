@@ -9,8 +9,11 @@ class Diffusion {
 public:
 
     Diffusion(  unsigned int travel_time_to_hub,
+                unsigned int max_diffusion_cnt,
                 std::shared_ptr<std::default_random_engine> rng )
-        :   travel_time_to_hub_(travel_time_to_hub), rng_(rng) {}
+        :   travel_time_to_hub_(travel_time_to_hub),
+            max_diffusion_cnt_(max_diffusion_cnt),
+            rng_(rng) {}
 
     std::string pickLocation() {
         std::string location_name = "";
@@ -33,7 +36,7 @@ public:
 
     unsigned int diffusionCount(unsigned int population_size) {
         std::uniform_int_distribution<int> distribution(0,
-                std::min(CONFIG->max_diffusion_cnt_, population_size-1));
+                std::min(max_diffusion_cnt_, population_size-1));
         return distribution(*rng_); 
     }
 
@@ -42,7 +45,8 @@ public:
     }
 
 private:
-    unsigned int travel_time_to_hub_;
+    unsigned int travel_time_to_hub_    = 0;
+    unsigned int max_diffusion_cnt_     = 0;
     std::shared_ptr<std::default_random_engine> rng_;
     std::map<std::string, unsigned int> travel_time_chart_;
 };

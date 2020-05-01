@@ -20,38 +20,45 @@ public:
         return instance_;
     }
 
-    double latent_infectivity_              = 0;
-    double latent_transition_rate_          = 0;
+    void read() {
+    }
 
-    double incubating_infectivity_          = 0;
-    double incubating_transition_rate_      = 0;
+    void write() {
+    }
 
-    double infectious_infectivity_          = 0;
-    double infectious_transition_rate_      = 0;
+    double infected_infectivity_            = 0;
+    double infected_transition_rate_        = 0;
 
-    double asympt_infectivity_              = 0;
-    double asympt_transition_ratio_         = 0;
+    double asymptomatic_infectivity_        = 0;
+    double asymptomatic_transition_ratio_   = 0;
 
     double transmissibility_                = 0;
     double mortality_rate_                  = 0;
 
     unsigned int update_trig_interval_      = 0;
     unsigned int diffusion_trig_interval_   = 0;
-    unsigned int max_diffusion_cnt_         = 0;
 
 private:
     static CoronaConfig* instance_;
     CoronaConfig() = default;
 }
 
+/* State Machine:
+ *
+ *       |=============|
+ *       |             |
+ *       v      |=> ASYMPTOMATIC
+ *  UNINFECTED =|             |=> DECEASED
+ *              |=> INFECTED =|
+ *                            |=> RECOVERED
+ */
 enum infection_state_t {
 
     UNINFECTED = 0,
-    LATENT,
-    INCUBATING,
-    INFECTIOUS,
-    ASYMPT,
+    INFECTED,
+    ASYMPTOMATIC,
     RECOVERED,
+    DECEASED,
     NUM_INFECTION_STATES
 };
 
@@ -141,6 +148,8 @@ public:
 
     Location(   const std::string& name,
                 unsigned int travel_time_to_hub,
+                unsigned int max_infected_diffusion_cnt,
+                unsigned int max_others_diffusion_cnt,
                 unsigned int index  )
         :   LogicalProcess(name),
             state_(),
@@ -148,14 +157,16 @@ public:
             rng_(new std::default_random_engine(index)) {
 
         state_ = std::make_shared<LocationState>();
-        diffusion_ = std::make_shared<Diffusion>(travel_time_to_hub, rng_);
+        diffusion_ = std::make_shared<Diffusion>(travel_time_to_hub,
+                        max_infected_diffusion_cnt, max_others_diffusion_cnt, rng_);
     }
 
     virtual warped::LPState& getState() override { return *state_; }
 
     virtual std::vector<std::shared_ptr<warped::Event>> initializeLP() override;
 
-    virtual std::vector<std::shared_ptr<warped::Event>> receiveEvent(const warped::Event& event) override;
+    virtual std::vector<std::shared_ptr<warped::Event>> receiveEvent(
+                                            const warped::Event& event) override;
 
     void populateTravelDistances(std::map<std::string, unsigned int> travel_chart) {
         diffusion_network_->populateTravelChart(travel_chart);
@@ -186,7 +197,7 @@ public:
     }
 
     // Report population, infected cnt, recovered count and death count
-    std::tuple<unsigned int, unsigned int, unsigned int, unsigned int> statistics () {
+    std::string printState() {
         auto population = 0U;
         for (auto i = 0; i < infection_state_t::NUM_INFECTION_STATES; i++) {
             population += state_->population_[i];
@@ -207,11 +218,22 @@ protected:
 private:
     void ptts() {
         // LATENT ==> INFECTIOUS
-        unsigned int new_infectious =
-            std::max(1, CONFIG->latent_transition_rate_ *
-                    state_->population_[infection_state_t::LATENT]);
+        unsigned int new_infectious = CONFIG->latent_transition_rate_ *
+                                state_->population_[infection_state_t::LATENT];
         state_->population_[infection_state_t::LATENT]      -= new_infectious;
         state_->population_[infection_state_t::INFECTIOUS]  += new_infectious;
+
+        // INFECTIOUS ==> RECOVERED
+        unsigned int new_recovered = CONFIG->infectious_transition_rate_ *
+                                state_->population_[infection_state_t::INFECTIOUS];
+        state_->population_[infection_state_t::INFECTIOUS]  -= new_recovered;
+        state_->population_[infection_state_t::RECOVERED]   += new_recovered;
+
+        // INFECTIOUS ==> DECEASED
+        unsigned int new_deaths = CONFIG->mortality_rate_ *
+                                state_->population_[infection_state_t::INFECTIOUS];
+        state_->population_[infection_state_t::INFECTIOUS]  -= new_deaths;
+        state_->population_[infection_state_t::DECEASED]    += new_deaths;
 
         // INCUBATING ==> ASYMPT
         unsigned int new_asympt =
@@ -219,13 +241,6 @@ private:
                     state_->population_[infection_state_t::INCUBATING]);
         state_->population_[infection_state_t::INCUBATING]  -= new_asympt;
         state_->population_[infection_state_t::ASYMPT]      += new_asympt;
-
-        // INFECTIOUS ==> RECOVERED
-        unsigned int new_recovered =
-            std::max(1, CONFIG->infectious_transition_rate_ *
-                    state_->population_[infection_state_t::INFECTIOUS]);
-        state_->population_[infection_state_t::INFECTIOUS]  -= new_recovered;
-        state_->population_[infection_state_t::RECOVERED]   += new_recovered;
 
         // ASYMPT ==> UNINFECTED
         unsigned int new_uninfected =
