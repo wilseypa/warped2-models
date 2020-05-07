@@ -65,3 +65,8 @@ Nature 393, 440-442 (1998).
 [4] Albert-László Barabási, Réka Albert. Emergence of scaling in random networks.
 Science 286(5439), 509-512 (1999).
 
+[5] Binti Hamzah FA, Lau C, Nazri H, Ligot DV, Lee G, Tan CL, et al.
+CoronaTracker: Worldwide COVID-19 Outbreak Data Analysis and Prediction.
+[Submitted]. Bull World Health Organ. E-pub: 19 March 2020.
+doi: http://dx.doi.org/10.2471/BLT.20.255695
+

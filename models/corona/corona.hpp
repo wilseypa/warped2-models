@@ -20,20 +20,11 @@ public:
         return instance_;
     }
 
-    void read() {
-    }
+    double transmissibility_                = 2.2; /* equals beta     */
+    double mean_incubation_duration_        = 5.2; /* equals 1/sigma  */
+    double mean_infection_duration_         = 2.3; /* equals 1/gamma  */
 
-    void write() {
-    }
-
-    double infected_infectivity_            = 0;
-    double infected_transition_rate_        = 0;
-
-    double asymptomatic_infectivity_        = 0;
-    double asymptomatic_transition_ratio_   = 0;
-
-    double transmissibility_                = 0;
-    double mortality_rate_                  = 0;
+    double mortality_rate_                  = 0.05;
 
     unsigned int update_trig_interval_      = 0;
     unsigned int diffusion_trig_interval_   = 0;
@@ -43,22 +34,16 @@ private:
     CoronaConfig() = default;
 }
 
-/* State Machine:
- *
- *       |=============|
- *       |             |
- *       v      |=> ASYMPTOMATIC
- *  UNINFECTED =|             |=> DECEASED
- *              |=> INFECTED =|
- *                            |=> RECOVERED
+/*
+ *               beta           sigma              gamma
+ *  SUSCEPTIBLE =====> EXPOSED ======> INFECTIOUS ======> RECOVERED
  */
 enum infection_state_t {
 
-    UNINFECTED = 0,
-    INFECTED,
-    ASYMPTOMATIC,
+    SUSCEPTIBLE = 0,
+    EXPOSED,
+    INFECTIOUS,
     RECOVERED,
-    DECEASED,
     NUM_INFECTION_STATES
 };
 
