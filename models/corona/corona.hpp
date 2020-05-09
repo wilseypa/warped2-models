@@ -9,7 +9,9 @@
 #include "warped.hpp"
 #include "diffusion.hpp"
 
-#define CONFIG CoronaConfig::getInstance()
+#define CONFIG  CoronaConfig::getInstance()
+#define HOUR    1
+#define DAY     24
 
 class CoronaConfig {
 public:
@@ -20,14 +22,14 @@ public:
         return instance_;
     }
 
-    double transmissibility_                = 2.2; /* equals beta     */
-    double mean_incubation_duration_        = 5.2; /* equals 1/sigma  */
-    double mean_infection_duration_         = 2.3; /* equals 1/gamma  */
+    double transmissibility_                = 2.2;          /* equals beta     */
+    double mean_incubation_duration_        = 5.2 * DAY;    /* equals 1/sigma  */
+    double mean_infection_duration_         = 2.3 * DAY;    /* equals 1/gamma  */
 
-    double mortality_rate_                  = 0.05;
+    double mortality_ratio_                 = 0.05;
 
-    unsigned int update_trig_interval_      = 0;
-    unsigned int diffusion_trig_interval_   = 0;
+    unsigned int update_trig_interval_      = 1 * DAY;
+    unsigned int diffusion_trig_interval_   = 6 * HOUR;
 
 private:
     static CoronaConfig* instance_;
@@ -35,8 +37,12 @@ private:
 }
 
 /*
- *               beta           sigma              gamma
- *  SUSCEPTIBLE =====> EXPOSED ======> INFECTIOUS ======> RECOVERED
+ *  beta  <= transmissibility
+ *  sigma <= 1 / mean_incubation_period
+ *  gamma <= 1 / mean_infection_period
+ *
+ *              beta         sigma            gamma           mortality
+ *  SUSCEPTIBLE ===> EXPOSED ====> INFECTIOUS ====> RECOVERED ========> DECEASED
  */
 enum infection_state_t {
 
@@ -44,6 +50,7 @@ enum infection_state_t {
     EXPOSED,
     INFECTIOUS,
     RECOVERED,
+    DECEASED,
     NUM_INFECTION_STATES
 };
 
@@ -160,36 +167,51 @@ public:
     void reaction() {
         ptts();
 
-        double prob_latent = 1.0 - CONFIG->latent_infectivity_;
-        prob_latent = pow(prob_latent, state_->population_[infection_state_t::LATENT]);
+        auto N = 0U;
+        for (auto i = 0; i < infection_state_t::DECEASED; i++) {
+            N += state_->population_[i];
+        }
 
-        double prob_incubate = 1.0 - CONFIG->incubating_infectivity_;
-        prob_incubate = pow(prob_incubate, state_->population_[infection_state_t::INCUBATING]);
+        /*
+         *  S' = -(beta * S * I) / N
+         *  E' = (beta * S * I) / N - sigma * E
+         *  I' = sigma * E - gamma * I
+         *  R' = gamma * I - mortality_ratio * R
+         *  D' = mortality_ratio * R
+         */
+        unsigned int delta_S = ( CONFIG->transmissibility_ *
+                            state_->population_[infection_state_t::SUSCEPTIBLE] *
+                            state_->population_[infection_state_t::INFECTIOUS] ) / N;
 
-        double prob_infect = 1.0 - CONFIG->infectious_infectivity_;
-        prob_infect = pow(prob_infect, state_->population_[infection_state_t::INFECTIOUS]);
+        state_->population_[infection_state_t::SUSCEPTIBLE] -= delta_S;
+        state_->population_[infection_state_t::EXPOSED]     += delta_S;
 
-        double prob_asympt = 1.0 - CONFIG->asympt_infectivity_;
-        prob_asympt = pow(prob_asympt, state_->population_[infection_state_t::ASYMPT]);
 
-        double disease_prob = 1.0 - prob_latent * prob_incubate * prob_infect * prob_asympt;
-        unsigned int affected =
-            std::max(1, disease_prob * state_->population_[infection_state_t::UNINFECTED]);
-        unsigned int new_latent = std::max(1, affected * CONFIG->transmissibility_);
-        state_->population_[infection_state_t::UNINFECTED]  -= affected;
-        state_->population_[infection_state_t::LATENT]      += new_latent;
-        state_->population_[infection_state_t::INCUBATING]  += (affected - new_latent);
+        unsigned int delta_E = state_->population_[infection_state_t::EXPOSED] /
+                                                    CONFIG->mean_incubation_duration_;
+
+        state_->population_[infection_state_t::EXPOSED]     -= delta_E;
+        state_->population_[infection_state_t::INFECTIOUS]  += delta_E;
+
+        unsigned int delta_I = state_->population_[infection_state_t::INFECTIOUS] /
+                                                    CONFIG->mean_infection_duration_;
+
+        state_->population_[infection_state_t::INFECTIOUS]  -= delta_I;
+        state_->population_[infection_state_t::RECOVERED]   += delta_I;
+
+        unsigned int delta_D = CONFIG->mortality_ratio_ * delta_I;
+
+        state_->population_[infection_state_t::RECOVERED]   -= delta_D;
+        state_->population_[infection_state_t::DECEASED]    += delta_D;
     }
 
     // Report population, infected cnt, recovered count and death count
     std::string printState() {
-        auto population = 0U;
-        for (auto i = 0; i < infection_state_t::NUM_INFECTION_STATES; i++) {
-            population += state_->population_[i];
-        }
-        unsigned int deaths = state_->population_[RECOVERED] * CONFIG->mortality_rate_;
-        return std::make_tuple(population, state_->population_[INFECTIOUS],
-                                        state_->population_[RECOVERED] - deaths, deaths);
+        return  location_name_                                      + ","
+                state_->population_[infection_state_t::SUSCEPTIBLE] + ","
+                state_->population_[infection_state_t::INFECTIOUS]  + ","
+                state_->population_[infection_state_t::RECOVERED]   + ","
+                state_->population_[infection_state_t::DECEASED]    + "\n";
     }
 
     std::string getLocationName() { return location_name_; }
@@ -199,41 +221,6 @@ protected:
     std::string location_name_;
     std::shared_ptr<Diffusion> diffusion_;
     std::shared_ptr<std::default_random_engine> rng_;
-
-private:
-    void ptts() {
-        // LATENT ==> INFECTIOUS
-        unsigned int new_infectious = CONFIG->latent_transition_rate_ *
-                                state_->population_[infection_state_t::LATENT];
-        state_->population_[infection_state_t::LATENT]      -= new_infectious;
-        state_->population_[infection_state_t::INFECTIOUS]  += new_infectious;
-
-        // INFECTIOUS ==> RECOVERED
-        unsigned int new_recovered = CONFIG->infectious_transition_rate_ *
-                                state_->population_[infection_state_t::INFECTIOUS];
-        state_->population_[infection_state_t::INFECTIOUS]  -= new_recovered;
-        state_->population_[infection_state_t::RECOVERED]   += new_recovered;
-
-        // INFECTIOUS ==> DECEASED
-        unsigned int new_deaths = CONFIG->mortality_rate_ *
-                                state_->population_[infection_state_t::INFECTIOUS];
-        state_->population_[infection_state_t::INFECTIOUS]  -= new_deaths;
-        state_->population_[infection_state_t::DECEASED]    += new_deaths;
-
-        // INCUBATING ==> ASYMPT
-        unsigned int new_asympt =
-            std::max(1, CONFIG->incubating_transition_rate_ *
-                    state_->population_[infection_state_t::INCUBATING]);
-        state_->population_[infection_state_t::INCUBATING]  -= new_asympt;
-        state_->population_[infection_state_t::ASYMPT]      += new_asympt;
-
-        // ASYMPT ==> UNINFECTED
-        unsigned int new_uninfected =
-            std::max(1, CONFIG->asympt_transition_ratio_ *
-                    state_->population_[infection_state_t::UNINFECTED]);
-        state_->population_[infection_state_t::ASYMPT]      -= new_uninfected;
-        state_->population_[infection_state_t::UNINFECTED]  += new_uninfected;
-    }
 };
 
 #endif
