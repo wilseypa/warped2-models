@@ -165,8 +165,6 @@ public:
     }
 
     void reaction() {
-        ptts();
-
         auto N = 0U;
         for (auto i = 0; i < infection_state_t::DECEASED; i++) {
             N += state_->population_[i];

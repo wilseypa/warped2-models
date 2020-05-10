@@ -20,30 +20,22 @@ std::vector<std::shared_ptr<warped::Event> > Location::initializeLP() {
 
     std::vector<std::shared_ptr<warped::Event> > events;
     events.emplace_back(new TriggerEvent {this->location_name_,
-                        CONFIG->location_state_refresh_interval_});
+                                    CONFIG->update_trig_interval_});
     events.emplace_back(new TriggerEvent {this->location_name_,
-                        CONFIG->location_diffusion_trigger_interval_, true});
+                                    CONFIG->diffusion_trig_interval_, true});
     return events;
 }
 
 std::vector<std::shared_ptr<warped::Event> > Location::receiveEvent(const warped::Event& event) {
 
     std::vector<std::shared_ptr<warped::Event> > events;
-    auto epidemic_event = static_cast<const EpidemicEvent&>(event);
-    auto timestamp = epidemic_event.loc_arrival_timestamp_;
 
-    switch (epidemic_event.event_type_) {
+    if (event->eventType() == event_type_t::TRIGGER) {
+        auto trigger_event = static_cast<const TriggerEvent&>(event);
+        auto timestamp = trigger_event->timestamp();
 
-        case event_type_t::DISEASE_UPDATE_TRIGGER: {
-            std::uniform_real_distribution<double> distribution(0.0, 1.0);
-            auto rand_factor = distribution(*rng_);
-            disease_model_->reaction(state_->current_population_, timestamp, rand_factor);
-            events.emplace_back(new EpidemicEvent {location_name_, 
-                                timestamp + location_state_refresh_interval_, 
-                                nullptr, DISEASE_UPDATE_TRIGGER});
-        } break;
-
-        case event_type_t::DIFFUSION_TRIGGER: {
+        /* Check whether a diffusion needs to be triggered */
+        if (trigger_event->is_diffusion_) {
             std::string selected_location = diffusion_network_->pickLocation();
             if (selected_location != "") {
                 auto travel_time = diffusion_network_->travelTimeToLocation(selected_location);
@@ -62,21 +54,23 @@ std::vector<std::shared_ptr<warped::Event> > Location::receiveEvent(const warped
                     state_->current_population_->erase(map_iter);
                 }
             }
-            events.emplace_back(new EpidemicEvent {location_name_, 
-                                timestamp + location_diffusion_trigger_interval_, 
-                                nullptr, DIFFUSION_TRIGGER});
-        } break;
+            events.emplace_back(new TriggerEvent {location_name_, 
+                                timestamp + CONFIG->diffusion_trig_interval_, true});
 
-        case event_type_t::DIFFUSION: {
-            std::shared_ptr<Person> person = std::make_shared<Person>(
+        } else { /* Update the LP state */
+            std::uniform_real_distribution<double> distribution(0.0, 1.0);
+            auto rand_factor = distribution(*rng_);
+            reaction();
+            events.emplace_back(new TriggerEvent {location_name_, 
+                                timestamp + CONFIG->update_trig_interval_});
+        }
+    } else {
+        std::shared_ptr<Person> person = std::make_shared<Person>(
                         epidemic_event.pid_, epidemic_event.susceptibility_, 
                         epidemic_event.vaccination_status_, epidemic_event.infection_state_,
                         timestamp, epidemic_event.prev_state_change_timestamp_);
-            state_->current_population_->insert(state_->current_population_->begin(), 
+        state_->current_population_->insert(state_->current_population_->begin(), 
                 std::pair <unsigned long, std::shared_ptr<Person>> (epidemic_event.pid_, person));
-        } break;
-
-        default: {}
     }
     return events;
 }
