@@ -8,7 +8,7 @@
 
 #define DEFAULT_MODEL_NAME "*"
 
-EpidemicConfig* EpidemicConfig::instance_ = nullptr;
+CoronaConfig* CoronaConfig::instance_ = nullptr;
 
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(DiffusionEvent)
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(TriggerEvent)
