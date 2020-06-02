@@ -34,7 +34,7 @@ public:
 private:
     static CoronaConfig* instance_;
     CoronaConfig() = default;
-}
+};
 
 /*
  *  beta  <= transmissibility
