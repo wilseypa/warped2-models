@@ -11,15 +11,18 @@
 #include <algorithm>
 #include <iterator>
 
+#include "jsoncons/json.hpp"
+#include "jsoncons/json_cursor.hpp"
 
 #define DEFAULT_MODEL_NAME "*"
 
 CoronaConfig* CoronaConfig::instance_ = nullptr;
-ConfigFileHandler* ConfigFileHandler::instance_ = nullptr;
 
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(DiffusionEvent)
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(TriggerEvent)
 
+// function prototype for library function to read bz2 compressed file
+std::unique_ptr<std::istream> readbz2file(std::string filename);
 
 std::vector<std::shared_ptr<warped::Event> > Location::initializeLP() {
 
@@ -57,27 +60,27 @@ std::vector<std::shared_ptr<warped::Event> > Location::receiveEvent(const warped
                         temp_cnt++;
                     }
                     std::shared_ptr<Person> person = map_iter->second;
-                    events.emplace_back(new EpidemicEvent {selected_location,
+                    events.emplace_back(new EpidemicEvent {selected_location, 
                                             timestamp + travel_time, person, DIFFUSION});
                     state_->current_population_->erase(map_iter);
                 }
             }
-            events.emplace_back(new TriggerEvent {location_name_,
+            events.emplace_back(new TriggerEvent {location_name_, 
                                 timestamp + CONFIG->diffusion_trig_interval_, true});
 
         } else { /* Update the LP state */
             std::uniform_real_distribution<double> distribution(0.0, 1.0);
             auto rand_factor = distribution(*rng_);
             reaction();
-            events.emplace_back(new TriggerEvent {location_name_,
+            events.emplace_back(new TriggerEvent {location_name_, 
                                 timestamp + CONFIG->update_trig_interval_});
         }
     } else {
         std::shared_ptr<Person> person = std::make_shared<Person>(
-                        epidemic_event.pid_, epidemic_event.susceptibility_,
+                        epidemic_event.pid_, epidemic_event.susceptibility_, 
                         epidemic_event.vaccination_status_, epidemic_event.infection_state_,
                         timestamp, epidemic_event.prev_state_change_timestamp_);
-        state_->current_population_->insert(state_->current_population_->begin(),
+        state_->current_population_->insert(state_->current_population_->begin(), 
                 std::pair <unsigned long, std::shared_ptr<Person>> (epidemic_event.pid_, person));
     }
     return events;
@@ -90,8 +93,100 @@ std::string toString(unsigned int num) {
 }
 
 
-int main(int argc, const char** argv)
+// TODO add doc
+void parseJsonPopulateLpsData(jsoncons::json_cursor& cur, std::vector<Location>& lps)
 {
+    bool flag_disease_model_key_seen = false;
+    bool inOuterArray = false;
+
+    jsoncons::json_decoder<jsoncons::json> decoder;
+
+    for (; !cur.done(); cur.next()) {
+
+        const auto& event = cur.current();
+
+        switch (event.event_type()) {
+
+        case jsoncons::staj_event_type::begin_array:
+
+            if (inOuterArray == false) {
+                inOuterArray = true;
+            } else {
+                cur.read_to(decoder);
+
+                jsoncons::json j = decoder.get_result();
+
+                // read in values from json array for each individual Location
+                std::string country = j[0].as<std::string>();
+                std::string state = j[1].as<std::string>();
+                std::string county = j[2].as<std::string>();
+                std::string fips_code = j[3].as<std::string>();
+                std::string geo_id = j[4].as<std::string>();
+                unsigned long int population = j[5].as<unsigned long int>();
+                unsigned long int infected = j[6].as<unsigned long int>();
+                unsigned long int recovered = j[7].as<unsigned long int>();
+                unsigned long int deaths = j[8].as<unsigned long int>();
+
+                // TODO add values to Location LP's
+                // std::cout << "array: " << j[1] << std::endl;
+            }
+
+            break;
+
+        case jsoncons::staj_event_type::end_array:
+            break;
+
+        case jsoncons::staj_event_type::begin_object:
+
+            if (flag_disease_model_key_seen == true) {
+                flag_disease_model_key_seen = false;
+
+                cur.read_to(decoder);
+
+                jsoncons::json j = decoder.get_result();
+
+                // read in disease model
+                CONFIG->transmissibility_ = j["transmissibility"].as<double>();
+                CONFIG->mean_incubation_duration_ = j["mean_incubation_duration_in_days"].as<double>();
+                CONFIG->mean_infection_duration_ = j["mean_infection_duration_in_days"].as<double>();
+                CONFIG->mortality_ratio_ = j["mortality_ratio"].as<double>();
+                CONFIG->update_trig_interval_ = j["update_trig_interval_in_hrs"].as<unsigned int>();
+                CONFIG->diffusion_trig_interval_ = j["diffusion_trig_interval_in_hrs"].as<unsigned int>();
+
+                // TODO std::cout << "transmissibility is : " << CONFIG->transmissibility_ << std::endl;
+            }
+            break;
+
+        case jsoncons::staj_event_type::end_object:
+            break;
+
+        case jsoncons::staj_event_type::key:
+
+            if (event.get<jsoncons::string_view>() == "disease_model") {
+                flag_disease_model_key_seen = true;
+            }
+            break;
+
+        case jsoncons::staj_event_type::string_value:
+            break;
+        case jsoncons::staj_event_type::null_value:
+            break;
+        case jsoncons::staj_event_type::bool_value:
+            break;
+        case jsoncons::staj_event_type::int64_value:
+            break;
+        case jsoncons::staj_event_type::uint64_value:
+            break;
+        case jsoncons::staj_event_type::double_value:
+            break;
+        default:
+            break;
+        }
+    }
+}
+
+int main(int argc, const char** argv) {
+
     std::string model_config_name   = DEFAULT_MODEL_NAME;
 
     TCLAP::ValueArg<std::string> model_config_name_arg( "m", "model-config",
@@ -115,9 +210,156 @@ int main(int argc, const char** argv)
     std::map<std::string, unsigned int> travel_map;
     std::vector<Location> lps;
 
-    CONFIGFILEHANDLER->getInstance()->openbz2File(model_config_name, &lps);
-    CONFIGFILEHANDLER->getInstance()->getValuesFromJsonStream();
+    // TODO handle exception / error
+    std::unique_ptr<std::istream> is(readbz2file(model_config_name));
+    jsoncons::json_cursor cur(*is);
 
+    // call new parse function for json
+    parseJsonPopulateLpsData(cur, lps);
+
+
+/*
+    std::string buffer;
+    std::string delimiter = ",";
+    size_t pos = 0;
+    std::string token;
+
+    // Diffusion model
+    getline(config_stream, buffer);
+    pos = buffer.find(delimiter);
+    graph_type = buffer.substr(0, pos);
+    buffer.erase(0, pos + delimiter.length());
+    std::string diffusion_params(buffer);
+
+    // Disease model
+    getline(config_stream, buffer);
+    float transmissibility = std::stof(buffer);
+
+    getline(config_stream, buffer);
+    pos = buffer.find(delimiter);
+    token = buffer.substr(0, pos);
+    unsigned int latent_dwell_time = (unsigned int) std::stoul(token);
+    buffer.erase(0, pos + delimiter.length());
+    float latent_infectivity = std::stof(buffer);
+
+    getline(config_stream, buffer);
+    pos = buffer.find(delimiter);
+    token = buffer.substr(0, pos);
+    unsigned int incubating_dwell_time = (unsigned int) std::stoul(token);
+    buffer.erase(0, pos + delimiter.length());
+    float incubating_infectivity = std::stof(buffer);
+
+    getline(config_stream, buffer);
+    pos = buffer.find(delimiter);
+    token = buffer.substr(0, pos);
+    unsigned int infectious_dwell_time = (unsigned int) std::stoul(token);
+    buffer.erase(0, pos + delimiter.length());
+    float infectious_infectivity = std::stof(buffer);
+
+    getline(config_stream, buffer);
+    pos = buffer.find(delimiter);
+    token = buffer.substr(0, pos);
+    unsigned int asympt_dwell_time = (unsigned int) std::stoul(token);
+    buffer.erase(0, pos + delimiter.length());
+    float asympt_infectivity = std::stof(buffer);
+
+    getline(config_stream, buffer);
+    pos = buffer.find(delimiter);
+    token = buffer.substr(0, pos);
+    float prob_ulu = stof(token);
+    buffer.erase(0, pos + delimiter.length());
+    pos = buffer.find(delimiter);
+    token = buffer.substr(0, pos);
+    float prob_ulv = std::stof(token);
+    buffer.erase(0, pos + delimiter.length());
+    float prob_urv = std::stof(buffer);
+
+    getline(config_stream, buffer);
+    unsigned int location_state_refresh_interval = (unsigned int) stoul(buffer);
+
+    //Population
+    getline(config_stream, buffer);
+    num_regions = (unsigned int) std::stoul(buffer);
+
+
+
+    for (unsigned int region_id = 0; region_id < num_regions; region_id++) {
+
+        getline(config_stream, buffer);
+        pos = buffer.find(delimiter);
+        std::string region_name = buffer.substr(0, pos);
+        buffer.erase(0, pos + delimiter.length());
+        num_locations = (unsigned int) std::stoul(buffer);
+
+        for (unsigned int location_id = 0; location_id < num_locations; location_id++) {
+
+            getline(config_stream, buffer);
+            pos = buffer.find(delimiter);
+            std::string location_name = buffer.substr(0, pos);
+            std::string location = region_name + location_name;
+            buffer.erase(0, pos + delimiter.length());
+            pos = buffer.find(delimiter);
+            token = buffer.substr(0, pos);
+            unsigned int travel_time_to_hub = (unsigned int) std::stoul(token);
+            buffer.erase(0, pos + delimiter.length());
+            pos = buffer.find(delimiter);
+            token = buffer.substr(0, pos);
+            unsigned int diffusion_interval = (unsigned int) std::stoul(token);
+            buffer.erase(0, pos + delimiter.length());
+            unsigned int num_persons = (unsigned int) std::stoul(buffer);
+
+            std::vector<std::shared_ptr<Person>> population;
+            travel_map.insert(std::pair<std::string, unsigned int>(location, travel_time_to_hub));
+
+            for (unsigned int person_id = 0; person_id < num_persons; person_id++) {
+
+                getline(config_stream, buffer);
+                pos = buffer.find(delimiter);
+                token = buffer.substr(0, pos);
+                unsigned long pid = std::stoul(token);
+                buffer.erase(0, pos + delimiter.length());
+                pos = buffer.find(delimiter);
+                token = buffer.substr(0, pos);
+                double susceptibility = std::stod(buffer);
+                buffer.erase(0, pos + delimiter.length());
+                pos = buffer.find(delimiter);
+                token = buffer.substr(0, pos);
+                bool vaccination_status = (bool) std::stoi(token);
+                buffer.erase(0, pos + delimiter.length());
+                infection_state_t state = (infection_state_t) std::stoi(buffer);
+
+                auto person = std::make_shared<Person> (    pid,
+                                                            susceptibility,
+                                                            vaccination_status,
+                                                            state,
+                                                            0,
+                                                            0
+                                                       );
+                population.push_back(person);
+            }
+            lps.emplace_back(   location,
+                                    transmissibility,
+                                    latent_dwell_time,
+                                    incubating_dwell_time,
+                                    infectious_dwell_time,
+                                    asympt_dwell_time,
+                                    latent_infectivity,
+                                    incubating_infectivity,
+                                    infectious_infectivity,
+                                    asympt_infectivity,
+                                    prob_ulu,
+                                    prob_ulv,
+                                    prob_urv,
+                                    location_state_refresh_interval,
+                                    diffusion_interval,
+                                    population,
+                                    travel_time_to_hub, 
+                                    location_id
+                                );
+        }
+    }
+    config_stream.close();
+*/
 
     // Create the Network Graph
     std::vector<std::string> nodes;
