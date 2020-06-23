@@ -39,5 +39,6 @@ AC_CONFIG_FILES([models/wildfire/Makefile])
 AC_CONFIG_FILES([models/sandpile/Makefile])
 AC_CONFIG_FILES([models/synthetic/Makefile])
 AC_CONFIG_FILES([models/neuron/Makefile])
+AC_CONFIG_FILES([models/corona/Makefile])
 
 AC_OUTPUT
