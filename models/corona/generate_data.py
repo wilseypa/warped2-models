@@ -5,31 +5,25 @@ try:
     import re
     import argparse
     import json
+    import pandas as pd
+    import logging
 except Exception as e:
     print(str(type(e).__name__) + ": " + str(e), file=sys.stderr)
     sys.exit(1)
 
-    
-def getpopulationforcountystate(filename, countyname, statename):
 
-    to_match = countyname + " County, " + statename;
-    
-    fileobj = open(filename, 'r')
-    line = fileobj.readline()
+def setup_logging():
+    """
+    """
+    try:
 
-    while line != '':
+        logging.basicConfig(format="%(asctime)s [%(levelname)s] : %(message)s",
+                            filename='coronadata_errors.log',
+                            level=logging.DEBUG)
 
-        matches = re.match(r'(.*),([^,\s]*).*', line);
-        
-        if to_match.lower() == matches.group(1).lower():
-            fileobj.close()
-            return matches.group(2)
-
-        line = fileobj.readline()
-
-    fileobj.close()
-    return (-1)
-
+    except Exception as e:
+        print(str(type(e).__name__) + ": " + str(e), file=sys.stderr)
+        sys.exit(1)
 
 
 def parse_cmdargs():
@@ -51,15 +45,21 @@ def parse_cmdargs():
     parser.add_argument('--format_json', help='Dump output as json', action='store_true',
                         default=False,
                         required=False)
-    
+
     args = parser.parse_args()
 
     return (args.covid_data, args.pop_data, args.date, args.out_file, args.format_json)
 
 
-
 def prepare_data():
 
+    """
+    read data from JHU CSSE github repo (from '/csse_covid_19_data/csse_covid_19_daily_reports' directory),
+    combine it with population data, and
+    output data (to be supplied to corona simulation program) in json / plain-text format, depending on user choice
+    """
+
+    # hard-coded values
     transmissibility, mean_incubation_duration_in_days, mean_infection_duration_in_days,\
         mortality_ratio, update_trig_interval_in_hrs, diffusion_trig_interval_in_hrs = 2.2, 2.2,\
             2.3, 0.05, 24, 48
@@ -69,15 +69,41 @@ def prepare_data():
                      update_trig_interval_in_hrs, diffusion_trig_interval_in_hrs]
 
 
+    # store user input
     (covid_csse_data_filepath, pop_data_filepath, data_date, out_fname, format_json) = \
         parse_cmdargs()
 
-    outfile = open(out_fname, 'w')
+    # create file object to output data
+    outdatafileobj = open(out_fname, 'w')
 
+    # create DF from CSSE data, add new column in order to 'join' with population data
+    csse_data_daily_report_df = pd.read_csv(covid_csse_data_filepath, skipinitialspace=True,
+                                            dtype={'FIPS':'object'})
+    csse_data_daily_report_df['Combined_Key_US'] = csse_data_daily_report_df.Admin2 + "," \
+        + csse_data_daily_report_df.Province_State
+
+    # create DF from population data, add 'Combined_Key_US' column
+    population_data_df = pd.read_csv(pop_data_filepath, skipinitialspace=True)
+    population_data_df['Combined_Key_US'] = population_data_df.County + "," + population_data_df.State
+
+    # now, join
+    csse_data_daily_report_merged_df = pd.merge(csse_data_daily_report_df,
+                                                population_data_df[['Combined_Key_US', 'Population']],
+                                                on='Combined_Key_US', how='left')
+
+    # TODO merged data has population column converted to float type, convert it to int
+
+    # TODO output merge errors to log file
+
+    # drop unnecessary columns
+    csse_data_daily_report_merged_df.drop(columns=['Last_Update', 'Combined_Key_US'])
+
+    # for plain text output, write out (comma-seperated) disease model to outfile
     if not format_json:
         strout = ','.join(str(v) for v in disease_model + [data_date])
-        outfile.write(strout + "\n")
+        outdatafileobj.write(strout + "\n")
 
+    # for json output, build a dictionary before writing it out
     final_dict = {
         "disease_model": {
             "transmissibility": transmissibility,
@@ -88,53 +114,19 @@ def prepare_data():
             "diffusion_trig_interval_in_hrs": diffusion_trig_interval_in_hrs,
             "data_date": data_date
         },
-        "locations":[]
+        "locations": []
     }
-        
-    with open(covid_csse_data_filepath, 'r') as filedata:
-    
-        # skip header
-        next(filedata)
 
-        line = filedata.readline()
-
-        while line != '':
-
-            matches = re.match(r'^([0-9]+),([^,]*)\s*,\s*([^,]*)\s*,\s*([^,]*)\s*,\s*([^,]*)\s*,\s*([^,]*)\s*,\s*([^,]*)\s*,\s*([^,]*)\s*,\s*([^,]*)\s*,\s*([^,]*)\s*,\s*([^,]*)\s*,.*', line)
-
-            line = filedata.readline()
-        
-            if matches:
-
-                fips_code = matches.group(1)
-                countyname = matches.group(2)
-                statename = matches.group(3)
-                loc_lat = matches.group(6)
-                loc_long = matches.group(7)
-                confirmed = matches.group(8)
-                deaths = matches.group(9)
-                recovered = matches.group(10)
-
-            else:
-                continue
-
-        
-            population = getpopulationforcountystate(pop_data_filepath, countyname=countyname,
-                                                     statename=statename)
-
-            location_array = [fips_code, countyname, statename, loc_lat, loc_long, population,
-                              confirmed, recovered, deaths]
-            
-            final_dict["locations"].append(location_array)
-
-            if not format_json:
-                strout = ','.join(str(v) for v in location_array)
-                outfile.write(strout + "\n")
-
-        if format_json:
-            outfile.write(json.dumps(final_dict))
+    if format_json:
+        # write out main dictionary to json file
+        final_dict["locations"] = csse_data_daily_report_merged_df.values.tolist()
+        # TODO pretty print json??
+        outdatafileobj.write(json.dumps(final_dict))
+    else:
+        outdatafileobj.write(csse_data_daily_report_merged_df.to_csv(header=False, index=False))
 
 
+# MAIN
 if __name__ == '__main__':
     prepare_data()
 
