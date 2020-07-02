@@ -8,7 +8,6 @@
 #include "memory.hpp"
 #include "warped.hpp"
 #include "diffusion.hpp"
-#include "libbz2support.hpp"
 
 #include "jsoncons/json.hpp"
 #include "jsoncons/json_cursor.hpp"
@@ -290,14 +289,12 @@ public:
         return instance_;
     }
 
-    void openbz2File(std::string fname, std::vector<Location> *lps)  {
+    void openFile(std::string fname, std::vector<Location> *lps) {
         m_lps = lps;
-        m_fname = fname;
+        m_input_fname = fname;
 
-        std::unique_ptr<std::istream> ifs(BZ2FILE->readbz2file(fname));
-
-        cur = std::unique_ptr<jsoncons::json_cursor> (
-                    new jsoncons::json_cursor(*ifs));
+        cur = std::unique_ptr<jsoncons::json_cursor> (new jsoncons::json_cursor(
+                      new std::ifstream(fname)));
     }
 
     void getValuesFromJsonStream() {
@@ -394,6 +391,7 @@ public:
             }
         }
 
+        // TODO close cur ??
     }
 
 
@@ -422,13 +420,13 @@ public:
 
         jsoncons::json_printable<jsoncons::json> jsonprintable(jsoncons::pretty_print(jsontowrite));
 
-        std::stringstream sst;
+        // TODO outfile name
 
-        jsonprintable.dump(sst);
+        std::ofstream outfile;
+        outfile.open(m_out_fname);
+        outfile << jsonprintable;
 
-        //send to print function
-        BZ2FILE->writebz2file(m_fname, sst.str());
-
+        outfile.close();
     }
 
 private:
@@ -440,8 +438,8 @@ private:
     std::unique_ptr<jsoncons::json_cursor> cur;
 
     std::vector <Location> *m_lps;
-    std::string m_fname;
-
+    std::string m_input_fname;
+    std::string m_out_fname;
 
 };
 

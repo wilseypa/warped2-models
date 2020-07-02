@@ -115,7 +115,7 @@ int main(int argc, const char** argv)
     std::map<std::string, unsigned int> travel_map;
     std::vector<Location> lps;
 
-    CONFIGFILEHANDLER->getInstance()->openbz2File(model_config_name, &lps);
+    CONFIGFILEHANDLER->getInstance()->openFile(model_config_name, &lps);
     CONFIGFILEHANDLER->getInstance()->getValuesFromJsonStream();
 
 
