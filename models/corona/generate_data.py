@@ -78,7 +78,22 @@ def prepare_data():
 
     # create DF from CSSE data, add new column in order to 'join' with population data
     csse_data_daily_report_df = pd.read_csv(covid_csse_data_filepath, skipinitialspace=True,
-                                            dtype={'FIPS':'object'})
+                                            usecols=['FIPS','Admin2','Province_State','Country_Region',
+                                                     'Lat','Long_','Confirmed','Deaths',
+                                                     'Recovered','Active','Combined_Key'],
+                                            dtype={'FIPS':'object',
+                                                   'Admin2':'object',
+                                                   'Province_State':'object',
+                                                   'Country_Region':'object',
+                                                   'Last_Update':'object',
+                                                   'Lat':'float64',
+                                                   'Long_':'float64',
+                                                   'Confirmed':'int64',
+                                                   'Deaths':'int64',
+                                                   'Recovered':'int64',
+                                                   'Active':'int64',
+                                                   'Combined_Key':'object'})
+
     csse_data_daily_report_df['Combined_Key_US'] = csse_data_daily_report_df.Admin2 + "," \
         + csse_data_daily_report_df.Province_State
 
@@ -91,17 +106,27 @@ def prepare_data():
                                                 population_data_df[['Combined_Key_US', 'Population']],
                                                 on='Combined_Key_US', how='left')
 
-    # TODO merged data has population column converted to float type, convert it to int
+    # replace na values
+    csse_data_daily_report_merged_df['FIPS'].fillna(value='', inplace=True)
+    csse_data_daily_report_merged_df['Admin2'].fillna(value='', inplace=True)
+    csse_data_daily_report_merged_df['Province_State'].fillna(value='', inplace=True)
+    csse_data_daily_report_merged_df['Country_Region'].fillna(value='', inplace=True)
+    csse_data_daily_report_merged_df['Lat'].fillna(value=-999.9, inplace=True)
+    csse_data_daily_report_merged_df['Long_'].fillna(value=-999.9, inplace=True)
+    csse_data_daily_report_merged_df['Confirmed'].fillna(value=-1, inplace=True)
+    csse_data_daily_report_merged_df['Deaths'].fillna(value=-1, inplace=True)
+    csse_data_daily_report_merged_df['Recovered'].fillna(value=-1, inplace=True)
+    csse_data_daily_report_merged_df['Active'].fillna(value=-1, inplace=True)
+    csse_data_daily_report_merged_df['Combined_Key_US'].fillna(value='', inplace=True)
+
+    # merged data has population column converted to float type, convert it back to int
+    csse_data_daily_report_merged_df['Population'] = \
+        csse_data_daily_report_merged_df['Population'].fillna(-1.0).astype(int)
 
     # TODO output merge errors to log file
 
     # drop unnecessary columns
-    csse_data_daily_report_merged_df.drop(columns=['Last_Update', 'Combined_Key_US'])
-
-    # for plain text output, write out (comma-seperated) disease model to outfile
-    if not format_json:
-        strout = ','.join(str(v) for v in disease_model + [data_date])
-        outdatafileobj.write(strout + "\n")
+    csse_data_daily_report_merged_df.drop(columns=['Combined_Key_US'])
 
     # for json output, build a dictionary before writing it out
     final_dict = {
@@ -114,7 +139,7 @@ def prepare_data():
             "diffusion_trig_interval_in_hrs": diffusion_trig_interval_in_hrs,
             "data_date": data_date
         },
-        "locations": []
+        "locations": None
     }
 
     if format_json:
@@ -123,6 +148,9 @@ def prepare_data():
         # TODO pretty print json??
         outdatafileobj.write(json.dumps(final_dict))
     else:
+        # for plain text output, write out (comma-seperated) disease model to outfile
+        strout = ','.join(str(v) for v in disease_model + [data_date])
+        outdatafileobj.write(strout + "\n")
         outdatafileobj.write(csse_data_daily_report_merged_df.to_csv(header=False, index=False))
 
 
