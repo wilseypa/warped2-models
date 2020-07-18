@@ -116,7 +116,7 @@ int main(int argc, const char** argv)
     std::vector<Location> lps;
 
     CONFIGFILEHANDLER->getInstance()->openFile(model_config_name, &lps);
-    CONFIGFILEHANDLER->getInstance()->getValuesFromJsonStream();
+    CONFIGFILEHANDLER->getInstance()->getValuesFromJsonFile();
 
 
     // Create the Network Graph
