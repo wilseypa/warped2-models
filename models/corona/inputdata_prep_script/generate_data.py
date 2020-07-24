@@ -10,6 +10,7 @@ try:
     import pandas as pd
     import logging
     from math import radians, cos, sin, asin, sqrt
+    import subprocess
 except Exception as e:
     print(str(type(e).__name__) + ": " + str(e), file=sys.stderr)
     sys.exit(1)
@@ -143,11 +144,6 @@ def prepare_data():
         mortality_ratio, update_trig_interval_in_hrs, diffusion_trig_interval_in_hrs = 2.2, 2.2,\
             2.3, 0.05, 24, 48
 
-    disease_model = [transmissibility, mean_incubation_duration_in_days,
-                     mean_infection_duration_in_days, mortality_ratio,
-                     update_trig_interval_in_hrs, diffusion_trig_interval_in_hrs]
-
-
     # store user input
     (covid_csse_data_filepath, pop_data_filepath, data_date, format_json) = \
         parse_cmdargs()
@@ -157,8 +153,17 @@ def prepare_data():
     if format_json:
         out_fname = out_fname + ".json"
 
-    # create file object to output data
     outdatafileobj = open(out_fname, 'w')
+
+    disease_model = {
+        "transmissibility": transmissibility,
+        "mean_incubation_duration_in_days": mean_incubation_duration_in_days,
+        "mean_infection_duration_in_days": mean_infection_duration_in_days,
+        "mortality_ratio": mortality_ratio,
+        "update_trig_interval_in_hrs": update_trig_interval_in_hrs,
+        "diffusion_trig_interval_in_hrs": diffusion_trig_interval_in_hrs,
+        "data_date": data_date
+    }
 
     # create DF from CSSE data, add new column in order to 'join' with population data
     csse_data_daily_report_df = pd.read_csv(covid_csse_data_filepath, skipinitialspace=True,
@@ -190,11 +195,11 @@ def prepare_data():
                                                 population_data_df[['Combined_Key_US', 'Population']],
                                                 on='Combined_Key_US', how='left')
 
-    # dropna ASK
-    csse_data_daily_report_merged_df['FIPS'].dropna(inplace=True)
+
+    # drop all non-US data rows
+    csse_data_daily_report_merged_df.dropna(subset=['FIPS'], inplace=True)
 
     # replace na values
-    # csse_data_daily_report_merged_df['FIPS'].fillna(value='', inplace=True)
     csse_data_daily_report_merged_df['Admin2'].fillna(value='', inplace=True)
     csse_data_daily_report_merged_df['Province_State'].fillna(value='', inplace=True)
     csse_data_daily_report_merged_df['Country_Region'].fillna(value='', inplace=True)
@@ -219,29 +224,29 @@ def prepare_data():
 
     # for json output, build a dictionary before writing it out
     final_dict = {
-        "disease_model": {
-            "transmissibility": transmissibility,
-            "mean_incubation_duration_in_days": mean_incubation_duration_in_days,
-            "mean_infection_duration_in_days": mean_infection_duration_in_days,
-            "mortality_ratio": mortality_ratio,
-            "update_trig_interval_in_hrs": update_trig_interval_in_hrs,
-            "diffusion_trig_interval_in_hrs": diffusion_trig_interval_in_hrs,
-            "data_date": data_date
-        },
+        "disease_model": disease_model,
         "locations": None
     }
 
     if format_json:
         # write out main dictionary to json file
         final_dict["locations"] = csse_data_daily_report_merged_df.values.tolist()
-        # TODO pretty print json??
-        outdatafileobj.write(json.dumps(final_dict))
+
+        proc = subprocess.Popen(['./pretty_print_json', out_fname], stdin=subprocess.PIPE,
+                                text=True)
+
+        proc.communicate(json.dumps(final_dict))
+
     else:
+
+        # create file object to output data
+        outdatafileobj = open(out_fname, 'w')
+
         # for plain text output, write out (comma-seperated) disease model to outfile
-        strout = ','.join(str(v) for v in disease_model + [data_date])
+        strout = ','.join(str(v) for v in disease_model.values())
         outdatafileobj.write(strout + "\n")
         outdatafileobj.write(csse_data_daily_report_merged_df.to_csv(header=False, index=False))
-
+        outdatafileobj.close()
 
 # MAIN
 if __name__ == '__main__':
