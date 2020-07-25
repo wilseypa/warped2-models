@@ -1,6 +1,7 @@
 #ifndef CORONA_HPP
 #define CORONA_HPP
 
+
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -45,7 +46,7 @@ WARPED_DEFINE_LP_STATE_STRUCT(LocationState) {
 
     LocationState(const LocationState& other) {
         for (auto i = 0U; i < infection_state_t::NUM_INFECTION_STATES; i++) {
-            population_[i] = other.population_[i]; // ASK ??
+            population_[i] = other.population_[i];
         }
     };
 
@@ -123,42 +124,12 @@ class Location : public warped::LogicalProcess { // add print
 public:
     Location() = delete;
 
-    // TODO add new constructor??
-    /*
-    Location (std::string fips, std::string county, std::string state, std::string country,
-              std::string loc_lat,
-              std::string loc_lang,
-              unsigned long int population,
-              unsigned long int confirmed,
-              unsigned long int recovered,
-              unsigned long int deaths) : LogicalProcess(fips) {
-        ;
-
-        fips_code
-        countyname
-        statename
-        // add country here??
-        location_lat
-        location_long
-        population : -1 for unknown value
-        confirmed
-        recovered
-        deaths
-
-
-    }
-
-    corona.hpp: Fix Location constructor - don't pass lat/long values, add variables for population,
-    cases, recovered, deaths (map these to infection_state_t)
-
-    */
-
     Location(   const std::string& name,
-                long int confirmed,
-                long int deaths,
-                long int recovered,
-                long int active,
-                long int population
+                long int num_confirmed,
+                long int num_deaths,
+                long int num_recovered,
+                long int num_active,
+                long int population_cnt
                 unsigned int index  )
         :   LogicalProcess(name),
             state_(),
@@ -167,20 +138,16 @@ public:
 
         state_ = std::make_shared<LocationState>();
 
-        state_->population_[0] = population;
-        state_->population_[1] = confirmed;
-        state_->population_[2] = active;
-        state_->population_[3] = recovered;
-        state_->population_[4] = deaths;
+        state_->population_[infection_state_t::SUSCEPTIBLE] = population_cnt;
+        // TODO multiply with factor??
+        state_->population_[infection_state_t::EXPOSED] = num_confirmed;
+        state_->population_[infection_state_t::INFECTIOUS] = num_active;
+        state_->population_[infection_state_t::RECOVERED] = num_recovered;
+        state_->population_[infection_state_t::DECEASED] = num_deaths;
 
-        /* ASK
         diffusion_ = std::make_shared<Diffusion>(travel_time_to_hub,
-                        max_infected_diffusion_cnt, max_others_diffusion_cnt, rng_);
-        */
+                                                 max_infected_diffusion_cnt, max_others_diffusion_cnt, rng_);
     }
-
-    // TODO add method to get location??
-
 
     virtual warped::LPState& getState() override { return *state_; }
 
@@ -251,8 +218,6 @@ protected:
 };
 
 
-
-
 class CoronaConfig {
 public:
     static CoronaConfig* getInstance() {
@@ -278,12 +243,12 @@ public:
         map_name_location[str] = map_val;
     }
 
-    Location* getLocation(const std::string& str) {
+    const std::tuple<std::string, std::string, std::string, float, float>* getLocation(const std::string& str) {
         if (map_name_location.find(str) == map_name_location.end()) {
             return nullptr;
         }
 
-        return map_name_location[str];
+        return &map_name_location[str];
     }
 
 
@@ -291,9 +256,9 @@ private:
 
     static CoronaConfig* instance_;
     CoronaConfig() = default;
-    std::unordered_map<std::string, std::tuple<std::string, std::string, std::string, float, float>> map_name_location;
+    std::unordered_map<std::string, std::tuple<std::string, std::string, std::string, float,
+                                               float>> map_name_location;
 };
-
 
 
 class ConfigFileHandler {
@@ -321,14 +286,14 @@ public:
 
         CONFIG->transmissibility_ = input_data["disease_model"]["transmissibility"].as<double>();
         CONFIG->mean_incubation_duration_ = input_data["disease_model"]["mean_incubation_duration_in_days"]
-                .as<double>() * TIME_UNITS_IN_DAYS;
+            .as<double>() * TIME_UNITS_IN_DAYS;
         CONFIG->mean_infection_duration_ = input_data["disease_model"]["mean_infection_duration_in_days"]
-                .as<double>() * TIME_UNITS_IN_DAYS;
+            .as<double>() * TIME_UNITS_IN_DAYS;
         CONFIG->mortality_ratio_ = input_data["disease_model"]["mortality_ratio"].as<double>();
         CONFIG->update_trig_interval_ = input_data["disease_model"]["update_trig_interval_in_hrs"]
-                .as<unsigned int>() * TIME_UNITS_IN_HOURS;
+            .as<unsigned int>() * TIME_UNITS_IN_HOURS;
         CONFIG->diffusion_trig_interval_ = input_data["disease_model"]["diffusion_trig_interval_in_hrs"]
-                .as<unsigned int>() * TIME_UNITS_IN_HOURS;
+            .as<unsigned int>() * TIME_UNITS_IN_HOURS;
 
 
         for (const auto& location_data : input_data["locations"].array_range()) {
@@ -339,16 +304,16 @@ public:
             std::string country = location_data[3].as<std::string>();
             float loc_lat = location_data[4].as<float>();
             float loc_lang = location_data[5].as<float>();
-            long int confirmed = location_data[6].as<long int>();
-            long int deaths = location_data[7].as<long int>();
-            long int recovered = location_data[8].as<long int>();
-            long int active = location_data[9].as<long int>();
+            long int num_confirmed = location_data[6].as<long int>();
+            long int num_deaths = location_data[7].as<long int>();
+            long int num_recovered = location_data[8].as<long int>();
+            long int num_active = location_data[9].as<long int>();
             std::string combined_key = location_data[10].as<std::string>();
-            long int population = location_data[11].as<long int>();
+            long int population_cnt = location_data[11].as<long int>();
 
             // add values to Location LP's
-            m_lps->emplace_back(Location(fips_code, confirmed, deaths, recovered, active, population,
-                                         std::stoi(fips_code)));
+            m_lps->emplace_back(Location(fips_code, num_confirmed, num_deaths, num_recovered, num_active,
+                                         population_cnt, std::stoi(fips_code)));
 
             CONFIG->addMapEntry(fips_code, std::make_tuple(county, state, country, loc_lat, loc_long));
         }
@@ -360,9 +325,12 @@ public:
 
         jsoncons::json jsontowrite;
 
-        jsoncons::json diseasemodel_arr(jsoncons::json_array_arg, {CONFIG->transmissibility_, CONFIG->mean_incubation_duration_,
-                                        CONFIG->mean_infection_duration_, CONFIG->mortality_ratio_, CONFIG->update_trig_interval_,
-                                        CONFIG->diffusion_trig_interval_});
+        jsoncons::json diseasemodel_arr(jsoncons::json_array_arg, {CONFIG->transmissibility_,
+                                                                   CONFIG->mean_incubation_duration_,
+                                                                   CONFIG->mean_infection_duration_,
+                                                                   CONFIG->mortality_ratio_,
+                                                                   CONFIG->update_trig_interval_,
+                                                                   CONFIG->diffusion_trig_interval_});
 
         jsontowrite["disease_model"] = std::move(diseasemodel_arr);
 
@@ -400,7 +368,7 @@ private:
     std::vector <Location> *m_lps;
     std::string m_input_fname;
     std::string m_out_fname;
-
 };
+
 
 #endif

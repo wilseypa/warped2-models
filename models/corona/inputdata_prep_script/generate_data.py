@@ -10,6 +10,7 @@ try:
     import pandas as pd
     import logging
     from math import radians, cos, sin, asin, sqrt
+    from datetime import datetime
     import subprocess
 except Exception as e:
     print(str(type(e).__name__) + ": " + str(e), file=sys.stderr)
@@ -40,8 +41,7 @@ def setup_logging():
     try:
 
         logging.basicConfig(format="%(asctime)s [%(levelname)s] : %(message)s",
-                            filename='coronadata_errors.log',
-                            level=logging.DEBUG)
+                            filename='generate_data.log', level=logging.DEBUG)
 
     except Exception as e:
         print(str(type(e).__name__) + ": " + str(e), file=sys.stderr)
@@ -119,52 +119,22 @@ def addDFrow_to_cluster(clusterDFs, cluster_centers, row):
 def sort_df_rows_into_clusters(mainDF):
     """
     """
+    # these DataFrames will store rows corresponding to each geographical partition; essentially
+    # storing partitions of original DataFrame
     clusterDFs = [pd.DataFrame(columns=mainDF.columns)] * len(cluster_centers)
 
     for index, row in mainDF.iterrows():
         addDFrow_to_cluster(clusterDFs, cluster_centers, row)
 
-    # TODO delete original mainDF??
-
+    # finally, we need a single DataFrame containing rows grouped by the geographical partition they fall in
     mainDF = pd.concat(clusterDFs, ignore_index=True)
 
     return mainDF
 
 
-def prepare_data():
-
+def create_merged_DF_jhu_population(covid_csse_data_filepath, pop_data_filepath, data_date):
     """
-    read data from JHU CSSE github repo (from '/csse_covid_19_data/csse_covid_19_daily_reports' directory),
-    combine it with population data, and
-    output data (to be supplied to corona simulation program) in json / plain-text format, depending on user choice
     """
-
-    # hard-coded values
-    transmissibility, mean_incubation_duration_in_days, mean_infection_duration_in_days,\
-        mortality_ratio, update_trig_interval_in_hrs, diffusion_trig_interval_in_hrs = 2.2, 2.2,\
-            2.3, 0.05, 24, 48
-
-    # store user input
-    (covid_csse_data_filepath, pop_data_filepath, data_date, format_json) = \
-        parse_cmdargs()
-
-    out_fname = os.path.splitext(os.path.basename(covid_csse_data_filepath))[0] + ".jhu-source-data"
-
-    if format_json:
-        out_fname = out_fname + ".json"
-
-    outdatafileobj = open(out_fname, 'w')
-
-    disease_model = {
-        "transmissibility": transmissibility,
-        "mean_incubation_duration_in_days": mean_incubation_duration_in_days,
-        "mean_infection_duration_in_days": mean_infection_duration_in_days,
-        "mortality_ratio": mortality_ratio,
-        "update_trig_interval_in_hrs": update_trig_interval_in_hrs,
-        "diffusion_trig_interval_in_hrs": diffusion_trig_interval_in_hrs,
-        "data_date": data_date
-    }
-
     # create DF from CSSE data, add new column in order to 'join' with population data
     csse_data_daily_report_df = pd.read_csv(covid_csse_data_filepath, skipinitialspace=True,
                                             usecols=['FIPS','Admin2','Province_State','Country_Region',
@@ -183,34 +153,40 @@ def prepare_data():
                                                    'Active':'int64',
                                                    'Combined_Key':'object'})
 
+    # drop all non-US data rows
+    csse_data_daily_report_df.dropna(subset=['FIPS'], inplace=True)
+
+    # replace na values
+    csse_data_daily_report_df['Admin2'].fillna(value='', inplace=True)
+    csse_data_daily_report_df['Province_State'].fillna(value='', inplace=True)
+    csse_data_daily_report_df['Country_Region'].fillna(value='', inplace=True)
+    csse_data_daily_report_df['Lat'].fillna(value=-999.9, inplace=True)
+    csse_data_daily_report_df['Long_'].fillna(value=-999.9, inplace=True)
+    csse_data_daily_report_df['Confirmed'].fillna(value=-1, inplace=True)
+    csse_data_daily_report_df['Deaths'].fillna(value=-1, inplace=True)
+    csse_data_daily_report_df['Recovered'].fillna(value=-1, inplace=True)
+    csse_data_daily_report_df['Active'].fillna(value=-1, inplace=True)
+
+    # create an extra column for merging
     csse_data_daily_report_df['Combined_Key_US'] = csse_data_daily_report_df.Admin2 + "," \
         + csse_data_daily_report_df.Province_State
 
-    # create DF from population data, add 'Combined_Key_US' column
+    # now, create DF from population data, add 'Combined_Key_US' column
     population_data_df = pd.read_csv(pop_data_filepath, skipinitialspace=True)
     population_data_df['Combined_Key_US'] = population_data_df.County + "," + population_data_df.State
 
+    logging.info("Merging main DataFrame [{} rows, {} columns] with population DataFrame [{} rows, {} columns] ..."
+                 .format(csse_data_daily_report_df.shape[0], csse_data_daily_report_df.shape[1],
+                         population_data_df.shape[0], population_data_df.shape[1]))
     # now, join
     csse_data_daily_report_merged_df = pd.merge(csse_data_daily_report_df,
                                                 population_data_df[['Combined_Key_US', 'Population']],
                                                 on='Combined_Key_US', how='left')
 
+    logging.info("Merged DataFrame has: [{} rows, {} columns]".format(csse_data_daily_report_merged_df.shape[0],
+                                                                      csse_data_daily_report_merged_df.shape[1]))
 
-    # drop all non-US data rows
-    csse_data_daily_report_merged_df.dropna(subset=['FIPS'], inplace=True)
-
-    # replace na values
-    csse_data_daily_report_merged_df['Admin2'].fillna(value='', inplace=True)
-    csse_data_daily_report_merged_df['Province_State'].fillna(value='', inplace=True)
-    csse_data_daily_report_merged_df['Country_Region'].fillna(value='', inplace=True)
-    csse_data_daily_report_merged_df['Lat'].fillna(value=-999.9, inplace=True)
-    csse_data_daily_report_merged_df['Long_'].fillna(value=-999.9, inplace=True)
-    csse_data_daily_report_merged_df['Confirmed'].fillna(value=-1, inplace=True)
-    csse_data_daily_report_merged_df['Deaths'].fillna(value=-1, inplace=True)
-    csse_data_daily_report_merged_df['Recovered'].fillna(value=-1, inplace=True)
-    csse_data_daily_report_merged_df['Active'].fillna(value=-1, inplace=True)
-
-    # merged data has population column converted to float type, convert it back to int
+    # merging converts population data to float type, convert it back to int
     csse_data_daily_report_merged_df['Population'] = \
         csse_data_daily_report_merged_df['Population'].fillna(-1.0).astype(int)
 
@@ -219,34 +195,104 @@ def prepare_data():
     # drop unnecessary columns
     csse_data_daily_report_merged_df.drop(columns=['Combined_Key_US'], inplace=True)
 
-    # TODO doesnt work why?? sort_df_rows_into_clusters(csse_data_daily_report_merged_df)
+    logging.info("Sorting DataFrame to group rows in clusters ...")
+
     csse_data_daily_report_merged_df = sort_df_rows_into_clusters(csse_data_daily_report_merged_df)
 
-    # for json output, build a dictionary before writing it out
-    final_dict = {
-        "disease_model": disease_model,
-        "locations": None
-    }
+    logging.info("Sorted DataFrame has: [{} rows, {} columns]".format(
+        csse_data_daily_report_merged_df.shape[0], csse_data_daily_report_merged_df.shape[1]))
 
-    if format_json:
-        # write out main dictionary to json file
-        final_dict["locations"] = csse_data_daily_report_merged_df.values.tolist()
+    return csse_data_daily_report_merged_df
 
-        proc = subprocess.Popen(['./pretty_print_json', out_fname], stdin=subprocess.PIPE,
-                                text=True)
 
-        proc.communicate(json.dumps(final_dict))
+def prepare_data():
 
-    else:
+    """
+    read data from JHU CSSE github repo (from '/csse_covid_19_data/csse_covid_19_daily_reports' directory),
+    combine it with population data, and write output data to file (to serve as input to covid simulation program)
+    in json / plain-text format, depending on user choice
+    """
 
-        # create file object to output data
-        outdatafileobj = open(out_fname, 'w')
+    try:
+        setup_logging()
 
-        # for plain text output, write out (comma-seperated) disease model to outfile
-        strout = ','.join(str(v) for v in disease_model.values())
-        outdatafileobj.write(strout + "\n")
-        outdatafileobj.write(csse_data_daily_report_merged_df.to_csv(header=False, index=False))
-        outdatafileobj.close()
+        logging.info("")
+        logging.info("")
+        logging.info("Starting ...")
+
+        # hard-coded values
+        transmissibility, mean_incubation_duration_in_days, mean_infection_duration_in_days,\
+            mortality_ratio, update_trig_interval_in_hrs, diffusion_trig_interval_in_hrs = 2.2, 2.2,\
+                2.3, 0.05, 24, 48
+
+        # store user input
+        (covid_csse_data_filepath, pop_data_filepath, data_date, format_json) = \
+            parse_cmdargs()
+
+        out_fname = os.path.splitext(os.path.basename(covid_csse_data_filepath))[0] + ".ordered-JHU-source-data"
+
+        if format_json:
+            out_fname = out_fname + ".json"
+
+        disease_model = {
+            "transmissibility": transmissibility,
+            "mean_incubation_duration_in_days": mean_incubation_duration_in_days,
+            "mean_infection_duration_in_days": mean_infection_duration_in_days,
+            "mortality_ratio": mortality_ratio,
+            "update_trig_interval_in_hrs": update_trig_interval_in_hrs,
+            "diffusion_trig_interval_in_hrs": diffusion_trig_interval_in_hrs,
+            "data_date": data_date
+        }
+
+        # create dataframe
+        csse_data_daily_report_merged_sorted_df = create_merged_DF_jhu_population(covid_csse_data_filepath,
+                                                                                  pop_data_filepath, data_date)
+
+
+        if format_json:
+
+            # for json output, build a dictionary before writing it out
+            final_dict = {
+                "disease_model": disease_model,
+                "locations": None
+            }
+
+            logging.info("Writing to file [{}] in json format".format(out_fname))
+            # write out main dictionary to json file
+            final_dict["locations"] = csse_data_daily_report_merged_sorted_df.values.tolist()
+
+            proc = subprocess.Popen(['./pretty_print_json', out_fname], stdin=subprocess.PIPE,
+                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
+            ret_stdout, ret_stderr = proc.communicate(json.dumps(final_dict))
+
+            if proc.returncode == 0:
+                logging.info("Writing finished with return status: {}".format(proc.returncode))
+            else:
+                raise Exception("Error in writing to file: [{}]".format(ret_stderr.strip()))
+
+        else:
+
+            # create file object to output data
+            outdatafileobj = open(out_fname, 'w')
+
+            logging.info("Writing to file [{}] in plain-text format".format(out_fname))
+
+            # for plain text output, write out (comma-seperated) disease model to outfile
+            strout = ','.join(str(v) for v in disease_model.values())
+            outdatafileobj.write(strout + "\n")
+            outdatafileobj.write(csse_data_daily_report_merged_sorted_df.to_csv(header=False, index=False))
+            outdatafileobj.close()
+
+        logging.info("Exiting ...\n\n")
+
+    except Exception as e:
+        logging.exception(str(type(e).__name__) + ": " + str(e), exc_info=True)
+        logging.info("Exiting ...\n\n")
+
+        print("Exception occured, view log file")
+        sys.exit(1)
+
 
 # MAIN
 if __name__ == '__main__':
