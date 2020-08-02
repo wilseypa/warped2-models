@@ -38,30 +38,41 @@ std::vector<std::shared_ptr<warped::Event> > Location::receiveEvent(const warped
 
     std::vector<std::shared_ptr<warped::Event> > events;
 
+    // TODO error: base operand of ‘->’ has non-pointer type ‘const warped::Event’
     if (event->eventType() == event_type_t::TRIGGER) {
         auto trigger_event = static_cast<const TriggerEvent&>(event);
+        // TODO error: base operand of ‘->’ has non-pointer type ‘TriggerEvent’
         auto timestamp = trigger_event->timestamp();
 
         /* Check whether a diffusion needs to be triggered */
+        // TODO error: base operand of ‘->’ has non-pointer type ‘TriggerEvent’
         if (trigger_event->is_diffusion_) {
+            // TODO error: ‘diffusion_network_’ was not declared in this scope
             std::string selected_location = diffusion_network_->pickLocation();
             if (selected_location != "") {
                 auto travel_time = diffusion_network_->travelTimeToLocation(selected_location);
+                // TODO error: ‘using element_type = struct LocationState’ {aka ‘struct LocationState’} has no member named ‘current_population_’
                 unsigned int person_count = state_->current_population_->size();
                 if (person_count) {
                     unsigned int person_id = diffusion_network_->pickPerson(person_count);
+                    // TODO error: ‘using element_type = struct LocationState’ {aka ‘struct LocationState’} has no member named ‘current_population_’
                     auto map_iter = state_->current_population_->begin();
                     unsigned int temp_cnt = 0;
                     while (temp_cnt < person_id) {
                         map_iter++;
                         temp_cnt++;
                     }
+                    // TODO error: ‘Person’ was not declared in this scope
+                    // TODO error: ‘Person’ was not declared in this scope
                     std::shared_ptr<Person> person = map_iter->second;
+                    // TODO error: ‘EpidemicEvent’ does not name a type
                     events.emplace_back(new EpidemicEvent {selected_location,
                                             timestamp + travel_time, person, DIFFUSION});
+                    // TODO error: ‘using element_type = struct LocationState’ {aka ‘struct LocationState’} has no member named ‘current_population_’
                     state_->current_population_->erase(map_iter);
                 }
             }
+            // TODO error: no matching function for call to ‘TriggerEvent::TriggerEvent(<brace-enclosed initializer list>)’
             events.emplace_back(new TriggerEvent {location_name_,
                                 timestamp + CONFIG->diffusion_trig_interval_, true});
 
@@ -69,15 +80,22 @@ std::vector<std::shared_ptr<warped::Event> > Location::receiveEvent(const warped
             std::uniform_real_distribution<double> distribution(0.0, 1.0);
             auto rand_factor = distribution(*rng_);
             reaction();
+            // TODO error: no matching function for call to ‘TriggerEvent::TriggerEvent(<brace-enclosed initializer list>)’
             events.emplace_back(new TriggerEvent {location_name_,
                                 timestamp + CONFIG->update_trig_interval_});
         }
     } else {
+        // TODO error: ‘Person’ was not declared in this scope
+        // TODO error: template argument 1 is invalid
         std::shared_ptr<Person> person = std::make_shared<Person>(
+            // TODO error: ‘epidemic_event’ was not declared in this scope
                         epidemic_event.pid_, epidemic_event.susceptibility_,
                         epidemic_event.vaccination_status_, epidemic_event.infection_state_,
+                        // TODO error: ‘timestamp’ was not declared in this scope
                         timestamp, epidemic_event.prev_state_change_timestamp_);
+        // TODO error: ‘using element_type = struct LocationState’ {aka ‘struct LocationState’} has no member named ‘current_population_’
         state_->current_population_->insert(state_->current_population_->begin(),
+                                            // TODO error: template argument 2 is invalid
                 std::pair <unsigned long, std::shared_ptr<Person>> (epidemic_event.pid_, person));
     }
     return events;
@@ -126,8 +144,13 @@ int main(int argc, const char** argv)
     }
 
     Graph *graph = nullptr;
+    // TODO error: ‘graph_type’ was not declared in this scope
     if (graph_type == "Watts-Strogatz") { // If the choice is Watts-Strogatz
+        // TODO error: ‘pos’ was not declared in this scope; did you mean ‘pow’?
+        // TODO error: ‘diffusion_params’ was not declared in this scope
+        // TODO error: ‘delimiter’ was not declared in this scope
         pos = diffusion_params.find(delimiter);
+        // TODO error: ‘token’ was not declared in this scope
         token = diffusion_params.substr(0, pos);
         unsigned int k = (unsigned int) std::stoul(token);
         diffusion_params.erase(0, pos + delimiter.length());
@@ -135,7 +158,11 @@ int main(int argc, const char** argv)
         graph = new WattsStrogatz(nodes, k, beta);
 
     } else if (graph_type == "Barabasi-Albert") { // If the choice is Barabasi-Albert
+        // TODO error: ‘pos’ was not declared in this scope; did you mean ‘pow’?
+        // TODO error: ‘diffusion_params’ was not declared in this scope
+        // TODO error: ‘delimiter’ was not declared in this scope
         pos = diffusion_params.find(delimiter);
+        // TODO error: ‘token’ was not declared in this scope
         token = diffusion_params.substr(0, pos);
         unsigned int m = (unsigned int) std::stoul(token);
         diffusion_params.erase(0, pos + delimiter.length());
@@ -164,6 +191,7 @@ int main(int argc, const char** argv)
 
         // Record the initial statistics
         unsigned long init_popu = 0, init_affected = 0;
+        // TODO error: ‘class Location’ has no member named ‘statistics’
         lp.statistics(&init_popu, &init_affected);
         initial_population[i]   = init_popu;
         initial_affected_cnt[i] = init_affected;
@@ -188,6 +216,7 @@ int main(int argc, const char** argv)
     i = 0;
     for (auto& lp : lps) {
         unsigned long final_population = 0, final_affected_cnt = 0;
+        // TODO error: ‘class Location’ has no member named ‘statistics’
         lp.statistics(&final_population, &final_affected_cnt);
 
         // If initial population >  final population, color is GREEN
