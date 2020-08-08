@@ -1,1 +1,1 @@
-SUBDIRS = phold pcs airport epidemic traffic volcano wildfire sandpile synthetic neuron corona
+SUBDIRS = phold pcs airport epidemic traffic volcano wildfire sandpile synthetic neuron pandemic

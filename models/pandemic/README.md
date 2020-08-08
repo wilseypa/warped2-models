@@ -1,6 +1,6 @@
-# CORONA: A WARPED simulation kernel application
+# PANDEMIC: A WARPED simulation kernel application
 
-Author: Sounak Gupta <br>
+Author: Vivek Mehra and Sounak Gupta <br>
 Experimental Computing Laboratory <br>
 Dept of ECECS, PO Box 210030 <br>
 Cincinnati, OH  45221--0030 <br>

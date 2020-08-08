@@ -1,20 +1,19 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <string>
 #include <cassert>
-#include "corona.hpp"
+#include <algorithm>
+#include <iterator>
+
+#include "pandemic.hpp"
 #include "graph.hpp"
 #include "ppm/ppm.hpp"
 #include "tclap/ValueArg.h"
 
-#include <string>
-#include <algorithm>
-#include <iterator>
-
-
 #define DEFAULT_MODEL_NAME "*"
 
-CoronaConfig* CoronaConfig::instance_ = nullptr;
+PandemicConfig* PandemicConfig::instance_ = nullptr;
 ConfigFileHandler* ConfigFileHandler::instance_ = nullptr;
 
 WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(DiffusionEvent)
@@ -115,7 +114,7 @@ int main(int argc, const char** argv)
     TCLAP::ValueArg<std::string> model_config_name_arg( "m", "model-config",
                         "Provide name of the model config", false, model_config_name, "string" );
     std::vector<TCLAP::Arg*> args = {&model_config_name_arg};
-    warped::Simulation corona_sim {"Covid-19 Pandemic Simulation", argc, argv, args};
+    warped::Simulation pandemic_sim {"Covid-19 Pandemic Simulation", argc, argv, args};
     model_config_name   = model_config_name_arg.getValue();
 
     if (model_config_name == DEFAULT_MODEL_NAME) {
@@ -204,7 +203,7 @@ int main(int argc, const char** argv)
     for (auto& lp : lps) {
         lp_pointers.push_back(&lp);
     }
-    corona_sim.simulate(lp_pointers);
+    pandemic_sim.simulate(lp_pointers);
 
     // Plot the heatmaps
     unsigned long cols = std::ceil( sqrt(lps.size()) );

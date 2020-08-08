@@ -1,6 +1,5 @@
-#ifndef CORONA_HPP
-#define CORONA_HPP
-
+#ifndef PANDEMIC_HPP
+#define PANDEMIC_HPP
 
 #include <string>
 #include <vector>
@@ -14,12 +13,11 @@
 #include "jsoncons/json.hpp"
 #include "jsoncons/json_cursor.hpp"
 
-#define CONFIG  CoronaConfig::getInstance()
+#define CONFIG              PandemicConfig::getInstance()
 #define CONFIGFILEHANDLER   ConfigFileHandler::getInstance()
 
-#define TIME_UNITS_IN_HOUR    1
-#define TIME_UNITS_IN_DAY     (24 * TIME_UNITS_IN_HOUR)
-
+#define TIME_UNITS_IN_HOUR  1
+#define TIME_UNITS_IN_DAY   (24 * TIME_UNITS_IN_HOUR)
 
 
 /*
@@ -121,11 +119,11 @@ public:
 };
 
 
-class CoronaConfig {
+class PandemicConfig {
 public:
-    static CoronaConfig* getInstance() {
+    static PandemicConfig* getInstance() {
         if (!instance_) {
-            instance_ = new CoronaConfig();
+            instance_ = new PandemicConfig();
         }
         return instance_;
     }
@@ -160,8 +158,8 @@ public:
 
 private:
 
-    static CoronaConfig* instance_;
-    CoronaConfig() = default;
+    static PandemicConfig* instance_;
+    PandemicConfig() = default;
     std::unordered_map<std::string, std::tuple<std::string, std::string, std::string, float,
                                                float>> map_name_location;
 };
