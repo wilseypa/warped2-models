@@ -1,1 +1,2 @@
- 
+- `generate_data.py` generates json formatted file inside `data` directory (in the parent directory). The json file created will serve as input to the pandemic simulation. The python script needs as input a single file from `csse_covid_19_data/csse_covid_19_daily_reports/` directory from the **COVID-19** git repo at [https://github.com/CSSEGISandData/COVID-19](https://github.com/CSSEGISandData/COVID-19)
+- `pretty_print_json.cpp` serves to be built into a standalone executable `pretty_print_json`. The executable is invoked by `generate_data.py` script to "pretty-print" the json output. A sepeate script is being used simply because the inbuilt python json pretty-print-ing doesn't meet our requirements
