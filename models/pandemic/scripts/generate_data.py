@@ -59,16 +59,18 @@ def parse_cmdargs():
     parser.add_argument('--covid_data', help='JHU_CSSE Covid19 data csv filepath',
                         required=True)
     parser.add_argument('--pop_data', help='Population data csv filepath',
-                        required=True)
+                        default='../data/county_population_data.csv',
+                        required=False)
     parser.add_argument('--date', help='Date of dataset in YYYY-MM-DD format',
                         required=False)
-    parser.add_argument('--format_json', help='Dump output as json', action='store_true',
+    parser.add_argument('--format_plaintext', help='Dump output as comma-seperated plain-text file',
+                        action='store_true',
                         default=False,
                         required=False)
 
     args = parser.parse_args()
 
-    return (args.covid_data, args.pop_data, args.date, args.format_json)
+    return (args.covid_data, args.pop_data, args.date, args.format_plaintext)
 
 
 def get_dist_between_coordinates(latA, longA, latB, longB):
@@ -214,6 +216,10 @@ def prepare_data():
     """
 
     try:
+        # parse command-line arguments
+        (covid_csse_data_filepath, pop_data_filepath, data_date, format_plaintext) = \
+            parse_cmdargs()
+
         setup_logging()
 
         logging.info("")
@@ -225,14 +231,12 @@ def prepare_data():
             mortality_ratio, update_trig_interval_in_hrs, diffusion_trig_interval_in_hrs = 2.2, 2.2,\
                 2.3, 0.05, 24, 48
 
-        # store user input
-        (covid_csse_data_filepath, pop_data_filepath, data_date, format_json) = \
-            parse_cmdargs()
 
-        out_fname = os.path.splitext(os.path.basename(covid_csse_data_filepath))[0] + ".ordered-JHU-source-data"
+        out_fname = os.path.splitext(os.path.basename(covid_csse_data_filepath))[0] + ".formatted-JHU-data"
 
-        if format_json:
-            out_fname = out_fname + ".json"
+        # set filename extension depending on output format - *json* is set as default
+        out_fname = out_fname + (".csv" if format_plaintext else ".json")
+        out_filepath = "../data/" + out_fname
 
         disease_model = {
             "transmissibility": transmissibility,
@@ -249,19 +253,30 @@ def prepare_data():
                                                                                   pop_data_filepath, data_date)
 
 
-        if format_json:
+        if format_plaintext:
+            # create file object to output data
+            outdatafileobj = open(out_filepath, 'w')
 
-            # for json output, build a dictionary before writing it out
+            logging.info("Writing to file [{}] in plain-text format".format(out_filepath))
+
+            # for plain text output, write out (comma-seperated) disease model to outfile
+            strout = ','.join(str(v) for v in disease_model.values())
+            outdatafileobj.write(strout + "\n")
+            outdatafileobj.write(csse_data_daily_report_merged_sorted_df.to_csv(header=False, index=False))
+            outdatafileobj.close()
+
+        else:
+            # (default) for json output, build a dictionary before writing it out
             final_dict = {
                 "disease_model": disease_model,
                 "locations": None
             }
 
-            logging.info("Writing to file [{}] in json format".format(out_fname))
+            logging.info("Writing to file [{}] in json format".format(out_filepath))
             # write out main dictionary to json file
             final_dict["locations"] = csse_data_daily_report_merged_sorted_df.values.tolist()
 
-            proc = subprocess.Popen(['./pretty_print_json', out_fname], stdin=subprocess.PIPE,
+            proc = subprocess.Popen(['./pretty_print_json', out_filepath], stdin=subprocess.PIPE,
                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
             ret_stdout, ret_stderr = proc.communicate(json.dumps(final_dict))
@@ -271,18 +286,6 @@ def prepare_data():
             else:
                 raise Exception("Error in writing to file: [{}]".format(ret_stderr.strip()))
 
-        else:
-
-            # create file object to output data
-            outdatafileobj = open(out_fname, 'w')
-
-            logging.info("Writing to file [{}] in plain-text format".format(out_fname))
-
-            # for plain text output, write out (comma-seperated) disease model to outfile
-            strout = ','.join(str(v) for v in disease_model.values())
-            outdatafileobj.write(strout + "\n")
-            outdatafileobj.write(csse_data_daily_report_merged_sorted_df.to_csv(header=False, index=False))
-            outdatafileobj.close()
 
         logging.info("Exiting ...\n\n")
 

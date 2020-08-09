@@ -1,3 +1,5 @@
+SUBDIRS = scripts
+
 bin_PROGRAMS = pandemic_sim
 
 pandemic_sim_SOURCES = \
