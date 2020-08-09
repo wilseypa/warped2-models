@@ -1,2 +1,2 @@
-- `county_population_data.csv` : this stores population count for each United States county, downloaded from [https://www.census.gov/data/datasets/time-series/demo/popest/2010s-counties-total.html#par_textimage_739801612](https://www.census.gov/data/datasets/time-series/demo/popest/2010s-counties-total.html#par_textimage_739801612)
+- `county_population_data.csv` : stores population count for each United States county, downloaded from [https://www.census.gov/data/datasets/time-series/demo/popest/2010s-counties-total.html#par_textimage_739801612](https://www.census.gov/data/datasets/time-series/demo/popest/2010s-counties-total.html#par_textimage_739801612)
 - There are two sample data files (in json and plain-text format, can be used as input for pandemic simulation as-is)
