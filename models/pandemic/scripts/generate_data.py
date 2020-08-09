@@ -141,7 +141,7 @@ def create_merged_DF_jhu_population(covid_csse_data_filepath, pop_data_filepath,
     csse_data_daily_report_df = pd.read_csv(covid_csse_data_filepath, skipinitialspace=True,
                                             usecols=['FIPS','Admin2','Province_State','Country_Region',
                                                      'Lat','Long_','Confirmed','Deaths',
-                                                     'Recovered','Active','Combined_Key'],
+                                                     'Recovered','Active'],
                                             dtype={'FIPS':'object',
                                                    'Admin2':'object',
                                                    'Province_State':'object',
@@ -152,8 +152,7 @@ def create_merged_DF_jhu_population(covid_csse_data_filepath, pop_data_filepath,
                                                    'Confirmed':'int64',
                                                    'Deaths':'int64',
                                                    'Recovered':'int64',
-                                                   'Active':'int64',
-                                                   'Combined_Key':'object'})
+                                                   'Active':'int64'})
 
     # drop all non-US data rows
     csse_data_daily_report_df.dropna(subset=['FIPS'], inplace=True)
@@ -198,7 +197,6 @@ def create_merged_DF_jhu_population(covid_csse_data_filepath, pop_data_filepath,
     csse_data_daily_report_merged_df.drop(columns=['Combined_Key_US'], inplace=True)
 
     logging.info("Sorting DataFrame to group rows in clusters ...")
-
     csse_data_daily_report_merged_df = sort_df_rows_into_clusters(csse_data_daily_report_merged_df)
 
     logging.info("Sorted DataFrame has: [{} rows, {} columns]".format(

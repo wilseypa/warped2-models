@@ -11,7 +11,7 @@
 #include "ppm/ppm.hpp"
 #include "tclap/ValueArg.h"
 
-#define DEFAULT_MODEL_NAME "*"
+#define DEFAULT_MODEL_NAME "data/05-26-2020.formatted-JHU-data.json"
 
 PandemicConfig* PandemicConfig::instance_ = nullptr;
 ConfigFileHandler* ConfigFileHandler::instance_ = nullptr;
@@ -109,7 +109,7 @@ std::string toString(unsigned int num) {
 
 int main(int argc, const char** argv)
 {
-    std::string model_config_name   = DEFAULT_MODEL_NAME;
+    std::string model_config_name = DEFAULT_MODEL_NAME;
 
     TCLAP::ValueArg<std::string> model_config_name_arg( "m", "model-config",
                         "Provide name of the model config", false, model_config_name, "string" );
@@ -117,10 +117,11 @@ int main(int argc, const char** argv)
     warped::Simulation pandemic_sim {"Covid-19 Pandemic Simulation", argc, argv, args};
     model_config_name   = model_config_name_arg.getValue();
 
-    if (model_config_name == DEFAULT_MODEL_NAME) {
-        std::cout << "Need a valid model config filename.\n";
-        exit(EXIT_FAILURE);
-    }
+
+    // if (model_config_name == DEFAULT_MODEL_NAME) {
+    //     std::cout << "Need a valid model config filename.\n";
+    //     exit(EXIT_FAILURE);
+    // }
 
     // commented existing file open code
     // std::ifstream config_stream;
@@ -247,6 +248,11 @@ int main(int argc, const char** argv)
         }
         i++;
     }
+
+    // TODO
+    std::string out_fname("");
+    ConfigFileHandler->getInstance()->writeSimulationOutputToJsonFile(out_fname);
+
     population_diffusion_hmap->write("population_diffusion_hmap.ppm");
     disease_growth_hmap->write("disease_growth_hmap.ppm");
 
