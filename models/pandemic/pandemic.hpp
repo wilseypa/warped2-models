@@ -308,7 +308,6 @@ public:
         CONFIG->diffusion_trig_interval_ = input_data["disease_model"]["diffusion_trig_interval_in_hrs"]
             .as<unsigned int>() * TIME_UNITS_IN_HOUR;
 
-
         for (const auto& location_data : input_data["locations"].array_range()) {
             // read in values from json array for each individual "Location"
             std::string fips_code = location_data[0].as<std::string>();
@@ -336,6 +335,42 @@ public:
             CONFIG->addMapEntry(fips_code, std::make_tuple(county, state, country, loc_lat, loc_long,
                                                            total_population_cnt));
         }
+
+        // Create the Network Graph
+        std::vector<std::string> nodes;
+        for (auto& lp : m_lps) {
+            nodes.push_back(lp.getLocationName());
+        }
+
+        // TODO: Fill the params in comments
+        Graph *graph = nullptr;
+        /* If the choice is Watts-Strogatz */
+        if (input_data["disease_model"].as<std::string>() == "Watts-Strogatz") {
+            // unsigned int k = (unsigned int) std::stoul(token);
+            // double beta = std::stod(diffusion_params);
+            // graph = new WattsStrogatz(nodes, k, beta);
+
+        } else if (graph_type == "Barabasi-Albert") { // If the choice is Barabasi-Albert
+            // unsigned int m = (unsigned int) std::stoul(token);
+            // double a = std::stod(diffusion_params);
+            // graph = new BarabasiAlbert(nodes, m, a);
+
+        } else { // Invalid choice
+            std::cerr << "Invalid choice of diffusion network." << std::endl;
+            assert(0);
+        }
+        for (auto& lp : lps) {
+            // Create the travel map
+            std::vector<std::string> connections = graph->adjacencyList(lp.getLocationName());
+            std::map<std::string, unsigned int> temp_travel_map;
+            for (auto& link : connections) {
+                auto travel_map_iter = travel_map.find(link);
+                temp_travel_map.insert(std::pair<std::string, unsigned int>
+                                (travel_map_iter->first, travel_map_iter->second));
+            }
+            lp.populateTravelDistances(temp_travel_map);
+        }
+        delete graph;
     }
 
 
