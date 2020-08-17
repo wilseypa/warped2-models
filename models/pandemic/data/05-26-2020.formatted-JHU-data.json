@@ -1,7 +1,10 @@
 {
-  "disease_model": {
-    "data_date": null, 
+  "diffusion_model": {
     "diffusion_trig_interval_in_hrs": 48, 
+    "graph_param_str": "8,0.1", 
+    "graph_type": "Watts-Strogatz"
+  }, 
+  "disease_model": {
     "mean_incubation_duration_in_days": 2.2, 
     "mean_infection_duration_in_days": 2.3, 
     "mortality_ratio": 0.05, 

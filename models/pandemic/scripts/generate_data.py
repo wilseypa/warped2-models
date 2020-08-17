@@ -55,22 +55,26 @@ def parse_cmdargs():
     """
     parser = argparse.ArgumentParser(description='Parse Covid19 dataset from JHU-CSSE, add '
                                      'population data and dump combined data to '
-                                     'file in csv or json format')
+                                     'file in json format')
     parser.add_argument('--covid_data', help='JHU_CSSE Covid19 data csv filepath',
                         required=True)
+
     parser.add_argument('--pop_data', help='Population data csv filepath',
                         default='../data/county_population_data.csv',
                         required=False)
-    parser.add_argument('--date', help='Date of dataset in YYYY-MM-DD format',
-                        required=False)
-    parser.add_argument('--format_plaintext', help='Dump output as comma-seperated plain-text file',
-                        action='store_true',
-                        default=False,
+
+    parser.add_argument('--graph_type', help="'ws' for Watts-Strogatz, and 'ba' for Barabasi-Albert",
+                        choices=['ws', 'ba'],
+                        required=True)
+
+    parser.add_argument('--graph_input_param_string', help="comma-seperated input parameter list for selected "
+                        "graph type, in form of a string",
+                        default="8,0.1",
                         required=False)
 
     args = parser.parse_args()
 
-    return (args.covid_data, args.pop_data, args.date, args.format_plaintext)
+    return (args.covid_data, args.pop_data, args.graph_type, args.graph_input_param_string)
 
 
 def get_dist_between_coordinates(latA, longA, latB, longB):
@@ -134,7 +138,7 @@ def sort_df_rows_into_clusters(mainDF):
     return mainDF
 
 
-def create_merged_DF_jhu_population(covid_csse_data_filepath, pop_data_filepath, data_date):
+def create_merged_DF_jhu_population(covid_csse_data_filepath, pop_data_filepath):
     """
     """
     # create DF from CSSE data, add new column in order to 'join' with population data
@@ -215,7 +219,7 @@ def prepare_data():
 
     try:
         # parse command-line arguments
-        (covid_csse_data_filepath, pop_data_filepath, data_date, format_plaintext) = \
+        (covid_csse_data_filepath, pop_data_filepath, graph_type, graph_input_param_string) = \
             parse_cmdargs()
 
         setup_logging()
@@ -230,11 +234,11 @@ def prepare_data():
                 2.3, 0.05, 24, 48
 
 
-        out_fname = os.path.splitext(os.path.basename(covid_csse_data_filepath))[0] + ".formatted-JHU-data"
+        out_fname = os.path.splitext(os.path.basename(covid_csse_data_filepath))[0] + ".formatted-JHU-data.json"
 
-        # set filename extension depending on output format - *json* is set as default
-        out_fname = out_fname + (".csv" if format_plaintext else ".json")
+        # set filepath
         out_filepath = "../data/" + out_fname
+
 
         disease_model = {
             "transmissibility": transmissibility,
@@ -242,47 +246,37 @@ def prepare_data():
             "mean_infection_duration_in_days": mean_infection_duration_in_days,
             "mortality_ratio": mortality_ratio,
             "update_trig_interval_in_hrs": update_trig_interval_in_hrs,
-            "diffusion_trig_interval_in_hrs": diffusion_trig_interval_in_hrs,
-            "data_date": data_date
+        }
+
+        diffusion_model = {
+            "graph_type": ("Watts-Strogatz" if graph_type == "ws" else "Barabasi-Albert"),
+            "graph_param_str": graph_input_param_string,
+            "diffusion_trig_interval_in_hrs": diffusion_trig_interval_in_hrs
         }
 
         # create dataframe
         csse_data_daily_report_merged_sorted_df = create_merged_DF_jhu_population(covid_csse_data_filepath,
-                                                                                  pop_data_filepath, data_date)
+                                                                                  pop_data_filepath)
 
+        final_dict = {
+            "disease_model": disease_model,
+            "diffusion_model": diffusion_model,
+            "locations": None
+        }
 
-        if format_plaintext:
-            # create file object to output data
-            outdatafileobj = open(out_filepath, 'w')
+        logging.info("Writing to file [{}] in json format".format(out_filepath))
+        # write out main dictionary to json file
+        final_dict["locations"] = csse_data_daily_report_merged_sorted_df.values.tolist()
 
-            logging.info("Writing to file [{}] in plain-text format".format(out_filepath))
+        proc = subprocess.Popen(['./pretty_print_json', out_filepath], stdin=subprocess.PIPE,
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
-            # for plain text output, write out (comma-seperated) disease model to outfile
-            strout = ','.join(str(v) for v in disease_model.values())
-            outdatafileobj.write(strout + "\n")
-            outdatafileobj.write(csse_data_daily_report_merged_sorted_df.to_csv(header=False, index=False))
-            outdatafileobj.close()
+        ret_stdout, ret_stderr = proc.communicate(json.dumps(final_dict))
 
+        if proc.returncode == 0:
+            logging.info("Writing finished with return status: {}".format(proc.returncode))
         else:
-            # (default) for json output, build a dictionary before writing it out
-            final_dict = {
-                "disease_model": disease_model,
-                "locations": None
-            }
-
-            logging.info("Writing to file [{}] in json format".format(out_filepath))
-            # write out main dictionary to json file
-            final_dict["locations"] = csse_data_daily_report_merged_sorted_df.values.tolist()
-
-            proc = subprocess.Popen(['./pretty_print_json', out_filepath], stdin=subprocess.PIPE,
-                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-
-            ret_stdout, ret_stderr = proc.communicate(json.dumps(final_dict))
-
-            if proc.returncode == 0:
-                logging.info("Writing finished with return status: {}".format(proc.returncode))
-            else:
-                raise Exception("Error in writing to file: [{}]".format(ret_stderr.strip()))
+            raise Exception("Error in writing to file: [{}]".format(ret_stderr.strip()))
 
 
         logging.info("Exiting ...\n\n")
