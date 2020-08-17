@@ -1,15 +1,15 @@
 {
-  "diffusion_model": {
-    "diffusion_trig_interval_in_hrs": 48, 
-    "graph_param_str": "8,0.1", 
-    "graph_type": "Watts-Strogatz"
-  }, 
   "disease_model": {
+    "transmissibility": 2.2, 
     "mean_incubation_duration_in_days": 2.2, 
     "mean_infection_duration_in_days": 2.3, 
     "mortality_ratio": 0.05, 
-    "transmissibility": 2.2, 
     "update_trig_interval_in_hrs": 24
+  }, 
+  "diffusion_model": {
+    "graph_type": "Watts-Strogatz", 
+    "graph_param_str": "8,0.1", 
+    "diffusion_trig_interval_in_hrs": 48
   }, 
   "locations": [
     ["32003", "Clark", "Nevada", "US", 36.21458855, -115.0130241, 6226, 329, 0, 5897, 2266715], 
