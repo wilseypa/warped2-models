@@ -157,8 +157,8 @@ public:
         return &locations_[str];
     }
 
-    std::unordered_map<std::string,
-        std::tuple<std::string, std::string, std::string, float, float, long int>> locations_;
+    std::unordered_map<std::string, std::tuple<std::string, std::string, std::string, float,
+                                               float, long int>> locations_;
 
 private:
 
