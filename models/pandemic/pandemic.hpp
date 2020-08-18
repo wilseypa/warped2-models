@@ -268,10 +268,8 @@ protected:
     std::string location_name_;
     std::shared_ptr<Diffusion> diffusion_;
     std::shared_ptr<std::default_random_engine> rng_;
+    std::vector<std::string> adjacent_nodes_;
 };
-
-
-
 
 class ConfigFileHandler {
 
@@ -337,41 +335,30 @@ public:
 
         // Create the Network Graph
         std::vector<std::string> nodes;
-        for (auto& lp : m_lps_) {
+        for (auto& lp : *m_lps_) {
             nodes.push_back(lp.getLocationName());
         }
 
-        // TODO: Fill the params in comments
         Graph *graph = nullptr;
         /* If the choice is Watts-Strogatz */
-        if (input_data["disease_model"].as<std::string>() == "Watts-Strogatz") {
-            // unsigned int k = (unsigned int) std::stoul(token);
-            // double beta = std::stod(diffusion_params);
-            // graph = new WattsStrogatz(nodes, k, beta);
+        if (input_data["diffusion_model"]["graph_type"].as<std::string>() == "Watts-Strogatz") {
+            std::string params = input_data["diffusion_model"]["graph_param_str"].as<std::string>();
+            graph = new WattsStrogatz(nodes, params);
 
-        } else if (graph_type == "Barabasi-Albert") { // If the choice is Barabasi-Albert
-            // unsigned int m = (unsigned int) std::stoul(token);
-            // double a = std::stod(diffusion_params);
-            // graph = new BarabasiAlbert(nodes, m, a);
+        } else if (input_data["diffusion_model"]["graph_type"].as<std::string>() == "Barabasi-Albert") {
+            /* If the choice is Barabasi-Albert */
+            std::string params = input_data["diffusion_model"]["graph_param_str"].as<std::string>();
+            graph = new BarabasiAlbert(nodes, params);
 
         } else { // Invalid choice
             std::cerr << "Invalid choice of diffusion network." << std::endl;
             assert(0);
         }
-        for (auto& lp : lps) {
-            // Create the travel map
-            std::vector<std::string> connections = graph->adjacencyList(lp.getLocationName());
-            std::map<std::string, unsigned int> temp_travel_map;
-            for (auto& link : connections) {
-                auto travel_map_iter = travel_map.find(link);
-                temp_travel_map.insert(std::pair<std::string, unsigned int>
-                                (travel_map_iter->first, travel_map_iter->second));
-            }
-            lp.populateTravelDistances(temp_travel_map);
+        for (auto& lp : *m_lps_) {
+            lp.adjacent_nodes_ = graph->adjacencyList(lp.getLocationName());
         }
         delete graph;
     }
-
 
     void writeSimulationOutputToJsonFile(const std::string& out_fname) {
 
