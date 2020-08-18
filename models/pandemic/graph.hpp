@@ -41,7 +41,17 @@ public:
 /* Watts-Strogatz Graph */
 class WattsStrogatz : public Graph {
 public:
-    WattsStrogatz( std::vector<std::string> nodes, unsigned int k, double beta ) {
+    WattsStrogatz( std::vector<std::string> nodes, std::string args ) {
+
+        /* Parse the model arguments */
+        std::stringstream args_stream(args);
+        assert(args_stream.good());
+        std::string substr;
+        getline(args_stream, substr, ',');
+        unsigned int k = std::stoul(substr);
+        assert(args_stream.good());
+        getline(args_stream, substr, ',');
+        double beta = std::stod(substr);
 
         /* Initialize the connection matrix */
         nodes_ = nodes;
@@ -99,7 +109,17 @@ public:
 /* Barabasi-Albert Graph */
 class BarabasiAlbert : public Graph {
 public:
-    BarabasiAlbert( std::vector<std::string> nodes, unsigned int m, double a ) {
+    BarabasiAlbert( std::vector<std::string> nodes, std::string args ) {
+
+        /* Parse the model arguments */
+        std::stringstream args_stream(args);
+        assert(args_stream.good());
+        std::string substr;
+        getline(args_stream, substr, ',');
+        unsigned int m = std::stoul(substr);
+        assert(args_stream.good());
+        getline(args_stream, substr, ',');
+        double a = std::stod(substr);
 
         /* Create the initial fully connected graph using m+1 nodes */
         nodes_ = nodes;
