@@ -12,7 +12,7 @@ int main(int argc, char* argv[])
     }
 
     try {
-        jsoncons::json json_text = jsoncons::json::parse(std::cin);
+        jsoncons::ojson json_text = jsoncons::ojson::parse(std::cin);
 
         std::ofstream outfile(argv[1], std::ios::out | std::ios::trunc);
 
