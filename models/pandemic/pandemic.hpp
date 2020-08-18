@@ -284,10 +284,10 @@ public:
     }
 
     void openFile(std::string fname, std::vector<Location> *lps) {
-        m_lps = lps;
-        m_input_fname = fname;
+        m_lps_ = lps;
+        m_input_fname_ = fname;
 
-        cur = std::unique_ptr<jsoncons::json_cursor> (new jsoncons::json_cursor(
+        cur_ = std::unique_ptr<jsoncons::json_cursor> (new jsoncons::json_cursor(
                       new std::ifstream(fname)));
     }
 
@@ -328,7 +328,7 @@ public:
                 - num_active;
 
             // add values to Location LP's
-            m_lps->emplace_back(Location(fips_code, num_confirmed, num_deaths, num_recovered, num_active,
+            m_lps_->emplace_back(Location(fips_code, num_confirmed, num_deaths, num_recovered, num_active,
                                          num_susceptible, std::stoi(fips_code)));
 
             CONFIG->addMapEntry(fips_code, std::make_tuple(county, state, country, loc_lat, loc_long,
@@ -337,7 +337,7 @@ public:
 
         // Create the Network Graph
         std::vector<std::string> nodes;
-        for (auto& lp : m_lps) {
+        for (auto& lp : m_lps_) {
             nodes.push_back(lp.getLocationName());
         }
 
@@ -390,7 +390,7 @@ public:
         jsontowrite["disease_model"] = std::move(disease_model);
         jsontowrite["locations"] = jsoncons::json(jsoncons::json_array_arg, {});
 
-        for (auto it = m_lps->begin(); it != m_lps->end(); ++it) {
+        for (auto it = m_lps_->begin(); it != m_lps_->end(); ++it) {
             std::string fips_code = it->getLocationName();
 
             std::tuple<std::string, std::string, std::string, float, float, long int>*
@@ -431,10 +431,10 @@ private:
 
     static ConfigFileHandler* instance_;
 
-    std::unique_ptr<jsoncons::json_cursor> cur;
+    std::unique_ptr<jsoncons::json_cursor> cur_;
 
-    std::vector <Location> *m_lps;
-    std::string m_input_fname;
+    std::vector <Location> *m_lps_;
+    std::string m_input_fname_;
 };
 
 
