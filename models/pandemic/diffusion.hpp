@@ -5,50 +5,44 @@
 #include "corona.hpp"
 #include <random>
 
+#include AVG_TRANSPORT_SPEED 10
+
 class Diffusion {
 public:
 
-    Diffusion(  unsigned int travel_time_to_hub,
-                unsigned int max_diffusion_cnt,
-                std::shared_ptr<std::default_random_engine> rng )
-        :   travel_time_to_hub_(travel_time_to_hub),
-            max_diffusion_cnt_(max_diffusion_cnt),
+    Diffusion( unsigned int max_population_size, std::shared_ptr<std::default_random_engine> rng )
+        :   max_population_size_(max_population_size),
             rng_(rng) {}
 
-    std::string pickLocation() {
-        std::string location_name = "";
-        unsigned int location_num = travel_time_chart_.size();
-        if(location_num) {
-            std::uniform_int_distribution<int> distribution(0, location_num-1);
-            auto location_id = (unsigned int) distribution(*rng_);
-            auto map_iter = travel_time_chart_.begin();
-            for(unsigned int count = 0; count < location_id; count++) {
-                map_iter++;
-            }
-            location_name = map_iter->first;
-        }
-        return location_name;
+    std::string pickLocation(std::string curr_loc) {
+        unsigned int num_locations = CONFIG->locations_.size();
+        if(!num_locations) return "";
+        std::uniform_int_distribution<int> distribution(0, num_locations-1);
+        auto location_id = (unsigned int) distribution(*rng_);
+        auto it = std::next(std::begin(CONFIG->locations_), location_id);
+        return it->first;
     }
 
-    unsigned int travelTimeToLocation(std::string location_name) {
-        return (travel_time_chart_[location_name] + travel_time_to_hub_);
-    }
-
-    unsigned int diffusionCount(unsigned int population_size) {
+    unsigned int populationSize() {
         std::uniform_int_distribution<int> distribution(0,
-                std::min(max_diffusion_cnt_, population_size-1));
-        return distribution(*rng_); 
+                std::min(max_population_size_, CONFIG->locations_.size()-1));
+        return distribution(*rng_);
     }
 
-    void populateTravelChart(std::map<std::string, unsigned int> travel_chart) {
-        travel_time_chart_ = travel_chart;
+    unsigned int travelTime(std::string curr_loc, std::string target_loc) {
+        auto curr_it = CONFIG->locations_.find(curr_loc);
+        assert(curr_it != CONFIG->locations_.end());
+        auto target_it = CONFIG->locations_.find(target_loc);
+        assert(target_it != CONFIG->locations_.end());
+
+        unsigned int distance = 0;
+        //TODO: Use curr_it->second and target_it->second to calculate distance.
+        return distance / AVG_TRANSPORT_SPEED;
     }
 
 private:
-    unsigned int travel_time_to_hub_    = 0;
-    unsigned int max_diffusion_cnt_     = 0;
+    unsigned int max_population_size_ = 0;
     std::shared_ptr<std::default_random_engine> rng_;
-    std::map<std::string, unsigned int> travel_time_chart_;
 };
 
 #endif

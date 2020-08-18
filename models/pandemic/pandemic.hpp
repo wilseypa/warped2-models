@@ -146,25 +146,24 @@ public:
 
     void addMapEntry(const std::string& str, std::tuple<std::string, std::string, std::string, float,
                      float, long int> map_val) {
-        map_name_location[str] = map_val;
+        locations_[str] = map_val;
     }
 
-    const std::tuple<std::string, std::string, std::string, float, float, long int>* getLocation(
-        const std::string& str) {
-        if (map_name_location.find(str) == map_name_location.end()) {
+    const std::tuple<std::string, std::string, std::string, float, float, long int>*
+                                                            getLocation(const std::string& str) {
+        if (locations_.find(str) == locations_.end()) {
             return nullptr;
         }
-
-        return &map_name_location[str];
+        return &locations_[str];
     }
 
+    std::unordered_map<std::string,
+        std::tuple<std::string, std::string, std::string, float, float, long int>> locations_;
 
 private:
 
     static PandemicConfig* instance_;
     PandemicConfig() = default;
-    std::unordered_map<std::string, std::tuple<std::string, std::string, std::string, float,
-                                               float, long int>> map_name_location;
 };
 
 
