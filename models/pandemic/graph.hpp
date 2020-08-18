@@ -3,6 +3,7 @@
 
 #include "memory.hpp"
 #include <random>
+#include <sstream>
 
 #define BETA_PRECISION 10000
 
