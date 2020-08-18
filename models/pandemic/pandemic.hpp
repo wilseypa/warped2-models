@@ -337,7 +337,7 @@ public:
 
         // Create the Network Graph
         std::vector<std::string> nodes;
-        for (auto& lp : m_lps_) {
+        for (auto& lp : *m_lps_) {
             nodes.push_back(lp.getLocationName());
         }
 

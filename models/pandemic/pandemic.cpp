@@ -11,7 +11,8 @@
 #include "ppm/ppm.hpp"
 #include "tclap/ValueArg.h"
 
-#define DEFAULT_MODEL_NAME "data/05-26-2020.formatted-JHU-data.json"
+#define DEFAULT_MODEL_CONFIG        "data/05-26-2020.formatted-JHU-data.json"
+#define DEFAULT_OUTPUT_FILE_NAME    "result.json"
 
 PandemicConfig* PandemicConfig::instance_ = nullptr;
 ConfigFileHandler* ConfigFileHandler::instance_ = nullptr;
@@ -69,80 +70,31 @@ std::string toString(unsigned int num) {
 }
 
 
-int main(int argc, const char** argv)
-{
-    std::string model_config_name = DEFAULT_MODEL_NAME;
+int main(int argc, const char** argv) {
+    std::string model_config_name   = DEFAULT_MODEL_CONFIG;
+    std::string out_file_name       = DEFAULT_OUTPUT_FILE_NAME;
 
     TCLAP::ValueArg<std::string> model_config_name_arg( "m", "model-config",
                         "Provide name of the model config", false, model_config_name, "string" );
-    std::vector<TCLAP::Arg*> args = {&model_config_name_arg};
+    TCLAP::ValueArg<std::string> out_file_name_arg( "o", "out-file",
+                        "Provide name of the output file", false, out_file_name, "string" );
+    std::vector<TCLAP::Arg*> args = {&model_config_name_arg, &out_file_name_arg};
     warped::Simulation pandemic_sim {"Covid-19 Pandemic Simulation", argc, argv, args};
-    model_config_name   = model_config_name_arg.getValue();
+    model_config_name = model_config_name_arg.getValue();
+    out_file_name = out_file_name_arg.getValue();
 
-    std::map<std::string, unsigned int> travel_map;
     std::vector<Location> lps;
-
     CONFIGFILEHANDLER->openFile(model_config_name, &lps);
     CONFIGFILEHANDLER->getValuesFromJsonFile();
-    // Simulate the epidemic
+
+    /* Simulate the pandemic */
     std::vector<warped::LogicalProcess*> lp_pointers;
     for (auto& lp : lps) {
         lp_pointers.push_back(&lp);
     }
     pandemic_sim.simulate(lp_pointers);
 
-    // Plot the heatmaps
-    unsigned long cols = std::ceil( sqrt(lps.size()) );
-    unsigned long rows = (lps.size()+cols-1)/cols;
-    auto population_diffusion_hmap = new ppm(cols, rows);
-    auto disease_growth_hmap = new ppm(cols, rows);
-
-    // Record final statistics for each LP
-    i = 0;
-    for (auto& lp : lps) {
-        unsigned long final_population = 0, final_affected_cnt = 0;
-        // TODO error: ‘class Location’ has no member named ‘statistics’
-        lp.statistics(&final_population, &final_affected_cnt);
-
-        // If initial population >  final population, color is GREEN
-        // If initial population == final population, color is BLACK
-        // If initial population  < final population, color is RED
-        if (initial_population[i] >= final_population) {
-            double ratio = ( (double)(initial_population[i] - final_population) ) /
-                                                                    initial_population[i];
-            population_diffusion_hmap->g[i] = ratio * 255;
-
-        } else {
-            double ratio = ( (double)(final_population - initial_population[i]) ) /
-                                                                    final_population;
-            population_diffusion_hmap->r[i] = ratio * 255;
-        }
-
-        // If initial affected cnt >  final affected cnt, color is YELLOWISH GREEN
-        // If initial affected cnt == final affected cnt, color is BLACK
-        // If initial affected cnt  < final affected cnt, color is RED
-        if (initial_affected_cnt[i] >= final_affected_cnt) {
-            double ratio = ( (double)(initial_affected_cnt[i] - final_affected_cnt) ) /
-                                                                    initial_affected_cnt[i];
-            disease_growth_hmap->g[i] = ratio * 255;
-
-        } else {
-            double ratio = ( (double)(final_affected_cnt - initial_affected_cnt[i]) ) /
-                                                                    final_affected_cnt;
-            disease_growth_hmap->r[i] = ratio * 255;
-        }
-        i++;
-    }
-
-    // TODO
-    std::string out_fname("");
-    ConfigFileHandler->getInstance()->writeSimulationOutputToJsonFile(out_fname);
-
-    population_diffusion_hmap->write("population_diffusion_hmap.ppm");
-    disease_growth_hmap->write("disease_growth_hmap.ppm");
-
-    delete population_diffusion_hmap;
-    delete disease_growth_hmap;
+    CONFIGFILEHANDLER->writeSimulationOutputToJsonFile(out_file_name);
 
     return 0;
 }
