@@ -28,9 +28,9 @@ std::vector<std::shared_ptr<warped::Event> > Location::initializeLP() {
 
     std::vector<std::shared_ptr<warped::Event> > events;
     events.emplace_back(new TriggerEvent {this->location_name_,
-                                    CONFIG->update_trig_interval_});
+                                    CONFIG->update_trig_interval_in_hrs});
     events.emplace_back(new TriggerEvent {this->location_name_,
-                                    CONFIG->diffusion_trig_interval_, true});
+                                    CONFIG->diffusion_trig_interval_in_hrs, true});
     return events;
 }
 
@@ -43,8 +43,10 @@ std::vector<std::shared_ptr<warped::Event> > Location::receiveEvent(const warped
         auto trigger_event = static_cast<const TriggerEvent&>(event);
         auto timestamp = trigger_event->timestamp();
 
-        std::string selected_location = diffusion_network_->pickLocation();
-        auto travel_time = diffusion_network_->travelTimeToLocation(selected_location);
+        std::string selected_location = pickLocation(location_name_);
+
+        auto travel_time = travelTimeToLocation(selected_location);
+
         state_->current_population_->erase(map_iter);
             // TODO error: no matching function for call to ‘TriggerEvent::TriggerEvent(<brace-enclosed initializer list>)’
         events.emplace_back(new TriggerEvent {location_name_,

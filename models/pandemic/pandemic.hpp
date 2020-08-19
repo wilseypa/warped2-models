@@ -8,7 +8,7 @@
 #include <tuple>
 #include "memory.hpp"
 #include "warped.hpp"
-#include "diffusion.hpp"
+#include "graph.hpp"
 
 #include "jsoncons/json.hpp"
 #include "jsoncons/json_cursor.hpp"
@@ -19,6 +19,7 @@
 #define TIME_UNITS_IN_HOUR  1
 #define TIME_UNITS_IN_DAY   (24 * TIME_UNITS_IN_HOUR)
 
+#define AVG_TRANSPORT_SPEED 10
 
 /*
  *  beta  <= transmissibility
@@ -141,20 +142,21 @@ public:
     // TODO add further explanation
     double exposed_confirmed_ratio_         = 10.0;
 
-    unsigned int update_trig_interval_      = 1 * TIME_UNITS_IN_DAY;
-    unsigned int diffusion_trig_interval_   = 6 * TIME_UNITS_IN_HOUR;
+    unsigned int update_trig_interval_in_hrs      = 1 * TIME_UNITS_IN_DAY;
+    unsigned int diffusion_trig_interval_in_hrs   = 6 * TIME_UNITS_IN_HOUR;
 
     void addMapEntry(const std::string& str, std::tuple<std::string, std::string, std::string, float,
                      float, long int> map_val) {
         locations_[str] = map_val;
     }
 
-    const std::tuple<std::string, std::string, std::string, float, float, long int>*
+    std::tuple<std::string, std::string, std::string, float, float, long int>*
                                                             getLocation(const std::string& str) {
-        if (locations_.find(str) == locations_.end()) {
-            return nullptr;
-        }
-        return &locations_[str];
+        auto it = locations_.find(str);
+
+        assert(it != locations_.end());
+
+        return &(it->second);
     }
 
     std::unordered_map<std::string, std::tuple<std::string, std::string, std::string, float,
@@ -192,23 +194,61 @@ public:
         state_->population_[infection_state_t::RECOVERED] = num_recovered;
         state_->population_[infection_state_t::DECEASED] = num_deaths;
 
-        // TODO error: ‘travel_time_to_hub’ was not declared in this scope
-        diffusion_ = std::make_shared<Diffusion>(travel_time_to_hub,
-                                                 max_infected_diffusion_cnt, max_others_diffusion_cnt, rng_);
     }
 
     virtual warped::LPState& getState() override { return *state_; }
 
+    
     virtual std::vector<std::shared_ptr<warped::Event>> initializeLP() override;
 
     virtual std::vector<std::shared_ptr<warped::Event>> receiveEvent(
                                             const warped::Event& event) override;
 
-    void populateTravelDistances(std::map<std::string, unsigned int> travel_chart) {
-        // TODO error: ‘diffusion_network_’ was not declared in this scope
-        diffusion_network_->populateTravelChart(travel_chart);
+    std::string pickLocation(std::string curr_loc) {
+        unsigned int num_locations = CONFIG->locations_.size();
+        if(!num_locations) return "";
+        std::uniform_int_distribution<int> distribution(0, num_locations-1);
+        auto location_id = (unsigned int) distribution(*rng_);
+        auto it = std::next(std::begin(CONFIG->locations_), location_id);
+        return it->first;
     }
 
+    double calc_haversine_distance(double lat1, double long1, double lat2, double long2) {
+
+        const double earth_radius = 6372.8;
+        const double pi_val = 3.14159265358979323846;
+        
+        double lat1_rad = lat1 * pi_val / 180.0;
+        double long1_rad = long1 * pi_val / 180.0;
+        double lat2_rad = lat2 * pi_val / 180.0;
+        double long2_rad = long2 * pi_val / 180.0;
+
+        double diff_lat = lat2_rad - lat1_rad;
+        double diff_long = long2_rad - long1_rad;
+
+        double temp_val = std::asin(std::sqrt(
+                                        std::sin(diff_lat / 2) * std::sin(diff_lat / 2) + std::cos(lat1_rad)
+                                        * std::cos(lat2_rad) * std::sin(diff_long / 2) * std::sin(diff_long / 2)
+                                        ));
+
+        return 2.0 * earth_radius * temp_val;
+    }
+    
+    unsigned int travelTimeToLocation(std::string target_loc) {
+
+        auto curr_it = CONFIG->locations_.find(location_name_);
+        auto target_it = CONFIG->locations_.find(target_loc);
+
+        assert(curr_it != CONFIG->locations_.end());
+        assert(target_it != CONFIG->locations_.end());
+
+        double distance = calc_haversine_distance(std::get<3>(target_it->second), std::get<4>(target_it->second),
+                                                  std::get<3>(curr_it->second),
+                                                  std::get<4>(curr_it->second)) / AVG_TRANSPORT_SPEED;
+
+        return (int) distance;
+    }
+    
     void reaction() {
         auto N = 0U;
         for (auto i = 0; i < infection_state_t::DECEASED; i++) {
@@ -259,14 +299,22 @@ public:
 
     std::string getLocationName() { return location_name_; }
 
-    const int* getLocationStateArray() {
-        return state_->population_;
+    void set_adjacent_nodes_(std::vector<std::string> st) {
+        adjacent_nodes_ = st;
     }
+    
+    // const int* getLocationStateArray() {
+    //     return state_->population_;
+    // }
 
+    std::shared_ptr<LocationState> getLocationState() {
+        return state_;
+    }
+    
 protected:
     std::shared_ptr<LocationState> state_;
     std::string location_name_;
-    std::shared_ptr<Diffusion> diffusion_;
+    // std::shared_ptr<Diffusion> diffusion_;
     std::shared_ptr<std::default_random_engine> rng_;
     std::vector<std::string> adjacent_nodes_;
 };
@@ -300,9 +348,9 @@ public:
         CONFIG->mean_infection_duration_ = input_data["disease_model"]["mean_infection_duration_in_days"]
             .as<double>() * TIME_UNITS_IN_DAY;
         CONFIG->mortality_ratio_ = input_data["disease_model"]["mortality_ratio"].as<double>();
-        CONFIG->update_trig_interval_ = input_data["disease_model"]["update_trig_interval_in_hrs"]
+        CONFIG->update_trig_interval_in_hrs = input_data["disease_model"]["update_trig_interval_in_hrs"]
             .as<unsigned int>() * TIME_UNITS_IN_HOUR;
-        CONFIG->diffusion_trig_interval_ = input_data["disease_model"]["diffusion_trig_interval_in_hrs"]
+        CONFIG->diffusion_trig_interval_in_hrs = input_data["disease_model"]["diffusion_trig_interval_in_hrs"]
             .as<unsigned int>() * TIME_UNITS_IN_HOUR;
 
         for (const auto& location_data : input_data["locations"].array_range()) {
@@ -355,22 +403,23 @@ public:
             assert(0);
         }
         for (auto& lp : *m_lps_) {
-            lp.adjacent_nodes_ = graph->adjacencyList(lp.getLocationName());
+            lp.set_adjacent_nodes_(graph->adjacencyList(lp.getLocationName()));
+            // lp.adjacent_nodes_ = graph->adjacencyList(lp.getLocationName());
         }
         delete graph;
     }
 
     void writeSimulationOutputToJsonFile(const std::string& out_fname) {
-
+        // TODO vivek: add diffusion_model
         jsoncons::json jsontowrite;
 
         jsoncons::json disease_model(jsoncons::json_object_arg, {
                 {"date_date", jsoncons::json::null},
                 {"diffusion_trig_interval_in_hrs", CONFIG->diffusion_trig_interval_in_hrs},
-                {"mean_incubation_duration_in_days", CONFIG->mean_incubation_duration_in_days},
-                {"mean_infection_duration_in_days", CONFIG->mean_infection_duration_in_days},
-                {"mortality_ratio", CONFIG->mortality_ratio},
-                {"transmissibility", CONFIG->transmissibility},
+                {"mean_incubation_duration_in_days", CONFIG->mean_incubation_duration_ / TIME_UNITS_IN_DAY},
+                {"mean_infection_duration_in_days", CONFIG->mean_infection_duration_ / TIME_UNITS_IN_DAY},
+                {"mortality_ratio", CONFIG->mortality_ratio_},
+                {"transmissibility", CONFIG->transmissibility_},
                 {"update_trig_interval_in_hrs", CONFIG->update_trig_interval_in_hrs}
             });
 
@@ -390,11 +439,11 @@ public:
             float loc_long = std::get<4>(*p_map_location_val);
             long int total_population_cnt = std::get<5>(*p_map_location_val);
 
-            long int num_susceptible = it->getLocationStateArray()[infection_state_t::SUSCEPTIBLE];
-            long int num_exposed = it->getLocationStateArray()[infection_state_t::EXPOSED];
-            long int num_confirmed = it->getLocationStateArray()[infection_state_t::INFECTIOUS];
-            long int num_recovered = it->getLocationStateArray()[infection_state_t::RECOVERED];
-            long int num_deaths = it->getLocationStateArray()[infection_state_t::DEATHS];
+            long int num_susceptible = it->getLocationState()->population_[infection_state_t::SUSCEPTIBLE];
+            long int num_exposed = it->getLocationState()->population_[infection_state_t::EXPOSED];
+            long int num_confirmed = it->getLocationState()->population_[infection_state_t::INFECTIOUS];
+            long int num_recovered = it->getLocationState()->population_[infection_state_t::RECOVERED];
+            long int num_deaths = it->getLocationState()->population_[infection_state_t::DECEASED];
 
             jsontowrite["locations"].push_back(jsoncons::json(jsoncons::json_array_arg, {
                         fips_code, county, state, country_region, loc_lat, loc_long, num_confirmed, num_deaths,
@@ -407,7 +456,7 @@ public:
         jsoncons::json_options options;
         options.indent_size(2);
 
-        outfile << json::pretty_print(jsontowrite, options);
+        outfile << jsoncons::pretty_print(jsontowrite, options);
 
         outfile.close();
     }
