@@ -129,47 +129,43 @@ public:
         return instance_;
     }
 
-    // getconfig and printconfig
-
     double transmissibility_                = 2.2;          /* equals beta     */
     double mean_incubation_duration_        = 5.2 * TIME_UNITS_IN_DAY;    /* equals 1/sigma  */
     double mean_infection_duration_         = 2.3 * TIME_UNITS_IN_DAY;    /* equals 1/gamma  */
 
     double mortality_ratio_                 = 0.05;
 
-    // An arbitrary factor to account for discrepancy between actual and reported confirmed cases
-    // https://fortune.com/2020/06/25/us-coronavirus-cases-how-many-total-20-million-asymptomatic-confirmed-tests-covid-19-case-count-cdc-estimate/
-    // TODO add further explanation
+    /* NOTE: An arbitrary factor to account for discrepancy between actual
+             and reported confirmed cases.
+       Source: https://fortune.com/2020/06/25/us-coronavirus-cases-how-many-\
+               total-20-million-asymptomatic-confirmed-tests-covid-19-case-count-cdc-estimate/
+     */
     double exposed_confirmed_ratio_         = 10.0;
 
     unsigned int update_trig_interval_in_hrs      = 1 * TIME_UNITS_IN_DAY;
     unsigned int diffusion_trig_interval_in_hrs   = 6 * TIME_UNITS_IN_HOUR;
 
-    void addMapEntry(const std::string& str, std::tuple<std::string, std::string, std::string, float,
-                     float, long int> map_val) {
+    void addMapEntry(const std::string& str,
+            std::tuple<std::string, std::string, std::string, float, float, long int> map_val) {
         locations_[str] = map_val;
     }
 
     std::tuple<std::string, std::string, std::string, float, float, long int>*
                                                             getLocation(const std::string& str) {
         auto it = locations_.find(str);
-
         assert(it != locations_.end());
-
         return &(it->second);
     }
 
-    std::unordered_map<std::string, std::tuple<std::string, std::string, std::string, float,
-                                               float, long int>> locations_;
+    std::unordered_map<std::string,
+        std::tuple<std::string, std::string, std::string, float, float, long int>> locations_;
 
 private:
-
     static PandemicConfig* instance_;
     PandemicConfig() = default;
 };
 
-
-class Location : public warped::LogicalProcess { // add print
+class Location : public warped::LogicalProcess {
 public:
     Location() = delete;
 
@@ -188,12 +184,11 @@ public:
         state_ = std::make_shared<LocationState>();
 
         state_->population_[infection_state_t::SUSCEPTIBLE] = population_cnt;
-        // TODO multiply with factor??
-        state_->population_[infection_state_t::EXPOSED] = CONFIG->exposed_confirmed_ratio_ * (double)num_confirmed;
-        state_->population_[infection_state_t::INFECTIOUS] = num_confirmed; // TODO num_active; // infectious = num_confirmed  rid of num_active
-        state_->population_[infection_state_t::RECOVERED] = num_recovered;
-        state_->population_[infection_state_t::DECEASED] = num_deaths;
-
+        state_->population_[infection_state_t::EXPOSED] =
+                    CONFIG->exposed_confirmed_ratio_ * (double)num_confirmed;
+        state_->population_[infection_state_t::INFECTIOUS]  = num_confirmed;
+        state_->population_[infection_state_t::RECOVERED]   = num_recovered;
+        state_->population_[infection_state_t::DECEASED]    = num_deaths;
     }
 
     virtual warped::LPState& getState() override { return *state_; }
@@ -355,14 +350,10 @@ public:
             long int num_deaths = location_data[7].as<long int>();
             long int num_recovered = location_data[8].as<long int>();
             long int num_active = location_data[9].as<long int>();
+            long int total_population_cnt = location_data[10].as<long int>();
+            long int num_susceptible = total_population_cnt -
+                            num_confirmed - num_deaths - num_recovered - num_active;
 
-            std::string combined_key = location_data[10].as<std::string>(); // TODO remove??
-
-            long int total_population_cnt = location_data[11].as<long int>();
-            long int num_susceptible = total_population_cnt - num_confirmed - num_deaths - num_recovered
-                - num_active;
-
-            // add values to Location LP's
             m_lps_->emplace_back(Location(fips_code, num_confirmed, num_deaths, num_recovered, num_active,
                                          num_susceptible, std::stoi(fips_code)));
 
