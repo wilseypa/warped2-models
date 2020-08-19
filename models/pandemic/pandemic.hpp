@@ -206,7 +206,7 @@ public:
         return adjacent_nodes_[location_id];
     }
 
-    unsigned int travelTimeToLocation(std::string target_loc) {
+    unsigned int travelTimeToTarget(std::string target_loc) {
 
         auto curr_it = CONFIG->locations_.find(location_name_);
         assert(curr_it != CONFIG->locations_.end());

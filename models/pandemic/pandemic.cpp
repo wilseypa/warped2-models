@@ -23,10 +23,12 @@ WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(TriggerEvent)
 
 std::vector<std::shared_ptr<warped::Event> > Location::initializeLP() {
 
-    // Register random number generator to allow kernel to roll it back
+    /* Register random number generator to allow kernel to roll it back */
     this->registerRNG<std::default_random_engine>(this->rng_);
 
     std::vector<std::shared_ptr<warped::Event> > events;
+
+    /* Create timer events for diffusion and update state */
     events.emplace_back(new TriggerEvent {this->location_name_,
                                     CONFIG->update_trig_interval_in_hrs});
     events.emplace_back(new TriggerEvent {this->location_name_,
@@ -38,29 +40,40 @@ std::vector<std::shared_ptr<warped::Event> > Location::receiveEvent(const warped
 
     std::vector<std::shared_ptr<warped::Event> > events;
 
-    // TODO error: base operand of ‘->’ has non-pointer type ‘const warped::Event’
+    /* If Trigger event */
     if (event->eventType() == event_type_t::TRIGGER) {
         auto trigger_event = static_cast<const TriggerEvent&>(event);
         auto timestamp = trigger_event->timestamp();
 
-        std::string selected_location = pickLocation(location_name_);
-
-        auto travel_time = travelTimeToLocation(selected_location);
-
-        state_->current_population_->erase(map_iter);
-            // TODO error: no matching function for call to ‘TriggerEvent::TriggerEvent(<brace-enclosed initializer list>)’
-        events.emplace_back(new TriggerEvent {location_name_,
+        /* If it is diffusion timer */
+        if (trigger_event->is_diffusion_) {
+            /* TODO: Do we only allow susceptible and exposed to travel ? It is part
+                     of advanced features we need to add for quarantine.
+               Note: a. Temporarily let's assume only susceptible people are travelling
+                     b. We won't consider Recovered in the diffusion mechanism since their
+                          diffusion has no impact if we assume they have acquired immunity.
+                          If not, the diffusion mechanism needs to be updated.
+                     c. Currently it is only one person per diffusion cycle. This needs to
+                          updated for multiple people, either sent to the same target or to
+                          different targets.
+             */
+            if (state_->population_[infection_state_t::SUSCEPTIBLE]) {
+                std::string target = pickLocation();
+                auto travel_time = travelTimeToTarget(target);
+                --state_->population_[infection_state_t::SUSCEPTIBLE];
+                events.emplace_back(new DiffusionEvent {target,
+                                timestamp + travel_time, infection_state_t::SUSCEPTIBLE});
+            }
+            events.emplace_back(new TriggerEvent {location_name_,
                                 timestamp + CONFIG->diffusion_trig_interval_, true});
 
-        std::uniform_real_distribution<double> distribution(0.0, 1.0);
-        auto rand_factor = distribution(*rng_);
-        reaction();
-        // TODO error: no matching function for call to ‘TriggerEvent::TriggerEvent(<brace-enclosed initializer list>)’
-        events.emplace_back(new TriggerEvent {location_name_,
-                                timestamp + CONFIG->update_trig_interval_});
-    } else {
-        state_->current_population_->insert(state_->current_population_->begin(),
-                std::pair <unsigned long, std::shared_ptr<Person>> (epidemic_event.pid_, person));
+        } else { /* Update state timer */
+            reaction();
+            events.emplace_back(new TriggerEvent {location_name_,
+                                    timestamp + CONFIG->update_trig_interval_});
+        }
+    } else { /* Diffusion event */
+        ++state_->population_[infection_state_t::SUSCEPTIBLE];
     }
     return events;
 }
