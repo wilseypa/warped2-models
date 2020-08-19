@@ -19,7 +19,8 @@
 #define TIME_UNITS_IN_HOUR  1
 #define TIME_UNITS_IN_DAY   (24 * TIME_UNITS_IN_HOUR)
 
-#define AVG_TRANSPORT_SPEED 10
+#define AVG_TRANSPORT_SPEED 10  //TODO: Move to config
+#define MAX_DIFFUSION_CNT   10  //TODO: Move to config
 
 /*
  *  beta  <= transmissibility
@@ -129,47 +130,43 @@ public:
         return instance_;
     }
 
-    // getconfig and printconfig
-
     double transmissibility_                = 2.2;          /* equals beta     */
     double mean_incubation_duration_        = 5.2 * TIME_UNITS_IN_DAY;    /* equals 1/sigma  */
     double mean_infection_duration_         = 2.3 * TIME_UNITS_IN_DAY;    /* equals 1/gamma  */
 
     double mortality_ratio_                 = 0.05;
 
-    // An arbitrary factor to account for discrepancy between actual and reported confirmed cases
-    // https://fortune.com/2020/06/25/us-coronavirus-cases-how-many-total-20-million-asymptomatic-confirmed-tests-covid-19-case-count-cdc-estimate/
-    // TODO add further explanation
+    /* NOTE: An arbitrary factor to account for discrepancy between actual
+             and reported confirmed cases.
+       Source: https://fortune.com/2020/06/25/us-coronavirus-cases-how-many-\
+               total-20-million-asymptomatic-confirmed-tests-covid-19-case-count-cdc-estimate/
+     */
     double exposed_confirmed_ratio_         = 10.0;
 
     unsigned int update_trig_interval_in_hrs      = 1 * TIME_UNITS_IN_DAY;
     unsigned int diffusion_trig_interval_in_hrs   = 6 * TIME_UNITS_IN_HOUR;
 
-    void addMapEntry(const std::string& str, std::tuple<std::string, std::string, std::string, float,
-                     float, long int> map_val) {
+    void addMapEntry(const std::string& str,
+            std::tuple<std::string, std::string, std::string, float, float, long int> map_val) {
         locations_[str] = map_val;
     }
 
     std::tuple<std::string, std::string, std::string, float, float, long int>*
                                                             getLocation(const std::string& str) {
         auto it = locations_.find(str);
-
         assert(it != locations_.end());
-
         return &(it->second);
     }
 
-    std::unordered_map<std::string, std::tuple<std::string, std::string, std::string, float,
-                                               float, long int>> locations_;
+    std::unordered_map<std::string,
+        std::tuple<std::string, std::string, std::string, float, float, long int>> locations_;
 
 private:
-
     static PandemicConfig* instance_;
     PandemicConfig() = default;
 };
 
-
-class Location : public warped::LogicalProcess { // add print
+class Location : public warped::LogicalProcess {
 public:
     Location() = delete;
 
@@ -188,67 +185,48 @@ public:
         state_ = std::make_shared<LocationState>();
 
         state_->population_[infection_state_t::SUSCEPTIBLE] = population_cnt;
-        // TODO multiply with factor??
-        state_->population_[infection_state_t::EXPOSED] = CONFIG->exposed_confirmed_ratio_ * (double)num_confirmed;
-        state_->population_[infection_state_t::INFECTIOUS] = num_confirmed; // TODO num_active; // infectious = num_confirmed  rid of num_active
-        state_->population_[infection_state_t::RECOVERED] = num_recovered;
-        state_->population_[infection_state_t::DECEASED] = num_deaths;
-
+        state_->population_[infection_state_t::EXPOSED] =
+                    CONFIG->exposed_confirmed_ratio_ * (double)num_confirmed;
+        state_->population_[infection_state_t::INFECTIOUS]  = num_confirmed;
+        state_->population_[infection_state_t::RECOVERED]   = num_recovered;
+        state_->population_[infection_state_t::DECEASED]    = num_deaths;
     }
 
     virtual warped::LPState& getState() override { return *state_; }
 
-    
     virtual std::vector<std::shared_ptr<warped::Event>> initializeLP() override;
 
     virtual std::vector<std::shared_ptr<warped::Event>> receiveEvent(
                                             const warped::Event& event) override;
 
-    std::string pickLocation(std::string curr_loc) {
-        unsigned int num_locations = CONFIG->locations_.size();
-        if(!num_locations) return "";
+    std::string diffusionTarget() {
+        unsigned int num_locations = adjacent_nodes_.size();
+        assert(num_locations);
         std::uniform_int_distribution<int> distribution(0, num_locations-1);
         auto location_id = (unsigned int) distribution(*rng_);
-        auto it = std::next(std::begin(CONFIG->locations_), location_id);
-        return it->first;
+        return adjacent_nodes_[location_id];
     }
 
-    double calc_haversine_distance(double lat1, double long1, double lat2, double long2) {
-
-        const double earth_radius = 6372.8;
-        const double pi_val = 3.14159265358979323846;
-        
-        double lat1_rad = lat1 * pi_val / 180.0;
-        double long1_rad = long1 * pi_val / 180.0;
-        double lat2_rad = lat2 * pi_val / 180.0;
-        double long2_rad = long2 * pi_val / 180.0;
-
-        double diff_lat = lat2_rad - lat1_rad;
-        double diff_long = long2_rad - long1_rad;
-
-        double temp_val = std::asin(std::sqrt(
-                                        std::sin(diff_lat / 2) * std::sin(diff_lat / 2) + std::cos(lat1_rad)
-                                        * std::cos(lat2_rad) * std::sin(diff_long / 2) * std::sin(diff_long / 2)
-                                        ));
-
-        return 2.0 * earth_radius * temp_val;
-    }
-    
-    unsigned int travelTimeToLocation(std::string target_loc) {
+    unsigned int travelTimeToTarget(std::string target_loc) {
 
         auto curr_it = CONFIG->locations_.find(location_name_);
-        auto target_it = CONFIG->locations_.find(target_loc);
-
         assert(curr_it != CONFIG->locations_.end());
+
+        auto target_it = CONFIG->locations_.find(target_loc);
         assert(target_it != CONFIG->locations_.end());
 
-        double distance = calc_haversine_distance(std::get<3>(target_it->second), std::get<4>(target_it->second),
-                                                  std::get<3>(curr_it->second),
-                                                  std::get<4>(curr_it->second)) / AVG_TRANSPORT_SPEED;
-
-        return (int) distance;
+        double distance = calc_haversine_distance(  std::get<3>(target_it->second),
+                                                    std::get<4>(target_it->second),
+                                                    std::get<3>(curr_it->second),
+                                                    std::get<4>(curr_it->second)  );
+        return (int)(distance/AVG_TRANSPORT_SPEED);
     }
-    
+
+    unsigned int diffusionCount() {
+        std::uniform_int_distribution<int> distribution(0, MAX_DIFFUSION_CNT);
+        return distribution(*rng_);
+    }
+
     void reaction() {
         auto N = 0U;
         for (auto i = 0; i < infection_state_t::DECEASED; i++) {
@@ -299,24 +277,36 @@ public:
 
     std::string getLocationName() { return location_name_; }
 
-    void set_adjacent_nodes_(std::vector<std::string> st) {
-        adjacent_nodes_ = st;
-    }
-    
-    // const int* getLocationStateArray() {
-    //     return state_->population_;
-    // }
-
-    std::shared_ptr<LocationState> getLocationState() {
-        return state_;
-    }
+    std::shared_ptr<LocationState> getLocationState() { return state_; }
     
 protected:
     std::shared_ptr<LocationState> state_;
     std::string location_name_;
-    // std::shared_ptr<Diffusion> diffusion_;
     std::shared_ptr<std::default_random_engine> rng_;
     std::vector<std::string> adjacent_nodes_;
+
+private:
+    double calc_haversine_distance(double lat1, double long1, double lat2, double long2) {
+
+        const double earth_radius = 6372.8;
+        const double pi_val = 3.14159265358979323846;
+
+        double lat1_rad = lat1 * pi_val / 180.0;
+        double long1_rad = long1 * pi_val / 180.0;
+        double lat2_rad = lat2 * pi_val / 180.0;
+        double long2_rad = long2 * pi_val / 180.0;
+
+        double diff_lat = lat2_rad - lat1_rad;
+        double diff_long = long2_rad - long1_rad;
+
+        double temp_val = std::asin(std::sqrt(
+                std::sin(diff_lat / 2) * std::sin(diff_lat / 2) +
+                std::cos(lat1_rad) * std::cos(lat2_rad) *
+                std::sin(diff_long / 2) * std::sin(diff_long / 2)));
+
+        return 2.0 * earth_radius * temp_val;
+    }
+
 };
 
 class ConfigFileHandler {
@@ -366,14 +356,10 @@ public:
             long int num_deaths = location_data[7].as<long int>();
             long int num_recovered = location_data[8].as<long int>();
             long int num_active = location_data[9].as<long int>();
+            long int total_population_cnt = location_data[10].as<long int>();
+            long int num_susceptible = total_population_cnt -
+                            num_confirmed - num_deaths - num_recovered - num_active;
 
-            std::string combined_key = location_data[10].as<std::string>(); // TODO remove??
-
-            long int total_population_cnt = location_data[11].as<long int>();
-            long int num_susceptible = total_population_cnt - num_confirmed - num_deaths - num_recovered
-                - num_active;
-
-            // add values to Location LP's
             m_lps_->emplace_back(Location(fips_code, num_confirmed, num_deaths, num_recovered, num_active,
                                          num_susceptible, std::stoi(fips_code)));
 
@@ -403,8 +389,7 @@ public:
             assert(0);
         }
         for (auto& lp : *m_lps_) {
-            lp.set_adjacent_nodes_(graph->adjacencyList(lp.getLocationName()));
-            // lp.adjacent_nodes_ = graph->adjacencyList(lp.getLocationName());
+            lp.adjacent_nodes_ = graph->adjacencyList(lp.getLocationName());
         }
         delete graph;
     }
