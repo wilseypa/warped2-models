@@ -4,7 +4,6 @@ bin_PROGRAMS = pandemic_sim
 
 pandemic_sim_SOURCES = \
     graph.hpp \
-    diffusion.hpp \
     pandemic.hpp \
     pandemic.cpp
 
