@@ -53,12 +53,11 @@ std::vector<std::shared_ptr<warped::Event> > Location::receiveEvent(const warped
                      b. We won't consider Recovered in the diffusion mechanism since their
                           diffusion has no impact if we assume they have acquired immunity.
                           If not, the diffusion mechanism needs to be updated.
-                     c. Currently it is only one person per diffusion cycle. This needs to
-                          updated for multiple people, either sent to the same target or to
-                          different targets.
              */
-            if (state_->population_[infection_state_t::SUSCEPTIBLE]) {
-                std::string target = pickLocation();
+            auto diffusion_cnt = diffusionCount();
+            while (diffusion_cnt--) {
+                if (state_->population_[infection_state_t::SUSCEPTIBLE] == 0) break;
+                std::string target = diffusionTarget();
                 auto travel_time = travelTimeToTarget(target);
                 --state_->population_[infection_state_t::SUSCEPTIBLE];
                 events.emplace_back(new DiffusionEvent {target,

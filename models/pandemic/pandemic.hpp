@@ -19,7 +19,8 @@
 #define TIME_UNITS_IN_HOUR  1
 #define TIME_UNITS_IN_DAY   (24 * TIME_UNITS_IN_HOUR)
 
-#define AVG_TRANSPORT_SPEED 10
+#define AVG_TRANSPORT_SPEED 10  //TODO: Move to config
+#define MAX_DIFFUSION_CNT   10  //TODO: Move to config
 
 /*
  *  beta  <= transmissibility
@@ -198,7 +199,7 @@ public:
     virtual std::vector<std::shared_ptr<warped::Event>> receiveEvent(
                                             const warped::Event& event) override;
 
-    std::string pickLocation() {
+    std::string diffusionTarget() {
         unsigned int num_locations = adjacent_nodes_.size();
         assert(num_locations);
         std::uniform_int_distribution<int> distribution(0, num_locations-1);
@@ -220,7 +221,12 @@ public:
                                                     std::get<4>(curr_it->second)  );
         return (int)(distance/AVG_TRANSPORT_SPEED);
     }
-    
+
+    unsigned int diffusionCount() {
+        std::uniform_int_distribution<int> distribution(0, MAX_DIFFUSION_CNT);
+        return distribution(*rng_);
+    }
+
     void reaction() {
         auto N = 0U;
         for (auto i = 0; i < infection_state_t::DECEASED; i++) {
