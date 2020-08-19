@@ -198,55 +198,32 @@ public:
 
     virtual warped::LPState& getState() override { return *state_; }
 
-    
     virtual std::vector<std::shared_ptr<warped::Event>> initializeLP() override;
 
     virtual std::vector<std::shared_ptr<warped::Event>> receiveEvent(
                                             const warped::Event& event) override;
 
-    std::string pickLocation(std::string curr_loc) {
-        unsigned int num_locations = CONFIG->locations_.size();
-        if(!num_locations) return "";
+    std::string pickLocation() {
+        unsigned int num_locations = adjacent_nodes_.size();
+        assert(num_locations);
         std::uniform_int_distribution<int> distribution(0, num_locations-1);
         auto location_id = (unsigned int) distribution(*rng_);
-        auto it = std::next(std::begin(CONFIG->locations_), location_id);
-        return it->first;
+        return adjacent_nodes_[location_id];
     }
 
-    double calc_haversine_distance(double lat1, double long1, double lat2, double long2) {
-
-        const double earth_radius = 6372.8;
-        const double pi_val = 3.14159265358979323846;
-        
-        double lat1_rad = lat1 * pi_val / 180.0;
-        double long1_rad = long1 * pi_val / 180.0;
-        double lat2_rad = lat2 * pi_val / 180.0;
-        double long2_rad = long2 * pi_val / 180.0;
-
-        double diff_lat = lat2_rad - lat1_rad;
-        double diff_long = long2_rad - long1_rad;
-
-        double temp_val = std::asin(std::sqrt(
-                                        std::sin(diff_lat / 2) * std::sin(diff_lat / 2) + std::cos(lat1_rad)
-                                        * std::cos(lat2_rad) * std::sin(diff_long / 2) * std::sin(diff_long / 2)
-                                        ));
-
-        return 2.0 * earth_radius * temp_val;
-    }
-    
     unsigned int travelTimeToLocation(std::string target_loc) {
 
         auto curr_it = CONFIG->locations_.find(location_name_);
-        auto target_it = CONFIG->locations_.find(target_loc);
-
         assert(curr_it != CONFIG->locations_.end());
+
+        auto target_it = CONFIG->locations_.find(target_loc);
         assert(target_it != CONFIG->locations_.end());
 
-        double distance = calc_haversine_distance(std::get<3>(target_it->second), std::get<4>(target_it->second),
-                                                  std::get<3>(curr_it->second),
-                                                  std::get<4>(curr_it->second)) / AVG_TRANSPORT_SPEED;
-
-        return (int) distance;
+        double distance = calc_haversine_distance(  std::get<3>(target_it->second),
+                                                    std::get<4>(target_it->second),
+                                                    std::get<3>(curr_it->second),
+                                                    std::get<4>(curr_it->second)  );
+        return (int)(distance/AVG_TRANSPORT_SPEED);
     }
     
     void reaction() {
@@ -299,24 +276,36 @@ public:
 
     std::string getLocationName() { return location_name_; }
 
-    void set_adjacent_nodes_(std::vector<std::string> st) {
-        adjacent_nodes_ = st;
-    }
-    
-    // const int* getLocationStateArray() {
-    //     return state_->population_;
-    // }
-
-    std::shared_ptr<LocationState> getLocationState() {
-        return state_;
-    }
+    std::shared_ptr<LocationState> getLocationState() { return state_; }
     
 protected:
     std::shared_ptr<LocationState> state_;
     std::string location_name_;
-    // std::shared_ptr<Diffusion> diffusion_;
     std::shared_ptr<std::default_random_engine> rng_;
     std::vector<std::string> adjacent_nodes_;
+
+private:
+    double calc_haversine_distance(double lat1, double long1, double lat2, double long2) {
+
+        const double earth_radius = 6372.8;
+        const double pi_val = 3.14159265358979323846;
+
+        double lat1_rad = lat1 * pi_val / 180.0;
+        double long1_rad = long1 * pi_val / 180.0;
+        double lat2_rad = lat2 * pi_val / 180.0;
+        double long2_rad = long2 * pi_val / 180.0;
+
+        double diff_lat = lat2_rad - lat1_rad;
+        double diff_long = long2_rad - long1_rad;
+
+        double temp_val = std::asin(std::sqrt(
+                std::sin(diff_lat / 2) * std::sin(diff_lat / 2) +
+                std::cos(lat1_rad) * std::cos(lat2_rad) *
+                std::sin(diff_long / 2) * std::sin(diff_long / 2)));
+
+        return 2.0 * earth_radius * temp_val;
+    }
+
 };
 
 class ConfigFileHandler {
@@ -403,8 +392,7 @@ public:
             assert(0);
         }
         for (auto& lp : *m_lps_) {
-            lp.set_adjacent_nodes_(graph->adjacencyList(lp.getLocationName()));
-            // lp.adjacent_nodes_ = graph->adjacencyList(lp.getLocationName());
+            lp.adjacent_nodes_ = graph->adjacencyList(lp.getLocationName());
         }
         delete graph;
     }
