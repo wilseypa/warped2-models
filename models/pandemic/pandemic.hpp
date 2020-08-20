@@ -278,12 +278,13 @@ public:
     std::string getLocationName() { return location_name_; }
 
     std::shared_ptr<LocationState> getLocationState() { return state_; }
-    
+
+    std::vector<std::string> adjacent_nodes_;
+
 protected:
     std::shared_ptr<LocationState> state_;
     std::string location_name_;
     std::shared_ptr<std::default_random_engine> rng_;
-    std::vector<std::string> adjacent_nodes_;
 
 private:
     double calc_haversine_distance(double lat1, double long1, double lat2, double long2) {
@@ -319,15 +320,11 @@ public:
         return instance_;
     }
 
-    void openFile(std::string fname, std::vector<Location> *lps) {
-        m_lps_ = lps;
-        m_input_fname_ = fname;
+    void readConfig(const std::string& fname, std::vector<Location>& lps) {
 
-        cur_ = std::unique_ptr<jsoncons::json_cursor> (new jsoncons::json_cursor(
-                      new std::ifstream(fname)));
-    }
-
-    void getValuesFromJsonFile(const std::string& fname) {
+        std::unique_ptr<jsoncons::json_cursor> cur_ (new jsoncons::json_cursor(new jsoncons::json_cursor(
+                                                                                   new std::ifstream(fname))));
+        
         std::ifstream is(fname);
 
         jsoncons::json input_data = jsoncons::json::parse(is);
@@ -360,7 +357,7 @@ public:
             long int num_susceptible = total_population_cnt -
                             num_confirmed - num_deaths - num_recovered - num_active;
 
-            m_lps_->emplace_back(Location(fips_code, num_confirmed, num_deaths, num_recovered, num_active,
+            lps.emplace_back(Location(fips_code, num_confirmed, num_deaths, num_recovered, num_active,
                                          num_susceptible, std::stoi(fips_code)));
 
             CONFIG->addMapEntry(fips_code, std::make_tuple(county, state, country, loc_lat, loc_long,
@@ -369,7 +366,7 @@ public:
 
         // Create the Network Graph
         std::vector<std::string> nodes;
-        for (auto& lp : *m_lps_) {
+        for (auto& lp : lps) {
             nodes.push_back(lp.getLocationName());
         }
 
@@ -388,13 +385,15 @@ public:
             std::cerr << "Invalid choice of diffusion network." << std::endl;
             assert(0);
         }
-        for (auto& lp : *m_lps_) {
+
+        for (auto& lp : lps) {
             lp.adjacent_nodes_ = graph->adjacencyList(lp.getLocationName());
         }
+        
         delete graph;
     }
 
-    void writeSimulationOutputToJsonFile(const std::string& out_fname) {
+    void writeConfig(const std::string& out_fname, std::vector<Location>& lps) {
         // TODO vivek: add diffusion_model
         jsoncons::json jsontowrite;
 
@@ -411,7 +410,7 @@ public:
         jsontowrite["disease_model"] = std::move(disease_model);
         jsontowrite["locations"] = jsoncons::json(jsoncons::json_array_arg, {});
 
-        for (auto it = m_lps_->begin(); it != m_lps_->end(); ++it) {
+        for (auto it = lps.begin(); it != lps.end(); ++it) {
             std::string fips_code = it->getLocationName();
 
             std::tuple<std::string, std::string, std::string, float, float, long int>*
@@ -448,14 +447,8 @@ public:
 
 private:
 
-    ConfigFileHandler() = default;
-
+    ConfigFileHandler() =     default;
     static ConfigFileHandler* instance_;
-
-    std::unique_ptr<jsoncons::json_cursor> cur_;
-
-    std::vector <Location> *m_lps_;
-    std::string m_input_fname_;
 };
 
 

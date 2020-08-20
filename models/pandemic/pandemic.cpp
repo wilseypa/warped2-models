@@ -41,12 +41,12 @@ std::vector<std::shared_ptr<warped::Event> > Location::receiveEvent(const warped
     std::vector<std::shared_ptr<warped::Event> > events;
 
     /* If Trigger event */
-    if (event->eventType() == event_type_t::TRIGGER) {
+    if (event.eventType() == event_type_t::TRIGGER) {
         auto trigger_event = static_cast<const TriggerEvent&>(event);
-        auto timestamp = trigger_event->timestamp();
+        auto timestamp = trigger_event.timestamp();
 
         /* If it is diffusion timer */
-        if (trigger_event->is_diffusion_) {
+        if (trigger_event.is_diffusion_) {
             /* TODO: Do we only allow susceptible and exposed to travel ? It is part
                      of advanced features we need to add for quarantine.
                Note: a. Temporarily let's assume only susceptible people are travelling
@@ -64,12 +64,12 @@ std::vector<std::shared_ptr<warped::Event> > Location::receiveEvent(const warped
                                 timestamp + travel_time, infection_state_t::SUSCEPTIBLE});
             }
             events.emplace_back(new TriggerEvent {location_name_,
-                                timestamp + CONFIG->diffusion_trig_interval_, true});
+                                timestamp + CONFIG->diffusion_trig_interval_in_hrs, true});
 
         } else { /* Update state timer */
             reaction();
             events.emplace_back(new TriggerEvent {location_name_,
-                                    timestamp + CONFIG->update_trig_interval_});
+                                    timestamp + CONFIG->update_trig_interval_in_hrs});
         }
     } else { /* Diffusion event */
         ++state_->population_[infection_state_t::SUSCEPTIBLE];
@@ -98,8 +98,8 @@ int main(int argc, const char** argv) {
     out_file_name = out_file_name_arg.getValue();
 
     std::vector<Location> lps;
-    CONFIGFILEHANDLER->openFile(model_config_name, &lps);
-    CONFIGFILEHANDLER->getValuesFromJsonFile();
+
+    CONFIGFILEHANDLER->readConfig(model_config_name, lps);
 
     /* Simulate the pandemic */
     std::vector<warped::LogicalProcess*> lp_pointers;
@@ -108,7 +108,7 @@ int main(int argc, const char** argv) {
     }
     pandemic_sim.simulate(lp_pointers);
 
-    CONFIGFILEHANDLER->writeSimulationOutputToJsonFile(out_file_name);
+    CONFIGFILEHANDLER->writeConfig(out_file_name, lps);
 
     return 0;
 }
