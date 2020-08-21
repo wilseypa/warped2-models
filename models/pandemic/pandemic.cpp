@@ -71,6 +71,7 @@ std::vector<std::shared_ptr<warped::Event> > Location::receiveEvent(const warped
         ++state_->population_[pandemic_event.state_];
 
     } else { /* Invalid choice */
+        std::cerr << "Invalid event type" << std::endl;
         assert(0);
     }
     return events;

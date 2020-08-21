@@ -139,12 +139,15 @@ class Location : public warped::LogicalProcess {
 public:
     Location() = delete;
 
+    /* NOTE : There is an ambiguity in naming convention in JHU data. For our model,
+              JHU's active count is our confirmed count. Active count refers to the
+              number of infected who are still alive and not recovered.
+     */
     Location(   const std::string& name,
-                long int num_confirmed,
-                long int num_deaths,
-                long int num_recovered,
-                long int num_active,
-                long int population_cnt,
+                unsigned long num_confirmed,
+                unsigned long num_deaths,
+                unsigned long num_recovered,
+                unsigned long population_size,
                 unsigned int index  )
         :   LogicalProcess(name),
             state_(),
@@ -152,13 +155,16 @@ public:
             rng_(new std::default_random_engine(index)) {
 
         state_ = std::make_shared<LocationState>();
-
-        state_->population_[infection_state_t::SUSCEPTIBLE] = population_cnt;
-        state_->population_[infection_state_t::EXPOSED] =
-                    CONFIG->exposed_confirmed_ratio_ * (double)num_confirmed;
+        state_->population_[infection_state_t::EXPOSED] = CONFIG->exposed_confirmed_ratio_ *
+                                                                        (double)num_confirmed;
         state_->population_[infection_state_t::INFECTIOUS]  = num_confirmed;
         state_->population_[infection_state_t::RECOVERED]   = num_recovered;
         state_->population_[infection_state_t::DECEASED]    = num_deaths;
+        state_->population_[infection_state_t::SUSCEPTIBLE] = population_size
+                                - state_->population_[infection_state_t::EXPOSED]
+                                - state_->population_[infection_state_t::INFECTIOUS]
+                                - state_->population_[infection_state_t::RECOVERED]
+                                - state_->population_[infection_state_t::DECEASED];
     }
 
     virtual warped::LPState& getState() override { return *state_; }
@@ -291,49 +297,47 @@ public:
 
     void readConfig(const std::string& fname, std::vector<Location>& lps) {
 
-        std::unique_ptr<jsoncons::json_cursor> cur_ (new jsoncons::json_cursor(new jsoncons::json_cursor(
-                                                                                   new std::ifstream(fname))));
-        
         std::ifstream is(fname);
+        jsoncons::json data = jsoncons::json::parse(is);
 
-        jsoncons::json input_data = jsoncons::json::parse(is);
+        CONFIG->transmissibility_ = data["disease_model"]["transmissibility"].as<double>();
 
-        CONFIG->transmissibility_ = input_data["disease_model"]["transmissibility"].as<double>();
-        CONFIG->mean_incubation_duration_ = input_data["disease_model"]["mean_incubation_duration_in_days"]
-            .as<double>() * TIME_UNITS_IN_DAY;
-        CONFIG->mean_infection_duration_ = input_data["disease_model"]["mean_infection_duration_in_days"]
-            .as<double>() * TIME_UNITS_IN_DAY;
-        CONFIG->mortality_ratio_ = input_data["disease_model"]["mortality_ratio"].as<double>();
-        CONFIG->update_trig_interval_in_hrs_ = input_data["disease_model"]["update_trig_interval_in_hrs"]
-            .as<unsigned int>() * TIME_UNITS_IN_HOUR;
-        CONFIG->diffusion_trig_interval_in_hrs_ = input_data["disease_model"]["diffusion_trig_interval_in_hrs"]
-            .as<unsigned int>() * TIME_UNITS_IN_HOUR;
+        CONFIG->mean_incubation_duration_ =
+            data["disease_model"]["mean_incubation_duration_in_days"].as<double>() * TIME_UNITS_IN_DAY;
 
-        for (const auto& location_data : input_data["locations"].array_range()) {
-            // read in values from json array for each individual "Location"
-            std::string fips_code = location_data[0].as<std::string>();
-            std::string county = location_data[1].as<std::string>();
-            std::string state = location_data[2].as<std::string>();
-            std::string country = location_data[3].as<std::string>();
-            float loc_lat = location_data[4].as<float>();
-            float loc_long = location_data[5].as<float>();
+        CONFIG->mean_infection_duration_ =
+            data["disease_model"]["mean_infection_duration_in_days"].as<double>() * TIME_UNITS_IN_DAY;
 
-            long int num_confirmed = location_data[6].as<long int>();
-            long int num_deaths = location_data[7].as<long int>();
-            long int num_recovered = location_data[8].as<long int>();
-            long int num_active = location_data[9].as<long int>();
-            long int total_population_cnt = location_data[10].as<long int>();
-            long int num_susceptible = total_population_cnt -
-                            num_confirmed - num_deaths - num_recovered - num_active;
+        CONFIG->mortality_ratio_ = data["disease_model"]["mortality_ratio"].as<double>();
 
-            lps.emplace_back(Location(fips_code, num_confirmed, num_deaths, num_recovered, num_active,
-                                         num_susceptible, std::stoi(fips_code)));
+        CONFIG->update_trig_interval_in_hrs_ =
+            data["disease_model"]["update_trig_interval_in_hrs"].as<unsigned int>() * TIME_UNITS_IN_HOUR;
 
-            CONFIG->addMapEntry(fips_code, std::make_tuple(county, state, country, loc_lat, loc_long,
-                                                           total_population_cnt));
+        CONFIG->diffusion_trig_interval_in_hrs_ =
+            data["disease_model"]["diffusion_trig_interval_in_hrs"].as<unsigned int>() * TIME_UNITS_IN_HOUR;
+
+        /* Read values from json array for each location.
+           NOTE : Number of confirmed for this model is the same as number of active in JHU data
+         */
+        unsigned int index = 0;
+        for (const auto& location : data["locations"].array_range()) {
+
+            std::string fips_code   = location[loc_data_field_t::FIPS_CODE].as<std::string>();
+            std::string county      = location[loc_data_field_t::COUNTY_NAME].as<std::string>();
+            std::string state       = location[loc_data_field_t::STATE].as<std::string>();
+            std::string country     = location[loc_data_field_t::COUNTRY].as<std::string>();
+            float latitude          = location[loc_data_field_t::LATITUDE].as<float>();
+            float longitude         = location[loc_data_field_t::LONGITUDE].as<float>();
+            unsigned long deaths    = location[loc_data_field_t::NUM_DEATHS].as<unsigned long>();
+            unsigned long recovered = location[loc_data_field_t::NUM_RECOVERED].as<unsigned long>();
+            unsigned long confirmed = location[loc_data_field_t::NUM_ACTIVE].as<unsigned long>();
+            unsigned long population= location[loc_data_field_t::POPULATION_SIZE].as<unsigned long>();
+
+            lps.emplace_back(Location(fips_code, confirmed, deaths, recovered, population, index++));
+            CONFIG->addMapEntry(fips_code, std::make_tuple(county, state, country, latitude, longitude, population));
         }
 
-        // Create the Network Graph
+        /* Create the Network Graph */
         std::vector<std::string> nodes;
         for (auto& lp : lps) {
             nodes.push_back(lp.getLocationName());
@@ -341,13 +345,13 @@ public:
 
         Graph *graph = nullptr;
         /* If the choice is Watts-Strogatz */
-        if (input_data["diffusion_model"]["graph_type"].as<std::string>() == "Watts-Strogatz") {
-            std::string params = input_data["diffusion_model"]["graph_param_str"].as<std::string>();
+        if (data["diffusion_model"]["graph_type"].as<std::string>() == "Watts-Strogatz") {
+            std::string params = data["diffusion_model"]["graph_param_str"].as<std::string>();
             graph = new WattsStrogatz(nodes, params);
 
-        } else if (input_data["diffusion_model"]["graph_type"].as<std::string>() == "Barabasi-Albert") {
+        } else if (data["diffusion_model"]["graph_type"].as<std::string>() == "Barabasi-Albert") {
             /* If the choice is Barabasi-Albert */
-            std::string params = input_data["diffusion_model"]["graph_param_str"].as<std::string>();
+            std::string params = data["diffusion_model"]["graph_param_str"].as<std::string>();
             graph = new BarabasiAlbert(nodes, params);
 
         } else { // Invalid choice
@@ -362,7 +366,7 @@ public:
         delete graph;
     }
 
-    void writeConfig(const std::string& out_fname, std::vector<Location>& lps) {
+    void writeConfig(const std::string& out_fname, const std::vector<Location>& lps) {
         // TODO vivek: add diffusion_model
         jsoncons::json jsontowrite;
 
@@ -416,9 +420,23 @@ public:
 
 private:
 
-    ConfigFileHandler() =     default;
+    ConfigFileHandler() = default;
     static ConfigFileHandler* instance_;
-};
 
+    enum loc_data_field_t {
+        FIPS_CODE = 0,
+        COUNTY_NAME,
+        STATE,
+        COUNTRY,
+        LATITUDE,
+        LONGITUDE,
+        NUM_CONFIRMED,
+        NUM_DEATHS,
+        NUM_RECOVERED,
+        NUM_ACTIVE,
+        POPULATION_SIZE,
+        NUM_FIELDS
+    };
+};
 
 #endif
