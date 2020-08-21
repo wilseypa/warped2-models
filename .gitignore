@@ -34,6 +34,9 @@ depcomp
 install-sh
 missing
 
+# Pandemic binary
+models/pandemic/scripts/pretty_print_json
+
 # Other autotools output
 .deps/
 m4/

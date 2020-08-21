@@ -17,8 +17,7 @@
 PandemicConfig* PandemicConfig::instance_ = nullptr;
 ConfigFileHandler* ConfigFileHandler::instance_ = nullptr;
 
-WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(DiffusionEvent)
-WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(TriggerEvent)
+WARPED_REGISTER_POLYMORPHIC_SERIALIZABLE_CLASS(PandemicEvent)
 
 
 std::vector<std::shared_ptr<warped::Event> > Location::initializeLP() {
@@ -29,50 +28,50 @@ std::vector<std::shared_ptr<warped::Event> > Location::initializeLP() {
     std::vector<std::shared_ptr<warped::Event> > events;
 
     /* Create timer events for diffusion and update state */
-    events.emplace_back(new TriggerEvent {this->location_name_,
-                                    CONFIG->update_trig_interval_in_hrs});
-    events.emplace_back(new TriggerEvent {this->location_name_,
-                                    CONFIG->diffusion_trig_interval_in_hrs, true});
+    events.emplace_back(new PandemicEvent {this->location_name_,
+            CONFIG->update_trig_interval_in_hrs_, event_type_t::UPDATE_TIMER});
+    events.emplace_back(new PandemicEvent {this->location_name_,
+            CONFIG->diffusion_trig_interval_in_hrs_, event_type_t::DIFFUSION_TIMER});
     return events;
 }
 
 std::vector<std::shared_ptr<warped::Event> > Location::receiveEvent(const warped::Event& event) {
 
     std::vector<std::shared_ptr<warped::Event> > events;
+    auto pandemic_event = reinterpret_cast<const PandemicEvent&>(event);
+    auto timestamp = pandemic_event.timestamp();
 
-    /* If Trigger event */
-    if (event.eventType() == event_type_t::TRIGGER) {
-        auto trigger_event = static_cast<const TriggerEvent&>(event);
-        auto timestamp = trigger_event.timestamp();
-
-        /* If it is diffusion timer */
-        if (trigger_event.is_diffusion_) {
-            /* TODO: Do we only allow susceptible and exposed to travel ? It is part
-                     of advanced features we need to add for quarantine.
-               Note: a. Temporarily let's assume only susceptible people are travelling
-                     b. We won't consider Recovered in the diffusion mechanism since their
-                          diffusion has no impact if we assume they have acquired immunity.
-                          If not, the diffusion mechanism needs to be updated.
-             */
-            auto diffusion_cnt = diffusionCount();
-            while (diffusion_cnt--) {
-                if (state_->population_[infection_state_t::SUSCEPTIBLE] == 0) break;
-                std::string target = diffusionTarget();
-                auto travel_time = travelTimeToTarget(target);
-                --state_->population_[infection_state_t::SUSCEPTIBLE];
-                events.emplace_back(new DiffusionEvent {target,
-                                timestamp + travel_time, infection_state_t::SUSCEPTIBLE});
-            }
-            events.emplace_back(new TriggerEvent {location_name_,
-                                timestamp + CONFIG->diffusion_trig_interval_in_hrs, true});
-
-        } else { /* Update state timer */
-            reaction();
-            events.emplace_back(new TriggerEvent {location_name_,
-                                    timestamp + CONFIG->update_trig_interval_in_hrs});
+    /* If Diffusion Timer event */
+    if (pandemic_event.type_ == event_type_t::DIFFUSION_TIMER) {
+        /* TODO: Do we only allow susceptible and exposed to travel ? It is part
+                 of advanced features we need to add for quarantine.
+           Note: a. Temporarily let's assume only susceptible people are travelling
+                 b. We won't consider Recovered in the diffusion mechanism since their
+                    diffusion has no impact if we assume they have acquired immunity.
+                    If not, the diffusion mechanism needs to be updated.
+         */
+        auto diffusion_cnt = diffusionCount();
+        while (diffusion_cnt--) {
+            if (state_->population_[infection_state_t::SUSCEPTIBLE] == 0) break;
+            std::string target = diffusionTarget();
+            auto travel_time = travelTimeToTarget(target);
+            --state_->population_[infection_state_t::SUSCEPTIBLE];
+            events.emplace_back(new PandemicEvent {target,
+                timestamp + travel_time, event_type_t::DIFFUSION, infection_state_t::SUSCEPTIBLE});
         }
-    } else { /* Diffusion event */
-        ++state_->population_[infection_state_t::SUSCEPTIBLE];
+        events.emplace_back(new PandemicEvent {location_name_,
+            timestamp + CONFIG->diffusion_trig_interval_in_hrs_, event_type_t::DIFFUSION_TIMER});
+
+    } else if (pandemic_event.type_ == event_type_t::UPDATE_TIMER) { /* Update Timer event */
+        reaction();
+        events.emplace_back(new PandemicEvent {location_name_,
+            timestamp + CONFIG->update_trig_interval_in_hrs_, event_type_t::UPDATE_TIMER});
+
+    } else if (pandemic_event.type_ == event_type_t::DIFFUSION) { /* Diffusion event */
+        ++state_->population_[pandemic_event.state_];
+
+    } else { /* Invalid choice */
+        assert(0);
     }
     return events;
 }

@@ -37,7 +37,7 @@ enum infection_state_t {
     INFECTIOUS,
     RECOVERED,
     DECEASED,
-    NUM_INFECTION_STATES // ??
+    NUM_INFECTION_STATES
 };
 
 WARPED_DEFINE_LP_STATE_STRUCT(LocationState) {
@@ -55,71 +55,40 @@ WARPED_DEFINE_LP_STATE_STRUCT(LocationState) {
 
 enum event_type_t {
     DIFFUSION,
-    TRIGGER
+    UPDATE_TIMER,
+    DIFFUSION_TIMER
 };
 
-class DiffusionEvent : public warped::Event {
+class PandemicEvent : public warped::Event {
 public:
-    DiffusionEvent() = delete;
+    PandemicEvent() = delete;
 
-    DiffusionEvent( const std::string receiver_name,
-                    unsigned int timestamp,
-                    infection_state_t infection_state)
-            :   receiver_name_(receiver_name),
-                arrival_ts_(timestamp),
-                infection_state_(infection_state) {}
+    PandemicEvent(  const std::string target,
+                    unsigned int ts,
+                    event_type_t type,
+                    infection_state_t state = infection_state_t::NUM_INFECTION_STATES ) :
+        target_(target),
+        ts_(ts),
+        type_(type),
+        state_(state) {}
 
-    const std::string& receiverName() const { return receiver_name_; }
+    const std::string& receiverName() const { return target_; }
 
-    unsigned int timestamp() const { return arrival_ts_; }
+    unsigned int timestamp() const { return ts_; }
 
     unsigned int size() const {
-        return  receiver_name_.length() +
-                sizeof(arrival_ts_) +
-                sizeof(infection_state_);
+        return  target_.length() + sizeof(ts_) + sizeof(type_) + sizeof(state_);
     }
 
-    event_type_t eventType() { return event_type_t::DIFFUSION; }
+    event_type_t eventType() { return type_; }
 
-    std::string         receiver_name_;
-    unsigned int        arrival_ts_;
-    infection_state_t   infection_state_;
+    std::string         target_;
+    unsigned int        ts_;
+    event_type_t        type_;
+    infection_state_t   state_;
 
-    WARPED_REGISTER_SERIALIZABLE_MEMBERS(cereal::base_class<warped::Event>(this),
-                receiver_name_, arrival_ts_, infection_state_)
+    WARPED_REGISTER_SERIALIZABLE_MEMBERS(cereal::base_class<warped::Event>(this), target_, ts_, type_, state_)
 };
-
-class TriggerEvent : public warped::Event {
-public:
-    TriggerEvent() = delete;
-
-    TriggerEvent(   const std::string receiver_name,
-                    unsigned int timestamp,
-                    bool is_diffusion = false)
-            :   receiver_name_(receiver_name),
-                target_ts_(timestamp),
-                is_diffusion_(is_diffusion) {}
-
-    const std::string& receiverName() const { return receiver_name_; }
-
-    unsigned int timestamp() const { return target_ts_; }
-
-    unsigned int size() const {
-        return  receiver_name_.length() +
-                sizeof(target_ts_) +
-                sizeof(is_diffusion_);
-    }
-
-    event_type_t eventType() { return event_type_t::TRIGGER; }
-
-    std::string         receiver_name_;
-    unsigned int        target_ts_;
-    bool                is_diffusion_;
-
-    WARPED_REGISTER_SERIALIZABLE_MEMBERS(cereal::base_class<warped::Event>(this),
-                receiver_name_, target_ts_, is_diffusion_)
-};
-
 
 class PandemicConfig {
 public:
@@ -143,8 +112,8 @@ public:
      */
     double exposed_confirmed_ratio_         = 10.0;
 
-    unsigned int update_trig_interval_in_hrs      = 1 * TIME_UNITS_IN_DAY;
-    unsigned int diffusion_trig_interval_in_hrs   = 6 * TIME_UNITS_IN_HOUR;
+    unsigned int update_trig_interval_in_hrs_ = 1 * TIME_UNITS_IN_DAY;
+    unsigned int diffusion_trig_interval_in_hrs_ = 6 * TIME_UNITS_IN_HOUR;
 
     void addMapEntry(const std::string& str,
             std::tuple<std::string, std::string, std::string, float, float, long int> map_val) {
@@ -335,9 +304,9 @@ public:
         CONFIG->mean_infection_duration_ = input_data["disease_model"]["mean_infection_duration_in_days"]
             .as<double>() * TIME_UNITS_IN_DAY;
         CONFIG->mortality_ratio_ = input_data["disease_model"]["mortality_ratio"].as<double>();
-        CONFIG->update_trig_interval_in_hrs = input_data["disease_model"]["update_trig_interval_in_hrs"]
+        CONFIG->update_trig_interval_in_hrs_ = input_data["disease_model"]["update_trig_interval_in_hrs"]
             .as<unsigned int>() * TIME_UNITS_IN_HOUR;
-        CONFIG->diffusion_trig_interval_in_hrs = input_data["disease_model"]["diffusion_trig_interval_in_hrs"]
+        CONFIG->diffusion_trig_interval_in_hrs_ = input_data["disease_model"]["diffusion_trig_interval_in_hrs"]
             .as<unsigned int>() * TIME_UNITS_IN_HOUR;
 
         for (const auto& location_data : input_data["locations"].array_range()) {
@@ -399,12 +368,12 @@ public:
 
         jsoncons::json disease_model(jsoncons::json_object_arg, {
                 {"date_date", jsoncons::json::null},
-                {"diffusion_trig_interval_in_hrs", CONFIG->diffusion_trig_interval_in_hrs},
+                {"diffusion_trig_interval_in_hrs", CONFIG->diffusion_trig_interval_in_hrs_},
                 {"mean_incubation_duration_in_days", CONFIG->mean_incubation_duration_ / TIME_UNITS_IN_DAY},
                 {"mean_infection_duration_in_days", CONFIG->mean_infection_duration_ / TIME_UNITS_IN_DAY},
                 {"mortality_ratio", CONFIG->mortality_ratio_},
                 {"transmissibility", CONFIG->transmissibility_},
-                {"update_trig_interval_in_hrs", CONFIG->update_trig_interval_in_hrs}
+                {"update_trig_interval_in_hrs", CONFIG->update_trig_interval_in_hrs_}
             });
 
         jsontowrite["disease_model"] = std::move(disease_model);
