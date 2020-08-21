@@ -90,6 +90,16 @@ public:
     WARPED_REGISTER_SERIALIZABLE_MEMBERS(cereal::base_class<warped::Event>(this), target_, ts_, type_, state_)
 };
 
+enum location_field_t {
+    COUNTY_NAME,
+    STATE,
+    COUNTRY,
+    LATITUDE,
+    LONGITUDE,
+    POPULATION_SIZE,
+    NUM_FIELDS
+};
+
 class PandemicConfig {
 public:
     static PandemicConfig* getInstance() {
@@ -164,17 +174,6 @@ private:
 
     std::unordered_map<std::string,
         std::tuple<std::string, std::string, std::string, float, float, unsigned long>> locations_;
-
-    enum location_field_t {
-        COUNTY_NAME,
-        STATE,
-        COUNTRY,
-        LATITUDE,
-        LONGITUDE,
-        POPULATION_SIZE,
-        NUM_FIELDS
-    };
-
 };
 
 class Location : public warped::LogicalProcess {
@@ -402,8 +401,6 @@ public:
             auto longitude      = std::get<location_field_t::LONGITUDE>(details);
             auto population     = std::get<location_field_t::POPULATION_SIZE>(details);
 
-            auto susceptible    = lp.getLocationState()->population_[infection_state_t::SUSCEPTIBLE];
-            auto exposed        = lp.getLocationState()->population_[infection_state_t::EXPOSED];
             auto active         = lp.getLocationState()->population_[infection_state_t::INFECTIOUS];
             auto recovered      = lp.getLocationState()->population_[infection_state_t::RECOVERED];
             auto deaths         = lp.getLocationState()->population_[infection_state_t::DECEASED];
