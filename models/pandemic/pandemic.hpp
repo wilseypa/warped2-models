@@ -322,9 +322,6 @@ public:
 
     void readConfig(const std::string& fname, std::vector<Location>& lps) {
 
-        std::unique_ptr<jsoncons::json_cursor> cur_ (new jsoncons::json_cursor(new jsoncons::json_cursor(
-                                                                                   new std::ifstream(fname))));
-        
         std::ifstream is(fname);
 
         jsoncons::json input_data = jsoncons::json::parse(is);
@@ -398,7 +395,7 @@ public:
         jsoncons::json jsontowrite;
 
         jsoncons::json disease_model(jsoncons::json_object_arg, {
-                {"date_date", jsoncons::json::null},
+                {"date_date", jsoncons::null_type()},
                 {"diffusion_trig_interval_in_hrs", CONFIG->diffusion_trig_interval_in_hrs},
                 {"mean_incubation_duration_in_days", CONFIG->mean_incubation_duration_ / TIME_UNITS_IN_DAY},
                 {"mean_infection_duration_in_days", CONFIG->mean_infection_duration_ / TIME_UNITS_IN_DAY},
