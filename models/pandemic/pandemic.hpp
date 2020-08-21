@@ -11,7 +11,6 @@
 #include "graph.hpp"
 
 #include "jsoncons/json.hpp"
-#include "jsoncons/json_cursor.hpp"
 
 #define CONFIG              PandemicConfig::getInstance()
 #define CONFIGFILEHANDLER   ConfigFileHandler::getInstance()
@@ -61,7 +60,7 @@ enum event_type_t {
 
 class PandemicEvent : public warped::Event {
 public:
-    PandemicEvent() = delete;
+    PandemicEvent() = default;
 
     PandemicEvent(  const std::string target,
                     unsigned int ts,
