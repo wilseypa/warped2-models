@@ -11,7 +11,6 @@
 #include "graph.hpp"
 
 #include "jsoncons/json.hpp"
-#include "jsoncons/json_cursor.hpp"
 
 #define CONFIG              PandemicConfig::getInstance()
 #define CONFIGFILEHANDLER   ConfigFileHandler::getInstance()
@@ -37,7 +36,7 @@ enum infection_state_t {
     INFECTIOUS,
     RECOVERED,
     DECEASED,
-    NUM_INFECTION_STATES // ??
+    NUM_INFECTION_STATES
 };
 
 WARPED_DEFINE_LP_STATE_STRUCT(LocationState) {
@@ -55,71 +54,50 @@ WARPED_DEFINE_LP_STATE_STRUCT(LocationState) {
 
 enum event_type_t {
     DIFFUSION,
-    TRIGGER
+    UPDATE_TIMER,
+    DIFFUSION_TIMER
 };
 
-class DiffusionEvent : public warped::Event {
+class PandemicEvent : public warped::Event {
 public:
-    DiffusionEvent() = delete;
+    PandemicEvent() = default;
 
-    DiffusionEvent( const std::string receiver_name,
-                    unsigned int timestamp,
-                    infection_state_t infection_state)
-            :   receiver_name_(receiver_name),
-                arrival_ts_(timestamp),
-                infection_state_(infection_state) {}
+    PandemicEvent(  const std::string target,
+                    unsigned int ts,
+                    event_type_t type,
+                    infection_state_t state = infection_state_t::NUM_INFECTION_STATES ) :
+        target_(target),
+        ts_(ts),
+        type_(type),
+        state_(state) {}
 
-    const std::string& receiverName() const { return receiver_name_; }
+    const std::string& receiverName() const { return target_; }
 
-    unsigned int timestamp() const { return arrival_ts_; }
+    unsigned int timestamp() const { return ts_; }
 
     unsigned int size() const {
-        return  receiver_name_.length() +
-                sizeof(arrival_ts_) +
-                sizeof(infection_state_);
+        return  target_.length() + sizeof(ts_) + sizeof(type_) + sizeof(state_);
     }
 
-    event_type_t eventType() { return event_type_t::DIFFUSION; }
+    event_type_t eventType() { return type_; }
 
-    std::string         receiver_name_;
-    unsigned int        arrival_ts_;
-    infection_state_t   infection_state_;
+    std::string         target_;
+    unsigned int        ts_;
+    event_type_t        type_;
+    infection_state_t   state_;
 
-    WARPED_REGISTER_SERIALIZABLE_MEMBERS(cereal::base_class<warped::Event>(this),
-                receiver_name_, arrival_ts_, infection_state_)
+    WARPED_REGISTER_SERIALIZABLE_MEMBERS(cereal::base_class<warped::Event>(this), target_, ts_, type_, state_)
 };
 
-class TriggerEvent : public warped::Event {
-public:
-    TriggerEvent() = delete;
-
-    TriggerEvent(   const std::string receiver_name,
-                    unsigned int timestamp,
-                    bool is_diffusion = false)
-            :   receiver_name_(receiver_name),
-                target_ts_(timestamp),
-                is_diffusion_(is_diffusion) {}
-
-    const std::string& receiverName() const { return receiver_name_; }
-
-    unsigned int timestamp() const { return target_ts_; }
-
-    unsigned int size() const {
-        return  receiver_name_.length() +
-                sizeof(target_ts_) +
-                sizeof(is_diffusion_);
-    }
-
-    event_type_t eventType() { return event_type_t::TRIGGER; }
-
-    std::string         receiver_name_;
-    unsigned int        target_ts_;
-    bool                is_diffusion_;
-
-    WARPED_REGISTER_SERIALIZABLE_MEMBERS(cereal::base_class<warped::Event>(this),
-                receiver_name_, target_ts_, is_diffusion_)
+enum location_field_t {
+    COUNTY_NAME,
+    STATE,
+    COUNTRY,
+    LATITUDE,
+    LONGITUDE,
+    POPULATION_SIZE,
+    NUM_FIELDS
 };
-
 
 class PandemicConfig {
 public:
@@ -143,39 +121,73 @@ public:
      */
     double exposed_confirmed_ratio_         = 10.0;
 
-    unsigned int update_trig_interval_in_hrs      = 1 * TIME_UNITS_IN_DAY;
-    unsigned int diffusion_trig_interval_in_hrs   = 6 * TIME_UNITS_IN_HOUR;
+    unsigned int update_trig_interval_in_hrs_ = 1 * TIME_UNITS_IN_DAY;
+    unsigned int diffusion_trig_interval_in_hrs_ = 6 * TIME_UNITS_IN_HOUR;
 
     void addMapEntry(const std::string& str,
-            std::tuple<std::string, std::string, std::string, float, float, long int> map_val) {
-        locations_[str] = map_val;
+            std::tuple<std::string, std::string, std::string, float, float, unsigned long> val) {
+        locations_[str] = val;
     }
 
-    std::tuple<std::string, std::string, std::string, float, float, long int>*
-                                                            getLocation(const std::string& str) {
+    std::tuple<std::string, std::string, std::string,
+                        float, float, unsigned long> getLocation(const std::string& str) {
         auto it = locations_.find(str);
         assert(it != locations_.end());
-        return &(it->second);
+        return it->second;
     }
 
-    std::unordered_map<std::string,
-        std::tuple<std::string, std::string, std::string, float, float, long int>> locations_;
+    unsigned int haversine_distance(std::string sender, std::string receiver) {
+
+        auto sender_it = locations_.find(sender);
+        assert(sender_it != locations_.end());
+        auto s_lati = std::get<location_field_t::LATITUDE> (sender_it->second);
+        auto s_long = std::get<location_field_t::LONGITUDE>(sender_it->second);
+
+        auto receiver_it = locations_.find(receiver);
+        assert(receiver_it != locations_.end());
+        auto r_lati = std::get<location_field_t::LATITUDE> (receiver_it->second);
+        auto r_long = std::get<location_field_t::LONGITUDE>(receiver_it->second);
+
+        const double earth_radius = 6372.8;
+        const double pi_val = 3.14159265358979323846;
+
+        double s_lati_rad = s_lati * pi_val / 180.0;
+        double s_long_rad = s_long * pi_val / 180.0;
+        double r_lati_rad = r_lati * pi_val / 180.0;
+        double r_long_rad = r_long * pi_val / 180.0;
+
+        double diff_lati = r_lati_rad - s_lati_rad;
+        double diff_long = r_long_rad - s_long_rad;
+
+        double val = std::asin(std::sqrt(
+                std::sin(diff_lati / 2) * std::sin(diff_lati / 2) +
+                std::cos(s_lati_rad) * std::cos(r_lati_rad) *
+                std::sin(diff_long / 2) * std::sin(diff_long / 2)));
+
+        return static_cast<unsigned int>(2.0 * earth_radius * val);
+    }
 
 private:
     static PandemicConfig* instance_;
     PandemicConfig() = default;
+
+    std::unordered_map<std::string,
+        std::tuple<std::string, std::string, std::string, float, float, unsigned long>> locations_;
 };
 
 class Location : public warped::LogicalProcess {
 public:
     Location() = delete;
 
+    /* NOTE : There is an ambiguity in naming convention in JHU data. For our model,
+              JHU's active count is our confirmed count. Active count refers to the
+              number of infected who are still alive and not recovered.
+     */
     Location(   const std::string& name,
-                long int num_confirmed,
-                long int num_deaths,
-                long int num_recovered,
-                long int num_active,
-                long int population_cnt,
+                unsigned long num_confirmed,
+                unsigned long num_deaths,
+                unsigned long num_recovered,
+                unsigned long population_size,
                 unsigned int index  )
         :   LogicalProcess(name),
             state_(),
@@ -183,13 +195,16 @@ public:
             rng_(new std::default_random_engine(index)) {
 
         state_ = std::make_shared<LocationState>();
-
-        state_->population_[infection_state_t::SUSCEPTIBLE] = population_cnt;
-        state_->population_[infection_state_t::EXPOSED] =
-                    CONFIG->exposed_confirmed_ratio_ * (double)num_confirmed;
+        state_->population_[infection_state_t::EXPOSED] = CONFIG->exposed_confirmed_ratio_ *
+                                                                        (double)num_confirmed;
         state_->population_[infection_state_t::INFECTIOUS]  = num_confirmed;
         state_->population_[infection_state_t::RECOVERED]   = num_recovered;
         state_->population_[infection_state_t::DECEASED]    = num_deaths;
+        state_->population_[infection_state_t::SUSCEPTIBLE] = population_size
+                                - state_->population_[infection_state_t::EXPOSED]
+                                - state_->population_[infection_state_t::INFECTIOUS]
+                                - state_->population_[infection_state_t::RECOVERED]
+                                - state_->population_[infection_state_t::DECEASED];
     }
 
     virtual warped::LPState& getState() override { return *state_; }
@@ -208,18 +223,7 @@ public:
     }
 
     unsigned int travelTimeToTarget(std::string target_loc) {
-
-        auto curr_it = CONFIG->locations_.find(location_name_);
-        assert(curr_it != CONFIG->locations_.end());
-
-        auto target_it = CONFIG->locations_.find(target_loc);
-        assert(target_it != CONFIG->locations_.end());
-
-        double distance = calc_haversine_distance(  std::get<3>(target_it->second),
-                                                    std::get<4>(target_it->second),
-                                                    std::get<3>(curr_it->second),
-                                                    std::get<4>(curr_it->second)  );
-        return (int)(distance/AVG_TRANSPORT_SPEED);
+        return CONFIG->haversine_distance(location_name_, target_loc) / AVG_TRANSPORT_SPEED;
     }
 
     unsigned int diffusionCount() {
@@ -268,7 +272,7 @@ public:
 
     // Report population, infected cnt, recovered count and death count
     std::string printState() {
-        return location_name_                                      + ","
+        return location_name_                                                     + ","
             + std::to_string(state_->population_[infection_state_t::SUSCEPTIBLE]) + ","
             + std::to_string(state_->population_[infection_state_t::INFECTIOUS])  + ","
             + std::to_string(state_->population_[infection_state_t::RECOVERED])   + ","
@@ -285,29 +289,6 @@ protected:
     std::shared_ptr<LocationState> state_;
     std::string location_name_;
     std::shared_ptr<std::default_random_engine> rng_;
-
-private:
-    double calc_haversine_distance(double lat1, double long1, double lat2, double long2) {
-
-        const double earth_radius = 6372.8;
-        const double pi_val = 3.14159265358979323846;
-
-        double lat1_rad = lat1 * pi_val / 180.0;
-        double long1_rad = long1 * pi_val / 180.0;
-        double lat2_rad = lat2 * pi_val / 180.0;
-        double long2_rad = long2 * pi_val / 180.0;
-
-        double diff_lat = lat2_rad - lat1_rad;
-        double diff_long = long2_rad - long1_rad;
-
-        double temp_val = std::asin(std::sqrt(
-                std::sin(diff_lat / 2) * std::sin(diff_lat / 2) +
-                std::cos(lat1_rad) * std::cos(lat2_rad) *
-                std::sin(diff_long / 2) * std::sin(diff_long / 2)));
-
-        return 2.0 * earth_radius * temp_val;
-    }
-
 };
 
 class ConfigFileHandler {
@@ -322,49 +303,47 @@ public:
 
     void readConfig(const std::string& fname, std::vector<Location>& lps) {
 
-        std::unique_ptr<jsoncons::json_cursor> cur_ (new jsoncons::json_cursor(new jsoncons::json_cursor(
-                                                                                   new std::ifstream(fname))));
-        
         std::ifstream is(fname);
+        jsoncons::json data = jsoncons::json::parse(is);
 
-        jsoncons::json input_data = jsoncons::json::parse(is);
+        CONFIG->transmissibility_ = data["disease_model"]["transmissibility"].as<double>();
 
-        CONFIG->transmissibility_ = input_data["disease_model"]["transmissibility"].as<double>();
-        CONFIG->mean_incubation_duration_ = input_data["disease_model"]["mean_incubation_duration_in_days"]
-            .as<double>() * TIME_UNITS_IN_DAY;
-        CONFIG->mean_infection_duration_ = input_data["disease_model"]["mean_infection_duration_in_days"]
-            .as<double>() * TIME_UNITS_IN_DAY;
-        CONFIG->mortality_ratio_ = input_data["disease_model"]["mortality_ratio"].as<double>();
-        CONFIG->update_trig_interval_in_hrs = input_data["disease_model"]["update_trig_interval_in_hrs"]
-            .as<unsigned int>() * TIME_UNITS_IN_HOUR;
-        CONFIG->diffusion_trig_interval_in_hrs = input_data["disease_model"]["diffusion_trig_interval_in_hrs"]
-            .as<unsigned int>() * TIME_UNITS_IN_HOUR;
+        CONFIG->mean_incubation_duration_ =
+            data["disease_model"]["mean_incubation_duration_in_days"].as<double>() * TIME_UNITS_IN_DAY;
 
-        for (const auto& location_data : input_data["locations"].array_range()) {
-            // read in values from json array for each individual "Location"
-            std::string fips_code = location_data[0].as<std::string>();
-            std::string county = location_data[1].as<std::string>();
-            std::string state = location_data[2].as<std::string>();
-            std::string country = location_data[3].as<std::string>();
-            float loc_lat = location_data[4].as<float>();
-            float loc_long = location_data[5].as<float>();
+        CONFIG->mean_infection_duration_ =
+            data["disease_model"]["mean_infection_duration_in_days"].as<double>() * TIME_UNITS_IN_DAY;
 
-            long int num_confirmed = location_data[6].as<long int>();
-            long int num_deaths = location_data[7].as<long int>();
-            long int num_recovered = location_data[8].as<long int>();
-            long int num_active = location_data[9].as<long int>();
-            long int total_population_cnt = location_data[10].as<long int>();
-            long int num_susceptible = total_population_cnt -
-                            num_confirmed - num_deaths - num_recovered - num_active;
+        CONFIG->mortality_ratio_ = data["disease_model"]["mortality_ratio"].as<double>();
 
-            lps.emplace_back(Location(fips_code, num_confirmed, num_deaths, num_recovered, num_active,
-                                         num_susceptible, std::stoi(fips_code)));
+        CONFIG->update_trig_interval_in_hrs_ =
+            data["disease_model"]["update_trig_interval_in_hrs"].as<unsigned int>() * TIME_UNITS_IN_HOUR;
 
-            CONFIG->addMapEntry(fips_code, std::make_tuple(county, state, country, loc_lat, loc_long,
-                                                           total_population_cnt));
+        CONFIG->diffusion_trig_interval_in_hrs_ =
+            data["disease_model"]["diffusion_trig_interval_in_hrs"].as<unsigned int>() * TIME_UNITS_IN_HOUR;
+
+        /* Read values from json array for each location.
+           NOTE : Number of confirmed for this model is the same as number of active in JHU data
+         */
+        unsigned int index = 0;
+        for (const auto& location : data["locations"].array_range()) {
+
+            std::string fips_code   = location[loc_data_field_t::FIPS_CODE].as<std::string>();
+            std::string county      = location[loc_data_field_t::COUNTY_NAME].as<std::string>();
+            std::string state       = location[loc_data_field_t::STATE].as<std::string>();
+            std::string country     = location[loc_data_field_t::COUNTRY].as<std::string>();
+            float latitude          = location[loc_data_field_t::LATITUDE].as<float>();
+            float longitude         = location[loc_data_field_t::LONGITUDE].as<float>();
+            unsigned long deaths    = location[loc_data_field_t::NUM_DEATHS].as<unsigned long>();
+            unsigned long recovered = location[loc_data_field_t::NUM_RECOVERED].as<unsigned long>();
+            unsigned long confirmed = location[loc_data_field_t::NUM_ACTIVE].as<unsigned long>();
+            unsigned long population= location[loc_data_field_t::POPULATION_SIZE].as<unsigned long>();
+
+            lps.emplace_back(Location(fips_code, confirmed, deaths, recovered, population, index++));
+            CONFIG->addMapEntry(fips_code, std::make_tuple(county, state, country, latitude, longitude, population));
         }
 
-        // Create the Network Graph
+        /* Create the Network Graph */
         std::vector<std::string> nodes;
         for (auto& lp : lps) {
             nodes.push_back(lp.getLocationName());
@@ -372,13 +351,13 @@ public:
 
         Graph *graph = nullptr;
         /* If the choice is Watts-Strogatz */
-        if (input_data["diffusion_model"]["graph_type"].as<std::string>() == "Watts-Strogatz") {
-            std::string params = input_data["diffusion_model"]["graph_param_str"].as<std::string>();
+        if (data["diffusion_model"]["graph_type"].as<std::string>() == "Watts-Strogatz") {
+            std::string params = data["diffusion_model"]["graph_param_str"].as<std::string>();
             graph = new WattsStrogatz(nodes, params);
 
-        } else if (input_data["diffusion_model"]["graph_type"].as<std::string>() == "Barabasi-Albert") {
+        } else if (data["diffusion_model"]["graph_type"].as<std::string>() == "Barabasi-Albert") {
             /* If the choice is Barabasi-Albert */
-            std::string params = input_data["diffusion_model"]["graph_param_str"].as<std::string>();
+            std::string params = data["diffusion_model"]["graph_param_str"].as<std::string>();
             graph = new BarabasiAlbert(nodes, params);
 
         } else { // Invalid choice
@@ -393,45 +372,43 @@ public:
         delete graph;
     }
 
-    void writeConfig(const std::string& out_fname, std::vector<Location>& lps) {
+    void writeConfig(const std::string& out_fname, const std::vector<Location>& lps) {
         // TODO vivek: add diffusion_model
         jsoncons::json jsontowrite;
 
         jsoncons::json disease_model(jsoncons::json_object_arg, {
                 {"date_date", jsoncons::json::null},
-                {"diffusion_trig_interval_in_hrs", CONFIG->diffusion_trig_interval_in_hrs},
+                {"diffusion_trig_interval_in_hrs", CONFIG->diffusion_trig_interval_in_hrs_},
                 {"mean_incubation_duration_in_days", CONFIG->mean_incubation_duration_ / TIME_UNITS_IN_DAY},
                 {"mean_infection_duration_in_days", CONFIG->mean_infection_duration_ / TIME_UNITS_IN_DAY},
                 {"mortality_ratio", CONFIG->mortality_ratio_},
                 {"transmissibility", CONFIG->transmissibility_},
-                {"update_trig_interval_in_hrs", CONFIG->update_trig_interval_in_hrs}
+                {"update_trig_interval_in_hrs", CONFIG->update_trig_interval_in_hrs_}
             });
 
         jsontowrite["disease_model"] = std::move(disease_model);
         jsontowrite["locations"] = jsoncons::json(jsoncons::json_array_arg, {});
 
-        for (auto it = lps.begin(); it != lps.end(); ++it) {
-            std::string fips_code = it->getLocationName();
+        for (auto lp : lps) {
+            auto fips_code      = lp.getLocationName();
 
-            std::tuple<std::string, std::string, std::string, float, float, long int>*
-                p_map_location_val = CONFIG->getLocation(fips_code);
+            auto details        = CONFIG->getLocation(fips_code);
+            auto county         = std::get<location_field_t::COUNTY_NAME>(details);
+            auto state          = std::get<location_field_t::STATE>(details);
+            auto country        = std::get<location_field_t::COUNTRY>(details);
+            auto latitude       = std::get<location_field_t::LATITUDE>(details);
+            auto longitude      = std::get<location_field_t::LONGITUDE>(details);
+            auto population     = std::get<location_field_t::POPULATION_SIZE>(details);
 
-            std::string county = std::get<0>(*p_map_location_val);
-            std::string state = std::get<1>(*p_map_location_val);
-            std::string country_region = std::get<2>(*p_map_location_val);
-            float loc_lat = std::get<3>(*p_map_location_val);
-            float loc_long = std::get<4>(*p_map_location_val);
-            long int total_population_cnt = std::get<5>(*p_map_location_val);
+            auto active         = lp.getLocationState()->population_[infection_state_t::INFECTIOUS];
+            auto recovered      = lp.getLocationState()->population_[infection_state_t::RECOVERED];
+            auto deaths         = lp.getLocationState()->population_[infection_state_t::DECEASED];
 
-            long int num_susceptible = it->getLocationState()->population_[infection_state_t::SUSCEPTIBLE];
-            long int num_exposed = it->getLocationState()->population_[infection_state_t::EXPOSED];
-            long int num_confirmed = it->getLocationState()->population_[infection_state_t::INFECTIOUS];
-            long int num_recovered = it->getLocationState()->population_[infection_state_t::RECOVERED];
-            long int num_deaths = it->getLocationState()->population_[infection_state_t::DECEASED];
-
+            /* NOTE : Active count for JHU data is confirmed count in this model */
+            auto confirmed = active + deaths + recovered;
             jsontowrite["locations"].push_back(jsoncons::json(jsoncons::json_array_arg, {
-                        fips_code, county, state, country_region, loc_lat, loc_long, num_confirmed, num_deaths,
-                        num_recovered, num_confirmed, total_population_cnt}));
+                        fips_code, county, state, country, latitude, longitude,
+                        confirmed, deaths, recovered, active, population}));
         }
 
         std::ofstream outfile;
@@ -447,9 +424,23 @@ public:
 
 private:
 
-    ConfigFileHandler() =     default;
+    ConfigFileHandler() = default;
     static ConfigFileHandler* instance_;
-};
 
+    enum loc_data_field_t {
+        FIPS_CODE = 0,
+        COUNTY_NAME,
+        STATE,
+        COUNTRY,
+        LATITUDE,
+        LONGITUDE,
+        NUM_CONFIRMED,
+        NUM_DEATHS,
+        NUM_RECOVERED,
+        NUM_ACTIVE,
+        POPULATION_SIZE,
+        NUM_FIELDS
+    };
+};
 
 #endif
