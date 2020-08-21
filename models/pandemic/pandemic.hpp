@@ -377,7 +377,7 @@ public:
         jsoncons::json jsontowrite;
 
         jsoncons::json disease_model(jsoncons::json_object_arg, {
-                {"date_date", jsoncons::json::null},
+                {"date_date", jsoncons::null_type()},
                 {"diffusion_trig_interval_in_hrs", CONFIG->diffusion_trig_interval_in_hrs_},
                 {"mean_incubation_duration_in_days", CONFIG->mean_incubation_duration_ / TIME_UNITS_IN_DAY},
                 {"mean_infection_duration_in_days", CONFIG->mean_infection_duration_ / TIME_UNITS_IN_DAY},
