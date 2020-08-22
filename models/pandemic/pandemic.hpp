@@ -376,8 +376,8 @@ public:
 
     void writeConfig(const std::string& out_fname, const std::vector<Location>& lps) {
 
-        jsoncons::json jsontowrite;
-        jsoncons::json disease_model(jsoncons::json_object_arg, {
+        jsoncons::ojson jsontowrite;
+        jsoncons::ojson disease_model(jsoncons::json_object_arg, {
                 {"transmissibility", CONFIG->transmissibility_},
                 {"mean_incubation_duration_in_days", CONFIG->mean_incubation_duration_ / TIME_UNITS_IN_DAY},
                 {"mean_infection_duration_in_days", CONFIG->mean_infection_duration_ / TIME_UNITS_IN_DAY},
@@ -386,14 +386,14 @@ public:
             });
         jsontowrite["disease_model"] = std::move(disease_model);
 
-        jsoncons::json diffusion_model(jsoncons::json_object_arg, {
+        jsoncons::ojson diffusion_model(jsoncons::json_object_arg, {
                 {"graph_type", graph_type_},
                 {"graph_params", graph_params_},
                 {"diffusion_trig_interval_in_hrs", CONFIG->diffusion_trig_interval_in_hrs_}
             });
         jsontowrite["diffusion_model"] = std::move(diffusion_model);
 
-        jsontowrite["locations"] = jsoncons::json(jsoncons::json_array_arg, {});
+        jsontowrite["locations"] = jsoncons::ojson(jsoncons::json_array_arg, {});
         for (auto lp : lps) {
             auto fips_code      = lp.getLocationName();
 
@@ -411,7 +411,7 @@ public:
 
             /* NOTE : Active count for JHU data is confirmed count in this model */
             auto confirmed = active + deaths + recovered;
-            jsontowrite["locations"].push_back(jsoncons::json(jsoncons::json_array_arg, {
+            jsontowrite["locations"].push_back(jsoncons::ojson(jsoncons::json_array_arg, {
                         fips_code, county, state, country, latitude, longitude,
                         confirmed, deaths, recovered, active, population}));
         }
