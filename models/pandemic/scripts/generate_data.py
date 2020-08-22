@@ -250,7 +250,7 @@ def prepare_data():
 
         diffusion_model = {
             "graph_type": ("Watts-Strogatz" if graph_type == "ws" else "Barabasi-Albert"),
-            "graph_param_str": graph_input_param_string,
+            "graph_params": graph_input_param_string,
             "diffusion_trig_interval_in_hrs": diffusion_trig_interval_in_hrs
         }
 
