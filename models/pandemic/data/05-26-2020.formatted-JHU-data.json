@@ -8,7 +8,7 @@
   }, 
   "diffusion_model": {
     "graph_type": "Watts-Strogatz", 
-    "graph_param_str": "8,0.1", 
+    "graph_params": "8,0.1",
     "diffusion_trig_interval_in_hrs": 48
   }, 
   "locations": [

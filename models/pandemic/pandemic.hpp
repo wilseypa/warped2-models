@@ -18,7 +18,7 @@
 #define TIME_UNITS_IN_HOUR  1
 #define TIME_UNITS_IN_DAY   (24 * TIME_UNITS_IN_HOUR)
 
-#define AVG_TRANSPORT_SPEED 10  //TODO: Move to config
+#define AVG_TRANSPORT_SPEED 100 //TODO: Move to config
 #define MAX_DIFFUSION_CNT   10  //TODO: Move to config
 
 /*
@@ -320,7 +320,7 @@ public:
             data["disease_model"]["update_trig_interval_in_hrs"].as<unsigned int>() * TIME_UNITS_IN_HOUR;
 
         CONFIG->diffusion_trig_interval_in_hrs_ =
-            data["disease_model"]["diffusion_trig_interval_in_hrs"].as<unsigned int>() * TIME_UNITS_IN_HOUR;
+            data["diffusion_model"]["diffusion_trig_interval_in_hrs"].as<unsigned int>() * TIME_UNITS_IN_HOUR;
 
         /* Read values from json array for each location.
            NOTE : Number of confirmed for this model is the same as number of active in JHU data
@@ -350,15 +350,17 @@ public:
         }
 
         Graph *graph = nullptr;
-        /* If the choice is Watts-Strogatz */
-        if (data["diffusion_model"]["graph_type"].as<std::string>() == "Watts-Strogatz") {
-            std::string params = data["diffusion_model"]["graph_param_str"].as<std::string>();
-            graph = new WattsStrogatz(nodes, params);
 
-        } else if (data["diffusion_model"]["graph_type"].as<std::string>() == "Barabasi-Albert") {
+        graph_type_     = data["diffusion_model"]["graph_type"].as<std::string>();
+        graph_params_   = data["diffusion_model"]["graph_params"].as<std::string>();
+
+        /* If the choice is Watts-Strogatz */
+        if (graph_type_ == "Watts-Strogatz") {
+            graph = new WattsStrogatz(nodes, graph_params_);
+
+        } else if (graph_type_ == "Barabasi-Albert") {
             /* If the choice is Barabasi-Albert */
-            std::string params = data["diffusion_model"]["graph_param_str"].as<std::string>();
-            graph = new BarabasiAlbert(nodes, params);
+            graph = new BarabasiAlbert(nodes, graph_params_);
 
         } else { // Invalid choice
             std::cerr << "Invalid choice of diffusion network." << std::endl;
@@ -373,22 +375,25 @@ public:
     }
 
     void writeConfig(const std::string& out_fname, const std::vector<Location>& lps) {
-        // TODO vivek: add diffusion_model
-        jsoncons::json jsontowrite;
 
+        jsoncons::json jsontowrite;
         jsoncons::json disease_model(jsoncons::json_object_arg, {
-                {"date_date", jsoncons::null_type()},
-                {"diffusion_trig_interval_in_hrs", CONFIG->diffusion_trig_interval_in_hrs_},
+                {"transmissibility", CONFIG->transmissibility_},
                 {"mean_incubation_duration_in_days", CONFIG->mean_incubation_duration_ / TIME_UNITS_IN_DAY},
                 {"mean_infection_duration_in_days", CONFIG->mean_infection_duration_ / TIME_UNITS_IN_DAY},
                 {"mortality_ratio", CONFIG->mortality_ratio_},
-                {"transmissibility", CONFIG->transmissibility_},
                 {"update_trig_interval_in_hrs", CONFIG->update_trig_interval_in_hrs_}
             });
-
         jsontowrite["disease_model"] = std::move(disease_model);
-        jsontowrite["locations"] = jsoncons::json(jsoncons::json_array_arg, {});
 
+        jsoncons::json diffusion_model(jsoncons::json_object_arg, {
+                {"graph_type", graph_type_},
+                {"graph_params", graph_params_},
+                {"diffusion_trig_interval_in_hrs", CONFIG->diffusion_trig_interval_in_hrs_}
+            });
+        jsontowrite["diffusion_model"] = std::move(diffusion_model);
+
+        jsontowrite["locations"] = jsoncons::json(jsoncons::json_array_arg, {});
         for (auto lp : lps) {
             auto fips_code      = lp.getLocationName();
 
@@ -426,6 +431,9 @@ private:
 
     ConfigFileHandler() = default;
     static ConfigFileHandler* instance_;
+
+    std::string graph_type_;
+    std::string graph_params_;
 
     enum loc_data_field_t {
         FIPS_CODE = 0,
