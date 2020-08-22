@@ -11,8 +11,8 @@
 #include "ppm/ppm.hpp"
 #include "tclap/ValueArg.h"
 
-#define DEFAULT_MODEL_CONFIG        "data/05-26-2020.formatted-JHU-data.json"
-#define DEFAULT_OUTPUT_FILE_NAME    "result.json"
+#define DEFAULT_CONFIG_FILE_NAME    "data/05-26-2020.formatted-JHU-data.json"
+#define DEFAULT_OUTPUT_FILE_NAME    "data/formatted-WARPED-data.json"
 
 PandemicConfig* PandemicConfig::instance_ = nullptr;
 ConfigFileHandler* ConfigFileHandler::instance_ = nullptr;
@@ -85,7 +85,7 @@ std::string toString(unsigned int num) {
 
 
 int main(int argc, const char** argv) {
-    std::string model_config_name   = DEFAULT_MODEL_CONFIG;
+    std::string model_config_name   = DEFAULT_CONFIG_FILE_NAME;
     std::string out_file_name       = DEFAULT_OUTPUT_FILE_NAME;
 
     TCLAP::ValueArg<std::string> model_config_name_arg( "m", "model-config",
