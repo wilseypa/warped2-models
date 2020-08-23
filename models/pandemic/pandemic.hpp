@@ -125,18 +125,18 @@ public:
     unsigned int diffusion_trig_interval_in_hrs_ = 6 * TIME_UNITS_IN_HOUR;
 
     void addMapEntry(const std::string& str,
-            std::tuple<std::string, std::string, std::string, float, float, unsigned long> val) {
+            std::tuple<std::string, std::string, std::string, double, double, unsigned long> val) {
         locations_[str] = val;
     }
 
     std::tuple<std::string, std::string, std::string,
-                        float, float, unsigned long> getLocation(const std::string& str) {
+               double, double, unsigned long> getLocation(const std::string& str) {
         auto it = locations_.find(str);
         assert(it != locations_.end());
         return it->second;
     }
 
-    unsigned int haversine_distance(std::string sender, std::string receiver) {
+    unsigned int haversine_distance(const std::string& sender, const std::string& receiver) {
 
         auto sender_it = locations_.find(sender);
         assert(sender_it != locations_.end());
@@ -172,7 +172,7 @@ private:
     PandemicConfig() = default;
 
     std::unordered_map<std::string,
-        std::tuple<std::string, std::string, std::string, float, float, unsigned long>> locations_;
+        std::tuple<std::string, std::string, std::string, double, double, unsigned long>> locations_;
 };
 
 class Location : public warped::LogicalProcess {
@@ -304,7 +304,7 @@ public:
     void readConfig(const std::string& fname, std::vector<Location>& lps) {
 
         std::ifstream is(fname);
-        jsoncons::json data = jsoncons::json::parse(is);
+        jsoncons::ojson data = jsoncons::ojson::parse(is);
 
         CONFIG->transmissibility_ = data["disease_model"]["transmissibility"].as<double>();
 
@@ -322,22 +322,21 @@ public:
         CONFIG->diffusion_trig_interval_in_hrs_ =
             data["diffusion_model"]["diffusion_trig_interval_in_hrs"].as<unsigned int>() * TIME_UNITS_IN_HOUR;
 
-        /* Read values from json array for each location.
-           NOTE : Number of confirmed for this model is the same as number of active in JHU data
-         */
+        // Read values from json array for each location.
+        // NOTE : Number of confirmed for this model is the same as number of active in JHU data
         unsigned int index = 0;
         for (const auto& location : data["locations"].array_range()) {
 
-            std::string fips_code   = location[loc_data_field_t::FIPS_CODE].as<std::string>();
-            std::string county      = location[loc_data_field_t::COUNTY_NAME].as<std::string>();
-            std::string state       = location[loc_data_field_t::STATE].as<std::string>();
-            std::string country     = location[loc_data_field_t::COUNTRY].as<std::string>();
-            float latitude          = location[loc_data_field_t::LATITUDE].as<float>();
-            float longitude         = location[loc_data_field_t::LONGITUDE].as<float>();
-            unsigned long deaths    = location[loc_data_field_t::NUM_DEATHS].as<unsigned long>();
-            unsigned long recovered = location[loc_data_field_t::NUM_RECOVERED].as<unsigned long>();
-            unsigned long confirmed = location[loc_data_field_t::NUM_ACTIVE].as<unsigned long>();
-            unsigned long population= location[loc_data_field_t::POPULATION_SIZE].as<unsigned long>();
+            std::string fips_code    = location[loc_data_field_t::FIPS_CODE].as<std::string>();
+            std::string county       = location[loc_data_field_t::COUNTY_NAME].as<std::string>();
+            std::string state        = location[loc_data_field_t::STATE].as<std::string>();
+            std::string country      = location[loc_data_field_t::COUNTRY].as<std::string>();
+            double latitude          = location[loc_data_field_t::LATITUDE].as<double>();
+            double longitude         = location[loc_data_field_t::LONGITUDE].as<double>();
+            unsigned long deaths     = location[loc_data_field_t::NUM_DEATHS].as<unsigned long>();
+            unsigned long recovered  = location[loc_data_field_t::NUM_RECOVERED].as<unsigned long>();
+            unsigned long confirmed  = location[loc_data_field_t::NUM_ACTIVE].as<unsigned long>();
+            unsigned long population = location[loc_data_field_t::POPULATION_SIZE].as<unsigned long>();
 
             lps.emplace_back(Location(fips_code, confirmed, deaths, recovered, population, index++));
             CONFIG->addMapEntry(fips_code, std::make_tuple(county, state, country, latitude, longitude, population));
@@ -370,7 +369,7 @@ public:
         for (auto& lp : lps) {
             lp.adjacent_nodes_ = graph->adjacencyList(lp.getLocationName());
         }
-        
+
         delete graph;
     }
 
@@ -395,19 +394,20 @@ public:
 
         jsontowrite["locations"] = jsoncons::ojson(jsoncons::json_array_arg, {});
         for (auto lp : lps) {
-            auto fips_code      = lp.getLocationName();
+            std::string fips_code    = lp.getLocationName();
 
-            auto details        = CONFIG->getLocation(fips_code);
-            auto county         = std::get<location_field_t::COUNTY_NAME>(details);
-            auto state          = std::get<location_field_t::STATE>(details);
-            auto country        = std::get<location_field_t::COUNTRY>(details);
-            auto latitude       = std::get<location_field_t::LATITUDE>(details);
-            auto longitude      = std::get<location_field_t::LONGITUDE>(details);
-            auto population     = std::get<location_field_t::POPULATION_SIZE>(details);
+            // get tuple
+            auto details             = CONFIG->getLocation(fips_code);
 
-            auto active         = lp.getLocationState()->population_[infection_state_t::INFECTIOUS];
-            auto recovered      = lp.getLocationState()->population_[infection_state_t::RECOVERED];
-            auto deaths         = lp.getLocationState()->population_[infection_state_t::DECEASED];
+            std::string county       = std::get<location_field_t::COUNTY_NAME>(details);
+            std::string state        = std::get<location_field_t::STATE>(details);
+            std::string country      = std::get<location_field_t::COUNTRY>(details);
+            double latitude          = std::get<location_field_t::LATITUDE>(details);
+            double longitude         = std::get<location_field_t::LONGITUDE>(details);
+            unsigned long population = std::get<location_field_t::POPULATION_SIZE>(details);
+            unsigned long active     = lp.getLocationState()->population_[infection_state_t::INFECTIOUS];
+            unsigned long recovered  = lp.getLocationState()->population_[infection_state_t::RECOVERED];
+            unsigned long deaths     = lp.getLocationState()->population_[infection_state_t::DECEASED];
 
             /* NOTE : Active count for JHU data is confirmed count in this model */
             auto confirmed = active + deaths + recovered;
