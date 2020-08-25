@@ -41,7 +41,7 @@ def setup_logging():
     try:
 
         logging.basicConfig(format="%(asctime)s [%(levelname)s] : %(message)s",
-                            filename='generate_data.log', level=logging.DEBUG)
+                            filename='prepare_dataset.log', level=logging.DEBUG)
 
     except Exception as e:
         print(str(type(e).__name__) + ": " + str(e), file=sys.stderr)
