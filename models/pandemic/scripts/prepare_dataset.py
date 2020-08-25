@@ -41,7 +41,7 @@ def setup_logging():
     try:
 
         logging.basicConfig(format="%(asctime)s [%(levelname)s] : %(message)s",
-                            filename='generate_data.log', level=logging.DEBUG)
+                            filename='prepare_dataset.log', level=logging.DEBUG)
 
     except Exception as e:
         print(str(type(e).__name__) + ": " + str(e), file=sys.stderr)
@@ -56,10 +56,11 @@ def parse_cmdargs():
     parser = argparse.ArgumentParser(description='Parse Covid19 dataset from JHU-CSSE, add '
                                      'population data and dump combined data to '
                                      'file in json format')
-    parser.add_argument('--covid_data', help='JHU_CSSE Covid19 data csv filepath',
+    parser.add_argument('--date', help='date for which corresponding Covid data should be '
+                        'pulled from JHU_CSSE repo, in MM-DD-YYYY format',
                         required=True)
 
-    parser.add_argument('--pop_data', help='Population data csv filepath',
+    parser.add_argument('--population_data', help='filepath for Population data csv',
                         default='../data/county_population_data.csv',
                         required=False)
 
@@ -67,14 +68,14 @@ def parse_cmdargs():
                         choices=['ws', 'ba'],
                         required=True)
 
-    parser.add_argument('--graph_input_param_string', help="comma-seperated input parameter list for selected "
-                        "graph type, in form of a string",
+    parser.add_argument('--graph_input_param_string', help='comma-seperated input parameter list for selected '
+                        'graph type, in form of a string',
                         default="8,0.1",
                         required=False)
 
     args = parser.parse_args()
 
-    return (args.covid_data, args.pop_data, args.graph_type, args.graph_input_param_string)
+    return (args.date, args.population_data, args.graph_type, args.graph_input_param_string)
 
 
 def get_dist_between_coordinates(latA, longA, latB, longB):
@@ -209,6 +210,21 @@ def create_merged_DF_jhu_population(covid_csse_data_filepath, pop_data_filepath)
     return csse_data_daily_report_merged_df
 
 
+def get_jhu_csse_data_filepath(dateStr):
+    """
+    """
+    # check for JHU github folder
+    if not os.path.isdir("../data/COVID-19.jhu/"):
+        raise Exception("JHU CSSE github repo does not exist in ../data directory")
+
+    filepath = "../data/COVID-19.jhu/csse_covid_19_data/csse_covid_19_daily_reports/" + dateStr + ".csv"
+
+    if not os.path.isfile(filepath):
+        raise Exception("File does not exist. Make sure date requested is valid, and run 'git pull'")
+
+    return filepath
+
+
 def prepare_data():
 
     """
@@ -219,7 +235,7 @@ def prepare_data():
 
     try:
         # parse command-line arguments
-        (covid_csse_data_filepath, pop_data_filepath, graph_type, graph_input_param_string) = \
+        (covid_csse_data_date, pop_data_filepath, graph_type, graph_input_param_string) = \
             parse_cmdargs()
 
         setup_logging()
@@ -233,6 +249,8 @@ def prepare_data():
             mortality_ratio, update_trig_interval_in_hrs, diffusion_trig_interval_in_hrs = 2.2, 2.2,\
                 2.3, 0.05, 24, 48
 
+
+        covid_csse_data_filepath = get_jhu_csse_data_filepath(covid_csse_data_date)
 
         out_fname = os.path.splitext(os.path.basename(covid_csse_data_filepath))[0] + ".formatted-JHU-data.json"
 
