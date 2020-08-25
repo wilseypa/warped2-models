@@ -12,12 +12,16 @@ import datetime
 import stat
 
 def openConfig():
-    # Removes the first line, which is a comment on the format for adding more models
     models = []
     with open("local-ross.config") as f:
         data = f.readlines()
-    data = data[1:]
-    models = [d.split(',') for d in data]
+
+    # Remove any lines that start with a '#'
+    actual = []
+    for d in data:
+        if d[0] != "#":
+            actual.append(d)
+    models = [a.split(',') for a in actual]
     for m in models:
         m[-1] = m[-1].replace("\n", "")
     return models
@@ -61,7 +65,7 @@ def defineModelSummaryJSON(model_name, capt_hist, file_name, format, events, LPs
     m["event_data"]["file_name"] = str(file_name)
     m["event_data"]["format"] = str(format)
     m["event_data"]["total_events"] = int(events)
-    m["event_data"]["format"] = ["sLP", "rLP", "sTS", "rTS", "et"]
+    m["event_data"]["format"] = ["sLP", "rLP", "sTS", "rTS", "rTS_RT", "et"]
     m["date_analyzed"] = str("")
     m["run_command"] = str(run_command)
     return m
@@ -138,12 +142,16 @@ trace_file = "trace.txt"
 
 for i in iterations:
     print(datetime.datetime.now())
-    name = i[0]
+    name = i[0].strip()
     flags = i[1]
-    size = i[2]
-    runtime = i[3]
+    size = i[2].strip()
+    runtime = i[3].strip()
+
+    newDir = name.upper() + size
+
+
     print(name)
-    testdir = os.path.join(os.getcwd(), "logs-ross/%s" % name.upper()) #(name.strip() + size.strip()))
+    testdir = os.path.join(os.getcwd(), "logs-ross/%s" % newDir)
     os.system("mkdir %s" % testdir)
 
     os.chdir(testdir)
@@ -156,7 +164,7 @@ for i in iterations:
     sim_string += " %s " % create_stats_file
     sim_string += " %s " % flags
     sim_string += " %s " % (end % runtime)
-    sim_string += " >> %s" % trace_file
+    sim_string += " > %s" % trace_file
     print(sim_string)
     os.system(sim_string)
     #try:
@@ -177,7 +185,7 @@ for i in iterations:
 
 #        newConfig(name, flags, size, newRuntime)
 
-    convert = "/testData/simulators/ross-master/ross-binary-reader/reader --filename=ross-stats-evtrace.bin --filetype=2"
+    convert = "/testData/simulators/ross-master/ross-binary-reader/ross-reader --filename=ross-stats-evtrace.bin --filetype=2"
 
     print("Converting binary to CSV...")
     os.system(convert)
