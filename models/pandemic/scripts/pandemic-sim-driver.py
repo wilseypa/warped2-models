@@ -138,12 +138,12 @@ def calc_wasserstein_distance(list1, list2):
     return wasserstein_distance(list1, list2)
 
 
-def run_simulation(formatted_json_filepath, sim_runtime_units, sim_output_filepath):
+def run_simulation(json_filepath, sim_runtime_units, sim_output_filepath):
     """
     """
 
-    sim_output_filename = sim_end_date + ".simulated-data.json"
-    sim_output_filepath = os.getcwd() + "/../data/" + sim_out_filename
+    # sim_output_filename = sim_end_date + ".simulated-data.json"
+    # sim_output_filepath = os.getcwd() + "/../data/" + sim_out_filename
 
     cmd = subprocess.run(['../pandemic_sim', '-m', formatted_json_filepath, '--max-sim-time', sim_runtime_units,
                            '-o', sim_output_filepath])

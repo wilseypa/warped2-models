@@ -304,7 +304,6 @@ def prepare_data(covid_csse_data_date=None, pop_data_filepath=DEFAULT_POPULATION
         else:
             raise Exception("Error in writing to file: [{}]".format(ret_stderr.strip()))
 
-        
         logging.info("Exiting ...\n\n")
 
         return (out_filepath)
@@ -318,7 +317,6 @@ def prepare_data(covid_csse_data_date=None, pop_data_filepath=DEFAULT_POPULATION
 
 
 # MAIN
-
 if __name__ == '__main__':
     prepare_data()
 
