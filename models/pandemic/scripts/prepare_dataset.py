@@ -35,6 +35,9 @@ cluster_centers = [("Las Vegas", 36.1699, -115.1398),
                    ("Portland", 45.5051, -122.6750),
                    ("Sacramento", 38.5816, -121.4944)]
 
+DEFAULT_POPULATION_FILEPATH='../data/county_population_data.csv'
+GRAPH_INPUT_PARAM_STRING='8,0.1'
+
 def setup_logging():
     """
     """
@@ -48,7 +51,7 @@ def setup_logging():
         sys.exit(1)
 
 
-def parse_cmdargs():
+def parse_cmdargs(population_data, graph_input_param_string):
     """
     Using argparse module, get commandline arguments
     :return:
@@ -61,7 +64,7 @@ def parse_cmdargs():
                         required=True)
 
     parser.add_argument('--population_data', help='filepath for Population data csv',
-                        default='../data/county_population_data.csv',
+                        default=DEFAULT_POPULATION_FILEPATH,
                         required=False)
 
     parser.add_argument('--graph_type', help="'ws' for Watts-Strogatz, and 'ba' for Barabasi-Albert",
@@ -70,7 +73,7 @@ def parse_cmdargs():
 
     parser.add_argument('--graph_input_param_string', help='comma-seperated input parameter list for selected '
                         'graph type, in form of a string',
-                        default="8,0.1",
+                        default=graph_input_param_string,
                         required=False)
 
     args = parser.parse_args()
@@ -182,8 +185,10 @@ def create_merged_DF_jhu_population(covid_csse_data_filepath, pop_data_filepath)
     population_data_df['Combined_Key_US'] = population_data_df.County + "," + population_data_df.State
 
     logging.info("Merging main DataFrame [{} rows, {} columns] with population DataFrame [{} rows, {} columns] ..."
-                 .format(csse_data_daily_report_df.shape[0], csse_data_daily_report_df.shape[1],
-                         population_data_df.shape[0], population_data_df.shape[1]))
+                 .format(csse_data_daily_report_df.shape[0],
+                         csse_data_daily_report_df.shape[1],
+                         population_data_df.shape[0],
+                         population_data_df.shape[1]))
     # now, join
     csse_data_daily_report_merged_df = pd.merge(csse_data_daily_report_df,
                                                 population_data_df[['Combined_Key_US', 'Population']],
@@ -225,7 +230,9 @@ def get_jhu_csse_data_filepath(dateStr):
     return filepath
 
 
-def prepare_data():
+def prepare_data(covid_csse_data_date=None, pop_data_filepath=DEFAULT_POPULATION_FILEPATH, graph_type=None,
+                 graph_input_param_string=GRAPH_INPUT_PARAM_STRING,
+                 logger=None):
 
     """
     read data from JHU CSSE github repo (from '/csse_covid_19_data/csse_covid_19_daily_reports' directory),
@@ -235,8 +242,9 @@ def prepare_data():
 
     try:
         # parse command-line arguments
-        (covid_csse_data_date, pop_data_filepath, graph_type, graph_input_param_string) = \
-            parse_cmdargs()
+        if not (covid_csse_data_date and pop_data_filepath and graph_type and graph_input_param_string):
+            (covid_csse_data_date, pop_data_filepath, graph_type, graph_input_param_string) = \
+                parse_cmdargs(pop_data_filepath, graph_input_param_string)
 
         setup_logging()
 
@@ -255,7 +263,7 @@ def prepare_data():
         out_fname = os.path.splitext(os.path.basename(covid_csse_data_filepath))[0] + ".formatted-JHU-data.json"
 
         # set filepath
-        out_filepath = "../data/" + out_fname
+        out_filepath = os.getcwd() + "/../data/" + out_fname
 
 
         disease_model = {
@@ -296,9 +304,11 @@ def prepare_data():
         else:
             raise Exception("Error in writing to file: [{}]".format(ret_stderr.strip()))
 
-
+        
         logging.info("Exiting ...\n\n")
 
+        return (out_filepath)
+    
     except Exception as e:
         logging.exception(str(type(e).__name__) + ": " + str(e), exc_info=True)
         logging.info("Exiting ...\n\n")
@@ -308,6 +318,7 @@ def prepare_data():
 
 
 # MAIN
+
 if __name__ == '__main__':
     prepare_data()
 
