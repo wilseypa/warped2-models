@@ -238,6 +238,8 @@ def prepare_data(covid_csse_data_date=None, pop_data_filepath=DEFAULT_POPULATION
     read data from JHU CSSE github repo (from '/csse_covid_19_data/csse_covid_19_daily_reports' directory),
     combine it with population data, and write output data to file (to serve as input to covid simulation program)
     in json / plain-text format, depending on user choice
+
+    returns output json filepath
     """
 
     try:
