@@ -267,7 +267,6 @@ def prepare_data(covid_csse_data_date=None, pop_data_filepath=DEFAULT_POPULATION
         # set filepath
         out_filepath = os.getcwd() + "/../data/" + out_fname
 
-
         disease_model = {
             "transmissibility": transmissibility,
             "mean_incubation_duration_in_days": mean_incubation_duration_in_days,
@@ -285,8 +284,10 @@ def prepare_data(covid_csse_data_date=None, pop_data_filepath=DEFAULT_POPULATION
         # create dataframe
         csse_data_daily_report_merged_sorted_df = create_merged_DF_jhu_population(covid_csse_data_filepath,
                                                                                   pop_data_filepath)
+        tweakable_params = ["disease_model", "diffusion_model"]
 
         final_dict = {
+            "tweakable_params": tweakable_params,
             "disease_model": disease_model,
             "diffusion_model": diffusion_model,
             "locations": None
@@ -309,7 +310,7 @@ def prepare_data(covid_csse_data_date=None, pop_data_filepath=DEFAULT_POPULATION
         logging.info("Exiting ...\n\n")
 
         return (out_filepath)
-    
+
     except Exception as e:
         logging.exception(str(type(e).__name__) + ": " + str(e), exc_info=True)
         logging.info("Exiting ...\n\n")

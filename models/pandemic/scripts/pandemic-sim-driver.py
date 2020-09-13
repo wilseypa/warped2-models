@@ -27,7 +27,7 @@ except Exception as e:
 class DistanceMetric(Enum):
     WASSERSTEIN = auto()
 
-    
+
 def setup_logging():
     """
     """
@@ -51,7 +51,7 @@ def parse_cmdargs():
 
     parser.add_argument('--sim_start_date', help='Simulation start date',
                         required=True)
-    
+
     parser.add_argument('--sim_runtime_days', help='Simulation runtime in days',
                         required=True)
 
@@ -59,9 +59,9 @@ def parse_cmdargs():
                         default='ws',
                         choices=['ws', 'ba'],
                         required=False)
-    
+
     parser.add_argument('--use_metric', nargs='*', help='Distance metric to use',
-                        default='wasserstein',
+                        default=['WASSERSTEIN'],
                         required=False)
 
     parser.add_argument('--paramtweaks_filepath', help='filepath containing tweaked diseaseparams',
@@ -69,8 +69,8 @@ def parse_cmdargs():
 
     parser.add_argument('--sim_overview_filepath', help='filepath to save overview for all simulations',
                         required=True)
-    
-    
+
+
     args = parser.parse_args()
 
     return (args.sim_start_date, args.sim_runtime_days, args.graph_type, args.use_metric, args.paramtweaks_filepath,
@@ -149,7 +149,7 @@ def get_sim_end_date(sim_start_date, sim_runtime_days):
 
 def calc_distance_ratio(enum_distanceMetric, simulated_json_file, sim_end_date, sim_start_date):
     """
-    TODO 
+    TODO
 
     ratio = distance between simulated_json_file & formatted_file(sim_start_date) / distance between formatted_file(sim_end_date) & formatted_file(sim_start_date)
 
@@ -183,7 +183,7 @@ def get_json_from_stream(fileobj, start_pos):
     try:
         obj = json.load(fileobj)
         return (obj, -1) # -1 signals end of file
-    
+
     except json.JSONDecodeError as e:
         fileobj.seek(start_pos)
         json_str = fileobj.read(e.pos)
@@ -201,8 +201,6 @@ def tweakDiseaseParams(json_obj, basejson_filepath, tweakedjson_filepath):
     jsondata = json.load(basejson_fileobj)
     basejson_fileobj.close()
 
-    finalParams = {}
-
     for element in flattened_json:
         list_keys = element[0]
         new_val = element[1]
@@ -214,16 +212,12 @@ def tweakDiseaseParams(json_obj, basejson_filepath, tweakedjson_filepath):
         last_key = list_keys[-1]
         jsondata2[last_key] = new_val
 
+    updatedParams = {k: jsondata[k] for k in jsondata["tweakable_params"]}
 
-    # TODO remove this hardcoding of key string; this couples this driver script with prepare_data.py
-
-    finalParams["disease_model"] = jsondata["disease_model"]
-    finalParams["diffusion_model"] = jsondata["diffusion_model"]
-    
     with open(tweakedjson_filepath, "w") as jsonFile:
         json.dump(jsondata, jsonFile)
 
-    return finalParams
+    return updatedParams
 
 
 def saveSimulationOverview(sim_overview_fileobj, start_date, end_date, tweakedparam_json, list_distmetrics):
@@ -234,12 +228,12 @@ def saveSimulationOverview(sim_overview_fileobj, start_date, end_date, tweakedpa
 
     json.dump(json_dict, sim_overview_fileobj)
     sim_overview_fileobj.write('\n')
-    
+
 
 def trigger():
 
     try:
-        
+
         (sim_start_date, sim_runtime_days, graph_type, distMetrics_list, diseaseparam_tweak_filepath,
          sim_overview_filepath) = parse_cmdargs()
 
@@ -254,7 +248,7 @@ def trigger():
                                                                         graph_type=graph_type)
 
 
-        
+
         formattedjson_enddate_filepath = prepare_dataset.prepare_data(covid_csse_data_date=sim_end_date,
                                                                       graph_type=graph_type)
 
@@ -263,17 +257,17 @@ def trigger():
         sim_overview_fileobj = open(sim_overview_filepath, "a+")
 
 
-        
+
         param_tweak_start_pos = 0
         while param_tweak_start_pos != -1:
-            
+
             (tweakedparam_json, param_tweak_start_pos) = get_json_from_stream(param_tweak_fileobj,
                                                                               param_tweak_start_pos)
 
 
 
             tweakedjson_startdate_filepath = os.getcwd() + "/../data/temp_jsontweakedfile1"
-            tweakedjson_enddate_filepath = os.getcwd() + "/../data/temp_jsontweakedfile2"            
+            tweakedjson_enddate_filepath = os.getcwd() + "/../data/temp_jsontweakedfile2"
 
             finalParams = tweakDiseaseParams(tweakedparam_json, formattedjson_startdate_filepath,
                                              tweakedjson_startdate_filepath)
@@ -282,11 +276,9 @@ def trigger():
 
 
             sim_outjson_filepath = os.getcwd() + "/../data/" + "sim_outjson_temp.json"
-            
+
             run_simulation(tweakedjson_startdate_filepath, sim_runtime_units, sim_outjson_filepath)
 
-
-            
             distMetricValList = calcDistanceMetric(distMetrics_list, tweakedjson_enddate_filepath,
                                                    sim_outjson_filepath)
 
@@ -297,8 +289,8 @@ def trigger():
             os.remove(tweakedjson_startdate_filepath)
             os.remove(tweakedjson_enddate_filepath)
             os.remove(sim_outjson_filepath)
-            
-        
+
+
         add_end_log()
 
     except Exception as e:
