@@ -256,8 +256,8 @@ def prepare_data(covid_csse_data_date=None, pop_data_filepath=DEFAULT_POPULATION
 
         # hard-coded values
         transmissibility, mean_incubation_duration_in_days, mean_infection_duration_in_days,\
-            mortality_ratio, update_trig_interval_in_hrs, diffusion_trig_interval_in_hrs = 2.2, 2.2,\
-                2.3, 0.05, 24, 48
+            mortality_ratio, update_trig_interval_in_hrs, diffusion_trig_interval_in_hrs,\
+            avg_transport_speed, max_diffusion_cnt = 2.2, 2.2, 2.3, 0.05, 24, 48, 100, 10
 
 
         covid_csse_data_filepath = get_jhu_csse_data_filepath(covid_csse_data_date)
@@ -278,7 +278,9 @@ def prepare_data(covid_csse_data_date=None, pop_data_filepath=DEFAULT_POPULATION
         diffusion_model = {
             "graph_type": ("Watts-Strogatz" if graph_type == "ws" else "Barabasi-Albert"),
             "graph_params": graph_input_param_string,
-            "diffusion_trig_interval_in_hrs": diffusion_trig_interval_in_hrs
+            "diffusion_trig_interval_in_hrs": diffusion_trig_interval_in_hrs,
+            "avg_transport_speed": avg_transport_speed,
+            "max_diffusion_cnt": max_diffusion_cnt
         }
 
         # create dataframe

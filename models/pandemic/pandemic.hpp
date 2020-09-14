@@ -18,9 +18,6 @@
 #define TIME_UNITS_IN_HOUR  1
 #define TIME_UNITS_IN_DAY   (24 * TIME_UNITS_IN_HOUR)
 
-#define AVG_TRANSPORT_SPEED 100 //TODO: Move to config
-#define MAX_DIFFUSION_CNT   10  //TODO: Move to config
-
 /*
  *  beta  <= transmissibility
  *  sigma <= 1 / mean_incubation_period
@@ -121,8 +118,10 @@ public:
      */
     double exposed_confirmed_ratio_         = 10.0;
 
-    unsigned int update_trig_interval_in_hrs_ = 1 * TIME_UNITS_IN_DAY;
-    unsigned int diffusion_trig_interval_in_hrs_ = 6 * TIME_UNITS_IN_HOUR;
+    unsigned int update_trig_interval_in_hrs_;
+    unsigned int diffusion_trig_interval_in_hrs_;
+    unsigned int avg_transport_speed_;
+    unsigned int max_diffusion_cnt_;
 
     void addMapEntry(const std::string& str,
             std::tuple<std::string, std::string, std::string, double, double, unsigned long> val) {
@@ -223,11 +222,11 @@ public:
     }
 
     unsigned int travelTimeToTarget(std::string target_loc) {
-        return CONFIG->haversine_distance(location_name_, target_loc) / AVG_TRANSPORT_SPEED;
+        return CONFIG->haversine_distance(location_name_, target_loc) / CONFIG->avg_transport_speed_;
     }
 
     unsigned int diffusionCount() {
-        std::uniform_int_distribution<int> distribution(0, MAX_DIFFUSION_CNT);
+        std::uniform_int_distribution<int> distribution(0, CONFIG->max_diffusion_cnt_);
         return distribution(*rng_);
     }
 
@@ -321,6 +320,12 @@ public:
 
         CONFIG->diffusion_trig_interval_in_hrs_ =
             data["diffusion_model"]["diffusion_trig_interval_in_hrs"].as<unsigned int>() * TIME_UNITS_IN_HOUR;
+
+        CONFIG->avg_transport_speed_ =
+            data["diffusion_model"]["avg_transport_speed"].as<unsigned int>();
+
+        CONFIG->max_diffusion_cnt_ =
+            data["diffusion_model"]["max_diffusion_cnt"].as<unsigned int>();
 
         // Read values from json array for each location.
         // NOTE : Number of confirmed for this model is the same as number of active in JHU data
