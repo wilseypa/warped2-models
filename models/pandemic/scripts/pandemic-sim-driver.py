@@ -220,11 +220,53 @@ def tweakDiseaseParams(json_obj, basejson_filepath, tweakedjson_filepath):
     return updatedParams
 
 
+def abbreviateTermsInDict(dict_var):
+    """
+    """
+    abbr_dict = {
+        "diseaseParam":"dp",
+        "disease_model":"dm",
+        "transmissibility":"tm",
+        "mean_incubation_duration_in_days":"mi",
+        "mean_infection_duration_in_days":"mn",
+        "mortality_ratio":"mr",
+        "update_trig_interval_in_hrs":"ut",
+        "diffusion_model":"df",
+        "graph_type":"gt",
+        "graph_params":"gp",
+        "diffusion_trig_interval_in_hrs":"di",
+        "distanceMetricValues":"dv",
+    }
+
+
+    def recursiveAbbrDict(abbrThisDict):
+        delete_keys_list = []
+
+        for k in list(abbrThisDict.keys()):
+
+            if type(abbrThisDict[k]) is dict:
+                recursiveAbbrDict(abbrThisDict[k])
+
+            if k in abbr_dict:
+                abbrThisDict[abbr_dict[k]] = abbrThisDict[k]
+                del abbrThisDict[k]
+
+
+    recursiveAbbrDict(dict_var)
+
+
+
 def saveSimulationOverview(sim_overview_fileobj, start_date, end_date, tweakedparam_json, list_distmetrics):
     """
     """
-    json_dict = {'start_date':start_date, 'end_date':end_date, 'diseaseParams':tweakedparam_json,
-                 'distanceMetricValues':list_distmetrics}
+    abbreviateTermsInDict(tweakedparam_json)
+
+    json_dict = {
+        'start_date':start_date,
+        'end_date':end_date,
+        'diseaseParams':tweakedparam_json,
+        'distanceMetricValues':list_distmetrics
+    }
 
     json.dump(json_dict, sim_overview_fileobj)
     sim_overview_fileobj.write('\n')
