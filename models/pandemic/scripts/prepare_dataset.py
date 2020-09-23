@@ -156,11 +156,7 @@ def create_merged_DF_jhu_population(covid_csse_data_filepath, pop_data_filepath)
                                                    'Country_Region':'object',
                                                    'Last_Update':'object',
                                                    'Lat':'float64',
-                                                   'Long_':'float64',
-                                                   'Confirmed':'int64',
-                                                   'Deaths':'int64',
-                                                   'Recovered':'int64',
-                                                   'Active':'int64'})
+                                                   'Long_':'float64'})
 
     # drop all non-US data rows
     csse_data_daily_report_df.dropna(subset=['FIPS'], inplace=True)
@@ -171,18 +167,21 @@ def create_merged_DF_jhu_population(covid_csse_data_filepath, pop_data_filepath)
     csse_data_daily_report_df['Country_Region'].fillna(value='', inplace=True)
     csse_data_daily_report_df['Lat'].fillna(value=-999.9, inplace=True)
     csse_data_daily_report_df['Long_'].fillna(value=-999.9, inplace=True)
-    csse_data_daily_report_df['Confirmed'].fillna(value=-1, inplace=True)
-    csse_data_daily_report_df['Deaths'].fillna(value=-1, inplace=True)
-    csse_data_daily_report_df['Recovered'].fillna(value=-1, inplace=True)
-    csse_data_daily_report_df['Active'].fillna(value=-1, inplace=True)
+
+    # replace NA disease metric values with 0
+    csse_data_daily_report_df['Confirmed'].fillna(value=0, inplace=True, downcast='infer')
+    csse_data_daily_report_df['Deaths'].fillna(value=0, inplace=True, downcast='infer')
+    csse_data_daily_report_df['Recovered'].fillna(value=0, inplace=True, downcast='infer')
+    csse_data_daily_report_df['Active'].fillna(value=0, inplace=True, downcast='infer')
 
     # create an extra column for merging
-    csse_data_daily_report_df['Combined_Key_US'] = csse_data_daily_report_df.Admin2 + "," \
-        + csse_data_daily_report_df.Province_State
+    csse_data_daily_report_df['Combined_Key_US'] = csse_data_daily_report_df.Admin2.str.lower() + "," \
+        + csse_data_daily_report_df.Province_State.str.lower()
 
     # now, create DF from population data, add 'Combined_Key_US' column
     population_data_df = pd.read_csv(pop_data_filepath, skipinitialspace=True)
-    population_data_df['Combined_Key_US'] = population_data_df.County + "," + population_data_df.State
+    population_data_df['Combined_Key_US'] = population_data_df.County.str.lower() + "," + \
+        population_data_df.State.str.lower()
 
     logging.info("Merging main DataFrame [{} rows, {} columns] with population DataFrame [{} rows, {} columns] ..."
                  .format(csse_data_daily_report_df.shape[0],
