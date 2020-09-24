@@ -35,8 +35,10 @@ cluster_centers = [("Las Vegas", 36.1699, -115.1398),
                    ("Portland", 45.5051, -122.6750),
                    ("Sacramento", 38.5816, -121.4944)]
 
-DEFAULT_POPULATION_FILEPATH='../data/county_population_data.csv'
+DEFAULT_JHU_CSSE_PATH='../data/COVID-19.jhu/'
+DEFAULT_POPULATION_FILEPATH='../data/US_counties_population_latLong.csv'
 GRAPH_INPUT_PARAM_STRING='8,0.1'
+
 
 def setup_logging():
     """
@@ -59,6 +61,9 @@ def parse_cmdargs(population_data, graph_input_param_string):
     parser = argparse.ArgumentParser(description='Parse Covid19 dataset from JHU-CSSE, add '
                                      'population data and dump combined data to '
                                      'file in json format')
+    parser.add_argument('--jhu_repo_path', help='path of JHU CSSE repo',
+                        default=DEFAULT_JHU_CSSE_PATH,
+                        required=False)
     parser.add_argument('--date', help='date for which corresponding Covid data should be '
                         'pulled from JHU_CSSE repo, in MM-DD-YYYY format',
                         required=True)
@@ -78,7 +83,7 @@ def parse_cmdargs(population_data, graph_input_param_string):
 
     args = parser.parse_args()
 
-    return (args.date, args.population_data, args.graph_type, args.graph_input_param_string)
+    return (args.jhu_repo_path, args.date, args.population_data, args.graph_type, args.graph_input_param_string)
 
 
 def get_dist_between_coordinates(latA, longA, latB, longB):
@@ -147,32 +152,18 @@ def create_merged_DF_jhu_population(covid_csse_data_filepath, pop_data_filepath)
     """
     # create DF from CSSE data, add new column in order to 'join' with population data
     csse_data_daily_report_df = pd.read_csv(covid_csse_data_filepath, skipinitialspace=True,
-                                            usecols=['FIPS','Admin2','Province_State','Country_Region',
-                                                     'Lat','Long_','Confirmed','Deaths',
-                                                     'Recovered','Active'],
-                                            dtype={'FIPS':'object',
-                                                   'Admin2':'object',
-                                                   'Province_State':'object',
-                                                   'Country_Region':'object',
-                                                   'Last_Update':'object',
-                                                   'Lat':'float64',
-                                                   'Long_':'float64'})
-
-    # drop all non-US data rows
-    csse_data_daily_report_df.dropna(subset=['FIPS'], inplace=True)
+                                            usecols=['Admin2','Province_State','Country_Region',
+                                                     'Confirmed',
+                                                     'Deaths',
+                                                     'Recovered',
+                                                     'Active'],
+                                            dtype={'Admin2':'object',
+                                                   'Province_State':'object'})
 
     # replace na values
     csse_data_daily_report_df['Admin2'].fillna(value='', inplace=True)
     csse_data_daily_report_df['Province_State'].fillna(value='', inplace=True)
     csse_data_daily_report_df['Country_Region'].fillna(value='', inplace=True)
-    csse_data_daily_report_df['Lat'].fillna(value=-999.9, inplace=True)
-    csse_data_daily_report_df['Long_'].fillna(value=-999.9, inplace=True)
-
-    # replace NA disease metric values with 0
-    csse_data_daily_report_df['Confirmed'].fillna(value=0, inplace=True, downcast='infer')
-    csse_data_daily_report_df['Deaths'].fillna(value=0, inplace=True, downcast='infer')
-    csse_data_daily_report_df['Recovered'].fillna(value=0, inplace=True, downcast='infer')
-    csse_data_daily_report_df['Active'].fillna(value=0, inplace=True, downcast='infer')
 
     # create an extra column for merging
     csse_data_daily_report_df['Combined_Key_US'] = csse_data_daily_report_df.Admin2.str.lower() + "," \
@@ -189,21 +180,35 @@ def create_merged_DF_jhu_population(covid_csse_data_filepath, pop_data_filepath)
                          population_data_df.shape[0],
                          population_data_df.shape[1]))
     # now, join
-    csse_data_daily_report_merged_df = pd.merge(csse_data_daily_report_df,
-                                                population_data_df[['Combined_Key_US', 'Population']],
-                                                on='Combined_Key_US', how='left')
+    csse_data_daily_report_merged_df = pd.merge(population_data_df,
+                                                csse_data_daily_report_df[['Country_Region',
+                                                                           'Confirmed',
+                                                                           'Deaths',
+                                                                           'Recovered',
+                                                                           'Active',
+                                                                           'Combined_Key_US']],
+
+                                                on='Combined_Key_US',
+                                                how='left')
+
+    # due to left join, there'd be unmatched rows with NA values, fill them
+    csse_data_daily_report_merged_df['Country_Region'].fillna(value='US', inplace=True)
+
+    # replace NA disease metric values with 0
+    csse_data_daily_report_merged_df['Confirmed'].fillna(value=0, inplace=True, downcast='infer')
+    csse_data_daily_report_merged_df['Deaths'].fillna(value=0, inplace=True, downcast='infer')
+    csse_data_daily_report_merged_df['Recovered'].fillna(value=0, inplace=True, downcast='infer')
+    csse_data_daily_report_merged_df['Active'].fillna(value=0, inplace=True, downcast='infer')
+
+    # reorder columns
+    csse_data_daily_report_merged_df = csse_data_daily_report_merged_df[['FIPS','County','State','Country_Region',
+                                                                         'Lat','Long_','Confirmed','Deaths',
+                                                                         'Recovered','Active','Population']]
 
     logging.info("Merged DataFrame has: [{} rows, {} columns]".format(csse_data_daily_report_merged_df.shape[0],
                                                                       csse_data_daily_report_merged_df.shape[1]))
 
-    # merging converts population data to float type, convert it back to int
-    csse_data_daily_report_merged_df['Population'] = \
-        csse_data_daily_report_merged_df['Population'].fillna(-1.0).astype(int)
-
     # TODO output merge errors to log file
-
-    # drop unnecessary columns
-    csse_data_daily_report_merged_df.drop(columns=['Combined_Key_US'], inplace=True)
 
     logging.info("Sorting DataFrame to group rows in clusters ...")
     csse_data_daily_report_merged_df = sort_df_rows_into_clusters(csse_data_daily_report_merged_df)
@@ -214,14 +219,14 @@ def create_merged_DF_jhu_population(covid_csse_data_filepath, pop_data_filepath)
     return csse_data_daily_report_merged_df
 
 
-def get_jhu_csse_data_filepath(dateStr):
+def get_jhu_csse_data_filepath(jhu_csse_path, dateStr):
     """
     """
     # check for JHU github folder
-    if not os.path.isdir("../data/COVID-19.jhu/"):
-        raise Exception("JHU CSSE github repo does not exist in ../data directory")
+    if not os.path.isdir(jhu_csse_path):
+        raise Exception("JHU CSSE github repo does not exist in {} directory".format(jhu_csse_path))
 
-    filepath = "../data/COVID-19.jhu/csse_covid_19_data/csse_covid_19_daily_reports/" + dateStr + ".csv"
+    filepath = jhu_csse_path + "/csse_covid_19_data/csse_covid_19_daily_reports/" + dateStr + ".csv"
 
     if not os.path.isfile(filepath):
         raise Exception("File does not exist. Make sure date requested is valid, and run 'git pull'")
@@ -244,7 +249,7 @@ def prepare_data(covid_csse_data_date=None, pop_data_filepath=DEFAULT_POPULATION
     try:
         # parse command-line arguments
         if not (covid_csse_data_date and pop_data_filepath and graph_type and graph_input_param_string):
-            (covid_csse_data_date, pop_data_filepath, graph_type, graph_input_param_string) = \
+            (jhu_csse_path, covid_csse_data_date, pop_data_filepath, graph_type, graph_input_param_string) = \
                 parse_cmdargs(pop_data_filepath, graph_input_param_string)
 
         setup_logging()
@@ -259,7 +264,7 @@ def prepare_data(covid_csse_data_date=None, pop_data_filepath=DEFAULT_POPULATION
             avg_transport_speed, max_diffusion_cnt = 2.2, 2.2, 2.3, 0.05, 24, 48, 100, 10
 
 
-        covid_csse_data_filepath = get_jhu_csse_data_filepath(covid_csse_data_date)
+        covid_csse_data_filepath = get_jhu_csse_data_filepath(jhu_csse_path, covid_csse_data_date)
 
         out_fname = os.path.splitext(os.path.basename(covid_csse_data_filepath))[0] + ".formatted-JHU-data.json"
 
