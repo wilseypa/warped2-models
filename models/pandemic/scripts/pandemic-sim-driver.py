@@ -84,7 +84,7 @@ def parse_cmdargs():
 def getDiseaseMetricLists(jsonFile):
     """
     """
-    cmd = subprocess.run(['./extractjson', '-f', jsonFile, '-i', '6,7,8,9'],
+    cmd = subprocess.run(['./extractDiseaseMetricCols', '-f', jsonFile, '-i', '6,7,8,9'],
                          stdout=subprocess.PIPE, text=True)
 
     valStr = cmd.stdout;
