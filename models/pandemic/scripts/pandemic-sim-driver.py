@@ -16,16 +16,15 @@ try:
     import prepare_dataset
 
     from scipy.stats import wasserstein_distance
-
-    from enum import Enum, auto
+    from scipy.spatial import distance
 
 except Exception as e:
     print(str(type(e).__name__) + ": " + str(e), file=sys.stderr)
     sys.exit(1)
 
 
-class DistanceMetric(Enum):
-    WASSERSTEIN = auto()
+dictDistMetricNames = {'wass':'WASSERSTEIN','jshan':'JENSENSHANNON'}
+
 
 
 def setup_logging():
@@ -42,6 +41,7 @@ def setup_logging():
         sys.exit(1)
 
 
+
 def parse_cmdargs():
     """
     Using argparse module, get commandline arguments
@@ -55,62 +55,81 @@ def parse_cmdargs():
     parser.add_argument('--sim_runtime_days', help='Simulation runtime in days',
                         required=True)
 
-    parser.add_argument('--graph_type', help="'ws' for Watts-Strogatz, and 'ba' for Barabasi-Albert",
-                        default='ws',
-                        choices=['ws', 'ba'],
+    parser.add_argument('--use_metric', nargs='*', help="List of distance metrics to use. 'wass' for "
+                        "Wasserstein distance",
+                        default=['wass'],
                         required=False)
 
-    parser.add_argument('--use_metric', nargs='*', help='Distance metric to use',
-                        default=['WASSERSTEIN'],
+    parser.add_argument('--tweaked_params_file', help='filepath containing tweaked diseaseparams',
+                        required=True)
+
+    parser.add_argument('--sim_result_file', help='filepath to save consolidated result for all simulations',
+                        required=True)
+
+    parser.add_argument('--jhu_repo_path', help='path of JHU CSSE repo',
+                        default='../data/COVID-19.jhu/',
                         required=False)
 
-    parser.add_argument('--paramtweaks_filepath', help='filepath containing tweaked diseaseparams',
-                        required=True)
-
-    parser.add_argument('--sim_overview_filepath', help='filepath to save overview for all simulations',
-                        required=True)
-
+    parser.add_argument('--population_data_file', help='filepath for Population data csv',
+                        default='../data/US_counties_population_latLong.csv',
+                        required=False)
 
     args = parser.parse_args()
 
-    return (args.sim_start_date, args.sim_runtime_days, args.graph_type, args.use_metric, args.paramtweaks_filepath,
-            args.sim_overview_filepath)
+    return (args.sim_start_date, args.sim_runtime_days, args.use_metric, args.tweaked_params_file,
+            args.sim_result_file, args.jhu_repo_path, args.population_data_file)
 
 
-def convertFiletoNumericList(filepath):
+
+def getDiseaseMetricLists(jsonFile):
     """
     """
-    fileobj = open(filepath, 'r')
-    filestr = fileobj.read()
-    fileobj.close()
+    cmd = subprocess.run(['./extractjson', '-f', jsonFile, '-i', '6,7,8,9'],
+                         stdout=subprocess.PIPE, text=True)
 
-    filestr_ascii_list = [ord(c) for c in filestr]
+    valStr = cmd.stdout;
 
-    return filestr_ascii_list
+    metricValList = []
+
+    for metricCol in valStr.split('\n'):
+        metricValList.append(list(map(int, metricCol.split(','))));
+
+    return metricValList
 
 
-def calcDistanceMetric(listDistanceMetric, file1, file2):
+
+def calcDistanceMetric(listDistanceMetrics, file1, file2):
     """
-    - return list of (tuple of distancemetric enum and distance value)
     """
+    metricValList1 = getDiseaseMetricLists(file1)
+    metricValList2 = getDiseaseMetricLists(file2)
 
-    numericList1 = convertFiletoNumericList(file1)
-    numericList2 = convertFiletoNumericList(file2)
+    for i in range(len(metricValList1)):
+        numericList1 = metricValList1[i];
+        numericList2 = metricValList2[i];
 
-    distanceResult = []
+    distanceResult = {}
 
-    for metric in listDistanceMetric:
-        if metric == DistanceMetric.WASSERSTEIN.name:
-            metricVal = calc_wasserstein_distance(numericList1, numericList2)
-            distanceResult.append({DistanceMetric.WASSERSTEIN.name : metricVal})
+    for metric in listDistanceMetrics:
+
+        distVal = 0
+
+        for i in range(len(metricValList1)):
+            numericList1 = metricValList1[i]
+            numericList2 = metricValList2[i]
+
+            if metric == 'wass':
+                distVal += wasserstein_distance(numericList1[0:10], numericList2[1:10])
+
+            if metric == 'jshan':
+                distVal += distance.jensenshannon(numericList1, numericList2)
+
+        distVal /= len(metricValList1)
+
+        distanceResult[dictDistMetricNames[metric]] = distVal
 
     return distanceResult
 
-
-def calc_wasserstein_distance(list1, list2):
-    """
-    """
-    return wasserstein_distance(list1, list2)
 
 
 def run_simulation(formatted_input_json_filepath, sim_runtime_units, sim_output_filepath):
@@ -123,16 +142,19 @@ def run_simulation(formatted_input_json_filepath, sim_runtime_units, sim_output_
         raise Exception("Simulation Error!")
 
 
+
 def add_start_log():
     logging.info("")
     logging.info("")
     logging.info("Starting ...")
 
 
+
 def add_end_log():
     logging.info("Exiting ...")
     logging.info("")
     logging.info("")
+
 
 
 def get_sim_end_date(sim_start_date, sim_runtime_days):
@@ -149,6 +171,7 @@ def get_sim_end_date(sim_start_date, sim_runtime_days):
 
 def calc_distance_ratio(enum_distanceMetric, simulated_json_file, sim_end_date, sim_start_date):
     """
+    not used
     TODO
 
     ratio = distance between simulated_json_file & formatted_file(sim_start_date) / distance between formatted_file(sim_end_date) & formatted_file(sim_start_date)
@@ -157,6 +180,7 @@ def calc_distance_ratio(enum_distanceMetric, simulated_json_file, sim_end_date, 
 
     """
     pass
+
 
 
 def flatten_json(y):
@@ -177,6 +201,7 @@ def flatten_json(y):
     return out
 
 
+
 def get_json_from_stream(fileobj, start_pos):
     """
     """
@@ -190,6 +215,23 @@ def get_json_from_stream(fileobj, start_pos):
         obj = json.loads(json_str)
         start_pos += e.pos
         return (obj, start_pos)
+
+
+
+def getDictTweakableDiseaseParamsFromFile(jsonFile):
+    """
+    """
+    with open(jsonFile, 'r') as f:
+        jsonData = json.load(f)
+        return getDictTweakableDiseaseParams(jsonData)
+
+
+
+def getDictTweakableDiseaseParams(dictJson):
+
+    dictParams = {k: dictJson[k] for k in dictJson["tweakable_params"]}
+    return dictParams
+
 
 
 def tweakDiseaseParams(json_obj, basejson_filepath, tweakedjson_filepath):
@@ -212,12 +254,10 @@ def tweakDiseaseParams(json_obj, basejson_filepath, tweakedjson_filepath):
         last_key = list_keys[-1]
         jsondata2[last_key] = new_val
 
-    updatedParams = {k: jsondata[k] for k in jsondata["tweakable_params"]}
-
     with open(tweakedjson_filepath, "w") as jsonFile:
         json.dump(jsondata, jsonFile)
 
-    return updatedParams
+    return getDictTweakableDiseaseParams(jsondata)
 
 
 def abbreviateTermsInDict(dict_var):
@@ -255,29 +295,60 @@ def abbreviateTermsInDict(dict_var):
     recursiveAbbrDict(dict_var)
 
 
-
-def saveSimulationOverview(sim_overview_fileobj, start_date, end_date, tweakedparam_json, list_distmetrics):
+def getListofKeys(dictvar):
     """
     """
-    abbreviateTermsInDict(tweakedparam_json)
+    flattened_val = flatten_json(dictvar)
+    listKeys = []
 
-    json_dict = {
-        'start_date':start_date,
-        'end_date':end_date,
-        'diseaseParams':tweakedparam_json,
-        'distanceMetricValues':list_distmetrics
-    }
+    for item in flattened_val:
+        keyStr = '-'.join(item[0])
+        listKeys.append(keyStr)
 
-    json.dump(json_dict, sim_overview_fileobj)
-    sim_overview_fileobj.write('\n')
+    return listKeys
+
+
+
+def getListofValues(dictvar):
+    flattened_val = flatten_json(dictvar)
+    listValues = []
+
+    for item in flattened_val:
+        listValues.append(item[1])
+
+    return listValues
+
+
+
+def addTSVHeader(fileObj, dictDiseaseParams, listDiseaseMetricKeywords):
+    """
+    """
+    tweakableDiseaseParamKeys = getListofKeys(dictDiseaseParams)
+    header_csv_string = '\t'.join(["start_date", "end_date"] + tweakableDiseaseParamKeys \
+                                  + [dictDistMetricNames[k] for k in listDiseaseMetricKeywords])
+
+    fileObj.write(header_csv_string + '\n')
+
+
+
+def saveSimulationOverview(sim_overview_fileobj, start_date, end_date, tweakedparam_json, listDistMetricNames,
+                           dictDistmetrics):
+    """
+    in tsv format
+    """
+    tsvLine = '\t'.join([start_date, end_date] + [str(x) for x in getListofValues(tweakedparam_json)] \
+                       + [str(dictDistmetrics[k]) for k in listDistMetricNames])
+
+    sim_overview_fileobj.write(tsvLine + '\n')
+
 
 
 def trigger():
 
     try:
 
-        (sim_start_date, sim_runtime_days, graph_type, distMetrics_list, diseaseparam_tweak_filepath,
-         sim_overview_filepath) = parse_cmdargs()
+        (sim_start_date, sim_runtime_days, use_distMetrics, tweaked_params_file, sim_result_file,
+         jhu_repo_path, population_data_file) = parse_cmdargs()
 
         setup_logging()
 
@@ -286,50 +357,48 @@ def trigger():
 
         sim_runtime_units = sim_runtime_days * 24
 
-        formattedjson_startdate_filepath = prepare_dataset.prepare_data(covid_csse_data_date=sim_start_date,
-                                                                        graph_type=graph_type)
+        formattedjson_startdate_filepath = prepare_dataset.prepare_data(jhu_csse_path=jhu_repo_path,
+                                                                        covid_csse_data_date=sim_start_date,
+                                                                        pop_data_filepath=population_data_file)
 
+        formattedjson_enddate_filepath = prepare_dataset.prepare_data(jhu_csse_path=jhu_repo_path,
+                                                                      covid_csse_data_date=sim_end_date,
+                                                                      pop_data_filepath=population_data_file)
 
+        tweaked_params_fileobj = open(tweaked_params_file, "r")
 
-        formattedjson_enddate_filepath = prepare_dataset.prepare_data(covid_csse_data_date=sim_end_date,
-                                                                      graph_type=graph_type)
+        sim_result_fileobj = open(sim_result_file, "a+")
 
+        if os.path.getsize(sim_result_file) == 0:
+            addTSVHeader(sim_result_fileobj, getDictTweakableDiseaseParamsFromFile(formattedjson_startdate_filepath),
+                         use_distMetrics)
 
-        param_tweak_fileobj = open(diseaseparam_tweak_filepath, "r")
-        sim_overview_fileobj = open(sim_overview_filepath, "a+")
+        tweaked_params_start_pos = 0
 
+        # TODO change -1
+        while tweaked_params_start_pos != -1:
 
-
-        param_tweak_start_pos = 0
-        while param_tweak_start_pos != -1:
-
-            (tweakedparam_json, param_tweak_start_pos) = get_json_from_stream(param_tweak_fileobj,
-                                                                              param_tweak_start_pos)
-
-
+            (tweakedparam_json, tweaked_params_start_pos) = get_json_from_stream(tweaked_params_fileobj,
+                                                                                 tweaked_params_start_pos)
 
             tweakedjson_startdate_filepath = os.getcwd() + "/../data/temp_jsontweakedfile1"
-            tweakedjson_enddate_filepath = os.getcwd() + "/../data/temp_jsontweakedfile2"
 
+            # TODO add comment
             finalParams = tweakDiseaseParams(tweakedparam_json, formattedjson_startdate_filepath,
                                              tweakedjson_startdate_filepath)
-            tweakDiseaseParams(tweakedparam_json, formattedjson_enddate_filepath, tweakedjson_enddate_filepath)
-
-
 
             sim_outjson_filepath = os.getcwd() + "/../data/" + "sim_outjson_temp.json"
 
             run_simulation(tweakedjson_startdate_filepath, sim_runtime_units, sim_outjson_filepath)
 
-            distMetricValList = calcDistanceMetric(distMetrics_list, tweakedjson_enddate_filepath,
-                                                   sim_outjson_filepath)
+            distMetricResult = calcDistanceMetric(use_distMetrics, formattedjson_enddate_filepath,
+                                                  sim_outjson_filepath)
 
-            saveSimulationOverview(sim_overview_fileobj, sim_start_date, sim_end_date, finalParams,
-                                   distMetricValList)
+            saveSimulationOverview(sim_result_fileobj, sim_start_date, sim_end_date, finalParams,
+                                   [dictDistMetricNames[k] for k in use_distMetrics],
+                                   distMetricResult)
 
-            # delete unnecessary files
             os.remove(tweakedjson_startdate_filepath)
-            os.remove(tweakedjson_enddate_filepath)
             os.remove(sim_outjson_filepath)
 
 

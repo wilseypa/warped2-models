@@ -37,7 +37,8 @@ cluster_centers = [("Las Vegas", 36.1699, -115.1398),
 
 DEFAULT_JHU_CSSE_PATH='../data/COVID-19.jhu/'
 DEFAULT_POPULATION_FILEPATH='../data/US_counties_population_latLong.csv'
-GRAPH_INPUT_PARAM_STRING='8,0.1'
+DEFAULT_GRAPH_TYPE='ws'
+DEFAULT_GRAPH_INPUT_PARAM_STRING='8,0.1'
 
 
 def setup_logging():
@@ -78,7 +79,7 @@ def parse_cmdargs(population_data, graph_input_param_string):
 
     parser.add_argument('--graph_input_param_string', help='comma-seperated input parameter list for selected '
                         'graph type, in form of a string',
-                        default=graph_input_param_string,
+                        default=DEFAULT_GRAPH_INPUT_PARAM_STRING,
                         required=False)
 
     args = parser.parse_args()
@@ -234,8 +235,10 @@ def get_jhu_csse_data_filepath(jhu_csse_path, dateStr):
     return filepath
 
 
-def prepare_data(covid_csse_data_date=None, pop_data_filepath=DEFAULT_POPULATION_FILEPATH, graph_type=None,
-                 graph_input_param_string=GRAPH_INPUT_PARAM_STRING,
+def prepare_data(jhu_csse_path=DEFAULT_JHU_CSSE_PATH, covid_csse_data_date=None,
+                 pop_data_filepath=DEFAULT_POPULATION_FILEPATH,
+                 graph_type=DEFAULT_GRAPH_TYPE,
+                 graph_input_param_string=DEFAULT_GRAPH_INPUT_PARAM_STRING,
                  logger=None):
 
     """
@@ -248,7 +251,10 @@ def prepare_data(covid_csse_data_date=None, pop_data_filepath=DEFAULT_POPULATION
 
     try:
         # parse command-line arguments
-        if not (covid_csse_data_date and pop_data_filepath and graph_type and graph_input_param_string):
+        if not (jhu_csse_path and covid_csse_data_date and pop_data_filepath and graph_type
+                and graph_input_param_string):
+            # print("h1", covid_csse_data_date, pop_data_filepath, graph_type, graph_input_param_string)
+            # print("h2", "calling cmdargs")
             (jhu_csse_path, covid_csse_data_date, pop_data_filepath, graph_type, graph_input_param_string) = \
                 parse_cmdargs(pop_data_filepath, graph_input_param_string)
 
@@ -270,6 +276,11 @@ def prepare_data(covid_csse_data_date=None, pop_data_filepath=DEFAULT_POPULATION
 
         # set filepath
         out_filepath = os.getcwd() + "/../data/" + out_fname
+
+        if os.path.isfile(out_filepath):
+            logging.info("File [{}] already exists ...".format(out_filepath))
+            logging.info("Exiting ...")
+            return (out_filepath)
 
         disease_model = {
             "transmissibility": transmissibility,
