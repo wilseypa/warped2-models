@@ -1,0 +1,35 @@
+@font-face{
+    font-family: 'JetBrains Mono';
+    src: url('https://raw.githubusercontent.com/JetBrains/JetBrainsMono/master/fonts/web/JetBrainsMono-Regular.eot') format('embedded-opentype'),
+         url('https://raw.githubusercontent.com/JetBrains/JetBrainsMono/master/fonts/web/JetBrainsMono-Regular.woff2') format('woff2'),
+         url('https://raw.githubusercontent.com/JetBrains/JetBrainsMono/master/fonts/web/JetBrainsMono-Regular.woff') format('woff'),
+         url('https://raw.githubusercontent.com/JetBrains/JetBrainsMono/master/fonts/ttf/JetBrainsMono-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+* {
+    -webkit-font-feature-settings: "liga" off, "calt" on;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    font-family: 'JetBrains Mono';
+}
+
+
+body {
+    font-family: "JetBrains Mono";
+}
+
+div.main {
+    margin: 0.5em;
+    background-color: antiquewhite;
+    padding: 1em;
+}
+
+h1 {
+    font-size: 1.5em;
+    // alignment: center;
+    // padding: 1em;
+    margin-top: 1em;
+    margin-bottom: 1em;
+}

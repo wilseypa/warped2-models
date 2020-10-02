@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pandemic Simulation</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jgthms/minireset.css@master/minireset.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre.min.css">
+    <link rel="stylesheet" type="text/css" href="pandemicwebappstyle.css">
+
+</head>
+<body>
+<div class="main">
+    <h1>Run Pandemic Simulation!</h1>
+    <form id="simform" action="/simulate" method="post">
+        <div class="form-group">
+            <input class="form-inline" id="startdate" type="text"
+                   name="startdate" placeholder="Start date" value="">
+        </div>
+        <div class="form-group">
+            <input class="form-inline" id="enddate" type="text"
+                   name="enddate" placeholder="End date" value="">
+        </div>
+
+        <div class="form-group">
+            <input class="form-inline" id="tweakscount" type="text"
+                   name="tweakscount" placeholder="No. of tweaks" value="">
+        </div>
+
+        <div class="form-group">
+            <input class="form-inline" id="transmissibility" type="checkbox">
+            <label class="form-inline" for="transmissibility">Transmissibility</label>
+            <input class="form-inline" id="transmissibilityfrom" type="text" placeholder="from">
+            <input class="form-inline" id="transmissibilityto" type="text" placeholder="to">
+        </div>
+
+        <div class="form-group">
+            <input class="form-inline" id="mean_incubation_duration_in_days" type="checkbox">
+            <label class="form-inline" for="mean_incubation_duration_in_days">mean_incubation_duration_in_days</label>
+            <input class="form-inline" id="mean_incubation_duration_in_daysfrom" type="text" placeholder="from">
+            <input class="form-inline" id="mean_incubation_duration_in_daysto" type="text" placeholder="to">
+        </div>
+        <div class="form-group">
+            <input class="form-inline" id="mean_infection_duration_in_days" type="checkbox">
+            <label class="form-inline" for="mean_infection_duration_in_days">mean_infection_duration_in_days</label>
+            <input class="form-inline" id="mean_infection_duration_in_daysfrom" type="text" placeholder="from">
+            <input class="form-inline" id="mean_infection_duration_in_daysto" type="text" placeholder="to">
+        </div>
+
+        <div class="form-group">
+            <input class="form-inline" id="mortality_ratio" type="checkbox">
+            <label class="form-inline" for="mortality_ratio">mortality_ratio</label>
+            <input class="form-inline" id="mortality_ratiofrom" type="text" placeholder="from">
+            <input class="form-inline" id="mortality_ratioto" type="text" placeholder="to">
+        </div>
+
+        <div class="form-group">
+            <input class="form-inline" id="update_trig_interval_in_hrs" type="checkbox">
+            <label class="form-inline" for="update_trig_interval_in_hrs">update_trig_interval_hrs</label>
+            <input class="form-inline" id="update_trig_interval_in_hrsfrom" type="text" placeholder="from">
+            <input class="form-inline" id="update_trig_interval_in_hrsto" type="text" placeholder="to">
+        </div>
+
+        <div class="form-group">
+            <input class="form-inline" id="graph_type" type="checkbox">
+            <label class="form-inline" for="graph_type">Specify count of graph types</label>
+
+            <select class="form-inline" id="graph_type1">
+                <option>Watts-Strogatz</option>
+                <option>Barabasi-Albert</option>
+            </select>
+            <input class="form-inline" id="graph_type1count" type="text"
+                   placeholder="how many">
+
+            <select class="form-inline" id="graph_type2">
+                <option>Watts-Strogatz</option>
+                <option>Barabasi-Albert</option>
+            </select>
+            <input class="form-inline" id="graph_type2count" type="text"
+                   placeholder="how many">
+        </div>
+
+        <div class="form-group">
+            <input class="form-inline" id="graph_params" type="checkbox">
+            <label class="form-inline" for="graph_params">graph params</label>
+            <input class="form-inline" id="graph_paramsfrom" type="text" placeholder="from">
+            <input class="form-inline" id="graph_paramsto" type="text" placeholder="to">
+        </div>
+
+        <div class="form-group">
+            <input class="form-inline" id="diffusion_trig_interval_in_hrs" type="checkbox">
+            <label class="form-inline" for="diffusion_trig_interval_in_hrs">diffusion_trig_interval_in_hrs</label>
+            <input class="form-inline" id="diffusion_trig_interval_in_hrsfrom" type="text" placeholder="from">
+            <input class="form-inline" id="diffusion_trig_interval_in_hrsto" type="text" placeholder="to">
+        </div>
+
+        <div class="form-group">
+            <input class="form-inline" id="avg_transport_speed" type="checkbox">
+            <label class="form-inline" for="avg_transport_speed">avg_transport_speed</label>
+            <input class="form-inline" id="diffusion_trig_interval_hrsfrom" type="text" placeholder="from">
+            <input class="form-inline" id="diffusion_trig_interval_hrsfromto" type="text" placeholder="to">
+        </div>
+
+        <div class="form-group">
+            <input class="form-inline" id="max_diffusion_cnt" type="checkbox">
+            <label class="form-inline" for="max_diffusion_cnt">max_diffusion_cnt</label>
+            <input class="form-inline" id="max_diffusion_cntfrom" type="text" placeholder="from">
+            <input class="form-inline" id="max_diffusion_cntto" type="text" placeholder="to">
+        </div>
+
+        <div class="form-group">
+            <input class="form-inline" id="distmetric" type="checkbox">
+            <label class="form-inline" for="distmetric">Change default distance metric:</label>
+
+            <input class="form-inline" id="distmetricwass" type="checkbox">
+            <label class="form-inline" for="distmetricwass">Wasserstein</label>
+            <input class="form-inline" id="distmetricshajen" type="checkbox">
+            <label class="form-inline" for="distmetricshajen">Shannon-Jensen</label>
+
+        </div>
+        <div class="form-group">
+            <input type="submit" class="btn btn-primary" value="Submit">
+            <!--        <button class="btn btn-primary btn-lg">Submit</button>-->
+        </div>
+    </form>
+
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/aja/0.4.1/aja.js" crossorigin="anonymous"></script>
+<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/aja/0.4.1/aja.min.js"></script>-->
+<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/nanoajax/0.4.3/nanoajax.min.js" integrity="sha512-PAdYTklQfdmQ4Jx2/BHHs10nWOLoo62qoeNjh7vw72lEotZ5zEnAzvBPODpMlNL9KOVhmoJKorjbw3QI5ROgIA==" crossorigin="anonymous"></script>-->
+<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/nanoajax/0.4.3/nanoajax.min.js"></script>-->
+<script src="myscript.js"></script>
+</body>
+</html>
