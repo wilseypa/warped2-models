@@ -5,6 +5,7 @@
     <title>Pandemic Simulation</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jgthms/minireset.css@master/minireset.min.css">
     <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="pandemicwebappstyle.css">
 
 </head>
@@ -12,6 +13,10 @@
 <div class="main">
     <h1>Run Pandemic Simulation!</h1>
     <form id="simform" action="/simulate" method="post">
+        <div class="form-group">
+            <input class="form-inline" id="simresultfile" type="text"
+                   name="simeresultfile" placeholder="Filename of simulation result file" value="">
+        </div>
         <div class="form-group">
             <input class="form-inline" id="startdate" type="text"
                    name="startdate" placeholder="Start date" value="">
@@ -96,8 +101,8 @@
         <div class="form-group">
             <input class="form-inline" id="avg_transport_speed" type="checkbox">
             <label class="form-inline" for="avg_transport_speed">avg_transport_speed</label>
-            <input class="form-inline" id="diffusion_trig_interval_hrsfrom" type="text" placeholder="from">
-            <input class="form-inline" id="diffusion_trig_interval_hrsfromto" type="text" placeholder="to">
+            <input class="form-inline" id="avg_transport_speedfrom" type="text" placeholder="from">
+            <input class="form-inline" id="avg_transport_speedto" type="text" placeholder="to">
         </div>
 
         <div class="form-group">

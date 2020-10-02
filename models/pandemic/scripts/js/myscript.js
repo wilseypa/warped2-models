@@ -47,20 +47,20 @@ document.addEventListener("DOMContentLoaded", function() {
                     'type2count':document.getElementById('graph_type2count').value,
                 }, 'graph_params' : {
                     'ifchecked':document.getElementById('graph_params').checked,
-                    'fromval':document.getElementById('graph_params').value,
-                    'toval':document.getElementById('graph_params').value
+                    'fromval':document.getElementById('graph_paramsfrom').value,
+                    'toval':document.getElementById('graph_paramsto').value
                 }, 'diffusion_trig_interval_in_hrs' : {
                     'ifchecked':document.getElementById('diffusion_trig_interval_in_hrs').checked,
-                    'fromval':document.getElementById('diffusion_trig_interval_in_hrs').value,
-                    'toval':document.getElementById('diffusion_trig_interval_in_hrs').value
+                    'fromval':document.getElementById('diffusion_trig_interval_in_hrsfrom').value,
+                    'toval':document.getElementById('diffusion_trig_interval_in_hrsto').value
                 }, 'avg_transport_speed' : {
                     'ifchecked':document.getElementById('avg_transport_speed').checked,
-                    'fromval':document.getElementById('avg_transport_speed').value,
-                    'toval':document.getElementById('avg_transport_speed').value
+                    'fromval':document.getElementById('avg_transport_speedfrom').value,
+                    'toval':document.getElementById('avg_transport_speedto').value
                 }, 'max_diffusion_cnt' : {
                     'ifchecked':document.getElementById('max_diffusion_cnt').checked,
-                    'fromval':document.getElementById('max_diffusion_cnt').value,
-                    'toval':document.getElementById('max_diffusion_cnt').value
+                    'fromval':document.getElementById('max_diffusion_cntfrom').value,
+                    'toval':document.getElementById('max_diffusion_cntto').value
                 }, 'distmetrictype' : {
                     'ifchecked':document.getElementById('distmetric').checked,
                     'ifmetricwasschecked':document.getElementById('distmetricwass').checked,

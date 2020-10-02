@@ -12,6 +12,8 @@ try:
     from math import radians, cos, sin, asin, sqrt
     import datetime
     import subprocess
+    import fcntl
+    import errno
 
     import prepare_dataset
 
@@ -303,25 +305,30 @@ def flatten_dict_get_values(dictVar):
     return listValues
 
 
-def add_TSV_header(fileObj, dictDiseaseParams, listDiseaseMetricKeywords):
+def get_TSV_header(dictDiseaseParams, listDiseaseMetricKeywords):
     """
     """
     tweakableDiseaseParamKeys = flatten_dict_get_keys(dictDiseaseParams)
     header_csv_string = '\t'.join(["start_date", "end_date"] + tweakableDiseaseParamKeys \
                                   + [dictDistMetricNames[k] for k in listDiseaseMetricKeywords])
 
-    fileObj.write(header_csv_string + '\n')
+    header_csv_string += '\n'
+
+    return header_csv_string
+    # fileObj.write(header_csv_string + '\n')
 
 
-def save_sim_result(simResultFileobj, startDate, endDate, dictParamTweaks, listDistMetricNames,
-                    dictDistMetrics):
+def get_sim_result(startDate, endDate, dictParamTweaks, listDistMetricNames,
+                   dictDistMetrics):
     """
     in tsv format
     """
     tsvLine = '\t'.join([startDate, endDate] + [str(x) for x in flatten_dict_get_values(dictParamTweaks)] \
                         + [str(dictDistMetrics[k]) for k in listDistMetricNames])
 
-    simResultFileobj.write(tsvLine + '\n')
+    tsvLine += '\n'
+
+    return tsvLine
 
 
 def trigger():
@@ -348,11 +355,13 @@ def trigger():
 
         paramTweaksFileobj = open(paramTweaksFile, "r")
 
-        simResultFileobj = open(simResultFile, "a+")
 
-        if os.path.getsize(simResultFile) == 0:
-            add_TSV_header(simResultFileobj, getDictTweakableDiseaseParamsFromFile(simStartdateInputJsonFile),
-                           distMetricsToUse)
+
+        #
+
+        simResultStr = ""
+        simResultFileHeader = get_TSV_header(getDictTweakableDiseaseParamsFromFile(simStartdateInputJsonFile),
+        distMetricsToUse)
 
         paramTweaksFilePos = 0
 
@@ -376,12 +385,38 @@ def trigger():
                                                                        simEnddateInputFormattedJsonFile,
                                                                        simOutJsonFile)
 
-            save_sim_result(simResultFileobj, simStartDate, simEndDate, dictCompleteParamsTweaked,
+            simResultStr += get_sim_result(simStartDate, simEndDate, dictCompleteParamsTweaked,
                             [dictDistMetricNames[k] for k in distMetricsToUse],
                             distMetricsResult)
 
             os.remove(simStartDateInputJsonTweakedFile)
             os.remove(simOutJsonFile)
+
+        simResultFileobj = open(simResultFile, "a+")
+
+        while True:
+            try:
+                fcntl.flock(simResultFileobj, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                break
+
+            except IOError as e:
+                if e.errno != errno.EAGAIN:
+                    raise
+                else:
+                    logging.info("file [{}] is locked, sleeping for 2 sec".format(simResultFile))
+                    time.sleep(2)
+
+        logging.info("locked file [{}]".format(simResultFile))
+
+        if os.path.getsize(simResultFile) == 0:
+            simResultStr = simResultFileHeader + simResultStr
+
+        time.sleep(30)
+        simResultFileobj.write(simResultStr)
+
+        # unlock
+        fcntl.flock(simResultFileobj, fcntl.LOCK_UN)
+        print("unlocked file [{}]".format(simResultFile))
 
         add_end_log()
 
