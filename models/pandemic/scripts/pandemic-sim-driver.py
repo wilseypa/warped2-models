@@ -14,7 +14,7 @@ try:
     import subprocess
     import fcntl
     import errno
-
+    import uuid
     import prepare_dataset
 
     from scipy.stats import wasserstein_distance
@@ -24,9 +24,7 @@ except Exception as e:
     print(str(type(e).__name__) + ": " + str(e), file=sys.stderr)
     sys.exit(1)
 
-
-dictDistMetricNames = {'wass':'WASSERSTEIN','jshan':'JENSENSHANNON'}
-
+dictDistMetricNames = {'wass': 'WASSERSTEIN', 'jshan': 'JENSENSHANNON'}
 
 
 def setup_logging():
@@ -48,7 +46,7 @@ def parse_cmdargs():
     Using argparse module, get commandline arguments
     """
     parser = argparse.ArgumentParser(description='Prepare Covid19 dataset, invoke simulation, '
-                                     'distance function between expected & simulated output, ')
+                                                 'distance function between expected & simulated output, ')
 
     parser.add_argument('--sim_start_date', help='Simulation start date',
                         required=True)
@@ -57,7 +55,7 @@ def parse_cmdargs():
                         required=True)
 
     parser.add_argument('--use_metric', nargs='*', help="List of distance metrics to use. 'wass' for "
-                        "Wasserstein distance",
+                                                        "Wasserstein distance, 'jshan' for Jenson-shannon",
                         default=['wass'],
                         required=False)
 
@@ -121,7 +119,7 @@ def get_simulation_actual_distance_metrics(listDistanceMetrics, simJsonFile1, si
 
         distVal /= len(listDiseaseMetrics1)
 
-        distanceMetricsResult[dictDistMetricNames[metric]] = distVal
+        distanceMetricsResult[dictDistMetricNames[metric]] = round(distVal, 3)
 
     return distanceMetricsResult
 
@@ -153,7 +151,7 @@ def get_sim_end_date(simStartDate, simRuntimeDays):
     return end_date in MM-DD-YYYY format
     """
     simEndDate = datetime.datetime.strptime(simStartDate, "%m-%d-%Y") \
-        + datetime.timedelta(days=simRuntimeDays)
+                 + datetime.timedelta(days=simRuntimeDays)
 
     simEndDate = simEndDate.strftime("%m-%d-%Y")
 
@@ -196,7 +194,7 @@ def get_json_from_stream(paramTweaksFileobj, startPos):
     """
     try:
         dictParamTweaks = json.load(paramTweaksFileobj)
-        return (dictParamTweaks, -1) # -1 signals end of file
+        return (dictParamTweaks, -1)  # -1 signals end of file
 
     except json.JSONDecodeError as e:
         paramTweaksFileobj.seek(startPos)
@@ -204,7 +202,6 @@ def get_json_from_stream(paramTweaksFileobj, startPos):
         dictParamTweaks = json.loads(strJson)
         startPos += e.pos
         return (dictParamTweaks, startPos)
-
 
 
 def getDictTweakableDiseaseParamsFromFile(jsonFile):
@@ -215,12 +212,9 @@ def getDictTweakableDiseaseParamsFromFile(jsonFile):
         return getDictTweakableDiseaseParams(jsonData)
 
 
-
 def getDictTweakableDiseaseParams(dictJson):
-
     dictParams = {k: dictJson[k] for k in dictJson["tweakable_params"]}
     return dictParams
-
 
 
 def tweak_params_sim_inputfile(dictParamTweaks, baseSimInputJsonFile, tweakedSimInputJsonFile):
@@ -253,18 +247,18 @@ def abbreviate_dict_terms(dict_var):
     """
     """
     abbr_dict = {
-        "diseaseParam":"dp",
-        "disease_model":"dm",
-        "transmissibility":"tm",
-        "mean_incubation_duration_in_days":"mi",
-        "mean_infection_duration_in_days":"mn",
-        "mortality_ratio":"mr",
-        "update_trig_interval_in_hrs":"ut",
-        "diffusion_model":"df",
-        "graph_type":"gt",
-        "graph_params":"gp",
-        "diffusion_trig_interval_in_hrs":"di",
-        "distanceMetricValues":"dv",
+        "diseaseParam": "dp",
+        "disease_model": "dm",
+        "transmissibility": "tm",
+        "mean_incubation_duration_in_days": "mi",
+        "mean_infection_duration_in_days": "mn",
+        "mortality_ratio": "mr",
+        "update_trig_interval_in_hrs": "ut",
+        "diffusion_model": "df",
+        "graph_type": "gt",
+        "graph_params": "gp",
+        "diffusion_trig_interval_in_hrs": "di",
+        "distanceMetricValues": "dv",
     }
 
     def helper_func(dictToAbbreviate):
@@ -305,12 +299,12 @@ def flatten_dict_get_values(dictVar):
     return listValues
 
 
-def get_TSV_header(dictDiseaseParams, listDiseaseMetricKeywords):
+def get_csv_header(dictDiseaseParams, listDiseaseMetricKeywords):
     """
     """
     tweakableDiseaseParamKeys = flatten_dict_get_keys(dictDiseaseParams)
-    header_csv_string = '\t'.join(["start_date", "end_date"] + tweakableDiseaseParamKeys \
-                                  + [dictDistMetricNames[k] for k in listDiseaseMetricKeywords])
+    header_csv_string = ','.join(["start_date", "end_date"] + tweakableDiseaseParamKeys \
+                                 + [dictDistMetricNames[k] for k in listDiseaseMetricKeywords])
 
     header_csv_string += '\n'
 
@@ -318,21 +312,25 @@ def get_TSV_header(dictDiseaseParams, listDiseaseMetricKeywords):
     # fileObj.write(header_csv_string + '\n')
 
 
-def get_sim_result(startDate, endDate, dictParamTweaks, listDistMetricNames,
-                   dictDistMetrics):
+def get_line_sim_params_result(startDate, endDate, dictParamTweaks, listDistMetricNames,
+                               dictDistMetrics):
     """
     in tsv format
     """
-    tsvLine = '\t'.join([startDate, endDate] + [str(x) for x in flatten_dict_get_values(dictParamTweaks)] \
-                        + [str(dictDistMetrics[k]) for k in listDistMetricNames])
+    temp = flatten_dict_get_values(dictParamTweaks)
 
-    tsvLine += '\n'
+    # HACK brute-forced replacement of comma with semi-colon (for graph_params)
+    # TODO any alternative elegant approach ??
+    csvLine = ','.join(
+        [startDate, endDate] + [str(x).replace(',', ';') for x in flatten_dict_get_values(dictParamTweaks)] \
+        + [str(dictDistMetrics[k]) for k in listDistMetricNames])
 
-    return tsvLine
+    csvLine += '\n'
+
+    return csvLine
 
 
 def trigger():
-
     try:
 
         (simStartDate, simRuntimeDays, distMetricsToUse, paramTweaksFile, simResultFile,
@@ -355,29 +353,28 @@ def trigger():
 
         paramTweaksFileobj = open(paramTweaksFile, "r")
 
-
-
         #
 
         simResultStr = ""
-        simResultFileHeader = get_TSV_header(getDictTweakableDiseaseParamsFromFile(simStartdateInputJsonFile),
-        distMetricsToUse)
+        simResultFileHeader = get_csv_header(getDictTweakableDiseaseParamsFromFile(simStartdateInputJsonFile),
+                                             distMetricsToUse)
 
         paramTweaksFilePos = 0
+        print(">>>>h1")
 
         # TODO change -1
         while paramTweaksFilePos != -1:
-
+            print(">>>>h2")
             (dictParamTweaks, paramTweaksFilePos) = get_json_from_stream(paramTweaksFileobj,
                                                                          paramTweaksFilePos)
 
-            simStartDateInputJsonTweakedFile = os.getcwd() + "/../data/temp_jsontweakedfile1"
+            simStartDateInputJsonTweakedFile = os.getcwd() + "/../data/tempfile_jsontweakedfile_" + str(uuid.uuid4())
 
             # TODO add comment
             dictCompleteParamsTweaked = tweak_params_sim_inputfile(dictParamTweaks, simStartdateInputJsonFile,
                                                                    simStartDateInputJsonTweakedFile)
 
-            simOutJsonFile = os.getcwd() + "/../data/" + "sim_outjson_temp.json"
+            simOutJsonFile = os.getcwd() + "/../data/" + "tempfile_sim_outjson_" + str(uuid.uuid4())
 
             run_simulation(simStartDateInputJsonTweakedFile, simRuntimeTimeUnits, simOutJsonFile)
 
@@ -385,9 +382,9 @@ def trigger():
                                                                        simEnddateInputFormattedJsonFile,
                                                                        simOutJsonFile)
 
-            simResultStr += get_sim_result(simStartDate, simEndDate, dictCompleteParamsTweaked,
-                            [dictDistMetricNames[k] for k in distMetricsToUse],
-                            distMetricsResult)
+            simResultStr += get_line_sim_params_result(simStartDate, simEndDate, dictCompleteParamsTweaked,
+                                                       [dictDistMetricNames[k] for k in distMetricsToUse],
+                                                       distMetricsResult)
 
             os.remove(simStartDateInputJsonTweakedFile)
             os.remove(simOutJsonFile)
@@ -396,7 +393,9 @@ def trigger():
 
         while True:
             try:
+                print(">>>>h3")
                 fcntl.flock(simResultFileobj, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                print(">>>>h4")
                 break
 
             except IOError as e:
@@ -411,7 +410,6 @@ def trigger():
         if os.path.getsize(simResultFile) == 0:
             simResultStr = simResultFileHeader + simResultStr
 
-        time.sleep(30)
         simResultFileobj.write(simResultStr)
 
         # unlock
@@ -432,4 +430,3 @@ def trigger():
 # MAIN
 if __name__ == '__main__':
     trigger()
-

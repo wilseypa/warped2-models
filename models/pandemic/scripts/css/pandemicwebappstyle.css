@@ -3,8 +3,12 @@ body {
     font-family: 'Roboto Mono', monospace;
 }
 
-div.main {
+div#wrapper {
     margin: 0.5em;
+}
+div.main {
+    margin-bottom: 2em;
+    // margin: 0.5em;
     background-color: antiquewhite;
     padding: 1em;
 }
@@ -15,4 +19,16 @@ h1 {
     // padding: 1em;
     margin-top: 1em;
     margin-bottom: 1em;
+}
+
+div.toast {
+    margin-bottom: 0.5em;
+}
+
+div.toast a {
+    float: right;
+}
+
+div#sbmt-btn {
+    margin-top: 2em;
 }

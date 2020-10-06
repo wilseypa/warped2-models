@@ -1,5 +1,7 @@
 document.addEventListener("DOMContentLoaded", function() {
 
+    var funcTimeout = undefined;
+
     console.log("js loaded");
 
     document.getElementById("simform").addEventListener('submit',
@@ -13,10 +15,12 @@ document.addEventListener("DOMContentLoaded", function() {
             var graph_type2 = graph_type2obj.options[graph_type2obj.selectedIndex].value;
 
             var postdata = {
-                'start_date' : {
+                'sim_result_file': {
+                    'value':document.getElementById('sim_result_file').value
+                }, 'start_date' : {
                     'value':document.getElementById('startdate').value
-                }, 'end_date' : {
-                    'value':document.getElementById('enddate').value
+                }, 'runtime_days' : {
+                    'value':document.getElementById('runtime_days').value
                 }, 'tweakscount' : {
                     'value':document.getElementById('tweakscount').value
                 }, 'transmissibility':{
@@ -30,7 +34,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 }, 'mean_infection_duration_in_days' : {
                     'ifchecked':document.getElementById('mean_infection_duration_in_days').checked,
                     'fromval':document.getElementById('mean_infection_duration_in_daysfrom').value,
-                    'toval':document.getElementById('mean_incubation_duration_in_daysto').value
+                    'toval':document.getElementById('mean_infection_duration_in_daysto').value
                 }, 'mortality_ratio' : {
                     'ifchecked':document.getElementById('mortality_ratio').checked,
                     'fromval':document.getElementById('mortality_ratiofrom').value,
@@ -73,16 +77,99 @@ document.addEventListener("DOMContentLoaded", function() {
                 // .header('Content-Type', 'application/json')
                 .data({'data':JSON.stringify(postdata)})
                 .url('/simulate')
-                .timeout(2500)
+                .timeout(3000)
                 .on('200', function (response) {
                     console.log("this is the response: ");
-                    console.log(JSON.parse(response));
-                    // console.log(response);
+                    // console.log(typeof response);
+                    // console.log(JSON.parse(response));
+                    console.log(response);
+
+                    // var newToastElement = document.createElement('div');
+
+                    // newToastElement.classList.add('toast');
+                    // newToastElement.classList.add('toast-primary');
+
+                    // add id
+                    // newToastElement.setAttribute("id", "job" + response["jobid"].toString());
+
+                    // newToastElement.innerText = response["bannertext"];
+
+                    // document.getElementById("wrapper").appendChild(newToastElement);
+
+                    if (funcTimeout) {
+                        clearInterval(funcTimeout);
+                        funcTimeout = setTimeout(getStatus, 200, false);
+                    } else {
+                        funcTimeout = setTimeout(getStatus, 200, false);
+                    }
+
+                    console.log("/simulate: set timeout");
                 })
                 .go();
-
-
-
         });
 
+
+    var getStatus = function (ifFetchAll) {
+        clearTimeout(funcTimeout);
+        funcTimeout = setTimeout(getStatus, 4000, false);
+        console.log("/getstatus cleared and set timeout");
+
+        // main logic
+        aja()
+            .method('GET')
+            // .header('Content-Type', 'application/json')
+            // .data({'data':JSON.stringify(postdata)})
+            .url('/getstatus')
+            .timeout(2500)
+            .on('200', function (response) {
+                console.log("getstatus:", response);
+
+                for (var jobid in response) {
+
+                    if (!response.hasOwnProperty(jobid)) {
+                        continue;
+                    }
+
+                    idStr = "job" + jobid.toString();
+
+                    if (ifFetchAll == false && response[jobid]["updatebanner"] == "no") {
+                        continue;
+                    }
+
+                    var bannerObj = document.getElementById(idStr);
+
+                    if (bannerObj) {
+                        bannerObj.removeAttribute("class");
+                        bannerObj.classList.add("toast");
+                    } else {
+                        // banner doesn't exist
+                        bannerObj = document.createElement('div');
+                        bannerObj.setAttribute("id", "job" + jobid.toString());
+                        bannerObj.classList.add('toast');
+                        document.getElementById("wrapper").appendChild(bannerObj);
+                    }
+
+                    if (response[jobid]["status"] == "success") {
+                        bannerObj.classList.add("toast-success");
+                        bannerObj.innerText = response[jobid]["bannertext"];
+
+                        var fileDownload_a = document.createElement('a');
+                        fileDownload_a.setAttribute("href", response[jobid]["filename"]);
+                        fileDownload_a.appendChild(document.createTextNode(response[jobid]["filename"]));
+                        bannerObj.appendChild(fileDownload_a);
+                    } else if (response[jobid]["status"] == "running") {
+                        bannerObj.classList.add("toast-primary");
+                        bannerObj.innerText = response[jobid]["bannertext"];
+                    } else if (response[jobid]["status"] == "failure") {
+                        bannerObj.classList.add("toast-error");
+                        bannerObj.innerText = response[jobid]["bannertext"];
+                    }
+
+                }
+
+            })
+            .go();
+    };
+
+    getStatus(true);
 });
