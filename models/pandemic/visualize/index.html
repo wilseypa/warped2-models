@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Pandemic Metrics</title>	  
+        <link rel="stylesheet" href="main.css">  
+    </head>
+    <body>
+        <h1 style="text-align:center">Pandemic model in the US</h1>
+        <div style="text-align:center">
+            <input type="checkbox" name="Confirmed" id="Confirmed">
+            <label for="Confirmed">Confirmed</label>
+            <input type="checkbox" name="Dead" id="Dead">
+            <label for="Dead">Dead</label>
+            <input type="checkbox" name="Recovered" id="Recovered">
+            <label for="Recovered">Recovered</label>
+            <input type="checkbox" name="Active" id="Active">
+            <label for="Active">Active</label>
+            <br><br>
+            <button onclick="plot_data()" style="width:55px;height:33px;">Plot</button>
+        </div>
+
+        <br>
+        <br>
+            
+        <div id="map" style="text-align: center"></div>
+        <div id="tt" class="tooltiptext"></div>
+
+        <div id="sliderContainer" class="slidecontainer" style="visibility: hidden">
+            <input type="range" min="1" max="4" value="1" class="slider" id="dateRange">
+            <p>Date: <span id="dateValue"></span></p>
+        </div>
+        
+        
+        
+        <script src="https://d3js.org/d3.v4.min.js"></script> 
+        <script src="http://d3js.org/topojson.v1.min.js"></script>
+	    <script src="js/visualization.js"></script>
+    </body>
+</html>
