@@ -1,15 +1,23 @@
-# **Visualization**
+# **Visualization**  
+
 ## **Notes**
 This is running on d3 v4 and does not currently work with d3 v3  
 Currently the files from JHU need to be modified because Oglala Lakota South Dakota and Kusilvak Alaska have incorrect county IDs  
+
 ## **TODO**
 The tooltip for county data makes scrollbars visible when the mouse is near edges of the screen  
 Calculate the true minimum and maximums for each data file, not hardcoded as it is currently  
-Investigate mongodb for a database  
+Create local mongodb database  
+Create script to set up mongodb database on a local machine  
+Create script to fix and import JHU data into mongodb database
 Investigate setting up AWS account for warped2  
 Change the data to be looking at periods of time ie looking at the month of march  
 Change the slider to an up/down arrow to increment/decrement days?  
-Add legend to heatmap
+Add legend to heatmap  
+
+## **Completed**
+Investigate mongodb for a database  
+
 ## **Resources**
 https://www.youtube.com/watch?v=aNbgrqRuoiE  --Help for US state map  
 https://www.youtube.com/watch?v=G-VggTK-Wlg  --Help for US county map
