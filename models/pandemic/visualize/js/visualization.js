@@ -76,7 +76,7 @@ function plot_data() {
             .attr("d", path)
             .on("mouseover", function(d) {
                 d3.select(this).classed("selected", true);
-                d3.select("#tt").style("visibility", "visible");
+                d3.select("#tt").style("display", "inline-block");
                 
                 var prnt = d3.select(this);
                 var loc;
@@ -125,7 +125,7 @@ function plot_data() {
             })
             .on("mouseout", function(d) {
                 d3.select(this).classed("selected", false);
-                d3.select("#tt").style("visibility", "hidden");
+                d3.select("#tt").style("display", "none");
                 if(document.getElementById("countyName")){
                     document.getElementById("countyName").remove();
                 }

@@ -2,7 +2,7 @@ svg {
     background: #3987c9;
 }
 .tooltiptext {
-    visibility: hidden;
+    display: none;
     border-radius: 25px;
     position: absolute;
     left: 75px;
