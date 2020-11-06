@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <random>
 #include <tuple>
+#include <algorithm>
 #include "memory.hpp"
 #include "warped.hpp"
 #include "graph.hpp"
@@ -194,8 +195,9 @@ public:
             rng_(new std::default_random_engine(index)) {
 
         state_ = std::make_shared<LocationState>();
-        state_->population_[infection_state_t::EXPOSED] = CONFIG->exposed_confirmed_ratio_ *
-                                                                        (double)num_confirmed;
+        state_->population_[infection_state_t::EXPOSED] =
+            std::min<unsigned long>(CONFIG->exposed_confirmed_ratio_ * (double)num_confirmed, population_size/2);
+
         state_->population_[infection_state_t::INFECTIOUS]  = num_confirmed;
         state_->population_[infection_state_t::RECOVERED]   = num_recovered;
         state_->population_[infection_state_t::DECEASED]    = num_deaths;
@@ -416,6 +418,8 @@ public:
 
             /* NOTE : Active count for JHU data is confirmed count in this model */
             auto confirmed = active + deaths + recovered;
+            assert(confirmed <= population);
+
             jsontowrite["locations"].push_back(jsoncons::ojson(jsoncons::json_array_arg, {
                         fips_code, county, state, country, latitude, longitude,
                         confirmed, deaths, recovered, active, population}));

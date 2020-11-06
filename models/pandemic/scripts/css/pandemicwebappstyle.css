@@ -32,3 +32,21 @@ div.toast a {
 div#sbmt-btn {
     margin-top: 2em;
 }
+
+div.form-group {
+    // border: 4px solid #b1dbd1;
+}
+
+p#statusmsg {
+    margin-top: 1em;
+    margin-bottom: 1em;
+}
+
+div#usageinfo {
+    background-color: #f3d855;
+    outline: 3px dashed #f3d855;
+    padding: 1em;
+    margin-bottom: 1em;
+    margin-top: 1em;
+    font-size: 1.1em;
+}

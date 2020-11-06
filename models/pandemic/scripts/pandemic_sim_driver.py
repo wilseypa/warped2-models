@@ -8,33 +8,58 @@ try:
     import argparse
     import json
     import pandas as pd
-    import logging
-    from math import radians, cos, sin, asin, sqrt
+    # import logging
+    # import logging.handlers
+    import numpy as np
+    from math import radians, cos, sin, asin, sqrt, isnan
     import datetime
     import subprocess
     import fcntl
     import errno
     import uuid
+    import pathlib
     import prepare_dataset
 
-    from scipy.stats import wasserstein_distance
     from scipy.spatial import distance
+    from scipy.stats import wasserstein_distance
+    import logging
+    import logging.config
+    # from logging import getLogger, INFO, DEBUG
+    from concurrent_log_handler import ConcurrentRotatingFileHandler
+    # import concurrent_log_handler
 
 except Exception as e:
     print(str(type(e).__name__) + ": " + str(e), file=sys.stderr)
     sys.exit(1)
 
-dictDistMetricNames = {'wass': 'WASSERSTEIN', 'jshan': 'JENSENSHANNON'}
+SCRIPTS_LOGS_DIR_PATH = "./logs/"
+dictDistMetricNames = {'wass': 'WASSERSTEIN', 'jenshan': 'JENSENSHANNON', 'eucd': 'EUCLIDEAN-DISTANCE'}
+logger = None
+COUNT_SUCCESSFULL_SIM_LOG_LIMIT = 10
+COUNT_SUCCESSFULL_SIM_WRITERESULT_LIMIT = 100
 
+
+# countSuccessfulSimulation
 
 def setup_logging():
     """
     """
     # TODO configure logger to print module name in same log file.
     try:
+        global logger
 
-        logging.basicConfig(format="%(asctime)s [%(levelname)s] : %(message)s",
-                            filename='pandemic-sim-driver.log', level=logging.DEBUG)
+        logger = logging.getLogger("pandemic_sim_driver")
+        rotateHandler = ConcurrentRotatingFileHandler(
+            os.path.abspath(SCRIPTS_LOGS_DIR_PATH + "pandemic_backend_scripts.log"),
+            "a", 1024 * 1024 * 4, 100)
+
+        logFormatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        rotateHandler.setFormatter(logFormatter)
+
+        logger.addHandler(rotateHandler)
+        logger.setLevel(logging.DEBUG)
+
+        # logger.info("concurrent logging")
 
     except Exception as e:
         print(str(type(e).__name__) + ": " + str(e), file=sys.stderr)
@@ -55,7 +80,8 @@ def parse_cmdargs():
                         required=True)
 
     parser.add_argument('--use_metric', nargs='*', help="List of distance metrics to use. 'wass' for "
-                                                        "Wasserstein distance, 'jshan' for Jenson-shannon",
+                                                        "Wasserstein distance, 'jshan' for Jenson-shannon"
+                                                        "'eucd' for Euclidean distance",
                         default=['wass'],
                         required=False)
 
@@ -79,10 +105,10 @@ def parse_cmdargs():
             args.sim_result_file, args.jhu_repo_path, args.population_data_file)
 
 
-def get_disease_metrics_list(simJsonFile):
+def extract_cols_list(simJsonFile):
     """
     """
-    cmd = subprocess.run(['./extractDiseaseMetricCols', '-f', simJsonFile, '-i', '6,7,8,9'],
+    cmd = subprocess.run(['./extractDiseaseMetricCols', '-f', simJsonFile, '-i', '6,7,8,9,10'],
                          stdout=subprocess.PIPE, text=True)
 
     valStr = cmd.stdout
@@ -95,29 +121,72 @@ def get_disease_metrics_list(simJsonFile):
     return listDistanceMetricsVal
 
 
-def get_simulation_actual_distance_metrics(listDistanceMetrics, simJsonFile1, simJsonFile2):
+def get_simulation_actual_distance_metrics(listDistanceMetrics, simJsonFileBase, simJsonFileSimulated):
     """
     """
-    listDiseaseMetrics1 = get_disease_metrics_list(simJsonFile1)
-    listDiseaseMetrics2 = get_disease_metrics_list(simJsonFile2)
+    tempList = extract_cols_list(simJsonFileBase)
+    listDiseaseMetricsBase = tempList[0:4]  # exclude population column
+
+    # print("simJsonFileSimulated", simJsonFileSimulated)
+    tempList = extract_cols_list(simJsonFileSimulated)
+    listDiseaseMetricsSimulated = tempList[0:4]
+
+    listCountyPopulation = tempList[4]
+    totalPopulation = sum(listCountyPopulation)
 
     distanceMetricsResult = {}
 
+    # print("listdistmetrics", listDistanceMetrics)
+
     for metric in listDistanceMetrics:
+        # print("metric", metric)
+        distVal = 0.0
 
-        distVal = 0
+        for i in range(len(listDiseaseMetricsBase)):
 
-        for i in range(len(listDiseaseMetrics1)):
-            numericList1 = listDiseaseMetrics1[i]
-            numericList2 = listDiseaseMetrics2[i]
+            # print("\n\n\ni:", i)
+            numericListBase = listDiseaseMetricsBase[i]
+            numericListSimulated = listDiseaseMetricsSimulated[i]
+
+            # print("numericList2", numericListSimulated[1050:1055])
+
+            # to find offending county(s)
+            # print("1", [float(x) / float(y) for x, y in zip(numericListBase, listCountyPopulation)][1052:1053])
+            # print("2", [float(x) / float(y) for x, y in zip(numericListSimulated, listCountyPopulation)][1052:1053])
+            #
+            # print("2", [(float(x), float(y)) for x, y in zip(numericListSimulated, listCountyPopulation)][1052:1053])
+            # sys.exit(1)
 
             if metric == 'wass':
-                distVal += wasserstein_distance(numericList1[0:10], numericList2[1:10])
+                # print("wass metric")
+                distVal += wasserstein_distance(numericListBase, numericListSimulated)
 
-            if metric == 'jshan':
-                distVal += distance.jensenshannon(numericList1, numericList2)
+            if metric == 'jenshan':
+                # templist1 = [0.00010482588959891951, 8.259212587266646e-06]
+                # templist2 = [0.0009865204440965508, 8.036204707743254e-05]
+                #
+                # print("!!!!!", distance.jensenshannon(templist1, templist2))
 
-        distVal /= len(listDiseaseMetrics1)
+                # templist1 = np.array([float(x) / totalPopulation for x in numericListBase])
+                # templist2 = np.array([float(x) / totalPopulation for x in numericListSimulated])
+
+                templist1 = [float(x) / totalPopulation for x in numericListBase]
+                templist2 = [float(x) / totalPopulation for x in numericListSimulated]
+
+                jenshanval = distance.jensenshannon(templist1, templist2)
+                # print("jenshan metric", jenshanval)
+
+                if not isnan(jenshanval):
+                    distVal += jenshanval
+
+                # print("distval", distVal)
+                # print(templist1)
+                # print(templist2)
+
+            if metric == 'eucd':
+                distVal += distance.euclidean(numericListBase, numericListSimulated)
+
+        distVal /= len(listDiseaseMetricsBase)
 
         distanceMetricsResult[dictDistMetricNames[metric]] = round(distVal, 3)
 
@@ -127,23 +196,35 @@ def get_simulation_actual_distance_metrics(listDistanceMetrics, simJsonFile1, si
 def run_simulation(simInputJsonFile, simRuntimeUnits, simOutJsonFile):
     """
     """
-    cmd = subprocess.run(['../pandemic_sim', '-m', simInputJsonFile, '--max-sim-time',
-                          str(simRuntimeUnits), '-o', simOutJsonFile])
+    try:
+        cmd = subprocess.run(['../pandemic_sim', '-m', simInputJsonFile, '--max-sim-time',
+                              str(simRuntimeUnits), '-o', simOutJsonFile], stdout=subprocess.DEVNULL,
+                             stderr=subprocess.PIPE,
+                             text=True,
+                             timeout=30)
+    except subprocess.TimeoutExpired:
+        errString = "Timeout expired for simulation job"
+        return -1, errString
+
+    errString = cmd.stderr
 
     if cmd.returncode != 0:
-        raise Exception("Simulation Error!")
+        # print("Simulation Error!")
+        return -1, errString
+
+    return 0, errString
 
 
 def add_start_log():
-    logging.info("")
-    logging.info("")
-    logging.info("Starting ...")
+    logger.info("")
+    logger.info("")
+    logger.info("Starting ...")
 
 
 def add_end_log():
-    logging.info("Exiting ...")
-    logging.info("")
-    logging.info("")
+    logger.info("Exiting ...")
+    logger.info("")
+    logger.info("")
 
 
 def get_sim_end_date(simStartDate, simRuntimeDays):
@@ -331,7 +412,42 @@ def get_line_sim_params_result(startDate, endDate, dictParamTweaks, listDistMetr
 
 
 def trigger():
+    """
+
+    :return:
+    """
     try:
+        def writeToFile():
+            # lock file and write
+            nonlocal simResultFileobj
+            nonlocal simResultStr
+
+            while True:
+                try:
+                    fcntl.flock(simResultFileobj, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    break
+
+                except IOError as e:
+                    if e.errno != errno.EAGAIN:
+                        raise
+                    else:
+                        logger.info("file [{}] is locked, sleeping for 2 sec".format(simResultFile))
+                        time.sleep(2)
+
+            # logger.info("locked file [{}]".format(simResultFile))
+
+            if os.path.getsize(simResultFile) == 0:
+                simResultStr = simResultFileHeader + simResultStr
+
+            simResultFileobj.write(simResultStr)
+
+            # unlock
+            fcntl.flock(simResultFileobj, fcntl.LOCK_UN)
+            # logger.info("Wrote to & unlocked file [{}]".format(simResultFile))
+
+            # print("unlocked file [{}]".format(simResultFile))
+
+        # END helper function
 
         (simStartDate, simRuntimeDays, distMetricsToUse, paramTweaksFile, simResultFile,
          jhuCSSErepoPath, usCountiesListFile) = parse_cmdargs()
@@ -353,18 +469,21 @@ def trigger():
 
         paramTweaksFileobj = open(paramTweaksFile, "r")
 
-        #
-
         simResultStr = ""
         simResultFileHeader = get_csv_header(getDictTweakableDiseaseParamsFromFile(simStartdateInputJsonFile),
                                              distMetricsToUse)
 
         paramTweaksFilePos = 0
-        print(">>>>h1")
+        # print(">>>>h1")
+
+        simResultFileobj = open(simResultFile, "a")
 
         # TODO change -1
-        while paramTweaksFilePos != -1:
-            print(">>>>h2")
+        successfulSimulationWriteCounter = 0
+        countSuccessfulSimulation = 0
+        countFailedSimulation = 0
+        pidVal = os.getpid()
+        while paramTweaksFilePos != -1:  # TODO why not simply read each line ???
             (dictParamTweaks, paramTweaksFilePos) = get_json_from_stream(paramTweaksFileobj,
                                                                          paramTweaksFilePos)
 
@@ -376,7 +495,32 @@ def trigger():
 
             simOutJsonFile = os.getcwd() + "/../data/" + "tempfile_sim_outjson_" + str(uuid.uuid4())
 
-            run_simulation(simStartDateInputJsonTweakedFile, simRuntimeTimeUnits, simOutJsonFile)
+            retStatus, errStr = run_simulation(simStartDateInputJsonTweakedFile, simRuntimeTimeUnits, simOutJsonFile)
+            if retStatus == -1:
+                countFailedSimulation += 1
+                logger.error(
+                    "pid[{}]: pandemic_sim for dates [{}:{}] failed with:\n"
+                    "<STDERR_STRING>\n{}\n</STDERR_STRING>\n"
+                    "<DISEASE_PARAMS>\n{}\n</DISEASE_PARAMS>\n".format(
+                        simStartDate,
+                        simEndDate,
+                        pidVal,
+                        errStr,
+                        str(dictCompleteParamsTweaked)))
+
+                try:
+                    # print("trying to remove file", simStartDateInputJsonTweakedFile, simOutJsonFile)
+                    os.remove(simStartDateInputJsonTweakedFile)
+                    os.remove(simOutJsonFile)
+                except OSError:
+                    pass
+
+                continue  # TODO add comment
+
+            # simulation completed successfully
+
+            countSuccessfulSimulation += 1
+            successfulSimulationWriteCounter += 1
 
             distMetricsResult = get_simulation_actual_distance_metrics(distMetricsToUse,
                                                                        simEnddateInputFormattedJsonFile,
@@ -386,41 +530,49 @@ def trigger():
                                                        [dictDistMetricNames[k] for k in distMetricsToUse],
                                                        distMetricsResult)
 
-            os.remove(simStartDateInputJsonTweakedFile)
-            os.remove(simOutJsonFile)
+            if countSuccessfulSimulation % COUNT_SUCCESSFULL_SIM_LOG_LIMIT == 0:
+                logger.info("pid[{}]: Total {} simulations completed successfully, more may follow ...".format(
+                    pidVal, countSuccessfulSimulation))
 
-        simResultFileobj = open(simResultFile, "a+")
+            if countSuccessfulSimulation % COUNT_SUCCESSFULL_SIM_WRITERESULT_LIMIT == 0:
+                logger.info("pid[{}]: writing results for {} simulations to file, more may follow ...".format(
+                    os.getpid(),
+                    COUNT_SUCCESSFULL_SIM_WRITERESULT_LIMIT))  # TODO use variable
 
-        while True:
+                writeToFile()
+                simResultStr = ""
+
             try:
-                print(">>>>h3")
-                fcntl.flock(simResultFileobj, fcntl.LOCK_EX | fcntl.LOCK_NB)
-                print(">>>>h4")
-                break
+                os.remove(simStartDateInputJsonTweakedFile)
+                os.remove(simOutJsonFile)
+            except OSError:
+                pass
 
-            except IOError as e:
-                if e.errno != errno.EAGAIN:
-                    raise
-                else:
-                    logging.info("file [{}] is locked, sleeping for 2 sec".format(simResultFile))
-                    time.sleep(2)
+        # if something is left unwritten, write it
+        if simResultStr:
+            writeToFile()
+            # not needed ??
+            simResultStr = ""
 
-        logging.info("locked file [{}]".format(simResultFile))
+        simResultFileobj.close()
 
-        if os.path.getsize(simResultFile) == 0:
-            simResultStr = simResultFileHeader + simResultStr
+        logger.info("pid[{}]: Total {} simulations completed, results written to file [{}]".format(
+            os.getpid(),
+            countSuccessfulSimulation,
+            simResultFile))
 
-        simResultFileobj.write(simResultStr)
+        # add_end_log()
 
-        # unlock
-        fcntl.flock(simResultFileobj, fcntl.LOCK_UN)
-        print("unlocked file [{}]".format(simResultFile))
-
-        add_end_log()
+        # TODO clear std err first ??
+        # HACK since stderr will hold existing data, use some unique string to extract count values
+        print("CDRQM{}/{}PAMCU".format(countSuccessfulSimulation,
+                                       countSuccessfulSimulation + countFailedSimulation),
+              end='',
+              file=sys.stderr)
 
     except Exception as e:
-        logging.exception(str(type(e).__name__) + ": " + str(e), exc_info=True)
-        logging.info("Exiting ...\n\n")
+        logger.exception(str(type(e).__name__) + ": " + str(e), exc_info=True)
+        logger.info("Exiting ...\n\n")
 
         print("Exception occurred, view log file")
 

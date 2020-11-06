@@ -9,13 +9,15 @@ try:
     import json
     import pandas as pd
     import logging
+    import logging.config
+    import pathlib
+    from concurrent_log_handler import ConcurrentRotatingFileHandler
     from math import radians, cos, sin, asin, sqrt
     from datetime import datetime
     import subprocess
 except Exception as e:
     print(str(type(e).__name__) + ": " + str(e), file=sys.stderr)
     sys.exit(1)
-
 
 cluster_centers = [("Las Vegas", 36.1699, -115.1398),
                    ("Salt Lake City", 40.7608, -111.8910),
@@ -35,19 +37,38 @@ cluster_centers = [("Las Vegas", 36.1699, -115.1398),
                    ("Portland", 45.5051, -122.6750),
                    ("Sacramento", 38.5816, -121.4944)]
 
-DEFAULT_JHU_CSSE_PATH='../data/COVID-19.jhu/'
-DEFAULT_POPULATION_FILEPATH='../data/US_counties_population_latLong.csv'
-DEFAULT_GRAPH_TYPE='ws'
-DEFAULT_GRAPH_INPUT_PARAM_STRING='8,0.1'
+DEFAULT_JHU_CSSE_PATH = '../data/COVID-19.jhu/'
+DEFAULT_POPULATION_FILEPATH = '../data/US_counties_population_latLong.csv'
+SCRIPTS_LOGS_DIR_PATH = "./logs/"
+DEFAULT_GRAPH_TYPE = 'ws'
+DEFAULT_GRAPH_INPUT_PARAM_STRING = '8,0.1'
+
+logger_prepare_dataset = None
 
 
 def setup_logging():
     """
     """
     try:
+        pass
+        # print("logger", logger)
 
-        logging.basicConfig(format="%(asctime)s [%(levelname)s] : %(message)s",
-                            filename='prepare_dataset.log', level=logging.DEBUG)
+        global logger_prepare_dataset
+
+        logger_prepare_dataset = logging.getLogger(__name__)
+
+        rotateHandler = ConcurrentRotatingFileHandler(os.path.abspath(SCRIPTS_LOGS_DIR_PATH + \
+                                                                      "pandemic_backend_scripts.log"),
+                                                      "a", 1024 * 1024 * 4, 100)
+
+        logFormatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        rotateHandler.setFormatter(logFormatter)
+
+        logger_prepare_dataset.addHandler(rotateHandler)
+        logger_prepare_dataset.setLevel(logging.DEBUG)
+
+        # logger_prepare_dataset.info("from prepare_dataset")
+
 
     except Exception as e:
         print(str(type(e).__name__) + ": " + str(e), file=sys.stderr)
@@ -60,13 +81,13 @@ def parse_cmdargs(population_data, graph_input_param_string):
     :return:
     """
     parser = argparse.ArgumentParser(description='Parse Covid19 dataset from JHU-CSSE, add '
-                                     'population data and dump combined data to '
-                                     'file in json format')
+                                                 'population data and dump combined data to '
+                                                 'file in json format')
     parser.add_argument('--jhu_repo_path', help='path of JHU CSSE repo',
                         default=DEFAULT_JHU_CSSE_PATH,
                         required=False)
     parser.add_argument('--date', help='date for which corresponding Covid data should be '
-                        'pulled from JHU_CSSE repo, in MM-DD-YYYY format',
+                                       'pulled from JHU_CSSE repo, in MM-DD-YYYY format',
                         required=True)
 
     parser.add_argument('--population_data', help='filepath for Population data csv',
@@ -78,7 +99,7 @@ def parse_cmdargs(population_data, graph_input_param_string):
                         required=True)
 
     parser.add_argument('--graph_input_param_string', help='comma-seperated input parameter list for selected '
-                        'graph type, in form of a string',
+                                                           'graph type, in form of a string',
                         default=DEFAULT_GRAPH_INPUT_PARAM_STRING,
                         required=False)
 
@@ -99,9 +120,9 @@ def get_dist_between_coordinates(latA, longA, latB, longB):
     # haversine formula
     dlon = longB - longA
     dlat = latB - latA
-    a = sin(dlat/2)**2 + cos(latA) * cos(latB) * sin(dlon/2)**2
+    a = sin(dlat / 2) ** 2 + cos(latA) * cos(latB) * sin(dlon / 2) ** 2
     c = 2 * asin(sqrt(a))
-    r = 6371 # Radius of earth in kilometers. Use 3956 for miles
+    r = 6371  # Radius of earth in kilometers. Use 3956 for miles
     return c * r
 
 
@@ -153,13 +174,13 @@ def create_merged_DF_jhu_population(covid_csse_data_filepath, pop_data_filepath)
     """
     # create DF from CSSE data, add new column in order to 'join' with population data
     csse_data_daily_report_df = pd.read_csv(covid_csse_data_filepath, skipinitialspace=True,
-                                            usecols=['Admin2','Province_State','Country_Region',
+                                            usecols=['Admin2', 'Province_State', 'Country_Region',
                                                      'Confirmed',
                                                      'Deaths',
                                                      'Recovered',
                                                      'Active'],
-                                            dtype={'Admin2':'object',
-                                                   'Province_State':'object'})
+                                            dtype={'Admin2': 'object',
+                                                   'Province_State': 'object'})
 
     # replace na values
     csse_data_daily_report_df['Admin2'].fillna(value='', inplace=True)
@@ -168,18 +189,19 @@ def create_merged_DF_jhu_population(covid_csse_data_filepath, pop_data_filepath)
 
     # create an extra column for merging
     csse_data_daily_report_df['Combined_Key_US'] = csse_data_daily_report_df.Admin2.str.lower() + "," \
-        + csse_data_daily_report_df.Province_State.str.lower()
+                                                   + csse_data_daily_report_df.Province_State.str.lower()
 
     # now, create DF from population data, add 'Combined_Key_US' column
     population_data_df = pd.read_csv(pop_data_filepath, skipinitialspace=True)
     population_data_df['Combined_Key_US'] = population_data_df.County.str.lower() + "," + \
-        population_data_df.State.str.lower()
+                                            population_data_df.State.str.lower()
 
-    logging.info("Merging main DataFrame [{} rows, {} columns] with population DataFrame [{} rows, {} columns] ..."
-                 .format(csse_data_daily_report_df.shape[0],
-                         csse_data_daily_report_df.shape[1],
-                         population_data_df.shape[0],
-                         population_data_df.shape[1]))
+    logger_prepare_dataset.info(
+        "Merging main DataFrame [{} rows, {} columns] with population DataFrame [{} rows, {} columns] ...".format(
+            csse_data_daily_report_df.shape[0],
+            csse_data_daily_report_df.shape[1],
+            population_data_df.shape[0],
+            population_data_df.shape[1]))
     # now, join
     csse_data_daily_report_merged_df = pd.merge(population_data_df,
                                                 csse_data_daily_report_df[['Country_Region',
@@ -202,19 +224,20 @@ def create_merged_DF_jhu_population(covid_csse_data_filepath, pop_data_filepath)
     csse_data_daily_report_merged_df['Active'].fillna(value=0, inplace=True, downcast='infer')
 
     # reorder columns
-    csse_data_daily_report_merged_df = csse_data_daily_report_merged_df[['FIPS','County','State','Country_Region',
-                                                                         'Lat','Long_','Confirmed','Deaths',
-                                                                         'Recovered','Active','Population']]
+    csse_data_daily_report_merged_df = csse_data_daily_report_merged_df[['FIPS', 'County', 'State', 'Country_Region',
+                                                                         'Lat', 'Long_', 'Confirmed', 'Deaths',
+                                                                         'Recovered', 'Active', 'Population']]
 
-    logging.info("Merged DataFrame has: [{} rows, {} columns]".format(csse_data_daily_report_merged_df.shape[0],
-                                                                      csse_data_daily_report_merged_df.shape[1]))
+    logger_prepare_dataset.info(
+        "Merged DataFrame has: [{} rows, {} columns]".format(csse_data_daily_report_merged_df.shape[0],
+                                                             csse_data_daily_report_merged_df.shape[1]))
 
     # TODO output merge errors to log file
 
-    logging.info("Sorting DataFrame to group rows in clusters ...")
+    logger_prepare_dataset.info("Sorting DataFrame to group rows in clusters ...")
     csse_data_daily_report_merged_df = sort_df_rows_into_clusters(csse_data_daily_report_merged_df)
 
-    logging.info("Sorted DataFrame has: [{} rows, {} columns]".format(
+    logger_prepare_dataset.info("Sorted DataFrame has: [{} rows, {} columns]".format(
         csse_data_daily_report_merged_df.shape[0], csse_data_daily_report_merged_df.shape[1]))
 
     return csse_data_daily_report_merged_df
@@ -240,7 +263,6 @@ def prepare_data(jhu_csse_path=DEFAULT_JHU_CSSE_PATH, covid_csse_data_date=None,
                  graph_type=DEFAULT_GRAPH_TYPE,
                  graph_input_param_string=DEFAULT_GRAPH_INPUT_PARAM_STRING,
                  logger=None):
-
     """
     read data from JHU CSSE github repo (from '/csse_covid_19_data/csse_covid_19_daily_reports' directory),
     combine it with population data, and write output data to file (to serve as input to covid simulation program)
@@ -251,6 +273,8 @@ def prepare_data(jhu_csse_path=DEFAULT_JHU_CSSE_PATH, covid_csse_data_date=None,
 
     try:
         # parse command-line arguments
+        # global logger
+
         if not (jhu_csse_path and covid_csse_data_date and pop_data_filepath and graph_type
                 and graph_input_param_string):
             # print("h1", covid_csse_data_date, pop_data_filepath, graph_type, graph_input_param_string)
@@ -258,17 +282,13 @@ def prepare_data(jhu_csse_path=DEFAULT_JHU_CSSE_PATH, covid_csse_data_date=None,
             (jhu_csse_path, covid_csse_data_date, pop_data_filepath, graph_type, graph_input_param_string) = \
                 parse_cmdargs(pop_data_filepath, graph_input_param_string)
 
+        # pathlib.Path(SCRIPTS_LOGS_DIR_PATH).mkdir(parents=True, exist_ok=True)
         setup_logging()
 
-        logging.info("")
-        logging.info("")
-        logging.info("Starting ...")
-
         # hard-coded values
-        transmissibility, mean_incubation_duration_in_days, mean_infection_duration_in_days,\
-            mortality_ratio, update_trig_interval_in_hrs, diffusion_trig_interval_in_hrs,\
-            avg_transport_speed, max_diffusion_cnt = 2.2, 2.2, 2.3, 0.05, 24, 48, 100, 10
-
+        transmissibility, mean_incubation_duration_in_days, mean_infection_duration_in_days, \
+        mortality_ratio, update_trig_interval_in_hrs, diffusion_trig_interval_in_hrs, \
+        avg_transport_speed, max_diffusion_cnt = 2.2, 2.2, 2.3, 0.05, 24, 48, 100, 10
 
         covid_csse_data_filepath = get_jhu_csse_data_filepath(jhu_csse_path, covid_csse_data_date)
 
@@ -278,8 +298,8 @@ def prepare_data(jhu_csse_path=DEFAULT_JHU_CSSE_PATH, covid_csse_data_date=None,
         out_filepath = os.getcwd() + "/../data/" + out_fname
 
         if os.path.isfile(out_filepath):
-            logging.info("File [{}] already exists ...".format(out_filepath))
-            logging.info("Exiting ...")
+            logger_prepare_dataset.info("File [{}] already exists ...".format(out_filepath))
+            logger_prepare_dataset.info("Exiting ...")
             return (out_filepath)
 
         disease_model = {
@@ -310,7 +330,7 @@ def prepare_data(jhu_csse_path=DEFAULT_JHU_CSSE_PATH, covid_csse_data_date=None,
             "locations": None
         }
 
-        logging.info("Writing to file [{}] in json format".format(out_filepath))
+        logger_prepare_dataset.info("Writing to file [{}] in json format".format(out_filepath))
         # write out main dictionary to json file
         final_dict["locations"] = csse_data_daily_report_merged_sorted_df.values.tolist()
 
@@ -320,17 +340,17 @@ def prepare_data(jhu_csse_path=DEFAULT_JHU_CSSE_PATH, covid_csse_data_date=None,
         ret_stdout, ret_stderr = proc.communicate(json.dumps(final_dict))
 
         if proc.returncode == 0:
-            logging.info("Writing finished with return status: {}".format(proc.returncode))
+            logger_prepare_dataset.info("Writing finished with return status: {}".format(proc.returncode))
         else:
             raise Exception("Error in writing to file: [{}]".format(ret_stderr.strip()))
 
-        logging.info("Exiting ...\n\n")
+        logger_prepare_dataset.info("Exiting ...\n\n")
 
-        return (out_filepath)
+        return out_filepath
 
     except Exception as e:
-        logging.exception(str(type(e).__name__) + ": " + str(e), exc_info=True)
-        logging.info("Exiting ...\n\n")
+        logger_prepare_dataset.exception(str(type(e).__name__) + ": " + str(e), exc_info=True)
+        logger_prepare_dataset.info("Exiting ...\n\n")
 
         print("Exception occured, view log file")
         sys.exit(1)
@@ -339,4 +359,3 @@ def prepare_data(jhu_csse_path=DEFAULT_JHU_CSSE_PATH, covid_csse_data_date=None,
 # MAIN
 if __name__ == '__main__':
     prepare_data()
-

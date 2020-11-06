@@ -1,6 +1,7 @@
 document.addEventListener("DOMContentLoaded", function() {
 
-    var funcTimeout = undefined;
+    var getstatusTimeout = undefined;
+    var jobid_prefix = "job_";
 
     console.log("js loaded");
 
@@ -9,10 +10,10 @@ document.addEventListener("DOMContentLoaded", function() {
             console.log("submit clicked!");
             event.preventDefault();
 
-            var graph_type1obj = document.getElementById('graph_type1');
-            var graph_type1 = graph_type1obj.options[graph_type1obj.selectedIndex].value;
-            var graph_type2obj = document.getElementById('graph_type2');
-            var graph_type2 = graph_type2obj.options[graph_type2obj.selectedIndex].value;
+            var graph_typeobj = document.getElementById('graph_typeoption');
+            var graph_type = graph_typeobj.options[graph_typeobj.selectedIndex].value;
+            // var graph_type2obj = document.getElementById('graph_type2');
+            // var graph_type2 = graph_type2obj.options[graph_type2obj.selectedIndex].value;
 
             var postdata = {
                 'sim_result_file': {
@@ -21,54 +22,67 @@ document.addEventListener("DOMContentLoaded", function() {
                     'value':document.getElementById('startdate').value
                 }, 'runtime_days' : {
                     'value':document.getElementById('runtime_days').value
-                }, 'tweakscount' : {
+                }, /*'tweakscount' : {
                     'value':document.getElementById('tweakscount').value
-                }, 'transmissibility':{
+                },*/'transmissibility':{
                     'ifchecked':document.getElementById('transmissibility').checked,
                     'fromval':document.getElementById('transmissibilityfrom').value,
-                    'toval':document.getElementById('transmissibilityto').value
+                    'toval':document.getElementById('transmissibilityto').value,
+                    'step':document.getElementById('transmissibilitystep').value
                 }, 'mean_incubation_duration_in_days' : {
                     'ifchecked':document.getElementById('mean_incubation_duration_in_days').checked,
                     'fromval':document.getElementById('mean_incubation_duration_in_daysfrom').value,
-                    'toval':document.getElementById('mean_incubation_duration_in_daysto').value
+                    'toval':document.getElementById('mean_incubation_duration_in_daysto').value,
+                    'step':document.getElementById('mean_incubation_duration_in_daysstep').value
                 }, 'mean_infection_duration_in_days' : {
                     'ifchecked':document.getElementById('mean_infection_duration_in_days').checked,
                     'fromval':document.getElementById('mean_infection_duration_in_daysfrom').value,
-                    'toval':document.getElementById('mean_infection_duration_in_daysto').value
+                    'toval':document.getElementById('mean_infection_duration_in_daysto').value,
+                    'step':document.getElementById('mean_infection_duration_in_daysstep').value
                 }, 'mortality_ratio' : {
                     'ifchecked':document.getElementById('mortality_ratio').checked,
                     'fromval':document.getElementById('mortality_ratiofrom').value,
-                    'toval':document.getElementById('mortality_ratioto').value
+                    'toval':document.getElementById('mortality_ratioto').value,
+                    'step':document.getElementById('mortality_ratiostep').value
                 }, 'update_trig_interval_in_hrs' : {
                     'ifchecked':document.getElementById('update_trig_interval_in_hrs').checked,
                     'fromval':document.getElementById('update_trig_interval_in_hrsfrom').value,
-                    'toval':document.getElementById('update_trig_interval_in_hrsto').value
+                    'toval':document.getElementById('update_trig_interval_in_hrsto').value,
+                    'step':document.getElementById('update_trig_interval_in_hrsstep').value
                 }, 'graph_type' : {
                     'ifchecked':document.getElementById('graph_type').checked,
-                    'type1':graph_type1,
-                    'type1count':document.getElementById('graph_type1count').value,
-                    'type2':graph_type2,
-                    'type2count':document.getElementById('graph_type2count').value,
+                    'type':graph_type
+                    // 'type1count':document.getElementById('graph_type1count').value,
+                    // 'type2':graph_type2,
+                    // 'type2count':document.getElementById('graph_type2count').value,
                 }, 'graph_params' : {
                     'ifchecked':document.getElementById('graph_params').checked,
-                    'fromval':document.getElementById('graph_paramsfrom').value,
-                    'toval':document.getElementById('graph_paramsto').value
+                    'K_fromval':document.getElementById('graph_param_Kfrom').value,
+                    'K_toval':document.getElementById('graph_param_Kto').value,
+                    'K_step':document.getElementById('graph_param_Kstep').value,
+                    'beta_fromval':document.getElementById('graph_param_betafrom').value,
+                    'beta_toval':document.getElementById('graph_param_betato').value,
+                    'beta_step':document.getElementById('graph_param_betastep').value
                 }, 'diffusion_trig_interval_in_hrs' : {
                     'ifchecked':document.getElementById('diffusion_trig_interval_in_hrs').checked,
                     'fromval':document.getElementById('diffusion_trig_interval_in_hrsfrom').value,
-                    'toval':document.getElementById('diffusion_trig_interval_in_hrsto').value
+                    'toval':document.getElementById('diffusion_trig_interval_in_hrsto').value,
+                    'step':document.getElementById('diffusion_trig_interval_in_hrsstep').value
                 }, 'avg_transport_speed' : {
                     'ifchecked':document.getElementById('avg_transport_speed').checked,
                     'fromval':document.getElementById('avg_transport_speedfrom').value,
-                    'toval':document.getElementById('avg_transport_speedto').value
+                    'toval':document.getElementById('avg_transport_speedto').value,
+                    'step':document.getElementById('avg_transport_speedstep').value
                 }, 'max_diffusion_cnt' : {
                     'ifchecked':document.getElementById('max_diffusion_cnt').checked,
                     'fromval':document.getElementById('max_diffusion_cntfrom').value,
-                    'toval':document.getElementById('max_diffusion_cntto').value
+                    'toval':document.getElementById('max_diffusion_cntto').value,
+                    'step':document.getElementById('max_diffusion_cntstep').value
                 }, 'distmetrictype' : {
                     'ifchecked':document.getElementById('distmetric').checked,
                     'ifmetricwasschecked':document.getElementById('distmetricwass').checked,
-                    'ifmetricshajenchecked':document.getElementById('distmetricshajen').checked
+                    'ifmetricjenshanchecked':document.getElementById('distmetricjenshan').checked,
+                    'ifmetriceucdchecked':document.getElementById('eucd').checked
                 }
             }
 
@@ -79,40 +93,27 @@ document.addEventListener("DOMContentLoaded", function() {
                 .url('/simulate')
                 .timeout(3000)
                 .on('200', function (response) {
-                    console.log("this is the response: ");
-                    // console.log(typeof response);
-                    // console.log(JSON.parse(response));
-                    console.log(response);
+                    console.log("simulate response:", response);
 
-                    // var newToastElement = document.createElement('div');
+                    document.getElementById("statusmsg").innerText = response["statusmsg"]
 
-                    // newToastElement.classList.add('toast');
-                    // newToastElement.classList.add('toast-primary');
-
-                    // add id
-                    // newToastElement.setAttribute("id", "job" + response["jobid"].toString());
-
-                    // newToastElement.innerText = response["bannertext"];
-
-                    // document.getElementById("wrapper").appendChild(newToastElement);
-
-                    if (funcTimeout) {
-                        clearInterval(funcTimeout);
-                        funcTimeout = setTimeout(getStatus, 200, false);
+                    if (getstatusTimeout) {
+                        clearInterval(getstatusTimeout);
+                        getstatusTimeout = setTimeout(getStatus, 200, false);
                     } else {
-                        funcTimeout = setTimeout(getStatus, 200, false);
+                        getstatusTimeout = setTimeout(getStatus, 200, false);
                     }
 
-                    console.log("/simulate: set timeout");
+                    // console.log("/simulate: set timeout");
                 })
                 .go();
         });
 
 
     var getStatus = function (ifFetchAll) {
-        clearTimeout(funcTimeout);
-        funcTimeout = setTimeout(getStatus, 4000, false);
-        console.log("/getstatus cleared and set timeout");
+        clearTimeout(getstatusTimeout);
+        getstatusTimeout = setTimeout(getStatus, 4000, false);
+        // console.log("/getstatus cleared and set timeout");
 
         // main logic
         aja()
@@ -122,19 +123,24 @@ document.addEventListener("DOMContentLoaded", function() {
             .url('/getstatus')
             .timeout(2500)
             .on('200', function (response) {
-                console.log("getstatus:", response);
+                // console.log("getstatus resp:", response);
+                // return;
 
-                for (var jobid in response) {
+                if ("statusmsg" in response) {
+                    document.getElementById("statusmsg").innerText = response["statusmsg"]
+                }
 
-                    if (!response.hasOwnProperty(jobid)) {
+                var respJobstatus = response["jobstatus"];
+
+                for (var jobid in respJobstatus) {
+
+                    idStr = jobid_prefix + jobid.toString();
+
+                    if (ifFetchAll == false && respJobstatus[jobid]["updatebanner"] == "no") {
                         continue;
                     }
 
-                    idStr = "job" + jobid.toString();
-
-                    if (ifFetchAll == false && response[jobid]["updatebanner"] == "no") {
-                        continue;
-                    }
+                    console.log("adding updating banner");
 
                     var bannerObj = document.getElementById(idStr);
 
@@ -142,27 +148,31 @@ document.addEventListener("DOMContentLoaded", function() {
                         bannerObj.removeAttribute("class");
                         bannerObj.classList.add("toast");
                     } else {
-                        // banner doesn't exist
+                        // banner doesn't exist; create one
                         bannerObj = document.createElement('div');
-                        bannerObj.setAttribute("id", "job" + jobid.toString());
+                        bannerObj.setAttribute("id", jobid_prefix + jobid.toString());
                         bannerObj.classList.add('toast');
-                        document.getElementById("wrapper").appendChild(bannerObj);
+                        document.getElementById("jobbanners").prepend(bannerObj);
                     }
 
-                    if (response[jobid]["status"] == "success") {
+                    if (respJobstatus[jobid]["status"] == "success") {
                         bannerObj.classList.add("toast-success");
-                        bannerObj.innerText = response[jobid]["bannertext"];
+                        // bannerObj.innerText = response[jobid]["bannertext"];
+                        bannerObj.innerHTML = respJobstatus[jobid]["bannertext"]; // HACK
 
+                        // file download link
                         var fileDownload_a = document.createElement('a');
-                        fileDownload_a.setAttribute("href", response[jobid]["filename"]);
-                        fileDownload_a.appendChild(document.createTextNode(response[jobid]["filename"]));
+                        fileDownload_a.setAttribute("href", respJobstatus[jobid]["filename"]);
+                        fileDownload_a.appendChild(document.createTextNode(respJobstatus[jobid]["filename"]));
                         bannerObj.appendChild(fileDownload_a);
-                    } else if (response[jobid]["status"] == "running") {
-                        bannerObj.classList.add("toast-primary");
-                        bannerObj.innerText = response[jobid]["bannertext"];
-                    } else if (response[jobid]["status"] == "failure") {
+                    } else if (respJobstatus[jobid]["status"] == "failure") {
                         bannerObj.classList.add("toast-error");
-                        bannerObj.innerText = response[jobid]["bannertext"];
+                        // bannerObj.innerText = response[jobid]["bannertext"];
+                        bannerObj.innerHTML = respJobstatus[jobid]["bannertext"];
+                    } else if (respJobstatus[jobid]["status"] == "running") {
+                        bannerObj.classList.add("toast-primary");
+                        // bannerObj.innerText = response[jobid]["bannertext"];
+                        bannerObj.innerHTML = respJobstatus[jobid]["bannertext"];
                     }
 
                 }

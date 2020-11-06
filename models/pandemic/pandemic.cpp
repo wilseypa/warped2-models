@@ -106,6 +106,7 @@ int main(int argc, const char** argv) {
     for (auto& lp : lps) {
         lp_pointers.push_back(&lp);
     }
+
     pandemic_sim.simulate(lp_pointers);
 
     CONFIGFILEHANDLER->writeConfig(out_file_name, lps);
