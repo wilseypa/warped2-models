@@ -1,0 +1,7 @@
+First run the install script to get mongoDB installed and launch the shell
+Script name: mongoDB.sh
+
+use mydb;
+var file = cat('./07/22/2020.formatted-JHU-data.json');
+var output = JSON.parse(file);
+db.mycol.insert(output);
