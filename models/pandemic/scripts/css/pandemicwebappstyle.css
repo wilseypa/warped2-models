@@ -50,3 +50,7 @@ div#usageinfo {
     margin-top: 1em;
     font-size: 1.1em;
 }
+
+label.ORlabel {
+    font-style: italic;
+}

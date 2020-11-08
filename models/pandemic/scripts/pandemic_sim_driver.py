@@ -39,8 +39,6 @@ COUNT_SUCCESSFULL_SIM_LOG_LIMIT = 10
 COUNT_SUCCESSFULL_SIM_WRITERESULT_LIMIT = 100
 
 
-# countSuccessfulSimulation
-
 def setup_logging():
     """
     """
@@ -79,6 +77,10 @@ def parse_cmdargs():
     parser.add_argument('--sim_runtime_days', help='Simulation runtime in days',
                         required=True)
 
+    # parser.add_argument('--exposed_confirmed_ratio', help='YYG or custom value',
+    #                     default='2.5',
+    #                     required=False)
+
     parser.add_argument('--use_metric', nargs='*', help="List of distance metrics to use. 'wass' for "
                                                         "Wasserstein distance, 'jshan' for Jenson-shannon"
                                                         "'eucd' for Euclidean distance",
@@ -101,8 +103,10 @@ def parse_cmdargs():
 
     args = parser.parse_args()
 
-    return (args.sim_start_date, args.sim_runtime_days, args.use_metric, args.tweaked_params_file,
-            args.sim_result_file, args.jhu_repo_path, args.population_data_file)
+    return (args.sim_start_date, args.sim_runtime_days, args.use_metric,
+            args.tweaked_params_file,
+            args.sim_result_file, args.jhu_repo_path,
+            args.population_data_file)
 
 
 def extract_cols_list(simJsonFile):
@@ -287,6 +291,7 @@ def get_json_from_stream(paramTweaksFileobj, startPos):
 
 def getDictTweakableDiseaseParamsFromFile(jsonFile):
     """
+    TODO add comment
     """
     with open(jsonFile, 'r') as f:
         jsonData = json.load(f)
@@ -449,8 +454,13 @@ def trigger():
 
         # END helper function
 
-        (simStartDate, simRuntimeDays, distMetricsToUse, paramTweaksFile, simResultFile,
-         jhuCSSErepoPath, usCountiesListFile) = parse_cmdargs()
+        (simStartDate, simRuntimeDays, distMetricsToUse, paramTweaksFile,
+         simResultFile,
+         jhuCSSErepoPath,
+         usCountiesListFile) = parse_cmdargs()
+
+        # NOTE: infected_confirmed_ratio, distMetricsToUse remain constant for entire set of simulations,
+        # so, they are not included in the "tweakfile"
 
         setup_logging()
 
@@ -459,6 +469,29 @@ def trigger():
 
         simRuntimeTimeUnits = simRuntimeDays * 24
 
+        #
+        # if exposedConfirmedRatio == "YYG":
+        #     # read from csv file
+        #     yyg_df = pandas.read_csv("cumulative-estimated-infections-of-covid-19.dateFormatted.csv")
+        #
+        #     if simStartDate in yyg_df.Date.values:
+        #         confirmedCount = yyg_df.loc[yyg_df['Date'] == simStartDate]["Cumulative_confirmed_cases"].iloc[0]
+        #         estimatedInfectedCount = yyg_df.loc[yyg_df['Date'] == \
+        #                                             simStartDate]["Cumulative_estimated_infections_YYG"].iloc[0]
+        #
+        #         if confirmedCount == 0 or estimatedInfectedCount == 0:
+        #             exposedConfirmedRatio = 2.5
+        #         else:
+        #             exposedConfirmedRatio = round(estimatedInfectedCount / confirmedCount, 4)
+        #
+        #     else:
+        #         # if date not found in csv
+        #         exposedConfirmedRatio = 2.5
+        #
+        # else:
+        #     # if custom value, convert string to float
+        #     exposedConfirmedRatio = float(exposedConfirmedRatio)
+        
         simStartdateInputJsonFile = prepare_dataset.prepare_data(jhu_csse_path=jhuCSSErepoPath,
                                                                  covid_csse_data_date=simStartDate,
                                                                  pop_data_filepath=usCountiesListFile)
@@ -492,6 +525,8 @@ def trigger():
             # TODO add comment
             dictCompleteParamsTweaked = tweak_params_sim_inputfile(dictParamTweaks, simStartdateInputJsonFile,
                                                                    simStartDateInputJsonTweakedFile)
+
+            # print("dictCompleteParamsTweaked", dictCompleteParamsTweaked)
 
             simOutJsonFile = os.getcwd() + "/../data/" + "tempfile_sim_outjson_" + str(uuid.uuid4())
 
@@ -563,7 +598,7 @@ def trigger():
 
         # add_end_log()
 
-        # TODO clear std err first ??
+        # TODO clear stderr first ??
         # HACK since stderr will hold existing data, use some unique string to extract count values
         print("CDRQM{}/{}PAMCU".format(countSuccessfulSimulation,
                                        countSuccessfulSimulation + countFailedSimulation),

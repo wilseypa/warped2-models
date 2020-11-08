@@ -107,6 +107,7 @@ public:
     }
 
     double transmissibility_                = 2.2;          /* equals beta     */
+    double exposed_confirmed_ratio_         = 2.5;
     double mean_incubation_duration_        = 5.2 * TIME_UNITS_IN_DAY;    /* equals 1/sigma  */
     double mean_infection_duration_         = 2.3 * TIME_UNITS_IN_DAY;    /* equals 1/gamma  */
 
@@ -115,10 +116,10 @@ public:
     /* NOTE: An arbitrary factor to account for discrepancy between actual
              and reported confirmed cases.
        Source: https://fortune.com/2020/06/25/us-coronavirus-cases-how-many-\
-               total-20-million-asymptomatic-confirmed-tests-covid-19-case-count-cdc-estimate/
-     */
-    double exposed_confirmed_ratio_         = 10.0;
+                total-20-million-asymptomatic-confirmed-tests-covid-19-case-count-cdc-estimate/
 
+                double exposed_confirmed_ratio_         = 10.0; */
+    
     unsigned int update_trig_interval_in_hrs_;
     unsigned int diffusion_trig_interval_in_hrs_;
     unsigned int avg_transport_speed_;
@@ -308,6 +309,8 @@ public:
         jsoncons::ojson data = jsoncons::ojson::parse(is);
 
         CONFIG->transmissibility_ = data["disease_model"]["transmissibility"].as<double>();
+
+        CONFIG->exposed_confirmed_ratio_ = data["disease_model"]["exposed_confirmed_ratio"].as<double>();
 
         CONFIG->mean_incubation_duration_ =
             data["disease_model"]["mean_incubation_duration_in_days"].as<double>() * TIME_UNITS_IN_DAY;

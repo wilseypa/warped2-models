@@ -94,6 +94,11 @@ def parse_cmdargs(population_data, graph_input_param_string):
                         default=DEFAULT_POPULATION_FILEPATH,
                         required=False)
 
+    # parser.add_argument('--exposed_confirmed_ratio', help='ratio of exposed to confirmed',
+    #                     type=float,
+    #                     default=2.5,
+    #                     required=False)
+
     parser.add_argument('--graph_type', help="'ws' for Watts-Strogatz, and 'ba' for Barabasi-Albert",
                         choices=['ws', 'ba'],
                         required=True)
@@ -260,6 +265,7 @@ def get_jhu_csse_data_filepath(jhu_csse_path, dateStr):
 
 def prepare_data(jhu_csse_path=DEFAULT_JHU_CSSE_PATH, covid_csse_data_date=None,
                  pop_data_filepath=DEFAULT_POPULATION_FILEPATH,
+                 # exposed_confirmed_ratio=2.5,
                  graph_type=DEFAULT_GRAPH_TYPE,
                  graph_input_param_string=DEFAULT_GRAPH_INPUT_PARAM_STRING,
                  logger=None):
@@ -275,20 +281,24 @@ def prepare_data(jhu_csse_path=DEFAULT_JHU_CSSE_PATH, covid_csse_data_date=None,
         # parse command-line arguments
         # global logger
 
-        if not (jhu_csse_path and covid_csse_data_date and pop_data_filepath and graph_type
-                and graph_input_param_string):
+        # TODO add comment
+        if not covid_csse_data_date:
             # print("h1", covid_csse_data_date, pop_data_filepath, graph_type, graph_input_param_string)
             # print("h2", "calling cmdargs")
-            (jhu_csse_path, covid_csse_data_date, pop_data_filepath, graph_type, graph_input_param_string) = \
-                parse_cmdargs(pop_data_filepath, graph_input_param_string)
+            (jhu_csse_path, covid_csse_data_date, pop_data_filepath, graph_type,
+             graph_input_param_string) = parse_cmdargs(pop_data_filepath, graph_input_param_string)
 
         # pathlib.Path(SCRIPTS_LOGS_DIR_PATH).mkdir(parents=True, exist_ok=True)
         setup_logging()
 
-        # hard-coded values
-        transmissibility, mean_incubation_duration_in_days, mean_infection_duration_in_days, \
-        mortality_ratio, update_trig_interval_in_hrs, diffusion_trig_interval_in_hrs, \
-        avg_transport_speed, max_diffusion_cnt = 2.2, 2.2, 2.3, 0.05, 24, 48, 100, 10
+        # Default values
+        (transmissibility, exposed_confirmed_ratio, mean_incubation_duration_in_days,
+         mean_infection_duration_in_days,
+         mortality_ratio,
+         update_trig_interval_in_hrs,
+         diffusion_trig_interval_in_hrs,
+         avg_transport_speed,
+         max_diffusion_cnt) = 2.2, 2.5, 2.2, 2.3, 0.05, 24, 48, 100, 10
 
         covid_csse_data_filepath = get_jhu_csse_data_filepath(jhu_csse_path, covid_csse_data_date)
 
@@ -304,6 +314,7 @@ def prepare_data(jhu_csse_path=DEFAULT_JHU_CSSE_PATH, covid_csse_data_date=None,
 
         disease_model = {
             "transmissibility": transmissibility,
+            "exposed_confirmed_ratio": exposed_confirmed_ratio,
             "mean_incubation_duration_in_days": mean_incubation_duration_in_days,
             "mean_infection_duration_in_days": mean_infection_duration_in_days,
             "mortality_ratio": mortality_ratio,

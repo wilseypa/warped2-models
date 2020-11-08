@@ -16,6 +16,7 @@ try:
     import multiprocessing as mp
     import pathlib
     from bottle import auth_basic, run, route, default_app, template, get, post, request, static_file, response, debug
+    import pandas
 
     # import helper
 except Exception as e:
@@ -158,8 +159,29 @@ def create_paramtweaks_file(reqdata):
         tweakfilesobj[tweakFileIndex].write(json.dumps(dictTweak) + '\n')
 
     # END addTweakDictToFile()
+    ################ END HELPER FUNCTIONS ################
 
     # tweakscount = int(reqdata['tweakscount']['value'])
+
+    # TODO comment
+    yyg_df = pandas.read_csv(os.getcwd() + "/../data/" + \
+                             "cumulative-estimated-infections-of-covid-19.dateFormatted.csv")
+
+    simStartDate = reqdata['start_date']['value']
+
+    if simStartDate in yyg_df.Date.values:
+        confirmedCount = yyg_df.loc[yyg_df['Date'] == simStartDate]["Cumulative_confirmed_cases"].iloc[0]
+        estimatedInfectedCount = yyg_df.loc[yyg_df['Date'] == \
+                                            simStartDate]["Cumulative_estimated_infections_YYG"].iloc[0]
+
+        if confirmedCount == 0 or estimatedInfectedCount == 0:
+            yygExposedConfirmedRatio = 4
+        else:
+            yygExposedConfirmedRatio = round(estimatedInfectedCount / confirmedCount, 4)
+
+    else:
+        # if date not found in csv
+        yygExposedConfirmedRatio = 4
 
     # create counter limit lists
     paramRollingCounter = []
@@ -170,9 +192,33 @@ def create_paramtweaks_file(reqdata):
         transmissibilityto = float(reqdata['transmissibility']['toval'])
         transmissibilitystep = float(reqdata['transmissibility']['step'])
 
+        # [4] index holds current value
         paramRollingCounter.append([('disease_model', 'transmissibility'), transmissibilityfrom, transmissibilityto,
                                     transmissibilitystep,
                                     transmissibilityfrom])
+
+    # for exposed confirmed factor
+    # TODO since this value does not vary, all tweaklines will contain same value, wasting space
+
+    if reqdata['exposed_confirmed_ratio']['ifchecked'] is True:
+        if reqdata['exposed_confirmed_ratio']['ifYYGchecked'] is True:
+            exposed_confirmed_ratio = yygExposedConfirmedRatio
+
+            paramRollingCounter.append([('disease_model', 'exposed_confirmed_ratio'),
+                                        exposed_confirmed_ratio,
+                                        exposed_confirmed_ratio,
+                                        0,
+                                        exposed_confirmed_ratio])
+        else:
+            exposed_confirmed_ratiofrom = float(reqdata['exposed_confirmed_ratio']['fromval'])
+            exposed_confirmed_ratioto = float(reqdata['exposed_confirmed_ratio']['toval'])
+            exposed_confirmed_ratiostep = float(reqdata['exposed_confirmed_ratio']['step'])
+
+            paramRollingCounter.append([('disease_model', 'exposed_confirmed_ratio'),
+                                        exposed_confirmed_ratiofrom,
+                                        exposed_confirmed_ratioto,
+                                        exposed_confirmed_ratiostep,
+                                        exposed_confirmed_ratiofrom])
 
     if reqdata['mean_incubation_duration_in_days']['ifchecked'] is True:
         mean_incubation_duration_in_daysfrom = \
@@ -377,6 +423,9 @@ def simulate_func(dictreq):
     """
     tweakfiles = create_paramtweaks_file(dictreq)  # expensive function
 
+    print("tweakfiles", tweakfiles)
+    # sys.exit(1)
+
     listDistmetrics = []
     if dictreq['distmetrictype']['ifchecked'] == True:
         if dictreq['distmetrictype']['ifmetricwasschecked'] == True:
@@ -509,6 +558,8 @@ def simulate():
 
     dictreq = json.loads(request.forms.get('data'))
     print("post data", dictreq)
+
+    # sys.exit(1)
 
     response.content_type = 'application/json'
 

@@ -22,13 +22,17 @@ document.addEventListener("DOMContentLoaded", function() {
                     'value':document.getElementById('startdate').value
                 }, 'runtime_days' : {
                     'value':document.getElementById('runtime_days').value
-                }, /*'tweakscount' : {
-                    'value':document.getElementById('tweakscount').value
-                },*/'transmissibility':{
+                }, 'transmissibility':{
                     'ifchecked':document.getElementById('transmissibility').checked,
                     'fromval':document.getElementById('transmissibilityfrom').value,
                     'toval':document.getElementById('transmissibilityto').value,
                     'step':document.getElementById('transmissibilitystep').value
+                }, 'exposed_confirmed_ratio':{
+                    'ifchecked':document.getElementById('exposed_confirmed_ratio').checked,
+                    'fromval':document.getElementById('exposed_confirmed_ratiofrom').value,
+                    'toval':document.getElementById('exposed_confirmed_ratioto').value,
+                    'step':document.getElementById('exposed_confirmed_ratiostep').value,
+                    'ifYYGchecked':document.getElementById('exposed_confirmed_ratioYYG').checked
                 }, 'mean_incubation_duration_in_days' : {
                     'ifchecked':document.getElementById('mean_incubation_duration_in_days').checked,
                     'fromval':document.getElementById('mean_incubation_duration_in_daysfrom').value,
