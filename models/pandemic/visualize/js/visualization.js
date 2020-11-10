@@ -261,6 +261,8 @@ function plot_data() {
                 var covidStatsArray = new Array(timeDiffInDays + 1); //will be length of date range
                 var locationsDataLength = covidStats.locations[0].length;
                 var locationsLength = covidStats.locations.length;
+
+                var dummyForEachArray = new Array(timeDiffInDays + 1).fill(0);
                 
                 
 
@@ -272,10 +274,10 @@ function plot_data() {
                     }
                 }
 
-                for (var currentJsonFile = 0; currentJsonFile < timeDiffInDays + 1; currentJsonFile++) {
+                dummyForEachArray.forEach(function(value, currentJsonFile){ //need the scope of forEach vs normal for loop
+                //for (var currentJsonFile = 0; currentJsonFile < timeDiffInDays + 1; currentJsonFile++) {
                     var startingDate = startDateValue.getDate();
                     var innerJsonDate = startingDate + currentJsonFile;
-                    console.log(innerJsonDate)
                     jsonDataFilePathString = "../07-" + innerJsonDate + "-2020.formatted-JHU-data.json"   //"../07-22-2020.formatted-JHU-data.json"
 
                     d3.json(jsonDataFilePathString).then(function(newData) {
@@ -291,13 +293,12 @@ function plot_data() {
                             }
                         }
 
-                        if((currentJsonFile) == timeDiffInDays+1) {   //final file iteration
-                            console.log(covidStats)
+                        if((currentJsonFile) == timeDiffInDays) {   //final file iteration
                             rePlot(covidStats);
                         }
                         //ANYTHING AFTER THIS (and/or outside of this d3.json) WILL BE EXECUTED BEFORE THIS CODE
                     });
-                }
+                })
 
             } else {
                 let startDateValue = new Date(startDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
