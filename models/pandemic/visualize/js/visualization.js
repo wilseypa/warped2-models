@@ -2,11 +2,12 @@ var tooltip = document.getElementById('tt');
 color_wheel = ["#ffcccc", "#ff8080", "#ff0000", "#b30000"];
 var count = 0;
 
-var slider = document.getElementById("dateRange");
-var dateValue = document.getElementById("dateValue");
-//dateValue.innerHTML = slider.value; // Display the default slider value
-dateArray = ["7-22-2020", "7-23-2020", "7-24-2020", "7-25-2020"]
-dateValue.innerHTML = dateArray[slider.value-1]; // Display the default slider value
+var startDate = document.getElementById('startDate');
+startDate.value = "2020-07-22";
+var endDate = document.getElementById('endDate');
+
+var incrementButton = document.getElementById("incrementButton");
+var decrementButton = document.getElementById("decrementButton");
 
 window.onmousemove = function (e) { //function gets location of mouse for tooltip
     var x = e.clientX,
@@ -15,9 +16,56 @@ window.onmousemove = function (e) { //function gets location of mouse for toolti
     tooltip.style.left = (x + 20) + 'px';
 };
 
+function enableRange(e) {
+    if(e.checked){
+        document.getElementById('endDate').disabled = false;
+    } else {
+        document.getElementById('endDate').disabled = true;
+    }
+}
+
+function formatDate(dateValue, dateFormat) {
+    let year = dateValue.getFullYear();
+    let month = dateValue.getMonth() + 1;
+    let day = dateValue.getDate()
+
+    if(month < 10) {
+        month = "0" + month;
+    }
+    if(day < 10) {
+        day = "0" + day;
+    }
+
+    if(dateFormat == "YYYY-MM-DD") {
+        return year + "-" + month + "-" + day;
+    } else if(dateFormat == "MM-DD-YYYY") {
+        return month + "-" + day + "-" + year;
+    } else {
+        throw "Invalid date format"
+    }
+
+}
+function dateIncrement(direction) { //1 is increment, 0 is decrement
+    var startDateValue = new Date(startDate.value + "T00:00:00")    //T00:00:00 is required for local timezone
+
+    if(document.getElementById('isDateRange').checked){
+        //increment by the same range of the current selected range
+        //ie if a month is selected increment with the range of the entire next month
+
+    } else {
+        if(direction){
+            startDateValue.setDate(startDateValue.getDate() + 1);
+        } else {
+            startDateValue.setDate(startDateValue.getDate() - 1);
+        }
+
+        startDate.value = formatDate(startDateValue, "YYYY-MM-DD");
+    }
+} 
+
 function plot_data() {
     document.getElementById('map').innerHTML = "";
-    document.getElementById('sliderContainer').style.visibility = "visible";
+    document.getElementById('map').style.display = "block";
 (function() {
     d3.json("../07-22-2020.formatted-JHU-data.json", function(data22) {
         covidStats = data22;
@@ -41,10 +89,6 @@ function plot_data() {
 
     d3.queue()
         .defer(d3.json, "../us.json")   //json for country drawing
-        //.defer(d3.json, "../07-22-2020.formatted-JHU-data.json") //covidStats
-        //.defer(d3.json, "../07-23-2020.formatted-JHU-data.json") //covidStats23
-        //.defer(d3.json, "../07-24-2020.formatted-JHU-data.json") //covidStats24
-        //.defer(d3.json, "../07-25-2020.formatted-JHU-data.json") //covidStats25
         .await(ready)
         
     /*
@@ -172,11 +216,15 @@ function plot_data() {
         /*
             Add a path for each state
         */
-        
-        slider.oninput = function() {
-            dateValue.innerHTML = dateArray[slider.value-1];
+    
+        incrementButton.addEventListener("click", loadNewData);
+        decrementButton.addEventListener("click", loadNewData)
 
-            jsonDataFilePathString = "../07-" + ((slider.value-1) + 22).toString() + "-2020.formatted-JHU-data.json"   //"../07-22-2020.formatted-JHU-data.json"
+        function loadNewData() {
+            var startDateValue = new Date(startDate.value + "T00:00:00")    //T00:00:00 is required for local timezone
+            let innerJsonDate = formatDate(startDateValue, "MM-DD-YYYY");
+            jsonDataFilePathString = "../" + innerJsonDate + ".formatted-JHU-data.json"   //"../07-22-2020.formatted-JHU-data.json"
+            
             d3.json(jsonDataFilePathString, function(newData) {
                 covidStats = newData;
                 rePlot(covidStats);
