@@ -1,10 +1,11 @@
 var tooltip = document.getElementById('tt');
 color_wheel = ["#ffcccc", "#ff8080", "#ff0000", "#b30000"];
-var count = 0;
+var colorWheelIndex = 0;
 
 var startDate = document.getElementById('startDate');
 startDate.value = "2020-07-22";
 var endDate = document.getElementById('endDate');
+var isDateRange = document.getElementById('isDateRange');
 
 var incrementButton = document.getElementById("incrementButton");
 var decrementButton = document.getElementById("decrementButton");
@@ -16,11 +17,17 @@ window.onmousemove = function (e) { //function gets location of mouse for toolti
     tooltip.style.left = (x + 20) + 'px';
 };
 
-function enableRange(e) {
-    if(e.checked){
+function enableRange() {
+    if(isDateRange.checked){
         document.getElementById('endDate').disabled = false;
+        var endDateValue = new Date(startDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
+        endDateValue = endDateValue.setDate(endDateValue.getDate() + 1);
+        endDateValue = new Date(endDateValue);
+        endDate.value = formatDate(endDateValue, "YYYY-MM-DD");
+
     } else {
         document.getElementById('endDate').disabled = true;
+        //endDate.value = undefined;
     }
 }
 
@@ -45,12 +52,26 @@ function formatDate(dateValue, dateFormat) {
     }
 
 }
+
 function dateIncrement(direction) { //1 is increment, 0 is decrement
-    var startDateValue = new Date(startDate.value + "T00:00:00")    //T00:00:00 is required for local timezone
+    var startDateValue = new Date(startDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
 
     if(document.getElementById('isDateRange').checked){
-        //increment by the same range of the current selected range
-        //ie if a month is selected increment with the range of the entire next month
+        var startDateValue = new Date(startDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
+        var endDateValue = new Date(endDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
+        let timeDiff = endDateValue.getTime() - startDateValue.getTime();
+
+        if(direction) {
+            startDateValue = startDateValue.setTime(startDateValue.getTime() + timeDiff);
+            endDateValue = endDateValue.setTime(endDateValue.getTime() + timeDiff);
+        } else {
+            startDateValue = startDateValue.setTime(startDateValue.getTime() - timeDiff);
+            endDateValue = endDateValue.setTime(endDateValue.getTime() - timeDiff);
+        }
+        startDateValue = new Date(startDateValue)
+        endDateValue = new Date(endDateValue)
+        startDate.value = formatDate(startDateValue, "YYYY-MM-DD");
+        endDate.value = formatDate(endDateValue, "YYYY-MM-DD");
 
     } else {
         if(direction){
@@ -63,11 +84,13 @@ function dateIncrement(direction) { //1 is increment, 0 is decrement
     }
 } 
 
+
+
 function plot_data() {
     document.getElementById('map').innerHTML = "";
     document.getElementById('map').style.display = "block";
 (function() {
-    d3.json("../07-22-2020.formatted-JHU-data.json", function(data22) {
+    d3.json("../07-22-2020.formatted-JHU-data.json").then(function(data22) {
         covidStats = data22;
     });
 
@@ -87,9 +110,18 @@ function plot_data() {
         Read in capiols.csv
     */
 
-    d3.queue()
-        .defer(d3.json, "../us.json")   //json for country drawing
-        .await(ready)
+    // d3.queue()
+    //     .defer(d3.json, "../us.json")   //json for country drawing
+    //     .await(ready)
+
+    var files = ["../us.json"];
+    var promises = [];
+    files.forEach(function(url) {
+        promises.push(d3.json(url))
+    });
+    Promise.all(promises).then(function(values) {
+        ready(values[0])
+    });
         
     /*
         Create new projection using Mercator (geoMercator)
@@ -109,7 +141,7 @@ function plot_data() {
     var path = d3.geoPath()
         .projection(projection)
     
-    function ready (error, data){   //function ready (error, data, data22, data23, data24, data25){
+    function ready (data){   //function ready (error, data, data22, data23, data24, data25){
         
         var counties = topojson.feature(data, data.objects.counties).features
             
@@ -218,18 +250,66 @@ function plot_data() {
         */
     
         incrementButton.addEventListener("click", loadNewData);
-        decrementButton.addEventListener("click", loadNewData)
+        decrementButton.addEventListener("click", loadNewData);
 
         function loadNewData() {
-            var startDateValue = new Date(startDate.value + "T00:00:00")    //T00:00:00 is required for local timezone
-            let innerJsonDate = formatDate(startDateValue, "MM-DD-YYYY");
-            jsonDataFilePathString = "../" + innerJsonDate + ".formatted-JHU-data.json"   //"../07-22-2020.formatted-JHU-data.json"
-            
-            d3.json(jsonDataFilePathString, function(newData) {
-                covidStats = newData;
-                rePlot(covidStats);
-            });
-            //ANY CODE HERE WILL BE EXECUTED BEFORE THE d3.json FUNCTION ABOVE
+            if (isDateRange.checked) {    //load all data from files across range
+                let startDateValue = new Date(startDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
+                let endDateValue = new Date(endDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
+                let timeDiffInDays = (endDateValue.getTime() - startDateValue.getTime())/(1000*60*60*24);
+
+                var covidStatsArray = new Array(timeDiffInDays + 1); //will be length of date range
+                var locationsDataLength = covidStats.locations[0].length;
+                var locationsLength = covidStats.locations.length;
+                
+                
+
+                for (var i = 0; i < locationsLength; i++) {
+                    for(var n = 0; n < locationsDataLength; n++) {
+                        if(n == 6 || n == 7 || n == 8 || n == 9) {
+                            covidStats.locations[i][n] = 0;
+                        }
+                    }
+                }
+
+                for (var currentJsonFile = 0; currentJsonFile < timeDiffInDays + 1; currentJsonFile++) {
+                    var startingDate = startDateValue.getDate();
+                    var innerJsonDate = startingDate + currentJsonFile;
+                    console.log(innerJsonDate)
+                    jsonDataFilePathString = "../07-" + innerJsonDate + "-2020.formatted-JHU-data.json"   //"../07-22-2020.formatted-JHU-data.json"
+
+                    d3.json(jsonDataFilePathString).then(function(newData) {
+                        covidStatsArray[currentJsonFile] = newData;
+
+                        for (var i = 0; i < locationsLength; i++) {
+                            for(var n = 0; n < locationsDataLength; n++) {
+                                if(n == 6 || n == 7 || n == 8 || n == 9) {
+                                    covidStats.locations[i][n] += covidStatsArray[currentJsonFile].locations[i][n];
+                                } else {
+                                    covidStats.locations[i][n] = covidStatsArray[currentJsonFile].locations[i][n];
+                                }
+                            }
+                        }
+
+                        if((currentJsonFile) == timeDiffInDays+1) {   //final file iteration
+                            console.log(covidStats)
+                            rePlot(covidStats);
+                        }
+                        //ANYTHING AFTER THIS (and/or outside of this d3.json) WILL BE EXECUTED BEFORE THIS CODE
+                    });
+                }
+
+            } else {
+                let startDateValue = new Date(startDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
+                let innerJsonDate = formatDate(startDateValue, "MM-DD-YYYY");
+                jsonDataFilePathString = "../" + innerJsonDate + ".formatted-JHU-data.json"   //"../07-22-2020.formatted-JHU-data.json"
+                
+                d3.json(jsonDataFilePathString).then(function(newData) {
+                    covidStats = newData;
+                    rePlot(covidStats);
+                });
+                //ANY CODE HERE WILL BE EXECUTED BEFORE THE d3.json FUNCTION ABOVE
+            }
         };
 
         function rePlot(covidStats){
@@ -262,7 +342,7 @@ function plot_data() {
                     } else if (percentage >= 9.231){
                         return color_wheel[3];
                     }
-                    return color_wheel[count];
+                    return color_wheel[colorWheelIndex];
                     });
         }
         
