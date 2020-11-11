@@ -272,7 +272,6 @@ function plot_data() {
                 let startDateValue = new Date(startDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
                 let endDateValue = new Date(endDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
                 let timeDiffInDays = (endDateValue.getTime() - startDateValue.getTime())/(1000*60*60*24);
-                console.log(timeDiffInDays)
 
                 var covidStatsArray = new Array(timeDiffInDays + 1); //will be length of date range
                 var locationsDataLength = covidStats.locations[0].length;
