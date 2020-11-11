@@ -7,7 +7,7 @@ const Datastore = require('nedb');
 const express = require('express');
 const app = express();
 app.listen(3000, () => console.log('listening at port 3000'));
-app.use(express.static('../visualize'));
+app.use(express.static('../../../visualize'));
 
 const database = new Datastore('database.db');
 database.loadDatabase();
