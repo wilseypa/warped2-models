@@ -6,13 +6,15 @@ Currently the files from JHU need to be modified because Oglala Lakota South Dak
 
 ## **TODO**
 ### ***Front End***
+Create timelapse functionality  
+Refactor plotting function  
 Calculate the true minimum and maximums for each data file, not hardcoded as it is currently  
-Change the data to be looking at periods of time ie looking at the month of march  
 Add legend to heatmap  
+Cleanup front-end (ongoing)  
 ### ***Back End***
-Create local mongodb database  
-Create script to set up mongodb database on a local machine  
-Create script to fix and import JHU data into mongodb database  
+Create basic API to load dummy data  
+Create API call to return json file for POSTed date in format of "MM-DD-YYYY"  
+Create API call to return list/array of json files between two POSTed dates in format of "MM-DD-YYYY"  
 Investigate setting up AWS account for warped2 cloud database  
 
 ### ***--Completed--***
@@ -24,6 +26,10 @@ Create server setup to host website
 Investigate mongodb for a database  
 The tooltip for county data makes scrollbars visible when the mouse is near edges of the screen  
 Change the slider to an up/down arrow to increment/decrement days?  
+Create local mongodb database  
+Create script to set up mongodb database on a local machine  
+Create script to fix and import JHU data into mongodb database  
+Change the data to be looking at periods of time ie looking at the month of march  
 
 ## **Resources**
 https://www.youtube.com/watch?v=aNbgrqRuoiE  --Help for US state map  
