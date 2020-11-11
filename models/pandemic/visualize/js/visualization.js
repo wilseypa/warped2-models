@@ -3,7 +3,7 @@ color_wheel = ["#ffcccc", "#ff8080", "#ff0000", "#b30000"];
 var colorWheelIndex = 0;
 
 var startDate = document.getElementById('startDate');
-startDate.value = "2020-07-22";
+startDate.value = "2020-07-22"; //"2020-03-25"
 var endDate = document.getElementById('endDate');
 var isDateRange = document.getElementById('isDateRange');
 
@@ -17,6 +17,16 @@ window.onmousemove = function (e) { //function gets location of mouse for toolti
     tooltip.style.left = (x + 20) + 'px';
 };
 
+function newDate(startOrEnd){
+    // if(startOrEnd) {    //end date change
+
+    // } else {    //start date change
+
+    // }
+    
+    document.getElementById('plotButton').disabled = false;
+}
+
 function enableRange() {
     if(isDateRange.checked){
         document.getElementById('endDate').disabled = false;
@@ -29,6 +39,8 @@ function enableRange() {
         document.getElementById('endDate').disabled = true;
         //endDate.value = undefined;
     }
+
+    document.getElementById('plotButton').disabled = false;
 }
 
 function formatDate(dateValue, dateFormat) {
@@ -87,10 +99,11 @@ function dateIncrement(direction) { //1 is increment, 0 is decrement
 
 
 function plot_data() {
+    document.getElementById('plotButton').disabled = true;
     document.getElementById('map').innerHTML = "";
     document.getElementById('map').style.display = "block";
 (function() {
-    d3.json("../07-22-2020.formatted-JHU-data.json").then(function(data22) {
+    d3.json("../mongodb/Pandemic_Data/07-22-2020.formatted-JHU-data.json").then(function(data22) {
         covidStats = data22;
     });
 
@@ -248,15 +261,18 @@ function plot_data() {
         /*
             Add a path for each state
         */
-    
-        incrementButton.addEventListener("click", loadNewData);
-        decrementButton.addEventListener("click", loadNewData);
+
+
+        d3.selectAll(".arrow").on("click", function() {
+            loadNewData();
+        });
 
         function loadNewData() {
             if (isDateRange.checked) {    //load all data from files across range
                 let startDateValue = new Date(startDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
                 let endDateValue = new Date(endDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
                 let timeDiffInDays = (endDateValue.getTime() - startDateValue.getTime())/(1000*60*60*24);
+                console.log(timeDiffInDays)
 
                 var covidStatsArray = new Array(timeDiffInDays + 1); //will be length of date range
                 var locationsDataLength = covidStats.locations[0].length;
@@ -274,11 +290,14 @@ function plot_data() {
                     }
                 }
 
+                var startingDate = startDateValue;
+                startingDate = new Date(startingDate.setDate(startingDate.getDate() - 1));
+
                 dummyForEachArray.forEach(function(value, currentJsonFile){ //need the scope of forEach vs normal for loop
                 //for (var currentJsonFile = 0; currentJsonFile < timeDiffInDays + 1; currentJsonFile++) {
-                    var startingDate = startDateValue.getDate();
-                    var innerJsonDate = startingDate + currentJsonFile;
-                    jsonDataFilePathString = "../07-" + innerJsonDate + "-2020.formatted-JHU-data.json"   //"../07-22-2020.formatted-JHU-data.json"
+                    startingDate = new Date(startingDate.setDate(startingDate.getDate() + 1));
+                    var innerJsonDate = formatDate(startingDate, "MM-DD-YYYY");
+                    jsonDataFilePathString = "../mongodb/Pandemic_Data/" + innerJsonDate + ".formatted-JHU-data.json"   //"../07-22-2020.formatted-JHU-data.json"
 
                     d3.json(jsonDataFilePathString).then(function(newData) {
                         covidStatsArray[currentJsonFile] = newData;
@@ -294,6 +313,13 @@ function plot_data() {
                         }
 
                         if((currentJsonFile) == timeDiffInDays) {   //final file iteration
+                            for (var i = 0; i < locationsLength; i++) {
+                                for(var n = 0; n < locationsDataLength; n++) {
+                                    if(n != 6 && n != 7 && n != 8 && n != 9) {
+                                        covidStats.locations[i][n] = covidStatsArray[currentJsonFile].locations[i][n];  //get stats (population) of latest date in range
+                                    }
+                                }
+                            }
                             rePlot(covidStats);
                         }
                         //ANYTHING AFTER THIS (and/or outside of this d3.json) WILL BE EXECUTED BEFORE THIS CODE
@@ -303,7 +329,7 @@ function plot_data() {
             } else {
                 let startDateValue = new Date(startDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
                 let innerJsonDate = formatDate(startDateValue, "MM-DD-YYYY");
-                jsonDataFilePathString = "../" + innerJsonDate + ".formatted-JHU-data.json"   //"../07-22-2020.formatted-JHU-data.json"
+                jsonDataFilePathString = "../mongodb/Pandemic_Data/" + innerJsonDate + ".formatted-JHU-data.json"   //"../07-22-2020.formatted-JHU-data.json"
                 
                 d3.json(jsonDataFilePathString).then(function(newData) {
                     covidStats = newData;
