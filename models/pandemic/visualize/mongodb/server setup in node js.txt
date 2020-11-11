@@ -1,9 +1,0 @@
-Setting up server using node js (from scratch):
-
-1. sudo apt install node
-2. sudo apt install npm
-3. npm init
-4. npm install express
-5. node index.js
-6. Go into Firefox or whatever browser you use and type localhost:3000
-7. Make sure that the webpage is being properly displayed
