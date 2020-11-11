@@ -1,5 +1,6 @@
 Setting up server using node js (from scratch):
 
+ON LINUX: ----------------------------------------------------
 From any cmd location:
 0. sudo apt-get update
 0. sudo apt-get upgrade
@@ -20,3 +21,13 @@ From directory above index (FOR INITIAL INSTALLATION WITHOUT GIT REPO):
 
 6. Go into Firefox or whatever browser you use and type localhost:3000
 7. Make sure that the webpage is being properly displayed
+------------------------------------------------------------------
+
+
+
+ON WINDOWS: ----------------------------------------------------
+1. Go to: https://nodejs.org/en/download/
+2. Select 'Windows Installer'
+3. Run installer 
+4. From cmd location of index.js, execute: node index.js
+----------------------------------------------------------------
