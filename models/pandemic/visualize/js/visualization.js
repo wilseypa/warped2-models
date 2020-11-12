@@ -1,108 +1,46 @@
-var tooltip = document.getElementById('tt');
-color_wheel = ["#ffcccc", "#ff8080", "#ff0000", "#b30000"];
-var colorWheelIndex = 0;
-
-var startDate = document.getElementById('startDate');
-startDate.value = "2020-07-22"; //"2020-03-25"
-var endDate = document.getElementById('endDate');
-var isDateRange = document.getElementById('isDateRange');
-
-var incrementButton = document.getElementById("incrementButton");
-var decrementButton = document.getElementById("decrementButton");
-
-window.onmousemove = function (e) { //function gets location of mouse for tooltip
-    var x = e.clientX,
-        y = e.clientY;
-    tooltip.style.top = (y + 20) + 'px';
-    tooltip.style.left = (x + 20) + 'px';
-};
-
-function newDate(startOrEnd){
-    // if(startOrEnd) {    //end date change
-
-    // } else {    //start date change
-
-    // }
-    
-    document.getElementById('plotButton').disabled = false;
-}
-
-function enableRange() {
-    if(isDateRange.checked){
-        document.getElementById('endDate').disabled = false;
-        var endDateValue = new Date(startDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
-        endDateValue = endDateValue.setDate(endDateValue.getDate() + 1);
-        endDateValue = new Date(endDateValue);
-        endDate.value = formatDate(endDateValue, "YYYY-MM-DD");
-
-    } else {
-        document.getElementById('endDate').disabled = true;
-        //endDate.value = undefined;
-    }
-
-    document.getElementById('plotButton').disabled = false;
-}
-
-function formatDate(dateValue, dateFormat) {
-    let year = dateValue.getFullYear();
-    let month = dateValue.getMonth() + 1;
-    let day = dateValue.getDate()
-
-    if(month < 10) {
-        month = "0" + month;
-    }
-    if(day < 10) {
-        day = "0" + day;
-    }
-
-    if(dateFormat == "YYYY-MM-DD") {
-        return year + "-" + month + "-" + day;
-    } else if(dateFormat == "MM-DD-YYYY") {
-        return month + "-" + day + "-" + year;
-    } else {
-        throw "Invalid date format"
-    }
-
-}
-
-function dateIncrement(direction) { //1 is increment, 0 is decrement
-    var startDateValue = new Date(startDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
-
-    if(document.getElementById('isDateRange').checked){
-        var startDateValue = new Date(startDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
-        var endDateValue = new Date(endDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
-        let timeDiff = endDateValue.getTime() - startDateValue.getTime();
-
-        if(direction) {
-            startDateValue = startDateValue.setTime(startDateValue.getTime() + timeDiff);
-            endDateValue = endDateValue.setTime(endDateValue.getTime() + timeDiff);
-        } else {
-            startDateValue = startDateValue.setTime(startDateValue.getTime() - timeDiff);
-            endDateValue = endDateValue.setTime(endDateValue.getTime() - timeDiff);
-        }
-        startDateValue = new Date(startDateValue)
-        endDateValue = new Date(endDateValue)
-        startDate.value = formatDate(startDateValue, "YYYY-MM-DD");
-        endDate.value = formatDate(endDateValue, "YYYY-MM-DD");
-
-    } else {
-        if(direction){
-            startDateValue.setDate(startDateValue.getDate() + 1);
-        } else {
-            startDateValue.setDate(startDateValue.getDate() - 1);
-        }
-
-        startDate.value = formatDate(startDateValue, "YYYY-MM-DD");
-    }
-} 
-
-
-
-function plot_data() {
-    document.getElementById('plotButton').disabled = true;
-    document.getElementById('map').innerHTML = "";
-    document.getElementById('map').style.display = "block";
 (function() {
+    var tooltip = document.getElementById('tt');
+    color_wheel = ["#ffcccc", "#ff8080", "#ff0000", "#b30000"];
+    var colorWheelIndex = 0;
+
+    var startDate = document.getElementById('startDate');
+    startDate.value = "2020-07-22"; //"2020-03-25"
+    var endDate = document.getElementById('endDate');
+    var isDateRange = document.getElementById('isDateRange');
+
+    window.onmousemove = function (e) { //function gets location of mouse for tooltip
+        var x = e.clientX,
+            y = e.clientY;
+        tooltip.style.top = (y + 20) + 'px';
+        tooltip.style.left = (x + 20) + 'px';
+    };
+
+    function formatDate(dateValue, dateFormat) {
+        let year = dateValue.getFullYear();
+        let month = dateValue.getMonth() + 1;
+        let day = dateValue.getDate()
+
+        if(month < 10) {
+            month = "0" + month;
+        }
+        if(day < 10) {
+            day = "0" + day;
+        }
+
+        if(dateFormat == "YYYY-MM-DD") {
+            return year + "-" + month + "-" + day;
+        } else if(dateFormat == "MM-DD-YYYY") {
+            return month + "-" + day + "-" + year;
+        } else {
+            throw "Invalid date format"
+        }
+
+    }
+
+    //document.getElementById('plotButton').disabled = true;
+    document.getElementById('map').innerHTML = "";
+    document.getElementById('map').style.display = "none";
+    
     d3.json("../mongodb/Pandemic_Data/07-22-2020.formatted-JHU-data.json").then(function(data22) {
         covidStats = data22;
     });
@@ -154,10 +92,284 @@ function plot_data() {
     var path = d3.geoPath()
         .projection(projection)
     
+
     function ready (data){   //function ready (error, data, data22, data23, data24, data25){
-        
-        var counties = topojson.feature(data, data.objects.counties).features
+/* D3 EVENT FUNCTIONS */
+        //Plot Button Press
+        d3.select("#plotButton").on("click", function() {
+            loadNewData();
+            d3.select("#map").style("display", "block");
+            d3.select(this).attr("disabled", true);
+        });
+
+        //Increment/Decrement Button Press
+        d3.selectAll(".arrow").on("click", function(){
+            //get which button pressed
+            var direction = 0
+            if(d3.select(this)._groups[0][0].id == "decrementButton"){
+                direction = 0
+            } else if(d3.select(this)._groups[0][0].id == "incrementButton"){
+                direction = 1
+            } else {
+                throw "unknown button pressed"
+            }
+    
+            //increment dates appropriately
+            var startDateValue = new Date(startDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
+    
+            if(document.getElementById('isDateRange').checked){
+                var startDateValue = new Date(startDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
+                var endDateValue = new Date(endDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
+                let timeDiff = endDateValue.getTime() - startDateValue.getTime();
+    
+                if(direction) {
+                    startDateValue = startDateValue.setTime(startDateValue.getTime() + timeDiff);
+                    endDateValue = endDateValue.setTime(endDateValue.getTime() + timeDiff);
+                } else {
+                    startDateValue = startDateValue.setTime(startDateValue.getTime() - timeDiff);
+                    endDateValue = endDateValue.setTime(endDateValue.getTime() - timeDiff);
+                }
+                startDateValue = new Date(startDateValue)
+                endDateValue = new Date(endDateValue)
+                startDate.value = formatDate(startDateValue, "YYYY-MM-DD");
+                endDate.value = formatDate(endDateValue, "YYYY-MM-DD");
+    
+            } else {
+                if(direction){
+                    startDateValue.setDate(startDateValue.getDate() + 1);
+                } else {
+                    startDateValue.setDate(startDateValue.getDate() - 1);
+                }
+    
+                startDate.value = formatDate(startDateValue, "YYYY-MM-DD");
+            }
+    
+            //load new data for new dates
+            loadNewData();
+        });
+
+        //Date Range New Input
+        var timelapseToggle = 1;
+        var intervalId;
+        d3.select("#timelapseButton").on("click", function() {
+            if(document.getElementById('map').style.display = "none") {
+                document.getElementById('map').style.display = "block";
+            }
+
+            if(timelapseToggle){
+                intervalId = setInterval(function() {
+                    document.getElementById("incrementButton").click();
+                }, 2000);
+                timelapseToggle = 0;
+            } else {
+                clearInterval(intervalId);
+                timelapseToggle = 1;
+            }
+            //needs a stopping function when at end of data
+        });
+
+        //Date Range New Input
+        d3.select(".dateInput").on("input", function() {
+            //get which button pressed
+            var startOrEnd = 0
+            if(d3.select(this)._groups[0][0].id == "startDate"){
+                startOrEnd = 0
+            } else if(d3.select(this)._groups[0][0].id == "endDate"){
+                startOrEnd = 1
+            } else {
+                throw "unknown button pressed"
+            }
+    
+            // if(startOrEnd) {    //end date change
+    
+            // } else {    //start date change
+    
+            // }
             
+            document.getElementById('plotButton').disabled = false;
+        });
+
+        //Range? Checkbox Toggle
+        d3.select("#isDateRange").on("click", function() {
+            if(isDateRange.checked){
+                document.getElementById('endDate').disabled = false;
+                var endDateValue = new Date(startDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
+                endDateValue = endDateValue.setDate(endDateValue.getDate() + 1);
+                endDateValue = new Date(endDateValue);
+                endDate.value = formatDate(endDateValue, "YYYY-MM-DD");
+    
+            } else {
+                document.getElementById('endDate').disabled = true;
+                //endDate.value = undefined;
+            }
+    
+            document.getElementById('plotButton').disabled = false;
+        });
+
+
+/* NON-EVENT FUNCTIONS */
+        //Grabs Dates from Input and Plots to D3 Map
+        function loadNewData() {
+            if (isDateRange.checked) {    //load all data from files across range
+                let startDateValue = new Date(startDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
+                let endDateValue = new Date(endDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
+                let timeDiffInDays = (endDateValue.getTime() - startDateValue.getTime())/(1000*60*60*24);
+
+                var covidStatsArray = new Array(timeDiffInDays + 1); //will be length of date range
+                var locationsDataLength = covidStats.locations[0].length;
+                var locationsLength = covidStats.locations.length;
+
+                var dummyForEachArray = new Array(timeDiffInDays + 1).fill(0);
+                
+                
+
+                for (var i = 0; i < locationsLength; i++) {
+                    for(var n = 0; n < locationsDataLength; n++) {
+                        if(n == 6 || n == 7 || n == 8 || n == 9) {
+                            covidStats.locations[i][n] = 0;
+                        }
+                    }
+                }
+
+                var startingDate = startDateValue;
+                startingDate = new Date(startingDate.setDate(startingDate.getDate() - 1));
+
+                dummyForEachArray.forEach(function(value, currentJsonFile){ //need the scope of forEach vs normal for loop
+                //for (var currentJsonFile = 0; currentJsonFile < timeDiffInDays + 1; currentJsonFile++) {
+                    startingDate = new Date(startingDate.setDate(startingDate.getDate() + 1));
+                    var innerJsonDate = formatDate(startingDate, "MM-DD-YYYY");
+                    //console.log(innerJsonDate)
+                    jsonDataFilePathString = "../mongodb/Pandemic_Data/" + innerJsonDate + ".formatted-JHU-data.json"   //"../07-22-2020.formatted-JHU-data.json"
+
+                    d3.json(jsonDataFilePathString).then(function(newData) {
+                        covidStatsArray[currentJsonFile] = newData;
+
+                        for (var i = 0; i < locationsLength; i++) {
+                            //console.log(covidStats.locations[i])
+                            for(var n = 0; n < locationsDataLength; n++) {
+                                if(n == 6 || n == 7 || n == 8 || n == 9) {
+                                    covidStats.locations[i][n] += covidStatsArray[currentJsonFile].locations[i][n];
+                                } else {
+                                    covidStats.locations[i][n] = covidStatsArray[currentJsonFile].locations[i][n];
+                                }
+                            }
+                        }
+
+                        if((currentJsonFile) == timeDiffInDays) {   //final file iteration
+                            for (var i = 0; i < locationsLength; i++) {
+                                for(var n = 0; n < locationsDataLength; n++) {
+                                    if(n != 6 && n != 7 && n != 8 && n != 9) {
+                                        covidStats.locations[i][n] = covidStatsArray[currentJsonFile].locations[i][n];  //get stats (population) of latest date in range
+                                    }
+                                }
+                            }
+                            rePlot(covidStats);
+                        }
+                        //ANYTHING AFTER THIS (and/or outside of this d3.json) WILL BE EXECUTED BEFORE THIS CODE
+                    });
+                })
+
+            } else {
+                let startDateValue = new Date(startDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
+                let innerJsonDate = formatDate(startDateValue, "MM-DD-YYYY");
+                jsonDataFilePathString = "../mongodb/Pandemic_Data/" + innerJsonDate + ".formatted-JHU-data.json"   //"../07-22-2020.formatted-JHU-data.json"
+                
+                d3.json(jsonDataFilePathString).then(function(newData) {
+                    covidStats = newData;
+                    rePlot(covidStats);
+                });
+                //ANY CODE HERE WILL BE EXECUTED BEFORE THE d3.json FUNCTION ABOVE
+            }
+        };
+
+        //The Plotting of Colors to Each County
+        function rePlot(covidStats){
+            svg.selectAll(".county")
+                .style("fill", function() {
+                    var currentCountyId = d3.select(this)._groups[0][0].__data__.id;
+                    var locData;
+                    for (i = 0; i < covidStats.locations.length; i++){
+                        if(parseInt(covidStats.locations[i][0]) == currentCountyId){
+                            locData = covidStats.locations[i];
+                            break;
+                        }
+                    }
+                    if(typeof locData == 'undefined'){
+                        return "black";
+                    }
+                    var percentage = (((locData[9] / locData[10])*3)*100);
+                    if (percentage >= 0 && percentage < 1.231){
+                        return color_wheel[0];
+                    } else if (percentage >= 1.231 && percentage < 5.231){
+                        return color_wheel[1];
+                    } else if (percentage >= 5.231 && percentage < 9.231){
+                        return color_wheel[2];
+                    } else if (percentage >= 9.231){
+                        return color_wheel[3];
+                    }
+                    return color_wheel[colorWheelIndex];
+                    });
+        }
+
+        // //The Plotting of Colors to Each County    -----------DYNAMIC MAX PERCENTAGE BUT DOESNT WORK WELL BECAUSE OF OUTLIERS....---------
+        // function rePlot(covidStats){
+        //     var highestPercentage = 0;
+        //     for (i = 0; i < covidStats.locations.length; i++) {
+        //         tempHighestPercentage =  ((covidStats.locations[i][9] / covidStats.locations[i][10]) * 100);
+        //         if(tempHighestPercentage > highestPercentage) {
+        //             highestPercentage = tempHighestPercentage;
+        //         }
+        //     }
+        //     percentageArray = new Array(4);
+        //     for (i = 0; i < percentageArray.length; i++) {
+        //         percentageArray[i] = ((highestPercentage / 4) * i);
+        //     }
+
+        //     svg.selectAll(".county")
+        //         .style("fill", function() {
+        //             var currentCountyId = d3.select(this)._groups[0][0].__data__.id;
+        //             var currentLocationData;
+        //             for (i = 0; i < covidStats.locations.length; i++){
+        //                 if(parseInt(covidStats.locations[i][0]) == currentCountyId){
+        //                     currentLocationData = covidStats.locations[i];
+        //                     break;
+        //                 }
+        //             }
+        //             if(typeof currentLocationData == 'undefined'){
+        //                 return "black";
+        //             }
+        //             var percentage = ((currentLocationData[9] / currentLocationData[10]) * 100);
+        //             // console.log("Active: " + currentLocationData[9] + "; " + "Total Pop: " + currentLocationData[10] + ";")
+        //             // if(percentage > 7) {
+        //             //     console.log(currentLocationData)
+        //             // }
+        //             if (percentage >= percentageArray[0] && percentage < percentageArray[1]){
+        //                 return color_wheel[0];
+        //             } else if (percentage >= percentageArray[1] && percentage < percentageArray[2]){
+        //                 return color_wheel[1];
+        //             } else if (percentage >= percentageArray[2] && percentage < percentageArray[3]){
+        //                 return color_wheel[2];
+        //             } else if (percentage >= percentageArray[3]){
+        //                 return color_wheel[3];
+        //             }
+        //             return color_wheel[colorWheelIndex];
+        //             });
+        // }
+
+
+/* D3 REQUIRED FUNCTIONS AND PLOTTING*/
+        //Loads State Map for Plotting?
+        var states = topojson.feature(data, data.objects.states).features
+        //Applies State Data and Logic to States (just the drawing of state lines)
+        svg.selectAll(".state")
+        .data(states)
+        .enter().append("path")
+        .attr("class", "state")
+        .attr("d", path)
+
+        //Loads County Map for Plotting?
+        var counties = topojson.feature(data, data.objects.counties).features
+        //Applies County Data and Logic to Counties
         svg.selectAll(".county")
             .data(counties)
             .enter().append("path")
@@ -249,138 +461,6 @@ function plot_data() {
                 }
             })
         
-        /*
-            topojson.feature converts
-            our RAW geo data into USABLE geo data
-            always pass it data, then data.objects.__something__
-            then get .features out of it
-        */
-        
-        var states = topojson.feature(data, data.objects.states).features
-        
-        /*
-            Add a path for each state
-        */
-
-
-        d3.selectAll(".arrow").on("click", function() {
-            loadNewData();
-        });
-
-        function loadNewData() {
-            if (isDateRange.checked) {    //load all data from files across range
-                let startDateValue = new Date(startDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
-                let endDateValue = new Date(endDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
-                let timeDiffInDays = (endDateValue.getTime() - startDateValue.getTime())/(1000*60*60*24);
-
-                var covidStatsArray = new Array(timeDiffInDays + 1); //will be length of date range
-                var locationsDataLength = covidStats.locations[0].length;
-                var locationsLength = covidStats.locations.length;
-
-                var dummyForEachArray = new Array(timeDiffInDays + 1).fill(0);
-                
-                
-
-                for (var i = 0; i < locationsLength; i++) {
-                    for(var n = 0; n < locationsDataLength; n++) {
-                        if(n == 6 || n == 7 || n == 8 || n == 9) {
-                            covidStats.locations[i][n] = 0;
-                        }
-                    }
-                }
-
-                var startingDate = startDateValue;
-                startingDate = new Date(startingDate.setDate(startingDate.getDate() - 1));
-
-                dummyForEachArray.forEach(function(value, currentJsonFile){ //need the scope of forEach vs normal for loop
-                //for (var currentJsonFile = 0; currentJsonFile < timeDiffInDays + 1; currentJsonFile++) {
-                    startingDate = new Date(startingDate.setDate(startingDate.getDate() + 1));
-                    var innerJsonDate = formatDate(startingDate, "MM-DD-YYYY");
-                    jsonDataFilePathString = "../mongodb/Pandemic_Data/" + innerJsonDate + ".formatted-JHU-data.json"   //"../07-22-2020.formatted-JHU-data.json"
-
-                    d3.json(jsonDataFilePathString).then(function(newData) {
-                        covidStatsArray[currentJsonFile] = newData;
-
-                        for (var i = 0; i < locationsLength; i++) {
-                            for(var n = 0; n < locationsDataLength; n++) {
-                                if(n == 6 || n == 7 || n == 8 || n == 9) {
-                                    covidStats.locations[i][n] += covidStatsArray[currentJsonFile].locations[i][n];
-                                } else {
-                                    covidStats.locations[i][n] = covidStatsArray[currentJsonFile].locations[i][n];
-                                }
-                            }
-                        }
-
-                        if((currentJsonFile) == timeDiffInDays) {   //final file iteration
-                            for (var i = 0; i < locationsLength; i++) {
-                                for(var n = 0; n < locationsDataLength; n++) {
-                                    if(n != 6 && n != 7 && n != 8 && n != 9) {
-                                        covidStats.locations[i][n] = covidStatsArray[currentJsonFile].locations[i][n];  //get stats (population) of latest date in range
-                                    }
-                                }
-                            }
-                            rePlot(covidStats);
-                        }
-                        //ANYTHING AFTER THIS (and/or outside of this d3.json) WILL BE EXECUTED BEFORE THIS CODE
-                    });
-                })
-
-            } else {
-                let startDateValue = new Date(startDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
-                let innerJsonDate = formatDate(startDateValue, "MM-DD-YYYY");
-                jsonDataFilePathString = "../mongodb/Pandemic_Data/" + innerJsonDate + ".formatted-JHU-data.json"   //"../07-22-2020.formatted-JHU-data.json"
-                
-                d3.json(jsonDataFilePathString).then(function(newData) {
-                    covidStats = newData;
-                    rePlot(covidStats);
-                });
-                //ANY CODE HERE WILL BE EXECUTED BEFORE THE d3.json FUNCTION ABOVE
-            }
-        };
-
-        function rePlot(covidStats){
-            svg.selectAll(".state")
-            .data(states)
-            .enter().append("path")
-            .attr("class", "state")
-            .attr("d", path)
-            
-            svg.selectAll(".county")
-                .style("fill", function() {
-                    var currentCountyId = d3.select(this)._groups[0][0].__data__.id;
-                    var locData
-                    for (i = 0; i < covidStats.locations.length; i++){
-                        if(parseInt(covidStats.locations[i][0]) == currentCountyId){
-                            locData = covidStats.locations[i];
-                            break;
-                        }
-                    }
-                    if(typeof locData == 'undefined'){
-                        return "black";
-                    }
-                    var percentage = (((locData[9] / locData[10])*3)*100);
-                    if (percentage >= 0 && percentage < 1.231){
-                        return color_wheel[0];
-                    } else if (percentage >= 1.231 && percentage < 5.231){
-                        return color_wheel[1];
-                    } else if (percentage >= 5.231 && percentage < 9.231){
-                        return color_wheel[2];
-                    } else if (percentage >= 9.231){
-                        return color_wheel[3];
-                    }
-                    return color_wheel[colorWheelIndex];
-                    });
-        }
-        
-        rePlot(covidStats); //for the initial plot
-            
-        /*
-            Add the cities
-            Get the x/y from the lat/long + projection
-        */
+        loadNewData();
     }
-    
-
-
 })()
-};

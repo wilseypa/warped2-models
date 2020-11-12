@@ -3,11 +3,11 @@
 ## **Notes**
 This is running on d3 v5 and does not currently work with d3 v3 or v4. Updated from v4 to move away from asynchronous data loading  
 Currently the files from JHU need to be modified because Oglala Lakota South Dakota and Kusilvak Alaska have incorrect county IDs  
+LOTS OF DATA IS MISSING IN CERTAIN DAYS (5/26/2020) WHICH THROWS ERRORS SPECIFICALLY WITH RANGES  
 
 ## **TODO**
 ### ***Front End***
-Create timelapse functionality  
-Refactor plotting function  
+Fix bug where ranges can cause not all files to load and cumulate (can test with a ~7 day range at end of july)  
 Calculate the true minimum and maximums for each data file, not hardcoded as it is currently  
 Add legend to heatmap  
 Cleanup front-end (ongoing)  
@@ -30,6 +30,8 @@ Create local mongodb database
 Create script to set up mongodb database on a local machine  
 Create script to fix and import JHU data into mongodb database  
 Change the data to be looking at periods of time ie looking at the month of march  
+Create timelapse functionality  
+Refactor plotting function  
 
 ## **Resources**
 https://www.youtube.com/watch?v=aNbgrqRuoiE  --Help for US state map  

@@ -12,17 +12,20 @@
             
         <div style="text-align: center;">
             <div id="dateInputDiv">
-                <input id="startDate" oninput="newDate(0)" type="date">
-                <input id="endDate" oninput="newDate(1)" type="date" disabled>
-                <input type="checkbox" class="checkbox" name="isDateRange" id="isDateRange" onclick="enableRange()">
+                <input id="startDate" class="dateInput" type="date">
+                <input id="endDate" class="dateInput" type="date" disabled>
+                <input type="checkbox" class="checkbox" name="isDateRange" id="isDateRange">
                 <label for="isDateRange">Range?</label>
             </div>
             <div>
-                <p id="decrementButton" class="arrow" style="padding-right: 2px;" onclick="dateIncrement(0)">&#x25C0;</p>
-                <p id="incrementButton" class="arrow" style="padding-left: 2px;" onclick="dateIncrement(1)">&#x25B6;</p>
+                <p id="decrementButton" class="arrow" style="padding-right: 2px;">&#x25C0;</p>
+                <p id="incrementButton" class="arrow" style="padding-left: 2px;">&#x25B6;</p>
+            </div>
+            <div>
+                <p id="timelapseButton" class="timelapse" style="color: black;">&#x23F1;</p>
             </div>
             <br>
-            <button id="plotButton" onclick="plot_data()" style="width: 55px; height: 33px;">Plot</button>
+            <button id="plotButton" style="width: 55px; height: 33px;">Plot</button>
         </div>
 
         <br>
