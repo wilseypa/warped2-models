@@ -13,7 +13,20 @@ const database = new Datastore('database.db');
 database.loadDatabase();
 
 
-app.get('/multiple_files', (request, response) => {
+app.get('/pandemic_data/:start_date/:end_date', (request, response) => {
+	var startDate = new Date(request.params.start_date);
+	var endDate = new Date(request.params.end_date);
+	var millisecond_to_day = 86400000
+	var number_of_days = ((endDate - startDate) / millisecond_to_day);
+	
+	console.log(number_of_days);
+	console.log(startDate);
+	console.log(startDate.setDate(startDate.getDate() + 1));
+	console.log(startDate);
+	console.log(startDate.setDate(startDate.getDate() + 10));
+        console.log(startDate);
+
+	// database.find({date: startDate.toString()})
 	database.find({}, (err, data) => {
 	if (err) {
 		response.end();
