@@ -12,6 +12,16 @@ app.use(express.static('../../../visualize'));
 const database = new Datastore('database.db');
 database.loadDatabase();
 
+
+app.get('/multiple_files', (request, response) => {
+	database.find({}, (err, data) => {
+	if (err) {
+		response.end();
+		return;
+	}
+	response.json(data);
+	});
+});
 /*
 fs.readdir(directoryPath, function (err, files) {
 	if (err) {
