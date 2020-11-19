@@ -1,6 +1,13 @@
 (function() {
+    async function getData() {
+        const response = await fetch('/pandemic_data/07-22-2020/08-22-2020');
+        const data = await response.json();
+        console.log(data);
+    }
+    getData();
     var tooltip = document.getElementById('tt');
-    color_wheel = ["#ffcccc", "#ff8080", "#ff0000", "#b30000"];
+    var color_wheel = ["#ffcccc", "#ff8080", "#ff0000", "#b30000"];
+    var percentageArray = new Array(4);
     var colorWheelIndex = 0;
 
     var startDate = document.getElementById('startDate');
@@ -282,79 +289,78 @@
             }
         };
 
-        //The Plotting of Colors to Each County
-        function rePlot(covidStats){
-            svg.selectAll(".county")
-                .style("fill", function() {
-                    var currentCountyId = d3.select(this)._groups[0][0].__data__.id;
-                    var locData;
-                    for (i = 0; i < covidStats.locations.length; i++){
-                        if(parseInt(covidStats.locations[i][0]) == currentCountyId){
-                            locData = covidStats.locations[i];
-                            break;
-                        }
-                    }
-                    if(typeof locData == 'undefined'){
-                        return "black";
-                    }
-                    var percentage = (((locData[9] / locData[10])*3)*100);
-                    if (percentage >= 0 && percentage < 1.231){
-                        return color_wheel[0];
-                    } else if (percentage >= 1.231 && percentage < 5.231){
-                        return color_wheel[1];
-                    } else if (percentage >= 5.231 && percentage < 9.231){
-                        return color_wheel[2];
-                    } else if (percentage >= 9.231){
-                        return color_wheel[3];
-                    }
-                    return color_wheel[colorWheelIndex];
-                    });
-        }
-
-        // //The Plotting of Colors to Each County    -----------DYNAMIC MAX PERCENTAGE BUT DOESNT WORK WELL BECAUSE OF OUTLIERS....---------
+        // //The Plotting of Colors to Each County
         // function rePlot(covidStats){
-        //     var highestPercentage = 0;
-        //     for (i = 0; i < covidStats.locations.length; i++) {
-        //         tempHighestPercentage =  ((covidStats.locations[i][9] / covidStats.locations[i][10]) * 100);
-        //         if(tempHighestPercentage > highestPercentage) {
-        //             highestPercentage = tempHighestPercentage;
-        //         }
-        //     }
-        //     percentageArray = new Array(4);
-        //     for (i = 0; i < percentageArray.length; i++) {
-        //         percentageArray[i] = ((highestPercentage / 4) * i);
-        //     }
-
         //     svg.selectAll(".county")
         //         .style("fill", function() {
         //             var currentCountyId = d3.select(this)._groups[0][0].__data__.id;
-        //             var currentLocationData;
+        //             var locData;
         //             for (i = 0; i < covidStats.locations.length; i++){
         //                 if(parseInt(covidStats.locations[i][0]) == currentCountyId){
-        //                     currentLocationData = covidStats.locations[i];
+        //                     locData = covidStats.locations[i];
         //                     break;
         //                 }
         //             }
-        //             if(typeof currentLocationData == 'undefined'){
+        //             if(typeof locData == 'undefined'){
         //                 return "black";
         //             }
-        //             var percentage = ((currentLocationData[9] / currentLocationData[10]) * 100);
-        //             // console.log("Active: " + currentLocationData[9] + "; " + "Total Pop: " + currentLocationData[10] + ";")
-        //             // if(percentage > 7) {
-        //             //     console.log(currentLocationData)
-        //             // }
-        //             if (percentage >= percentageArray[0] && percentage < percentageArray[1]){
+        //             var percentage = (((locData[9] / locData[10])*3)*100);
+        //             if (percentage >= 0 && percentage < 1.231){
         //                 return color_wheel[0];
-        //             } else if (percentage >= percentageArray[1] && percentage < percentageArray[2]){
+        //             } else if (percentage >= 1.231 && percentage < 5.231){
         //                 return color_wheel[1];
-        //             } else if (percentage >= percentageArray[2] && percentage < percentageArray[3]){
+        //             } else if (percentage >= 5.231 && percentage < 9.231){
         //                 return color_wheel[2];
-        //             } else if (percentage >= percentageArray[3]){
+        //             } else if (percentage >= 9.231){
         //                 return color_wheel[3];
         //             }
         //             return color_wheel[colorWheelIndex];
         //             });
         // }
+
+        //The Plotting of Colors to Each County    -----------DYNAMIC MAX PERCENTAGE BUT DOESNT WORK WELL BECAUSE OF OUTLIERS....---------
+        function rePlot(covidStats){
+            var highestPercentage = 0;
+            for (i = 0; i < covidStats.locations.length; i++) {
+                tempHighestPercentage =  ((covidStats.locations[i][9] / covidStats.locations[i][10]) * 100);
+                if(tempHighestPercentage > highestPercentage) {
+                    highestPercentage = tempHighestPercentage;
+                }
+            }
+            for (i = 0; i < percentageArray.length; i++) {
+                percentageArray[i] = ((highestPercentage / 4) * i);
+            }
+
+            svg.selectAll(".county")
+                .style("fill", function() {
+                    var currentCountyId = d3.select(this)._groups[0][0].__data__.id;
+                    var currentLocationData;
+                    for (i = 0; i < covidStats.locations.length; i++){
+                        if(parseInt(covidStats.locations[i][0]) == currentCountyId){
+                            currentLocationData = covidStats.locations[i];
+                            break;
+                        }
+                    }
+                    if(typeof currentLocationData == 'undefined'){
+                        return "black";
+                    }
+                    var percentage = ((currentLocationData[9] / currentLocationData[10]) * 100);
+                    // console.log("Active: " + currentLocationData[9] + "; " + "Total Pop: " + currentLocationData[10] + ";")
+                    // if(percentage > 7) {
+                    //     console.log(currentLocationData)
+                    // }
+                    if (percentage >= percentageArray[0] && percentage < percentageArray[1]){
+                        return color_wheel[0];
+                    } else if (percentage >= percentageArray[1] && percentage < percentageArray[2]){
+                        return color_wheel[1];
+                    } else if (percentage >= percentageArray[2] && percentage < percentageArray[3]){
+                        return color_wheel[2];
+                    } else if (percentage >= percentageArray[3]){
+                        return color_wheel[3];
+                    }
+                    return color_wheel[colorWheelIndex];
+                    });
+        }
 
 
 /* D3 REQUIRED FUNCTIONS AND PLOTTING*/
