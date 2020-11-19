@@ -1,14 +1,35 @@
 (function() {
-    async function getData() {
-        const response = await fetch('/pandemic_data/07-22-2020/08-22-2020');
+    async function getData(startDate, endDate) {
+        const response = await fetch('/pandemic_data/' + startDate + '/' + endDate);
         const data = await response.json();
         console.log(data);
     }
-    getData();
+    getData("07-22-2020", "07-22-2020");
+
     var tooltip = document.getElementById('tt');
-    var color_wheel = ["#ffcccc", "#ff8080", "#ff0000", "#b30000"];
-    var percentageArray = new Array(4);
+    var color_wheel = ["#ffffcc", "#ffeda0", "#fed976", "#feb24c", "#fd8d3c", "#fc4e2a", "#e31a1c", "#bd0026", "#800026"];
+    //var color_wheel = ["#00FF00", "#33FF33", "#66FF66", "#99FF99", "#800026", "#bd0026", "#e31a1c", "#fc4e2a", "#fd8d3c"];
+    var percentageArray = new Array(9);
     var colorWheelIndex = 0;
+    for(var i = 0; i < color_wheel.length; i++) {
+        var legendInnerContainers = document.createElement("div");
+        legendInnerContainers.setAttribute("id", "legendInnerContainer" + i);
+        document.getElementById("legend").appendChild(legendInnerContainers);
+
+        var legendColorEl = document.createElement("div");
+        legendColorEl.setAttribute("id", "legendColor" + i);
+        legendColorEl.setAttribute("class", "legend-fill");
+        document.getElementById("legendInnerContainer" + i).appendChild(legendColorEl);
+
+        var legendValueEl = document.createElement("div");
+        legendValueEl.setAttribute("id", "legendValue" + i);
+        legendValueEl.setAttribute("class", "legend-value");
+        document.getElementById("legendInnerContainer" + i).appendChild(legendValueEl);
+        
+        document.getElementById('legendColor' + i).style.backgroundColor = color_wheel[i];
+        document.getElementById('legendValue' + i).innerHTML = 0 + "%";
+    }
+    
 
     var startDate = document.getElementById('startDate');
     startDate.value = "2020-07-22"; //"2020-03-25"
@@ -47,14 +68,15 @@
     //document.getElementById('plotButton').disabled = true;
     document.getElementById('map').innerHTML = "";
     document.getElementById('map').style.display = "none";
+    document.getElementById('legend').style.display = "none";
     
     d3.json("../mongodb/Pandemic_Data/07-22-2020.formatted-JHU-data.json").then(function(data22) {
         covidStats = data22;
     });
 
     var margin = { top: 0, left: 0, right: 0, bottom: 0},
-        height = 400 - margin.top - margin.bottom,
-        width = 800 - margin.left - margin.right;
+        height = 500 - margin.top - margin.bottom,
+        width = 900 - margin.left - margin.right;
         
     var svg = d3.select("#map")
         .append("svg")
@@ -88,7 +110,7 @@
     */
     
     var projection = d3.geoAlbersUsa()  //mercator projection for drawing map
-        .translate([ width / 2, height / 2])
+        .translate([ width / 2 + 50, height / 2])
         .scale(850)
         
     /*
@@ -105,7 +127,8 @@
         //Plot Button Press
         d3.select("#plotButton").on("click", function() {
             loadNewData();
-            d3.select("#map").style("display", "block");
+            document.getElementById('map').style.display = "block";
+            document.getElementById('legend').style.display = "block";
             d3.select(this).attr("disabled", true);
         });
 
@@ -159,8 +182,9 @@
         var timelapseToggle = 1;
         var intervalId;
         d3.select("#timelapseButton").on("click", function() {
-            if(document.getElementById('map').style.display = "none") {
+            if(document.getElementById('map').style.display == "none") {
                 document.getElementById('map').style.display = "block";
+                document.getElementById('legend').style.display = "block";
             }
 
             if(timelapseToggle){
@@ -325,10 +349,21 @@
                 tempHighestPercentage =  ((covidStats.locations[i][9] / covidStats.locations[i][10]) * 100);
                 if(tempHighestPercentage > highestPercentage) {
                     highestPercentage = tempHighestPercentage;
+                    //console.log(covidStats.locations[i][1] +  " " + covidStats.locations[i][2]);
+                    //console.log(highestPercentage);
                 }
             }
             for (i = 0; i < percentageArray.length; i++) {
-                percentageArray[i] = ((highestPercentage / 4) * i);
+                percentageArray[i] = ((highestPercentage / percentageArray.length) * i).toFixed(2);
+            }
+            
+            for (i = 0; i < percentageArray.length; i++) {
+                let selectString = "#legendValue" + i;
+                let htmlString = percentageArray[i] + "%" + " - " + percentageArray[i + 1] + "%"
+                if(i == percentageArray.length-1) {
+                    htmlString = percentageArray[i] + "%" + "+";
+                }
+                d3.select(selectString).html(htmlString);
             }
 
             svg.selectAll(".county")
@@ -349,16 +384,40 @@
                     // if(percentage > 7) {
                     //     console.log(currentLocationData)
                     // }
-                    if (percentage >= percentageArray[0] && percentage < percentageArray[1]){
-                        return color_wheel[0];
-                    } else if (percentage >= percentageArray[1] && percentage < percentageArray[2]){
-                        return color_wheel[1];
-                    } else if (percentage >= percentageArray[2] && percentage < percentageArray[3]){
-                        return color_wheel[2];
-                    } else if (percentage >= percentageArray[3]){
-                        return color_wheel[3];
+
+                    for (i = 0; i < percentageArray.length; i++) {
+                        if(i == percentageArray.length-1) {
+                            if (percentage >= percentageArray[i]){
+                                return color_wheel[i];
+                            }
+                        }
+                        if (percentage >= percentageArray[i] && percentage < percentageArray[i + 1]){
+                            return color_wheel[i];
+                        }
                     }
-                    return color_wheel[colorWheelIndex];
+
+                    // if (percentage >= percentageArray[0] && percentage < percentageArray[1]){
+                    //     return color_wheel[0];
+                    // } else if (percentage >= percentageArray[1] && percentage < percentageArray[2]){
+                    //     return color_wheel[1];
+                    // } else if (percentage >= percentageArray[2] && percentage < percentageArray[3]){
+                    //     return color_wheel[2];
+                    // } else if (percentage >= percentageArray[3] && percentage < percentageArray[4]){
+                    //     return color_wheel[3];
+                    // } else if (percentage >= percentageArray[4] && percentage < percentageArray[5]){
+                    //     return color_wheel[4];
+                    // } else if (percentage >= percentageArray[5] && percentage < percentageArray[6]){
+                    //     return color_wheel[5];
+                    // } else if (percentage >= percentageArray[6] && percentage < percentageArray[7]){
+                    //     return color_wheel[6];
+                    // } else if (percentage >= percentageArray[7] && percentage < percentageArray[8]){
+                    //     return color_wheel[7];
+                    // } else if (percentage >= percentageArray[8] && percentage < percentageArray[9]){
+                    //     return color_wheel[8];
+                    // } else if (percentage >= percentageArray[9]){
+                    //     return color_wheel[9];
+                    // }
+                    // return color_wheel[colorWheelIndex];
                     });
         }
 
@@ -455,13 +514,14 @@
             .on("click", function(d) {
                 d3.select(this).classed("selected", true)
                 var prnt = d3.select(this);
-                console.log(prnt._groups[0][0].__data__.id);
-                console.log(covidStats);
+                //console.log(prnt._groups[0][0].__data__.id);
+                //console.log(covidStats);
                 for (i = 0; i < covidStats.locations.length; i++){
                     if(parseInt(covidStats.locations[i][0]) == prnt._groups[0][0].__data__.id){
                         loc = covidStats.locations[i];
-                        console.log("Index: " + i);
+                        //console.log("Index: " + i);
                         console.log(loc[1] + " " + loc[2]);
+                        console.log("Percentage: " + (loc[9]/loc[10]*100));
                         break;
                     }
                 }

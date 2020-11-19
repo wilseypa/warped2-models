@@ -8,8 +8,7 @@ LOTS OF DATA IS MISSING IN CERTAIN DAYS (5/26/2020) WHICH THROWS ERRORS SPECIFIC
 ## **TODO**
 ### ***Front End***
 Fix bug where ranges can cause not all files to load and cumulate (can test with a ~7 day range at end of july)  
-Calculate the true minimum and maximums for each data file, not hardcoded as it is currently  
-Add legend to heatmap  
+Position legend properly for windows resizing  
 Cleanup front-end (ongoing)  
 ### ***Back End***
 Create basic API to load dummy data  
@@ -32,6 +31,8 @@ Create script to fix and import JHU data into mongodb database
 Change the data to be looking at periods of time ie looking at the month of march  
 Create timelapse functionality  
 Refactor plotting function  
+Calculate the true minimum and maximums for each data file, not hardcoded as it is currently  
+Add legend to heatmap  
 
 ## **Resources**
 https://www.youtube.com/watch?v=aNbgrqRuoiE  --Help for US state map  
