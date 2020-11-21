@@ -35,16 +35,3 @@ app.get('/pandemic_data/:start_date/:end_date', (request, response) => {
 	response.json(data);
 	});
 });
-/*
-fs.readdir(directoryPath, function (err, files) {
-	if (err) {
-		return console.log('Unable to scan directory: ' + err);
-	}
-	files.forEach(function (file) {
-		// console.log(file);
-		var read_file = fs.readFileSync(directoryPath + '/' + file);
-		var output = JSON.parse(read_file);
-		database.insert(output);
-	});
-});
-*/
