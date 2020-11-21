@@ -1,2 +1,2 @@
-sudo rm database.db
+rm database.db
 node create_db.js

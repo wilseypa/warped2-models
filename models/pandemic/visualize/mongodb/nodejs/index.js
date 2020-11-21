@@ -24,14 +24,22 @@ app.get('/pandemic_data/:start_date/:end_date', (request, response) => {
 	console.log(startDate.setDate(startDate.getDate() + 1));
 	console.log(startDate);
 	console.log(startDate.setDate(startDate.getDate() + 10));
-        console.log(startDate);
+    console.log(startDate);
 
 	// database.find({date: startDate.toString()})
-	database.find({}, (err, data) => {
-	if (err) {
-		response.end();
-		return;
+	console.log(request.params.start_date);
+	var responseArray=[];
+	for(i=0; i<number_of_days; i++){
+		//startDate.formattedDate(startDate);
+		database.find({"date": request.params.start_date}, (err, data) => {
+			if (err) {
+				response.end();
+				return;
+			}
+			//response.json(data);
+			responseArray.push(data);
+			});
+		startDate.setDate(startDate.getDate() + 1);
 	}
-	response.json(data);
-	});
+	response.json(responseArray);
 });
