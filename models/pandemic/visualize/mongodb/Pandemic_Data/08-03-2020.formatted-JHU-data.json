@@ -1,5 +1,5 @@
 {
-  "date": "2020-08-03",
+  "date": "08-03-2020",
   "tweakable_params": ["disease_model", "diffusion_model"], 
   "disease_model": {
     "transmissibility": 2.2, 
