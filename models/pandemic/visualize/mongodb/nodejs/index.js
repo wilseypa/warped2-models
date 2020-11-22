@@ -12,34 +12,50 @@ app.use(express.static('../../../visualize'));
 const database = new Datastore('database.db');
 database.loadDatabase();
 
+function formatDate(dateValue, dateFormat) {
+        let year = dateValue.getFullYear();
+        let month = dateValue.getMonth() + 1;
+        let day = dateValue.getDate()
+
+        if(month < 10) {
+            month = "0" + month;
+        }
+        if(day < 10) {
+            day = "0" + day;
+        }
+
+        if(dateFormat == "YYYY-MM-DD") {
+            return year + "-" + month + "-" + day;
+        } else if(dateFormat == "MM-DD-YYYY") {
+            return month + "-" + day + "-" + year;
+        } else {
+            throw "Invalid date format"
+        }
+}
 
 app.get('/pandemic_data/:start_date/:end_date', (request, response) => {
 	var startDate = new Date(request.params.start_date);
 	var endDate = new Date(request.params.end_date);
 	var millisecond_to_day = 86400000
 	var number_of_days = ((endDate - startDate) / millisecond_to_day);
-	
-	console.log(number_of_days);
-	console.log(startDate);
-	console.log(startDate.setDate(startDate.getDate() + 1));
-	console.log(startDate);
-	console.log(startDate.setDate(startDate.getDate() + 10));
-    console.log(startDate);
 
-	// database.find({date: startDate.toString()})
-	console.log(request.params.start_date);
-	var responseArray=[];
-	for(i=0; i<number_of_days; i++){
-		//startDate.formattedDate(startDate);
-		database.find({"date": request.params.start_date}, (err, data) => {
+	let responseArray = [];
+	var responses = 0;
+	
+	for(i = 0; i <= number_of_days; i++) {
+		formatted_date = formatDate(startDate, "MM-DD-YYYY");
+		database.find({"date": formatted_date}, (err, data) => {
 			if (err) {
 				response.end();
 				return;
 			}
-			//response.json(data);
 			responseArray.push(data);
-			});
+			responses += 1;
+			if (responses > number_of_days) {
+				response.json(responseArray);
+				return;
+			}	
+		});
 		startDate.setDate(startDate.getDate() + 1);
 	}
-	response.json(responseArray);
 });
