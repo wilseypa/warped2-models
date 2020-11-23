@@ -3,7 +3,7 @@
 ## **Notes**
 This is running on d3 v5 and does not currently work with d3 v3 or v4. Updated from v4 to move away from asynchronous data loading  
 Currently the files from JHU need to be modified because Oglala Lakota South Dakota and Kusilvak Alaska have incorrect county IDs  
-LOTS OF DATA IS MISSING IN CERTAIN DAYS (5/26/2020) WHICH THROWS ERRORS SPECIFICALLY WITH RANGES  
+LOTS OF DATA IS MISSING IN CERTAIN DAYS (5/26/2020)(8/23/2020 only with range) WHICH THROWS ERRORS SPECIFICALLY WITH RANGES  
 
 ## **TODO**
 ### ***Front End***

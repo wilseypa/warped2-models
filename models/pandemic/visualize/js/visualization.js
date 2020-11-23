@@ -2,9 +2,10 @@
     async function getData(startDate, endDate) {
         const response = await fetch('/pandemic_data/' + startDate + '/' + endDate);
         const data = await response.json();
-        console.log(data);
+        //console.log(data);
+        return data;
     }
-    getData("07-22-2020", "07-22-2020");
+    //getData("07-22-2020", "07-23-2020");
 
     var tooltip = document.getElementById('tt');
     var color_wheel = ["#ffffcc", "#ffeda0", "#fed976", "#feb24c", "#fd8d3c", "#fc4e2a", "#e31a1c", "#bd0026", "#800026"];
@@ -70,9 +71,9 @@
     document.getElementById('map').style.display = "none";
     document.getElementById('legend').style.display = "none";
     
-    d3.json("../mongodb/Pandemic_Data/07-22-2020.formatted-JHU-data.json").then(function(data22) {
-        covidStats = data22;
-    });
+    // d3.json("../mongodb/Pandemic_Data/07-22-2020.formatted-JHU-data.json").then(function(data22) {
+    //     covidStats = data22;
+    // });
 
     var margin = { top: 0, left: 0, right: 0, bottom: 0},
         height = 500 - margin.top - margin.bottom,
@@ -96,12 +97,16 @@
 
     var files = ["../us.json"];
     var promises = [];
-    files.forEach(function(url) {
-        promises.push(d3.json(url))
-    });
-    Promise.all(promises).then(function(values) {
-        ready(values[0])
-    });
+    getData("07-22-2020", "07-22-2020").then((data) => {
+        covidStats = data[0][0];
+        //console.log(covidStats)
+        files.forEach(function(url) {
+            promises.push(d3.json(url))
+        });
+        Promise.all(promises).then(function(values) {
+            ready(values[0])
+        });
+      })
         
     /*
         Create new projection using Mercator (geoMercator)
@@ -200,7 +205,7 @@
         });
 
         //Date Range New Input
-        d3.select(".dateInput").on("input", function() {
+        d3.selectAll(".dateInput").on("input", function() {
             //get which button pressed
             var startOrEnd = 0
             if(d3.select(this)._groups[0][0].id == "startDate"){
@@ -246,101 +251,63 @@
                 let endDateValue = new Date(endDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
                 let timeDiffInDays = (endDateValue.getTime() - startDateValue.getTime())/(1000*60*60*24);
 
-                var covidStatsArray = new Array(timeDiffInDays + 1); //will be length of date range
-                var locationsDataLength = covidStats.locations[0].length;
-                var locationsLength = covidStats.locations.length;
+                var startDateParam = formatDate(startDateValue, "MM-DD-YYYY");
+                var endDateParam = formatDate(endDateValue, "MM-DD-YYYY");
+                //console.log(startDateParam + "   " + endDateParam);
+                var covidStatsAPIArray;
+                getData(startDateParam, endDateParam).then((data) => {
+                    covidStatsAPIArray = data;
+                    //console.log(covidStatsAPIArray);
 
-                var dummyForEachArray = new Array(timeDiffInDays + 1).fill(0);
-                
-                
+                    var locationsLength = covidStats.locations.length;
+                    var locationsDataLength = covidStats.locations[0].length;
 
-                for (var i = 0; i < locationsLength; i++) {
-                    for(var n = 0; n < locationsDataLength; n++) {
-                        if(n == 6 || n == 7 || n == 8 || n == 9) {
-                            covidStats.locations[i][n] = 0;
+                    for (var i = 0; i < locationsLength; i++) {
+                        for(var n = 0; n < locationsDataLength; n++) {
+                            if(n == 6 || n == 7 || n == 8 || n == 9) {
+                                covidStats.locations[i][n] = 0;
+                            }
                         }
                     }
-                }
 
-                var startingDate = startDateValue;
-                startingDate = new Date(startingDate.setDate(startingDate.getDate() - 1));
-
-                dummyForEachArray.forEach(function(value, currentJsonFile){ //need the scope of forEach vs normal for loop
-                //for (var currentJsonFile = 0; currentJsonFile < timeDiffInDays + 1; currentJsonFile++) {
-                    startingDate = new Date(startingDate.setDate(startingDate.getDate() + 1));
-                    var innerJsonDate = formatDate(startingDate, "MM-DD-YYYY");
-                    //console.log(innerJsonDate)
-                    jsonDataFilePathString = "../mongodb/Pandemic_Data/" + innerJsonDate + ".formatted-JHU-data.json"   //"../07-22-2020.formatted-JHU-data.json"
-
-                    d3.json(jsonDataFilePathString).then(function(newData) {
-                        covidStatsArray[currentJsonFile] = newData;
+                    covidStatsAPIArray.forEach(function (value, index) { // (item, index)
+                        locationsLength = covidStatsAPIArray[index][0].locations.length;
+                        locationsDataLength = covidStatsAPIArray[index][0].locations[0].length;
 
                         for (var i = 0; i < locationsLength; i++) {
                             //console.log(covidStats.locations[i])
-                            for(var n = 0; n < locationsDataLength; n++) {
-                                if(n == 6 || n == 7 || n == 8 || n == 9) {
-                                    covidStats.locations[i][n] += covidStatsArray[currentJsonFile].locations[i][n];
-                                } else {
-                                    covidStats.locations[i][n] = covidStatsArray[currentJsonFile].locations[i][n];
-                                }
+                            for (var n = 0; n < locationsDataLength; n++) {
+                                if (n == 6 || n == 7 || n == 8 || n == 9) {
+                                    covidStats.locations[i][n] += covidStatsAPIArray[index][0].locations[i][n];
+                                } /*else {    //ELSE NOT NEEDED BC OF NEXT IF STATEMENT
+                                        covidStats.locations[i][n] = covidStatsAPIArray[index][0].locations[i][n];
+                                    }*/
                             }
                         }
 
-                        if((currentJsonFile) == timeDiffInDays) {   //final file iteration
+                        if ((index) == timeDiffInDays) {   //final file iteration
                             for (var i = 0; i < locationsLength; i++) {
-                                for(var n = 0; n < locationsDataLength; n++) {
-                                    if(n != 6 && n != 7 && n != 8 && n != 9) {
-                                        covidStats.locations[i][n] = covidStatsArray[currentJsonFile].locations[i][n];  //get stats (population) of latest date in range
+                                for (var n = 0; n < locationsDataLength; n++) {
+                                    if (n != 6 && n != 7 && n != 8 && n != 9) {
+                                        covidStats.locations[i][n] = covidStatsAPIArray[index][0].locations[i][n];  //get stats (population) of latest date in range
                                     }
                                 }
                             }
                             rePlot(covidStats);
                         }
-                        //ANYTHING AFTER THIS (and/or outside of this d3.json) WILL BE EXECUTED BEFORE THIS CODE
-                    });
+                    })
                 })
 
             } else {
                 let startDateValue = new Date(startDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
-                let innerJsonDate = formatDate(startDateValue, "MM-DD-YYYY");
-                jsonDataFilePathString = "../mongodb/Pandemic_Data/" + innerJsonDate + ".formatted-JHU-data.json"   //"../07-22-2020.formatted-JHU-data.json"
-                
-                d3.json(jsonDataFilePathString).then(function(newData) {
-                    covidStats = newData;
+                var startDateParam = formatDate(startDateValue, "MM-DD-YYYY");
+                //console.log(startDateParam);
+                getData(startDateParam, startDateParam).then((data) => {
+                    covidStats = data[0][0];
                     rePlot(covidStats);
-                });
-                //ANY CODE HERE WILL BE EXECUTED BEFORE THE d3.json FUNCTION ABOVE
+                })
             }
         };
-
-        // //The Plotting of Colors to Each County
-        // function rePlot(covidStats){
-        //     svg.selectAll(".county")
-        //         .style("fill", function() {
-        //             var currentCountyId = d3.select(this)._groups[0][0].__data__.id;
-        //             var locData;
-        //             for (i = 0; i < covidStats.locations.length; i++){
-        //                 if(parseInt(covidStats.locations[i][0]) == currentCountyId){
-        //                     locData = covidStats.locations[i];
-        //                     break;
-        //                 }
-        //             }
-        //             if(typeof locData == 'undefined'){
-        //                 return "black";
-        //             }
-        //             var percentage = (((locData[9] / locData[10])*3)*100);
-        //             if (percentage >= 0 && percentage < 1.231){
-        //                 return color_wheel[0];
-        //             } else if (percentage >= 1.231 && percentage < 5.231){
-        //                 return color_wheel[1];
-        //             } else if (percentage >= 5.231 && percentage < 9.231){
-        //                 return color_wheel[2];
-        //             } else if (percentage >= 9.231){
-        //                 return color_wheel[3];
-        //             }
-        //             return color_wheel[colorWheelIndex];
-        //             });
-        // }
 
         //The Plotting of Colors to Each County    -----------DYNAMIC MAX PERCENTAGE BUT DOESNT WORK WELL BECAUSE OF OUTLIERS....---------
         function rePlot(covidStats){
