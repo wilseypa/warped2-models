@@ -67,7 +67,7 @@
     }
 
     //document.getElementById('plotButton').disabled = true;
-    document.getElementById('map').innerHTML = "";
+    //document.getElementById('map').innerHTML = "";
     document.getElementById('map').style.display = "none";
     document.getElementById('legend').style.display = "none";
     
