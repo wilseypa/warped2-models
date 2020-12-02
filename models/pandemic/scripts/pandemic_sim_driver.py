@@ -387,6 +387,7 @@ def flatten_dict_get_values(dictVar):
 
 def get_csv_header(dictDiseaseParams, listDiseaseMetricKeywords):
     """
+    TODO   for final consolidated csv ???
     """
     tweakableDiseaseParamKeys = flatten_dict_get_keys(dictDiseaseParams)
     header_csv_string = ','.join(["start_date", "end_date"] + tweakableDiseaseParamKeys \
@@ -401,7 +402,7 @@ def get_csv_header(dictDiseaseParams, listDiseaseMetricKeywords):
 def get_line_sim_params_result(startDate, endDate, dictParamTweaks, listDistMetricNames,
                                dictDistMetrics):
     """
-    in tsv format
+    in tsv format TODO ???
     """
     temp = flatten_dict_get_values(dictParamTweaks)
 
@@ -520,6 +521,7 @@ def trigger():
             (dictParamTweaks, paramTweaksFilePos) = get_json_from_stream(paramTweaksFileobj,
                                                                          paramTweaksFilePos)
 
+            # create a name for a new tweaked input jsonfile
             simStartDateInputJsonTweakedFile = os.getcwd() + "/../data/tempfile_jsontweakedfile_" + str(uuid.uuid4())
 
             # TODO add comment

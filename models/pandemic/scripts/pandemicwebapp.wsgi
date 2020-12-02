@@ -68,25 +68,20 @@ def create_paramtweaks_file(reqdata):
         # print("paramRollingCounter", paramRollingCounter)
         dictTweak = {}
         for item in paramRollingCounter:
-
+            # copy reference
             dictTemp = dictTweak
 
             for key in item[0]:
-                # print("key", key)
                 if key not in dictTemp:
                     dictTemp[key] = {}
 
                 dictTemp2 = dictTemp
                 dictTemp = dictTemp[key]
-                # print("dicttemp", dictTemp)
 
             if dictTemp2:
                 dictTemp2[key] = item[4]
-            # dictTemp[key] = item[3]
 
         return dictTweak
-
-    # END get_tweak_dict()
 
     # helper function
     def roll_param_meter():
@@ -133,15 +128,10 @@ def create_paramtweaks_file(reqdata):
     # HELPER function
     def add_tweak_dict_to_file(dictTweak):
         """
-
-        :param dictTweak:
-        :return:
+        TODO purpose ??
         """
-        if not dictTweak:  # check if empty
+        if not dictTweak:
             return
-
-        # print("dicttweak", dictTweak)
-        # sys.exit(-1)
 
         # TODO add comment
         if 'diffusion_model' in dictTweak and 'graph_params_K' in dictTweak['diffusion_model'] and \
@@ -160,8 +150,6 @@ def create_paramtweaks_file(reqdata):
 
     # END addTweakDictToFile()
     ################ END HELPER FUNCTIONS ################
-
-    # tweakscount = int(reqdata['tweakscount']['value'])
 
     # TODO comment
     yyg_df = pandas.read_csv(os.getcwd() + "/../data/" + \
@@ -184,8 +172,7 @@ def create_paramtweaks_file(reqdata):
         yygExposedConfirmedRatio = 4
 
     # create counter limit lists
-    paramRollingCounter = []
-    # graph_param_betaIndex = None
+    paramRollingCounter = []    # graph_param_betaIndex = None
 
     if reqdata['transmissibility']['ifchecked'] is True:
         transmissibilityfrom = float(reqdata['transmissibility']['fromval'])
@@ -301,14 +288,6 @@ def create_paramtweaks_file(reqdata):
                                     graph_param_betastep,
                                     graph_param_betafrom])
 
-        # graph_param_betaIndex = len(paramRollingCounter) - 1
-
-        # graph_param1 = graph_param1from + i * ((graph_param1to - graph_param1from) / (tweakscount - 1))
-        # graph_param2 = graph_param2from + i * ((graph_param2to - graph_param2from) / (tweakscount - 1))
-        #
-        # dicttweakline["diffusion_model"]['graph_params'] = str(round(graph_param1, 3)) + ',' + str(
-        #     round(graph_param2, 3))
-
     if reqdata['diffusion_trig_interval_in_hrs']['ifchecked'] is True:
         diffusion_trig_interval_in_hrsfrom = float(reqdata['diffusion_trig_interval_in_hrs']['fromval'])
         diffusion_trig_interval_in_hrsto = float(reqdata['diffusion_trig_interval_in_hrs']['toval'])
@@ -342,25 +321,20 @@ def create_paramtweaks_file(reqdata):
                                     max_diffusion_cntstep,
                                     max_diffusion_cntfrom])
 
-    # print("paramRollingCounter", paramRollingCounter)
-    # sys.exit(-1)
-
-    # if graph_param_betaIndex:
-    #     par
-    #################################################
-
     tweakfiles = []
     tweakfilesobj = []
 
     tweakFileIndex = 0
     while True:
+        # create as many tweakfiles as 'taskCount' value
         if tweakFileIndex > len(tweakfiles) - 1:
             tweakfiles.append(TWEAKFILES_DIR_PATH + "diseaseparamtweakfile_" + str(uuid.uuid4()))
             tweakfilesobj.append(open(tweakfiles[-1], "w"))
 
+        # add next tweak-set to current index-ed tweakfile
         add_tweak_dict_to_file(get_tweak_dict())  # TODO change get_tweak_dict name
 
-        # reset
+        # next tweak-set should go to the next tweakfile; reset index to loop to the first tweakfile
         tweakFileIndex += 1
         if tweakFileIndex == taskCount:
             tweakFileIndex = 0
@@ -397,8 +371,7 @@ def send_static(filename):
 
 def triggersimulation(pandemic_sim_driver_args):
     """
-    :param:
-    :return:
+    TODO add comment
     """
 
     subprocessArgs = [pandemic_sim_driver_path, "--sim_start_date", pandemic_sim_driver_args['start_date'],
@@ -418,8 +391,7 @@ def triggersimulation(pandemic_sim_driver_args):
 
 def simulate_func(dictreq):
     """
-
-    :return:
+    TODO purpose??
     """
     tweakfiles = create_paramtweaks_file(dictreq)  # expensive function
 
@@ -478,6 +450,7 @@ def getstatus():
 
     dictToSend = {}
 
+    # TODO add comment
     dictToSend["statusmsg"] = ""
 
     global jobstatus

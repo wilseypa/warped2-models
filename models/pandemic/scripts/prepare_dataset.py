@@ -197,7 +197,7 @@ def create_merged_DF_jhu_population(covid_csse_data_filepath, pop_data_filepath)
                                                    + csse_data_daily_report_df.Province_State.str.lower()
 
     # now, create DF from population data, add 'Combined_Key_US' column
-    population_data_df = pd.read_csv(pop_data_filepath, skipinitialspace=True)
+    population_data_df = pd.read_csv(pop_data_filepath, dtype={'FIPS':object}, skipinitialspace=True)
     population_data_df['Combined_Key_US'] = population_data_df.County.str.lower() + "," + \
                                             population_data_df.State.str.lower()
 
@@ -207,6 +207,7 @@ def create_merged_DF_jhu_population(covid_csse_data_filepath, pop_data_filepath)
             csse_data_daily_report_df.shape[1],
             population_data_df.shape[0],
             population_data_df.shape[1]))
+
     # now, join
     csse_data_daily_report_merged_df = pd.merge(population_data_df,
                                                 csse_data_daily_report_df[['Country_Region',
@@ -302,9 +303,8 @@ def prepare_data(jhu_csse_path=DEFAULT_JHU_CSSE_PATH, covid_csse_data_date=None,
 
         covid_csse_data_filepath = get_jhu_csse_data_filepath(jhu_csse_path, covid_csse_data_date)
 
+        # get csv`filename and set output json full filepath
         out_fname = os.path.splitext(os.path.basename(covid_csse_data_filepath))[0] + ".formatted-JHU-data.json"
-
-        # set filepath
         out_filepath = os.getcwd() + "/../data/" + out_fname
 
         if os.path.isfile(out_filepath):
