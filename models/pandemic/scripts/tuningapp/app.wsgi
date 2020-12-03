@@ -303,6 +303,7 @@ def simulate_func(dict_args):
                                             json_formatted_dirpath=None,
                                             simulated_json_dirpath=simulated_json_dirpath)
 
+    subprocess.run(["Rscript", "rangeSimulationDataAnalyse.R"], stdout=subprocess.DEVNULL)
 
 
 @post('/simulate')
