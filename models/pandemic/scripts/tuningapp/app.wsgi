@@ -344,7 +344,15 @@ def send_static(filename):
     return static_file(filename, root='static/')
 
 
+def check_user(username, password):
+    if username == "scooby" and password == "doobyd00":
+        return True
+    else:
+        return False
+
+
 @route('/')
+@auth_basic(check_user)
 def home():
     with open('index.html', 'r') as myfile:
         html_string = myfile.read()
