@@ -307,7 +307,7 @@ def fix_metrics_values(jhu_csse_path, main_df, curr_date_str):
             # print("h3")
             continue
 
-        prev_active_val = int((prev_date_csse_df[prev_date_csse_df['FIPS'] == fips]['Active']).to_list()[0])
+        prev_active_val = int((prev_date_csse_df[prev_date_csse_df['FIPS'] == fips]['Active']).values.tolist()[0])
 
         main_active_val = int(main_df[main_df['FIPS'] == fips]['Active'])
         main_confirmed_val = int(main_df[main_df['FIPS'] == fips]['Confirmed'])
