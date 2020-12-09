@@ -13,7 +13,7 @@ try:
     import pathlib
     from concurrent_log_handler import ConcurrentRotatingFileHandler
     from math import radians, cos, sin, asin, sqrt
-    from datetime import datetime
+    from datetime import datetime, timedelta
     import subprocess
 except Exception as e:
     print(str(type(e).__name__) + ": " + str(e), file=sys.stderr)
@@ -197,7 +197,7 @@ def create_merged_DF_jhu_population(covid_csse_data_filepath, pop_data_filepath)
                                                    + csse_data_daily_report_df.Province_State.str.lower()
 
     # now, create DF from population data, add 'Combined_Key_US' column
-    population_data_df = pd.read_csv(pop_data_filepath, dtype={'FIPS':object}, skipinitialspace=True)
+    population_data_df = pd.read_csv(pop_data_filepath, dtype={'FIPS': object}, skipinitialspace=True)
     population_data_df['Combined_Key_US'] = population_data_df.County.str.lower() + "," + \
                                             population_data_df.State.str.lower()
 
@@ -262,6 +262,80 @@ def get_jhu_csse_data_filepath(jhu_csse_path, dateStr):
         raise Exception("File does not exist. Make sure date requested is valid, and run 'git pull'")
 
     return filepath
+
+
+def fix_metrics_values(jhu_csse_path, main_df, curr_date_str):
+    """
+    """
+    # print("h1\n", main_df.dtypes)
+
+    curr_date = datetime.strptime(curr_date_str, "%m-%d-%Y")
+
+    prev_date_filepath = get_jhu_csse_data_filepath(jhu_csse_path,
+                                                    (curr_date - timedelta(days=14)).strftime("%m-%d-%Y"))
+
+    # print("prev_date_filepath", prev_date_filepath)
+    # print("main dtypes", main_df.dtypes)
+
+    prev_date_csse_df = pd.read_csv(prev_date_filepath, skipinitialspace=True, dtype={'FIPS': 'object'})  # ',
+    # 'Active':'object'})
+    if 'FIPS' not in prev_date_csse_df.columns:
+        return
+
+    # print(prev_date_csse_df.iloc[2000:2010])
+    # sys.exit(1)
+
+    # print("prev_date_csse_df dtypes\n", prev_date_csse_df.dtypes)
+    # print("prev_date_csse_df[FIPS]", list(prev_date_csse_df['FIPS']))
+    # print(prev_date_csse_df.loc[prev_date_csse_df.FIPS == '32003'])
+    # sys.exit(1)
+
+    for index, row in main_df.iterrows():
+
+        fips = row['FIPS']
+
+        # print("type", type(fips))
+        # print("fips", fips)
+
+        # sys.exit(1)
+
+        # if not fips:
+        #     print("null true")
+        #     sys.exit(1)
+
+        if fips not in prev_date_csse_df['FIPS'].values:
+            # print("h3")
+            continue
+
+        prev_active_val = int((prev_date_csse_df[prev_date_csse_df['FIPS'] == fips]['Active']).to_list()[0])
+
+        main_active_val = int(main_df[main_df['FIPS'] == fips]['Active'])
+        main_confirmed_val = int(main_df[main_df['FIPS'] == fips]['Confirmed'])
+        # main_recovered_val = int(main_df[main_df['FIPS'] == fips]['Recovered'])
+        main_deaths_val = int(main_df[main_df['FIPS'] == fips]['Deaths'])
+
+        # print("prev_active_val", prev_active_val, main_active_val)
+
+        # print(main_df[main_df['FIPS'] == fips])
+        # print("h2")
+        new_active_val = main_active_val - prev_active_val
+        new_recovered_val = main_confirmed_val - new_active_val - main_deaths_val
+
+        if new_active_val < 0:
+            new_active_val = 0
+
+        if new_recovered_val < 0:
+            new_recovered_val = 0
+
+        main_df.loc[(main_df['FIPS'] == fips), 'Active'] = new_active_val
+        main_df.loc[(main_df['FIPS'] == fips), 'Recovered'] = new_recovered_val
+
+        # print(main_df.loc[index])
+
+        # print(main_df[main_df['FIPS'] == fips])
+        # sys.exit(1)
+
+        # main_df[main_df['FIPS'] == fips]['Active'] = main_active_val - prev_active_val
 
 
 def prepare_data(jhu_csse_path=DEFAULT_JHU_CSSE_PATH, covid_csse_data_date=None,
@@ -332,6 +406,18 @@ def prepare_data(jhu_csse_path=DEFAULT_JHU_CSSE_PATH, covid_csse_data_date=None,
         # create dataframe
         csse_data_daily_report_merged_sorted_df = create_merged_DF_jhu_population(covid_csse_data_filepath,
                                                                                   pop_data_filepath)
+        #
+        # covid_csse_data_prev_date = (datetime.strptime(covid_csse_data_date, "%m-%d-%Y") -
+        #                              timedelta(days=14)).strftime("%m-%d-%Y")
+        #
+        # covid_csse_prev_data_filepath = get_jhu_csse_data_filepath(jhu_csse_path, covid_csse_data_prev_date)
+        #
+        # csse_data_daily_report_merged_sorted_prev_df = \
+        #     create_merged_DF_jhu_population(covid_csse_prev_data_filepath,
+        #                                     pop_data_filepath)
+
+        fix_metrics_values(jhu_csse_path, csse_data_daily_report_merged_sorted_df, covid_csse_data_date)
+
         tweakable_params = ["disease_model", "diffusion_model"]
 
         final_dict = {
