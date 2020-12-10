@@ -185,6 +185,7 @@ public:
               number of infected who are still alive and not recovered.
      */
     Location(   const std::string& name,
+                double transmissibility_,
                 unsigned long num_confirmed,
                 unsigned long num_deaths,
                 unsigned long num_recovered,
@@ -194,7 +195,7 @@ public:
             state_(),
             location_name_(name),
             rng_(new std::default_random_engine(index)) {
-
+        dynamic_transmissibility_ = transmissibility_;
         state_ = std::make_shared<LocationState>();
         state_->population_[infection_state_t::EXPOSED] =
             std::min<unsigned long>(CONFIG->exposed_confirmed_ratio_ * (double)num_confirmed, population_size/2);
@@ -246,7 +247,7 @@ public:
          *  R' = gamma * I - mortality_ratio * R
          *  D' = mortality_ratio * R
          */
-        unsigned int delta_S = ( CONFIG->transmissibility_ *
+        unsigned int delta_S = ( dynamic_transmissibility_ *
                             state_->population_[infection_state_t::SUSCEPTIBLE] *
                             state_->population_[infection_state_t::INFECTIOUS] ) / N;
 
@@ -291,6 +292,7 @@ protected:
     std::shared_ptr<LocationState> state_;
     std::string location_name_;
     std::shared_ptr<std::default_random_engine> rng_;
+    double dynamic_transmissibility_;
 };
 
 class ConfigFileHandler {
@@ -348,7 +350,7 @@ public:
             unsigned long confirmed  = location[loc_data_field_t::NUM_ACTIVE].as<unsigned long>();
             unsigned long population = location[loc_data_field_t::POPULATION_SIZE].as<unsigned long>();
 
-            lps.emplace_back(Location(fips_code, confirmed, deaths, recovered, population, index++));
+            lps.emplace_back(Location(fips_code, CONFIG->transmissibility_, confirmed, deaths, recovered, population, index++));
             CONFIG->addMapEntry(fips_code, std::make_tuple(county, state, country, latitude, longitude, population));
         }
 
