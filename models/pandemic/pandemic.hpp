@@ -250,9 +250,9 @@ public:
          *  R' = gamma * I - mortality_ratio * R
          *  D' = mortality_ratio * R
          */
-        unsigned int dynamic_transmissibility_ = CONFIG->transmissibility_ * pow(2.71828, -1 * (timestamp/240));
+        double dynamic_transmissibility_ = CONFIG->transmissibility_ * pow(2.71828, -1 * (timestamp/240));
 
-        unsigned int delta_S = ( dynamic_transmissibility_ *
+        unsigned int delta_S = (int)( dynamic_transmissibility_ *
                             state_->population_[infection_state_t::SUSCEPTIBLE] *
                             state_->population_[infection_state_t::INFECTIOUS] ) / N;
 
