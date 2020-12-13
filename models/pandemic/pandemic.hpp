@@ -185,7 +185,7 @@ public:
               number of infected who are still alive and not recovered.
      */
     Location(   const std::string& name,
-                double transmissibility_,
+                // double transmissibility_,
                 unsigned long num_confirmed,
                 unsigned long num_deaths,
                 unsigned long num_recovered,
@@ -195,7 +195,7 @@ public:
             state_(),
             location_name_(name),
             rng_(new std::default_random_engine(index)) {
-        dynamic_transmissibility_ = transmissibility_;
+        // dynamic_transmissibility_ = transmissibility_;
         state_ = std::make_shared<LocationState>();
         state_->population_[infection_state_t::EXPOSED] =
             std::min<unsigned long>(CONFIG->exposed_confirmed_ratio_ * (double)num_confirmed, population_size/2);
@@ -234,7 +234,10 @@ public:
         return distribution(*rng_);
     }
 
-    void reaction() {
+    void reaction(unsigned int timestamp) {
+
+        timestamp += 0;
+
         auto N = 0U;
         for (auto i = 0; i < infection_state_t::DECEASED; i++) {
             N += state_->population_[i];
@@ -247,6 +250,8 @@ public:
          *  R' = gamma * I - mortality_ratio * R
          *  D' = mortality_ratio * R
          */
+        unsigned int dynamic_transmissibility_ = CONFIG->transmissibility_ * pow(2.71828, -1 * (timestamp/240));
+
         unsigned int delta_S = ( dynamic_transmissibility_ *
                             state_->population_[infection_state_t::SUSCEPTIBLE] *
                             state_->population_[infection_state_t::INFECTIOUS] ) / N;
@@ -292,7 +297,7 @@ protected:
     std::shared_ptr<LocationState> state_;
     std::string location_name_;
     std::shared_ptr<std::default_random_engine> rng_;
-    double dynamic_transmissibility_;
+    // double dynamic_transmissibility_;
 };
 
 class ConfigFileHandler {
@@ -350,7 +355,7 @@ public:
             unsigned long confirmed  = location[loc_data_field_t::NUM_ACTIVE].as<unsigned long>();
             unsigned long population = location[loc_data_field_t::POPULATION_SIZE].as<unsigned long>();
 
-            lps.emplace_back(Location(fips_code, CONFIG->transmissibility_, confirmed, deaths, recovered, population, index++));
+            lps.emplace_back(Location(fips_code, confirmed, deaths, recovered, population, index++));
             CONFIG->addMapEntry(fips_code, std::make_tuple(county, state, country, latitude, longitude, population));
         }
 
@@ -389,7 +394,7 @@ public:
 
         jsoncons::ojson jsontowrite;
         jsoncons::ojson disease_model(jsoncons::json_object_arg, {
-                {"transmissibility", CONFIG->transmissibility_},
+                {"transmissibility", CONFIG->transmissibility_}, // TODO
                 {"mean_incubation_duration_in_days", CONFIG->mean_incubation_duration_ / TIME_UNITS_IN_DAY},
                 {"mean_infection_duration_in_days", CONFIG->mean_infection_duration_ / TIME_UNITS_IN_DAY},
                 {"mortality_ratio", CONFIG->mortality_ratio_},

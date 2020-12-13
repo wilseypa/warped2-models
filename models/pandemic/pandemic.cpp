@@ -63,16 +63,18 @@ std::vector<std::shared_ptr<warped::Event> > Location::receiveEvent(const warped
             timestamp + CONFIG->diffusion_trig_interval_in_hrs_, event_type_t::DIFFUSION_TIMER});
 
     } else if (pandemic_event.type_ == event_type_t::UPDATE_TIMER) { /* Update Timer event */
-        std::cout << "::::::UPDATE_TIMER location_name_ " << location_name_ << " timestamp "
-                  << timestamp << std::endl;
-        // BUG?? if CONFIG->update_trig_interval_in_hrs_ isn;t multiple of 24
-        if (timestamp % (10 * 24) == 0) {
-            if (dynamic_transmissibility_ > 0.2) {
-                dynamic_transmissibility_ /= 2;
-            }
-        }
+        // commenting out for new test
 
-        reaction();
+        // std::cout << "::::::UPDATE_TIMER location_name_ " << location_name_ << " timestamp "
+        //           << timestamp << std::endl;
+        // // BUG?? if CONFIG->update_trig_interval_in_hrs_ isn;t multiple of 24
+        // if (timestamp % (10 * 24) == 0) {
+        //     if (dynamic_transmissibility_ > 0.2) {
+        //         dynamic_transmissibility_ /= 2;
+        //     }
+        // }
+
+        reaction(timestamp);
         events.emplace_back(new PandemicEvent {location_name_,
             timestamp + CONFIG->update_trig_interval_in_hrs_, event_type_t::UPDATE_TIMER});
 
