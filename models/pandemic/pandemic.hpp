@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <random>
 #include <tuple>
+#include <cmath>
 #include <algorithm>
 #include "memory.hpp"
 #include "warped.hpp"
@@ -250,7 +251,7 @@ public:
          *  R' = gamma * I - mortality_ratio * R
          *  D' = mortality_ratio * R
          */
-        double dynamic_transmissibility_ = CONFIG->transmissibility_ * pow(2.71828, -1 * (timestamp/240));
+        double dynamic_transmissibility_ = CONFIG->transmissibility_ * pow(2.71828, -1 * (timestamp/24));
 
         unsigned int delta_S = (int)( dynamic_transmissibility_ *
                             state_->population_[infection_state_t::SUSCEPTIBLE] *
