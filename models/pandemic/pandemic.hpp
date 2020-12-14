@@ -266,8 +266,14 @@ public:
         state_->population_[infection_state_t::EXPOSED]     += delta_S;
 
 
-        unsigned int delta_E = state_->population_[infection_state_t::EXPOSED] /
-                                                    CONFIG->mean_incubation_duration_;
+        // unsigned int delta_E = state_->population_[infection_state_t::EXPOSED] /
+        //                                             CONFIG->mean_incubation_duration_;
+
+
+        unsigned int delta_E = state_->population_[infection_state_t::EXPOSED] / pow(2.71828,
+                                                                                     CONFIG->mean_incubation_duration_ * 24 / timestamp);
+
+        
 
         state_->population_[infection_state_t::EXPOSED]     -= delta_E;
         state_->population_[infection_state_t::INFECTIOUS]  += delta_E;
