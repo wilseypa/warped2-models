@@ -66,6 +66,54 @@
 
     }
 
+    //Submitting ConfigAPI Form
+    d3.select("#submitConfigApi").on("click", function() {
+        document.getElementById('postSimulationContent').style.visibility = "hidden";
+        document.getElementById('postSimulationContent').style.display = "block";
+        //console.log(document.getElementById('configApi').style.animationName);
+
+        document.getElementById('configApi').style.animation = "hide 0.35s";
+        document.getElementById('configApi').style.animationFillMode = "forwards";
+
+        document.getElementById('postSimulationContent').style.animation = "show 0.35s";
+        document.getElementById('postSimulationContent').style.animationFillMode = "forwards";
+        document.getElementById('postSimulationContent').style.animationDelay = "0.35s";
+
+        // if(document.getElementById('configApi').style.animationName === ""){
+        //     //no animation played yet
+        //     document.getElementById('configApi').style.animation = "hide 0.50s";
+        //     document.getElementById('configApi').style.animationFillMode = "forwards";
+
+        //     document.getElementById('postSimulationContent').style.animation = "show 0.50s";
+        //     document.getElementById('postSimulationContent').style.animationFillMode = "forwards";
+        //     document.getElementById('postSimulationContent').style.animationDelay = "1s";
+            
+        // } else if (document.getElementById('configApi').style.animationName === "hide") {
+        //     //hidden
+        //     document.getElementById('configApi').style.animation = "show 0.50s";
+        //     document.getElementById('configApi').style.animationFillMode = "forwards";
+        //     document.getElementById('configApi').style.animationDelay = "1s";
+
+        //     document.getElementById('postSimulationContent').style.animation = "hide 0.50s";
+        //     document.getElementById('postSimulationContent').style.animationFillMode = "forwards";
+        // } else if (document.getElementById('configApi').style.animationName === "show") {
+        //     //shown
+        //     document.getElementById('configApi').style.animation = "hide 0.50s";
+        //     document.getElementById('configApi').style.animationFillMode = "forwards";
+
+        //     document.getElementById('postSimulationContent').style.animation = "show 0.50s";
+        //     document.getElementById('postSimulationContent').style.animationFillMode = "forwards";
+        //     document.getElementById('postSimulationContent').style.animationDelay = "1s";
+        // } else {
+        //     console.log("Shouldn't be here");
+        // }
+    });
+
+    d3.select("#editConfig").on("click", function() {
+        document.getElementById('configApi').style.animation = "show 0.50s";
+        document.getElementById('configApi').style.animationFillMode = "forwards";
+    });
+
     //document.getElementById('plotButton').disabled = true;
     //document.getElementById('map').innerHTML = "";
     document.getElementById('map').style.display = "none";
@@ -244,6 +292,15 @@
 
 
 /* NON-EVENT FUNCTIONS */
+        //Updates #mapDate value
+        function updateMapDateValue(startDateParam, endDateParam) {
+            if (endDateParam === undefined) {
+                document.getElementById('mapDate').innerHTML = startDateParam;
+            } else {
+                document.getElementById('mapDate').innerHTML = startDateParam + " - " + endDateParam;
+            }
+        }
+
         //Grabs Dates from Input and Plots to D3 Map
         function loadNewData() {
             if (isDateRange.checked) {    //load all data from files across range
@@ -253,6 +310,9 @@
 
                 var startDateParam = formatDate(startDateValue, "MM-DD-YYYY");
                 var endDateParam = formatDate(endDateValue, "MM-DD-YYYY");
+                
+                updateMapDateValue(startDateParam, endDateParam);
+
                 //console.log(startDateParam + "   " + endDateParam);
                 var covidStatsAPIArray;
                 getData(startDateParam, endDateParam).then((data) => {
@@ -301,6 +361,9 @@
             } else {
                 let startDateValue = new Date(startDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
                 var startDateParam = formatDate(startDateValue, "MM-DD-YYYY");
+
+                updateMapDateValue(startDateParam, endDateParam);
+
                 //console.log(startDateParam);
                 getData(startDateParam, startDateParam).then((data) => {
                     covidStats = data[0][0];

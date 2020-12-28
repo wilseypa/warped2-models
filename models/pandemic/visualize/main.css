@@ -2,6 +2,19 @@
     font-family: Arial, Helvetica, sans-serif;
 }*/
 
+.configApi {
+    /* height: 500px; */
+    /* width: 100%; */
+    text-align: center;
+}
+.configApiForm {
+    /* height: 100%; */
+    /* width: 900px; */
+    /* border: 1px solid black; */
+    display:inline-block;
+    text-align: left;
+}
+
 svg {
     background: #3987c9;
 }
@@ -68,5 +81,45 @@ svg {
 }
 .legend-value {
     display: inline-block;
+}
+#mapDate {
+    position: absolute;
+    display: inline-block;
+    width: 895px;
+    color: white;
+    text-align: right;
+    padding-right: 5px;
+    padding-top: 5px;
+}
 
+/* ANIMATIONS */
+@keyframes hide {
+    0% {
+        opacity: 1;
+        height: 100%;
+        font-size: inherit;
+        transform: scaleY(1);
+    }
+    100% {
+        opacity: 0;
+        height: 0px;
+        font-size: 0px;
+        transform: scaleY(0);
+    }
+}
+
+@keyframes show {
+    0% {
+        opacity: 0;
+        height: 0px;
+        font-size: 0px;
+        transform: scaleY(0);
+    }
+    100% {
+        opacity: 1;
+        height: 100%;
+        font-size: inherit;
+        transform: scaleY(1);
+        visibility: visible;
+    }
 }

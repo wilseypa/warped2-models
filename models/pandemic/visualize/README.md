@@ -7,7 +7,9 @@ LOTS OF DATA IS MISSING IN CERTAIN DAYS (5/26/2020)(8/23/2020 only with range) W
 
 ## **TODO**
 ### ***Front End***
-Fix bug where ranges can cause not all files to load and cumulate (can test with a ~7 day range at end of july)  
+Re-add slider to bottom of map  
+Make statistics on county appear in bottom right of map since tooltip is not consistent?  
+Fix bug where ranges can cause not all files to load and cumulate (can test with a ~7 day range at end of july) (possibly bad data)  
 Position legend properly for windows resizing  
 Cleanup front-end (ongoing)  
 ### ***Back End***
@@ -33,6 +35,8 @@ Create timelapse functionality
 Refactor plotting function  
 Calculate the true minimum and maximums for each data file, not hardcoded as it is currently  
 Add legend to heatmap  
+Add current date to top right corner of map  
+Add new form for viveks api  
 
 ## **Resources**
 https://www.youtube.com/watch?v=aNbgrqRuoiE  --Help for US state map  
