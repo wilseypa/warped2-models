@@ -9,6 +9,8 @@ LOTS OF DATA IS MISSING IN CERTAIN DAYS (5/26/2020)(8/23/2020 only with range) W
 ### ***Front End***
 Re-add slider to bottom of map  
 Make statistics on county appear in bottom right of map since tooltip is not consistent?  
+Update tooltip data on new day when hovering with timelapse function enabled  
+Make timelapse clearly enabled/disabled  
 Fix bug where ranges can cause not all files to load and cumulate (can test with a ~7 day range at end of july) (possibly bad data)  
 Position legend properly for windows resizing  
 Cleanup front-end (ongoing)  
