@@ -68,6 +68,32 @@
 
     //Submitting ConfigAPI Form
     d3.select("#submitConfigApi").on("click", function() {
+    //Manually checking if required inputs have values (using type="submit" on button messed up animation) 
+        if(document.getElementById('startdate').value === "" || document.getElementById('runtime_days').value === ""){
+            var warningEl = document.createElement("div");
+            warningEl.setAttribute("id", "requiredWarning");
+            document.getElementById("startdate_runtime").appendChild(warningEl);
+            document.getElementById("requiredWarning").innerHTML = "Both \"start date\" and \"runtime in days\" needs to be provided to submit";
+            document.getElementById("requiredWarning").style.color = "#ff0033";
+            document.getElementById("requiredWarning").style.marginTop = "4px";
+            document.getElementById("requiredWarning").style.paddingLeft = "5px";
+            document.getElementById("requiredWarning").style.paddingRight = "5px";
+            document.getElementById("requiredWarning").style.paddingTop = "2px";
+            document.getElementById("requiredWarning").style.paddingBottom = "2px";
+            document.getElementById("requiredWarning").style.borderRadius = "7px";
+            document.getElementById("requiredWarning").style.backgroundColor = "#f2dede";
+            document.getElementById("requiredWarning").style.border = "solid 1px #ebccd1";
+            
+            return
+        } else {
+            if (document.getElementById("requiredWarning") != null) {
+                document.getElementById("requiredWarning").remove();
+            } else {
+                // Doesn't exist, can't remove -> do nothing
+            }
+        }
+        
+    //CSS and Animation
         document.getElementById('postSimulationContent').style.visibility = "hidden";
         document.getElementById('postSimulationContent').style.display = "block";
         //console.log(document.getElementById('configApi').style.animationName);
@@ -79,35 +105,97 @@
         document.getElementById('postSimulationContent').style.animationFillMode = "forwards";
         document.getElementById('postSimulationContent').style.animationDelay = "0.35s";
 
-        // if(document.getElementById('configApi').style.animationName === ""){
-        //     //no animation played yet
-        //     document.getElementById('configApi').style.animation = "hide 0.50s";
-        //     document.getElementById('configApi').style.animationFillMode = "forwards";
+    //Form Submission Logic
+    var postdata = {
+        'start_date' : {
+            'value':document.getElementById('startdate').value
+        }, 'runtime_days' : {
+            'value':document.getElementById('runtime_days').value
+        }, 'transmissibility':{
+            'ifchecked':document.getElementById('transmissibility').checked,
+            'value':document.getElementById('transmissibilityval').value
+        }, 'exposed_confirmed_ratio':{
+            'ifchecked':document.getElementById('exposed_confirmed_ratio').checked,
+            'value':document.getElementById('exposed_confirmed_ratioval').value
+        }, 'mean_incubation_duration_in_days':{
+            'ifchecked':document.getElementById('mean_incubation_duration_in_days').checked,
+            'value':document.getElementById('mean_incubation_duration_in_daysval').value
+        }, 'mean_infection_duration_in_days':{
+            'ifchecked':document.getElementById('mean_infection_duration_in_days').checked,
+            'value':document.getElementById('mean_infection_duration_in_daysval').value
+        }, 'mortality_ratio':{
+            'ifchecked':document.getElementById('mortality_ratio').checked,
+            'value':document.getElementById('mortality_ratioval').value
+        }, 'update_trig_interval_in_hrs':{
+            'ifchecked':document.getElementById('update_trig_interval_in_hrs').checked,
+            'value':document.getElementById('update_trig_interval_in_hrsval').value//'value':document.getElementById('transmissibilityval').value
+        }, 'graph_type':{
+            'ifchecked':document.getElementById('graph_type').checked,
+            'value':document.getElementById('graph_typeoption').options[document.getElementById('graph_typeoption').selectedIndex].value//'value':graph_type
+        }, 'graph_params':{
+            'ifchecked':document.getElementById('graph_params').checked,
+            'K_val':document.getElementById('graph_param_Kval').value,
+            'beta_val':document.getElementById('graph_param_betaval').value
+        }, 'diffusion_trig_interval_in_hrs':{
+            'ifchecked':document.getElementById('diffusion_trig_interval_in_hrs').checked,
+            'value':document.getElementById('diffusion_trig_interval_in_hrsval').value
+        }, 'avg_transport_speed':{
+            'ifchecked':document.getElementById('avg_transport_speed').checked,
+            'value':document.getElementById('avg_transport_speedval').value
+        }, 'max_diffusion_cnt':{
+            'ifchecked':document.getElementById('max_diffusion_cnt').checked,
+            'value':document.getElementById('max_diffusion_cntval').value
+        }/*, 'fipslist': {
+            'value': document.getElementById('fipslist').value
+        }*/
+    };
+    // console.log(postdata);
+    // console.log(JSON.stringify(postdata));
+    aja()
+        .method('POST')
+        // .header('Content-Type', 'application/json')
+        .data({'data':JSON.stringify(postdata)})
+        .url('/simulate')
+        .timeout(3000)
+        .on('200', function (response) {
+            console.log("simulate response:", response);
 
-        //     document.getElementById('postSimulationContent').style.animation = "show 0.50s";
-        //     document.getElementById('postSimulationContent').style.animationFillMode = "forwards";
-        //     document.getElementById('postSimulationContent').style.animationDelay = "1s";
-            
-        // } else if (document.getElementById('configApi').style.animationName === "hide") {
-        //     //hidden
-        //     document.getElementById('configApi').style.animation = "show 0.50s";
-        //     document.getElementById('configApi').style.animationFillMode = "forwards";
-        //     document.getElementById('configApi').style.animationDelay = "1s";
+            // document.getElementById("statusmsg").innerText = response["statusmsg"]
 
-        //     document.getElementById('postSimulationContent').style.animation = "hide 0.50s";
-        //     document.getElementById('postSimulationContent').style.animationFillMode = "forwards";
-        // } else if (document.getElementById('configApi').style.animationName === "show") {
-        //     //shown
-        //     document.getElementById('configApi').style.animation = "hide 0.50s";
-        //     document.getElementById('configApi').style.animationFillMode = "forwards";
+            if (getstatusTimeout) {
+                clearInterval(getstatusTimeout);
+                getstatusTimeout = setTimeout(getStatus, 200, false);
+            } else {
+                getstatusTimeout = setTimeout(getStatus, 200, false);
+            }
 
-        //     document.getElementById('postSimulationContent').style.animation = "show 0.50s";
-        //     document.getElementById('postSimulationContent').style.animationFillMode = "forwards";
-        //     document.getElementById('postSimulationContent').style.animationDelay = "1s";
-        // } else {
-        //     console.log("Shouldn't be here");
-        // }
+            // console.log("/simulate: set timeout");
+        })
+        .go();
+
+        //FUNCTION TO CHECK getStatus() AND SHOW LOADING CIRCLE
+
     });
+    // var getStatus = function () {
+    //     clearTimeout(getstatusTimeout);
+    //     getstatusTimeout = setTimeout(getStatus, 6000, false);
+
+    //     // main logic
+    //     aja()
+    //         .method('GET')
+    //         // .header('Content-Type', 'application/json')
+    //         // .data({'data':JSON.stringify(postdata)})
+    //         .url('/getstatus')
+    //         .timeout(2500)
+    //         .on('200', function (response) {
+    //             if ("statusmsg" in response) {
+    //                 document.getElementById("statusmsg").innerText = response["statusmsg"]
+    //             }
+    //         })
+    //         .go();
+    // }
+
+    // getStatus();
 
     d3.select("#editConfig").on("click", function() {
         document.getElementById('configApi').style.animation = "show 0.50s";
