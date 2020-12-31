@@ -175,6 +175,37 @@
 
         //FUNCTION TO CHECK getStatus() AND SHOW LOADING CIRCLE
 
+
+        var loadingEl = document.createElement("div");
+        loadingEl.setAttribute("id", "loadingCircle");
+        document.getElementById("loadingDiv").appendChild(loadingEl);
+        // <div class="sk-circle">
+        //     <div class="sk-circle1 sk-child"></div>
+        //     <div class="sk-circle2 sk-child"></div>
+        //     <div class="sk-circle3 sk-child"></div>
+        //     <div class="sk-circle4 sk-child"></div>
+        //     <div class="sk-circle5 sk-child"></div>
+        //     <div class="sk-circle6 sk-child"></div>
+        //     <div class="sk-circle7 sk-child"></div>
+        //     <div class="sk-circle8 sk-child"></div>
+        //     <div class="sk-circle9 sk-child"></div>
+        //     <div class="sk-circle10 sk-child"></div>
+        //     <div class="sk-circle11 sk-child"></div>
+        //     <div class="sk-circle12 sk-child"></div>
+        //   </div>
+        let loadingHtml = "<div class=\"sk-circle\"\><div class=\"sk-circle1 sk-child\"></div\><div class=\"sk-circle2 sk-child\"></div\><div class=\"sk-circle3 sk-child\"></div\><div class=\"sk-circle4 sk-child\"></div\><div class=\"sk-circle5 sk-child\"></div\><div class=\"sk-circle6 sk-child\"></div\><div class=\"sk-circle7 sk-child\"></div\><div class=\"sk-circle8 sk-child\"></div\><div class=\"sk-circle9 sk-child\"></div\><div class=\"sk-circle10 sk-child\"></div\><div class=\"sk-circle11 sk-child\"></div\><div class=\"sk-circle12 sk-child\"></div\><div\>"
+        document.getElementById("loadingDiv").innerHTML = loadingHtml;
+
+        setTimeout(() => { 
+            if (document.getElementById("loadingDiv") != null) {
+                document.getElementById("loadingDiv").remove();
+            } else {
+                // Doesn't exist, can't remove -> do nothing
+            } 
+        }, 2000);
+
+        
+
     });
     // var getStatus = function () {
     //     clearTimeout(getstatusTimeout);
