@@ -66,6 +66,29 @@
 
     }
 
+
+    var getStatus = function () {
+        clearTimeout(getstatusTimeout);
+        getstatusTimeout = setTimeout(getStatus, 6000, false);
+
+        // main logic
+        aja()
+            .method('GET')
+            // .header('Content-Type', 'application/json')
+            // .data({'data':JSON.stringify(postdata)})
+            .url('/getstatus')
+            .timeout(2500)
+            .on('200', function (response) {
+                if ("statusmsg" in response) {
+                    document.getElementById("statusmsg").innerText = response["statusmsg"]
+                    if (response.statusmsg == "job finished") {
+                        removeLoadingBar();
+                    }
+                }
+            })
+            .go();
+    }
+
     //Submitting ConfigAPI Form
     d3.select("#submitConfigApi").on("click", function() {
     //Manually checking if required inputs have values (using type="submit" on button messed up animation) 
@@ -94,16 +117,16 @@
         }
         
     //CSS and Animation
-        document.getElementById('postSimulationContent').style.visibility = "hidden";
-        document.getElementById('postSimulationContent').style.display = "block";
+        // document.getElementById('postSimulationContent').style.visibility = "hidden";
+        // document.getElementById('postSimulationContent').style.display = "block";
         //console.log(document.getElementById('configApi').style.animationName);
 
         document.getElementById('configApi').style.animation = "hide 0.35s";
         document.getElementById('configApi').style.animationFillMode = "forwards";
 
-        document.getElementById('postSimulationContent').style.animation = "show 0.35s";
-        document.getElementById('postSimulationContent').style.animationFillMode = "forwards";
-        document.getElementById('postSimulationContent').style.animationDelay = "0.35s";
+        // document.getElementById('postSimulationContent').style.animation = "show 0.35s";
+        // document.getElementById('postSimulationContent').style.animationFillMode = "forwards";
+        // document.getElementById('postSimulationContent').style.animationDelay = "0.35s";
 
     //Form Submission Logic
     var postdata = {
@@ -173,58 +196,54 @@
         })
         .go();
 
-        //FUNCTION TO CHECK getStatus() AND SHOW LOADING CIRCLE
-
-
-        var loadingEl = document.createElement("div");
-        loadingEl.setAttribute("id", "loadingCircle");
-        document.getElementById("loadingDiv").appendChild(loadingEl);
-        // <div class="sk-circle">
-        //     <div class="sk-circle1 sk-child"></div>
-        //     <div class="sk-circle2 sk-child"></div>
-        //     <div class="sk-circle3 sk-child"></div>
-        //     <div class="sk-circle4 sk-child"></div>
-        //     <div class="sk-circle5 sk-child"></div>
-        //     <div class="sk-circle6 sk-child"></div>
-        //     <div class="sk-circle7 sk-child"></div>
-        //     <div class="sk-circle8 sk-child"></div>
-        //     <div class="sk-circle9 sk-child"></div>
-        //     <div class="sk-circle10 sk-child"></div>
-        //     <div class="sk-circle11 sk-child"></div>
-        //     <div class="sk-circle12 sk-child"></div>
-        //   </div>
-        let loadingHtml = "<div class=\"sk-circle\"\><div class=\"sk-circle1 sk-child\"></div\><div class=\"sk-circle2 sk-child\"></div\><div class=\"sk-circle3 sk-child\"></div\><div class=\"sk-circle4 sk-child\"></div\><div class=\"sk-circle5 sk-child\"></div\><div class=\"sk-circle6 sk-child\"></div\><div class=\"sk-circle7 sk-child\"></div\><div class=\"sk-circle8 sk-child\"></div\><div class=\"sk-circle9 sk-child\"></div\><div class=\"sk-circle10 sk-child\"></div\><div class=\"sk-circle11 sk-child\"></div\><div class=\"sk-circle12 sk-child\"></div\><div\>"
-        document.getElementById("loadingDiv").innerHTML = loadingHtml;
-
-        setTimeout(() => { 
-            if (document.getElementById("loadingDiv") != null) {
-                document.getElementById("loadingDiv").remove();
-            } else {
-                // Doesn't exist, can't remove -> do nothing
-            } 
-        }, 2000);
-
-        
+        waitForSimulationData();
 
     });
-    // var getStatus = function () {
-    //     clearTimeout(getstatusTimeout);
-    //     getstatusTimeout = setTimeout(getStatus, 6000, false);
 
-    //     // main logic
-    //     aja()
-    //         .method('GET')
-    //         // .header('Content-Type', 'application/json')
-    //         // .data({'data':JSON.stringify(postdata)})
-    //         .url('/getstatus')
-    //         .timeout(2500)
-    //         .on('200', function (response) {
-    //             if ("statusmsg" in response) {
-    //                 document.getElementById("statusmsg").innerText = response["statusmsg"]
-    //             }
-    //         })
-    //         .go();
-    // }
+    function waitForSimulationData() {
+    //Create loading spinner and wait for simulation data
+        setTimeout(() => { 
+            var loadingEl = document.createElement("div");
+            loadingEl.setAttribute("id", "loadingCircle");
+            document.getElementById("loadingDiv").appendChild(loadingEl);
+            let loadingHtml =   `<div class="sk-circle">
+                                    <div class="sk-circle1 sk-child"></div>
+                                    <div class="sk-circle2 sk-child"></div>
+                                    <div class="sk-circle3 sk-child"></div>
+                                    <div class="sk-circle4 sk-child"></div>
+                                    <div class="sk-circle5 sk-child"></div>
+                                    <div class="sk-circle6 sk-child"></div>
+                                    <div class="sk-circle7 sk-child"></div>
+                                    <div class="sk-circle8 sk-child"></div>
+                                    <div class="sk-circle9 sk-child"></div>
+                                    <div class="sk-circle10 sk-child"></div>
+                                    <div class="sk-circle11 sk-child"></div>
+                                    <div class="sk-circle12 sk-child"></div>
+                                </div>`
+            document.getElementById("loadingDiv").innerHTML = loadingHtml;
+        }, 500);
+
+        // setTimeout(() => { 
+        //     if (document.getElementById("loadingDiv") != null) {
+        //         document.getElementById("loadingDiv").remove();
+        //     } else {
+        //         // Doesn't exist, can't remove -> do nothing
+        //     } 
+        // }, 2000);
+
+        getData();
+    }
+
+    function removeLoadingBar() {
+        document.getElementById("loadingDiv").remove();
+
+        document.getElementById('postSimulationContent').style.visibility = "hidden";
+        document.getElementById('postSimulationContent').style.display = "block";
+
+        document.getElementById('postSimulationContent').style.animation = "show 0.35s";
+        document.getElementById('postSimulationContent').style.animationFillMode = "forwards";
+        document.getElementById('postSimulationContent').style.animationDelay = "0.35s";
+    }
 
     // getStatus();
 
