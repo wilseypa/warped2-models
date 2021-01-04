@@ -251,7 +251,9 @@ public:
          *  R' = gamma * I - mortality_ratio * R
          *  D' = mortality_ratio * R
          */
-        double exponent = (double) -1 * (timestamp / 24);
+        // double exponent = (double) -1 * (48 * timestamp);
+        double exponent = (double) -1 * (timestamp / 70);
+
         double dynamic_transmissibility_ = CONFIG->transmissibility_ * pow(2.71828, exponent);
 
         // unsigned int delta_S = (int)( dynamic_transmissibility_ *
@@ -266,14 +268,12 @@ public:
         state_->population_[infection_state_t::EXPOSED]     += delta_S;
 
 
-        // unsigned int delta_E = state_->population_[infection_state_t::EXPOSED] /
-        //                                             CONFIG->mean_incubation_duration_;
+        unsigned int delta_E = state_->population_[infection_state_t::EXPOSED] /
+                                                    CONFIG->mean_incubation_duration_;
 
 
-        unsigned int delta_E = state_->population_[infection_state_t::EXPOSED] / pow(2.71828,
-                                                                                     CONFIG->mean_incubation_duration_ * 24 / timestamp);
-
-        
+        // unsigned int delta_E = state_->population_[infection_state_t::EXPOSED] / pow(2.71828,
+        //                                                                             CONFIG->mean_incubation_duration_ * 24 / timestamp);
 
         state_->population_[infection_state_t::EXPOSED]     -= delta_E;
         state_->population_[infection_state_t::INFECTIOUS]  += delta_E;
@@ -364,7 +364,7 @@ public:
             double longitude         = location[loc_data_field_t::LONGITUDE].as<double>();
             unsigned long deaths     = location[loc_data_field_t::NUM_DEATHS].as<unsigned long>();
             unsigned long recovered  = location[loc_data_field_t::NUM_RECOVERED].as<unsigned long>();
-            unsigned long confirmed  = location[loc_data_field_t::NUM_ACTIVE].as<unsigned long>();
+            unsigned long confirmed  = 3.646 * location[loc_data_field_t::NUM_ACTIVE].as<unsigned long>();  // ratio of actual vs. calculate actual active values for july 1st
             unsigned long population = location[loc_data_field_t::POPULATION_SIZE].as<unsigned long>();
 
             lps.emplace_back(Location(fips_code, confirmed, deaths, recovered, population, index++));
