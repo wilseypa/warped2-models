@@ -364,7 +364,7 @@ public:
             double longitude         = location[loc_data_field_t::LONGITUDE].as<double>();
             unsigned long deaths     = location[loc_data_field_t::NUM_DEATHS].as<unsigned long>();
             unsigned long recovered  = location[loc_data_field_t::NUM_RECOVERED].as<unsigned long>();
-            unsigned long confirmed  = 3.646 * location[loc_data_field_t::NUM_ACTIVE].as<unsigned long>();  // ratio of actual vs. calculate actual active values for july 1st
+            unsigned long confirmed  = location[loc_data_field_t::NUM_ACTIVE].as<unsigned long>();  // ratio of actual vs. calculate actual active values for july 1st
             unsigned long population = location[loc_data_field_t::POPULATION_SIZE].as<unsigned long>();
 
             lps.emplace_back(Location(fips_code, confirmed, deaths, recovered, population, index++));
