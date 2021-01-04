@@ -263,6 +263,19 @@ def get_jhu_csse_data_filepath(jhu_csse_path, dateStr):
 
     return filepath
 
+def get_true_us_active_count(date_str):
+    """
+
+    :param date_val:
+    :return:
+    """
+    us_states_metrics_df = pd.read_csv(DEFAULT_JHU_CSSE_PATH
+                                       + "/csse_covid_19_data/csse_covid_19_daily_reports_us/"
+                                       + date_str + ".csv", usecols=['Active'], dtype={'Active': int})
+
+    return us_states_metrics_df['Active'].sum()
+
+
 
 def fix_metrics_values(jhu_csse_path, main_df, curr_date_str):
     """
@@ -282,6 +295,8 @@ def fix_metrics_values(jhu_csse_path, main_df, curr_date_str):
     if 'FIPS' not in prev_date_csse_df.columns:
         return
 
+    total_us_active = get_true_us_active_count(curr_date_str)
+
     # print(prev_date_csse_df.iloc[2000:2010])
     # sys.exit(1)
 
@@ -289,6 +304,8 @@ def fix_metrics_values(jhu_csse_path, main_df, curr_date_str):
     # print("prev_date_csse_df[FIPS]", list(prev_date_csse_df['FIPS']))
     # print(prev_date_csse_df.loc[prev_date_csse_df.FIPS == '32003'])
     # sys.exit(1)
+
+    dict_fips_newActive = {}
 
     for index, row in main_df.iterrows():
 
@@ -303,32 +320,78 @@ def fix_metrics_values(jhu_csse_path, main_df, curr_date_str):
         #     print("null true")
         #     sys.exit(1)
 
+        main_active_val = int(main_df[main_df['FIPS'] == fips]['Active'])
+
         if fips not in prev_date_csse_df['FIPS'].values:
             # print("h3")
+            dict_fips_newActive[fips] = main_active_val
             continue
 
         prev_active_val = int((prev_date_csse_df[prev_date_csse_df['FIPS'] == fips]['Active']).values.tolist()[0])
 
-        main_active_val = int(main_df[main_df['FIPS'] == fips]['Active'])
-        main_confirmed_val = int(main_df[main_df['FIPS'] == fips]['Confirmed'])
-        # main_recovered_val = int(main_df[main_df['FIPS'] == fips]['Recovered'])
-        main_deaths_val = int(main_df[main_df['FIPS'] == fips]['Deaths'])
-
-        # print("prev_active_val", prev_active_val, main_active_val)
-
-        # print(main_df[main_df['FIPS'] == fips])
-        # print("h2")
         new_active_val = main_active_val - prev_active_val
-        new_recovered_val = main_confirmed_val - new_active_val - main_deaths_val
 
         if new_active_val < 0:
             new_active_val = 0
 
+        dict_fips_newActive[fips] = new_active_val
+
+    # calculate ratio
+    total_us_new_active = sum(dict_fips_newActive.values())
+    ratio_actual_calculated_active = total_us_active / total_us_new_active
+
+    population_data_df = pd.read_csv(DEFAULT_POPULATION_FILEPATH, dtype={'FIPS': object}, skipinitialspace=True)
+
+
+
+    # now, run loop to fix main_df
+    for index, row in main_df.iterrows():
+
+        fips = row['FIPS']
+
+        new_scaled_active = int(dict_fips_newActive[fips] * ratio_actual_calculated_active)
+
+        if new_scaled_active < 0:
+            new_scaled_active = 0
+
+        # add population check
+        # REDUNDANT??? if fips not in population_data_df['FIPS'].values():
+        # fips_population = int(population_data_df[population_data_df['FIPS'] ==
+        #                                          "6037"]['Population'].values.tolist()[0])
+
+        # TODO change to .tolist()
+        main_confirmed_val = int(main_df[main_df['FIPS'] == fips]['Confirmed'])
+        main_deaths_val = int(main_df[main_df['FIPS'] == fips]['Deaths'])
+
+
+        # if new_scaled_active >= fips_population:
+        #     new_scaled_active = fips_population
+
+        # csv recovered is always zero, so no need to factor that
+        if new_scaled_active >= main_confirmed_val - main_deaths_val:
+            new_scaled_active = main_confirmed_val - main_deaths_val
+
+        # main_recovered_val = int(main_df[main_df['FIPS'] == fips]['Recovered'])
+        # print("prev_active_val", prev_active_val, main_active_val)
+
+        # print(main_df[main_df['FIPS'] == fips])
+        # print("h2")
+
+        new_recovered_val = main_confirmed_val - new_scaled_active - main_deaths_val
+
         if new_recovered_val < 0:
             new_recovered_val = 0
 
-        main_df.loc[(main_df['FIPS'] == fips), 'Active'] = new_active_val
+        # TODO problem, eg.:
+        # ["41059", "Umatilla", "Oregon", "US", 45.59073056, -118.7353826, 533, 4, 0, 533, 77950],
+
+        # now, update
+        main_df.loc[(main_df['FIPS'] == fips), 'Active'] = new_scaled_active
         main_df.loc[(main_df['FIPS'] == fips), 'Recovered'] = new_recovered_val
+
+    print("total 'Confirmed'", main_df['Confirmed'].sum())
+    print("total 'Active'", main_df['Active'].sum())
+    print("total 'Recovered'", main_df['Recovered'].sum())
 
         # print(main_df.loc[index])
 
