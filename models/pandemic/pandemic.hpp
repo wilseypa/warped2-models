@@ -187,7 +187,8 @@ public:
      */
     Location(   const std::string& name,
                 // double transmissibility_,
-                unsigned long num_confirmed,
+                // unsigned long num_confirmed,
+                unsigned long num_active,
                 unsigned long num_deaths,
                 unsigned long num_recovered,
                 unsigned long population_size,
@@ -198,10 +199,14 @@ public:
             rng_(new std::default_random_engine(index)) {
         // dynamic_transmissibility_ = transmissibility_;
         state_ = std::make_shared<LocationState>();
-        state_->population_[infection_state_t::EXPOSED] =
-            std::min<unsigned long>(CONFIG->exposed_confirmed_ratio_ * (double)num_confirmed, population_size/2);
+        // state_->population_[infection_state_t::EXPOSED] =
+        //     std::min<unsigned long>(CONFIG->exposed_confirmed_ratio_ * (double)num_confirmed, population_size/2);
 
-        state_->population_[infection_state_t::INFECTIOUS]  = num_confirmed;
+        state_->population_[infection_state_t::EXPOSED] =
+            std::min<unsigned long>(CONFIG->exposed_confirmed_ratio_ * (double)num_active, population_size/2);
+        
+        // state_->population_[infection_state_t::INFECTIOUS]  = num_confirmed;
+        state_->population_[infection_state_t::INFECTIOUS]  = num_active;
         state_->population_[infection_state_t::RECOVERED]   = num_recovered;
         state_->population_[infection_state_t::DECEASED]    = num_deaths;
         state_->population_[infection_state_t::SUSCEPTIBLE] = population_size
@@ -329,6 +334,7 @@ public:
 
         CONFIG->transmissibility_ = data["disease_model"]["transmissibility"].as<double>();
 
+        // TODO rename this
         CONFIG->exposed_confirmed_ratio_ = data["disease_model"]["exposed_confirmed_ratio"].as<double>();
 
         CONFIG->mean_incubation_duration_ =
@@ -364,10 +370,12 @@ public:
             double longitude         = location[loc_data_field_t::LONGITUDE].as<double>();
             unsigned long deaths     = location[loc_data_field_t::NUM_DEATHS].as<unsigned long>();
             unsigned long recovered  = location[loc_data_field_t::NUM_RECOVERED].as<unsigned long>();
-            unsigned long confirmed  = location[loc_data_field_t::NUM_ACTIVE].as<unsigned long>();  // ratio of actual vs. calculate actual active values for july 1st
+            // unsigned long confirmed  = location[loc_data_field_t::NUM_ACTIVE].as<unsigned long>();
+            unsigned long active     = location[loc_data_field_t::NUM_ACTIVE].as<unsigned long>();
             unsigned long population = location[loc_data_field_t::POPULATION_SIZE].as<unsigned long>();
 
-            lps.emplace_back(Location(fips_code, confirmed, deaths, recovered, population, index++));
+            // lps.emplace_back(Location(fips_code, confirmed, deaths, recovered, population, index++));
+            lps.emplace_back(Location(fips_code, active, deaths, recovered, population, index++));
             CONFIG->addMapEntry(fips_code, std::make_tuple(county, state, country, latitude, longitude, population));
         }
 
