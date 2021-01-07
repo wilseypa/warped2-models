@@ -33,6 +33,40 @@ function formatDate(dateValue, dateFormat) {
         }
 }
 
+app.get('/login/:username/:password', (request, response) => {
+	let password = request.params.password;
+	let username = request.params.username;
+	console.log(username);
+	console.log(password);
+	if (username == 'admin' && password == 'warped2') {
+		console.log('Good');
+		response.status(200).send({response: "success"});
+
+	}
+	else {
+		console.log('Bad');
+		response.status(400).send({response: "failed"});
+	}
+});
+
+app.get('/send_data', (request, response) => {
+	// Function call to send back files from Vivek's directory to our frontend
+	const vivek_path = '/work/vivek/warped2-models/warped2-models/models/pandemic/scripts/tuningapp/simOutfiles';
+	const data_folder2 = path.join(__dirname, '../../../../../../../../../', vivek_path);
+
+	let responseArray = [];
+	fs.readdir(data_folder2, (err, files) => {
+		files.forEach(file => {
+			// console.log(file);
+			let filepath = path.join(data_folder2, file);
+			let rawdata = fs.readFileSync(filepath);
+			let pandemic_data = JSON.parse(rawdata);
+			responseArray.push(pandemic_data);
+		});
+		response.json(responseArray);
+	});
+});
+
 app.get('/pandemic_data/:start_date/:end_date', (request, response) => {
 	var startDate = new Date(request.params.start_date);
 	var endDate = new Date(request.params.end_date);
