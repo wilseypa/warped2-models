@@ -11,6 +11,7 @@
         } else {
             isDevEnv = true;
         }
+        console.log(isDevEnv);
         return data;
     }
     async function sendData() {
