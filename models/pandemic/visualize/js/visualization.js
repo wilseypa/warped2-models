@@ -8,6 +8,7 @@
         return data;
     }
     var isDevEnv = isDevEnvFunc();
+    console.log(isDevEnv);
     if(isDevEnv.path === "/work/") {
         isDevEnv = false;
     } else {
