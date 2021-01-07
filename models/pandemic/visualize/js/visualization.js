@@ -7,7 +7,7 @@
         console.log(data);
         return data;
     }
-    var isDevEnv = isDevEnvFunc() != "/work/";
+    var isDevEnv = isDevEnvFunc().path != "/work/";
     console.log(isDevEnv);
     async function sendData() {
         const response = await fetch('/send_data/');
