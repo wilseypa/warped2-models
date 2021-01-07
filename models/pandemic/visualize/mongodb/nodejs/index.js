@@ -52,7 +52,7 @@ app.get('/login/:username/:password', (request, response) => {
 app.get('/isDevEnv', (request, response) => {
 	const envPath = path.join(__dirname, '../../../../../../../');
 
-	console.log(envPath)
+	//console.log(envPath)
 	response.status(200).send({path: envPath});
 });
 
