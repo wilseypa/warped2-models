@@ -229,7 +229,7 @@
 
         // getStatus();
 
-        removeLoadingBar();
+        setTimeout(function(){ removeLoadingBar(); }, 3000);
     }
 
     function removeLoadingBar() {
