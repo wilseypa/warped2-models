@@ -14,6 +14,7 @@
         console.log(isDevEnv);
         return data;
     }
+    isDevEnvFunc();
     async function sendData() {
         const response = await fetch('/send_data/');
         const data = await response.json();
