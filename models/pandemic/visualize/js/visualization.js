@@ -1,21 +1,18 @@
 //Begin D3 Accessible Code
 (function() {
 //Backend Functions
+    var isDevEnv = false;
     async function isDevEnvFunc() {
         const response = await fetch('/isDevEnv');
         const data = await response.json();
         console.log(data);
-        return data;
-    }
-    var isDevEnv = isDevEnvFunc().then(function() {
-        console.log(isDevEnv);
-        if(isDevEnv.path === "/work/") {
+        if(data.path === "/work/") {
             isDevEnv = false;
         } else {
             isDevEnv = true;
         }
-        console.log(isDevEnv);
-    });
+        return data;
+    }
     async function sendData() {
         const response = await fetch('/send_data/');
         const data = await response.json();
