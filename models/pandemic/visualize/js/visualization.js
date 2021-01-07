@@ -76,7 +76,7 @@
             .method('GET')
             // .header('Content-Type', 'application/json')
             // .data({'data':JSON.stringify(postdata)})
-            .url('/getstatus')
+            .url('localhost:8081/getstatus')
             .timeout(2500)
             .on('200', function (response) {
                 if ("statusmsg" in response) {
@@ -172,33 +172,37 @@
             'value': document.getElementById('fipslist').value
         }*/
     };
+
+    removeLoadingBar();
+    
     // console.log(postdata);
     // console.log(JSON.stringify(postdata));
-    aja()
-        .method('POST')
-        // .header('Content-Type', 'application/json')
-        .data({'data':JSON.stringify(postdata)})
-        .url('/simulate')
-        .timeout(3000)
-        .on('200', function (response) {
-            console.log("simulate response:", response);
+    
+    // aja()
+    //     .method('POST')
+    //     // .header('Content-Type', 'application/json')
+    //     .data({'data':JSON.stringify(postdata)})
+    //     .url('localhost:8081/simulate')
+    //     .timeout(3000)
+    //     .on('200', function (response) {
+    //         console.log("simulate response:", response);
 
-            // document.getElementById("statusmsg").innerText = response["statusmsg"]
+    //         // document.getElementById("statusmsg").innerText = response["statusmsg"]
 
-            if (getstatusTimeout) {
-                clearInterval(getstatusTimeout);
-                getstatusTimeout = setTimeout(getStatus, 200, false);
-            } else {
-                getstatusTimeout = setTimeout(getStatus, 200, false);
-            }
+    //         if (getstatusTimeout) {
+    //             clearInterval(getstatusTimeout);
+    //             getstatusTimeout = setTimeout(getStatus, 200, false);
+    //         } else {
+    //             getstatusTimeout = setTimeout(getStatus, 200, false);
+    //         }
 
-            // console.log("/simulate: set timeout");
-        })
-        .go();
+    //         // console.log("/simulate: set timeout");
+    //     })
+    //     .go();
 
-        waitForSimulationData();
+    //     waitForSimulationData();
 
-    });
+    // });
 
     function waitForSimulationData() {
     //Create loading spinner and wait for simulation data
@@ -231,7 +235,7 @@
         //     } 
         // }, 2000);
 
-        getData();
+        getStatus();
     }
 
     function removeLoadingBar() {
@@ -243,6 +247,8 @@
         document.getElementById('postSimulationContent').style.animation = "show 0.35s";
         document.getElementById('postSimulationContent').style.animationFillMode = "forwards";
         document.getElementById('postSimulationContent').style.animationDelay = "0.35s";
+
+        loadVisualization();
     }
 
     // getStatus();
@@ -283,6 +289,7 @@
 
     var files = ["../us.json"];
     var promises = [];
+    //NEED ARRAY OF STRINGS WITH EACH DATE TO BE READ IN THROUGH JSON FUNCTION
     getData("07-22-2020", "07-22-2020").then((data) => {
         covidStats = data[0][0];
         //console.log(covidStats)
@@ -293,6 +300,12 @@
             ready(values[0])
         });
       })
+
+      function loadVisualization() {    //  "/work/vivek/warped2-models/warped2-models/models/pandemic/scripts/tuningapp/simOutfiles/07-02-2020.simulated-data.json"
+          d3.json("/work/vivek/warped2-models/warped2-models/models/pandemic/scripts/tuningapp/simOutfiles/07-02-2020.simulated-data.json").then(function(newData) {
+              console.log(newData);
+          });
+      }
         
     /*
         Create new projection using Mercator (geoMercator)

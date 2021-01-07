@@ -7,6 +7,11 @@ LOTS OF DATA IS MISSING IN CERTAIN DAYS (5/26/2020)(8/23/2020 only with range) W
 
 ## **TODO**
 ### ***Front End***
+Create single username password for webapp  
+Create information icon hover for each parameter  
+Have placeholder values  
+Remove checkboxes if placeholder values (placeholder values as background unless typed then forget placeholder values)  
+Make calendar picker for start date (MM-DD-YYYY dash delimeter)  
 Re-add slider to bottom of map  
 Make statistics on county appear in bottom right of map since tooltip is not consistent?  
 Update tooltip data on new day when hovering with timelapse function enabled  
