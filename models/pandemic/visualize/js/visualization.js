@@ -174,7 +174,7 @@
     };
 
     removeLoadingBar();
-    
+
     // console.log(postdata);
     // console.log(JSON.stringify(postdata));
     
@@ -200,9 +200,9 @@
     //     })
     //     .go();
 
-    //     waitForSimulationData();
+        waitForSimulationData();
 
-    // });
+    });
 
     function waitForSimulationData() {
     //Create loading spinner and wait for simulation data
@@ -227,15 +227,9 @@
             document.getElementById("loadingDiv").innerHTML = loadingHtml;
         }, 500);
 
-        // setTimeout(() => { 
-        //     if (document.getElementById("loadingDiv") != null) {
-        //         document.getElementById("loadingDiv").remove();
-        //     } else {
-        //         // Doesn't exist, can't remove -> do nothing
-        //     } 
-        // }, 2000);
+        // getStatus();
 
-        getStatus();
+        removeLoadingBar();
     }
 
     function removeLoadingBar() {
