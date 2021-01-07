@@ -173,8 +173,6 @@
         }*/
     };
 
-    removeLoadingBar();
-
     // console.log(postdata);
     // console.log(JSON.stringify(postdata));
     
