@@ -1,13 +1,20 @@
 //Begin D3 Accessible Code
 (function() {
 //Backend Functions
+    async function isDevEnv() {
+        const response = await fetch('/isDevEnv');
+        const data = await response.json();
+        console.log(data);
+        return data;
+    }
+    isDevEnv();
     async function sendData() {
         const response = await fetch('/send_data/');
         const data = await response.json();
         console.log(data);
         return data;
     }
-    sendData();
+    //sendData();
     async function getData(startDate, endDate) {
         const response = await fetch('/pandemic_data/' + startDate + '/' + endDate);
         const data = await response.json();

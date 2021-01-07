@@ -49,6 +49,13 @@ app.get('/login/:username/:password', (request, response) => {
 	}
 });
 
+app.get('/isDevEnv', (request, response) => {
+	const envPath = path.join(__dirname, '../../../../../../../../');
+
+	console.log(envPath)
+	response.status(200).send({path: envPath});
+});
+
 app.get('/send_data', (request, response) => {
 	// Function call to send back files from Vivek's directory to our frontend
 	const vivek_path = '/work/vivek/warped2-models/warped2-models/models/pandemic/scripts/tuningapp/simOutfiles';
