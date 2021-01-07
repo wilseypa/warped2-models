@@ -7,14 +7,15 @@
         console.log(data);
         return data;
     }
-    var isDevEnv = isDevEnvFunc();
-    console.log(isDevEnv);
-    if(isDevEnv.path === "/work/") {
-        isDevEnv = false;
-    } else {
-        isDevEnv = true;
-    }
-    console.log(isDevEnv);
+    var isDevEnv = isDevEnvFunc().then(function() {
+        console.log(isDevEnv);
+        if(isDevEnv.path === "/work/") {
+            isDevEnv = false;
+        } else {
+            isDevEnv = true;
+        }
+        console.log(isDevEnv);
+    });
     async function sendData() {
         const response = await fetch('/send_data/');
         const data = await response.json();
