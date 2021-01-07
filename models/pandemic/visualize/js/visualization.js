@@ -1,12 +1,27 @@
+//Begin D3 Accessible Code
 (function() {
+//Backend Functions
+    async function sendData() {
+        const response = await fetch('/send_data/');
+        const data = await response.json();
+        console.log(data);
+        return data;
+    }
+    sendData();
     async function getData(startDate, endDate) {
         const response = await fetch('/pandemic_data/' + startDate + '/' + endDate);
         const data = await response.json();
         //console.log(data);
         return data;
     }
-    //getData("07-22-2020", "07-23-2020");
+    async function requestLogin(username, password) {
+        const response = await fetch('/login/' + username + '/' + password);
+        const data = await response.json();
+        //console.log(data);
+        return data;
+    }
 
+//Frontend Globals and Setup
     var tooltip = document.getElementById('tt');
     var color_wheel = ["#ffffcc", "#ffeda0", "#fed976", "#feb24c", "#fd8d3c", "#fc4e2a", "#e31a1c", "#bd0026", "#800026"];
     //var color_wheel = ["#00FF00", "#33FF33", "#66FF66", "#99FF99", "#800026", "#bd0026", "#e31a1c", "#fc4e2a", "#fd8d3c"];
@@ -66,6 +81,42 @@
 
     }
 
+    function createRequiredWarning(elToAttachTo, warningId, warningMsg, display) {
+        var warningEl = document.createElement("div");
+            warningEl.setAttribute("id", warningId);
+            document.getElementById(elToAttachTo).appendChild(warningEl);
+            document.getElementById(warningId).innerHTML = warningMsg;
+            document.getElementById(warningId).style.color = "#ff0033";
+            document.getElementById(warningId).style.width = "fit-content";
+            document.getElementById(warningId).style.display = display;
+            document.getElementById(warningId).style.marginTop = "4px";
+            document.getElementById(warningId).style.paddingLeft = "5px";
+            document.getElementById(warningId).style.paddingRight = "5px";
+            document.getElementById(warningId).style.paddingTop = "2px";
+            document.getElementById(warningId).style.paddingBottom = "2px";
+            document.getElementById(warningId).style.borderRadius = "7px";
+            document.getElementById(warningId).style.backgroundColor = "#f2dede";
+            document.getElementById(warningId).style.border = "solid 1px #ebccd1";
+    }
+    function removeRequiredWarning(warningId) {
+        if (document.getElementById(warningId) != null) {
+            document.getElementById(warningId).remove();
+        } else {
+            // Doesn't exist, can't remove -> do nothing
+        }
+    }
+
+    function hideAnimation(elId, durationOfAnimation) { //INPUTS MUST BE STRINGS
+        document.getElementById(elId).style.animation = "hide " + durationOfAnimation + "s";
+        document.getElementById(elId).style.animationFillMode = "forwards";
+    }
+    function showAnimation(elId, durationOfAnimation, delayOfAnimation) {
+        document.getElementById(elId).style.visibility = "hidden";
+        document.getElementById(elId).style.display = "block";
+        document.getElementById(elId).style.animation = "show " + durationOfAnimation + "s";
+        document.getElementById(elId).style.animationFillMode = "forwards";
+        document.getElementById(elId).style.animationDelay = delayOfAnimation + "s";
+    }
 
     var getStatus = function () {
         clearTimeout(getstatusTimeout);
@@ -89,44 +140,43 @@
             .go();
     }
 
+    //Submitting Login Form
+    d3.select("#submitLogin").on("click", function() {
+        let username = document.getElementById('username').value;
+        let password = document.getElementById('password').value;
+
+        if (username === "" || password === "") {
+            createRequiredWarning("loginDiv", "requiredWarning", "Incorrect username and/or password", "inline-block");
+
+        } else {
+            requestLogin(username, password).then(function(response) {
+                if(response.response == "success") {
+                    removeRequiredWarning("requiredWarning");
+    
+                    hideAnimation('loginDiv', "0.35");
+                    showAnimation('passwordProtected', "0.35", "0.35");
+    
+                } else {
+                    createRequiredWarning("loginDiv", "requiredWarning", "Incorrect username and/or password", "inline-block");
+                }
+            });
+        }
+    });
+
     //Submitting ConfigAPI Form
     d3.select("#submitConfigApi").on("click", function() {
-    //Manually checking if required inputs have values (using type="submit" on button messed up animation) 
-        if(document.getElementById('startdate').value === "" || document.getElementById('runtime_days').value === ""){
-            var warningEl = document.createElement("div");
-            warningEl.setAttribute("id", "requiredWarning");
-            document.getElementById("startdate_runtime").appendChild(warningEl);
-            document.getElementById("requiredWarning").innerHTML = "Both \"start date\" and \"runtime in days\" needs to be provided to submit";
-            document.getElementById("requiredWarning").style.color = "#ff0033";
-            document.getElementById("requiredWarning").style.marginTop = "4px";
-            document.getElementById("requiredWarning").style.paddingLeft = "5px";
-            document.getElementById("requiredWarning").style.paddingRight = "5px";
-            document.getElementById("requiredWarning").style.paddingTop = "2px";
-            document.getElementById("requiredWarning").style.paddingBottom = "2px";
-            document.getElementById("requiredWarning").style.borderRadius = "7px";
-            document.getElementById("requiredWarning").style.backgroundColor = "#f2dede";
-            document.getElementById("requiredWarning").style.border = "solid 1px #ebccd1";
-            
+        //Manually checking if required inputs have values (using type="submit" on button messed up animation) 
+        if (document.getElementById('startdate').value === "" || document.getElementById('runtime_days').value === "") {
+            createRequiredWarning("startdate_runtime", "requiredWarning", "Both \"start date\" and \"runtime in days\" needs to be provided to submit", "block");
             return
+
         } else {
-            if (document.getElementById("requiredWarning") != null) {
-                document.getElementById("requiredWarning").remove();
-            } else {
-                // Doesn't exist, can't remove -> do nothing
-            }
+            removeRequiredWarning("requiredWarning");
         }
-        
-    //CSS and Animation
-        // document.getElementById('postSimulationContent').style.visibility = "hidden";
-        // document.getElementById('postSimulationContent').style.display = "block";
-        //console.log(document.getElementById('configApi').style.animationName);
 
-        document.getElementById('configApi').style.animation = "hide 0.35s";
-        document.getElementById('configApi').style.animationFillMode = "forwards";
-
-        // document.getElementById('postSimulationContent').style.animation = "show 0.35s";
-        // document.getElementById('postSimulationContent').style.animationFillMode = "forwards";
-        // document.getElementById('postSimulationContent').style.animationDelay = "0.35s";
+        // document.getElementById('configApi').style.animation = "hide 0.35s";
+        // document.getElementById('configApi').style.animationFillMode = "forwards";
+        hideAnimation('configApi', "0.35");
 
     //Form Submission Logic
     var postdata = {
@@ -233,12 +283,13 @@
     function removeLoadingBar() {
         document.getElementById("loadingDiv").remove();
 
-        document.getElementById('postSimulationContent').style.visibility = "hidden";
-        document.getElementById('postSimulationContent').style.display = "block";
+        // document.getElementById('postSimulationContent').style.visibility = "hidden";
+        // document.getElementById('postSimulationContent').style.display = "block";
 
-        document.getElementById('postSimulationContent').style.animation = "show 0.35s";
-        document.getElementById('postSimulationContent').style.animationFillMode = "forwards";
-        document.getElementById('postSimulationContent').style.animationDelay = "0.35s";
+        // document.getElementById('postSimulationContent').style.animation = "show 0.35s";
+        // document.getElementById('postSimulationContent').style.animationFillMode = "forwards";
+        // document.getElementById('postSimulationContent').style.animationDelay = "0.35s";
+        showAnimation('postSimulationContent', "0.35", "0.35");
 
         loadVisualization();
     }
@@ -246,8 +297,9 @@
     // getStatus();
 
     d3.select("#editConfig").on("click", function() {
-        document.getElementById('configApi').style.animation = "show 0.50s";
-        document.getElementById('configApi').style.animationFillMode = "forwards";
+        // document.getElementById('configApi').style.animation = "show 0.50s";
+        // document.getElementById('configApi').style.animationFillMode = "forwards";
+        showAnimation('configApi', "0.50", "0.00");
     });
 
     //document.getElementById('plotButton').disabled = true;
