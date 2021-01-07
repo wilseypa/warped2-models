@@ -36,15 +36,15 @@ function formatDate(dateValue, dateFormat) {
 app.get('/login/:username/:password', (request, response) => {
 	let password = request.params.password;
 	let username = request.params.username;
-	console.log(username);
-	console.log(password);
+	// console.log(username);
+	// console.log(password);
 	if (username == 'admin' && password == 'warped2') {
-		console.log('Good');
+		// console.log('Good');
 		response.status(200).send({response: "success"});
 
 	}
 	else {
-		console.log('Bad');
+		// console.log('Bad');
 		response.status(400).send({response: "failed"});
 	}
 });
