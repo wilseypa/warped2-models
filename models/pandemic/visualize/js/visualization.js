@@ -293,11 +293,14 @@
         });
       })
 
-      function loadVisualization() {    //  "/work/vivek/warped2-models/warped2-models/models/pandemic/scripts/tuningapp/simOutfiles/07-02-2020.simulated-data.json"
-          d3.json("/work/vivek/warped2-models/warped2-models/models/pandemic/scripts/tuningapp/simOutfiles/07-02-2020.simulated-data.json").then(function(newData) {
-              console.log(newData);
-          });
-      }
+    function loadVisualization() {    //  "/work/vivek/warped2-models/warped2-models/models/pandemic/scripts/tuningapp/simOutfiles/07-02-2020.simulated-data.json"
+        // getData("/work/vivek/warped2-models/warped2-models/models/pandemic/scripts/tuningapp/simOutfiles/07-02-2020.simulated-data.json", "string").then((data) => {
+        //     console.log(data);
+            d3.json("/work/vivek/warped2-models/warped2-models/models/pandemic/scripts/tuningapp/simOutfiles/07-02-2020.simulated-data.json"/*data*/).then(function(newData) {
+                console.log(newData);
+            });
+        // })
+    }
         
     /*
         Create new projection using Mercator (geoMercator)
