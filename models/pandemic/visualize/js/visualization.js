@@ -5,13 +5,13 @@
     async function isDevEnvFunc() {
         const response = await fetch('/isDevEnv');
         const data = await response.json();
-        console.log(data);
+        //console.log(data);
         if(data.path === "/work/") {
             isDevEnv = false;
         } else {
             isDevEnv = true;
         }
-        console.log(isDevEnv);
+        //console.log(isDevEnv);
         return data;
     }
     isDevEnvFunc();
