@@ -14,6 +14,10 @@
     display:inline-block;
     text-align: left;
 }
+.info {
+  cursor: default;
+  margin: 5px;
+}
 
 svg {
     background: #3987c9;
@@ -92,6 +96,8 @@ svg {
     padding-top: 5px;
 }
 
+
+
 /* ANIMATIONS */
 @keyframes hide {
     0% {
@@ -99,12 +105,14 @@ svg {
         height: 100%;
         font-size: inherit;
         transform: scaleY(1);
+        visibility: visible;
     }
     100% {
         opacity: 0;
         height: 0px;
         font-size: 0px;
         transform: scaleY(0);
+        visibility: hidden;
     }
 }
 
@@ -114,6 +122,7 @@ svg {
         height: 0px;
         font-size: 0px;
         transform: scaleY(0);
+        visibility: hidden;
     }
     100% {
         opacity: 1;

@@ -35,7 +35,10 @@
         return data;
     }
 
-//Frontend Globals and Setup
+// Frontend Globals and Setup
+    var pageState = "login"; // login, config, viewingMap, editingConfig
+    document.getElementById('username').focus();
+
     var tooltip = document.getElementById('tt');
     var color_wheel = ["#ffffcc", "#ffeda0", "#fed976", "#feb24c", "#fd8d3c", "#fc4e2a", "#e31a1c", "#bd0026", "#800026"];
     //var color_wheel = ["#00FF00", "#33FF33", "#66FF66", "#99FF99", "#800026", "#bd0026", "#e31a1c", "#fc4e2a", "#fd8d3c"];
@@ -66,13 +69,15 @@
     var endDate = document.getElementById('endDate');
     var isDateRange = document.getElementById('isDateRange');
 
+// Frontend Basic Functions
     window.onmousemove = function (e) { //function gets location of mouse for tooltip
         var x = e.clientX,
-            y = e.clientY;
-        tooltip.style.top = (y + 20) + 'px';
-        tooltip.style.left = (x + 20) + 'px';
+            y = e.clientY - document.getElementById('postSimulationContent').getBoundingClientRect().top;
+        tooltip.style.top = (y + 5) + 'px';
+        tooltip.style.left = (x + 5) + 'px';
     };
 
+    // Function for handling dates
     function formatDate(dateValue, dateFormat) {
         let year = dateValue.getFullYear();
         let month = dateValue.getMonth() + 1;
@@ -94,6 +99,20 @@
         }
 
     }
+
+    // Mapping enter to submit buttons without using forms
+    document.addEventListener("keyup", event => {
+        if (event.key !== "Enter") return; // Use `.key` instead.
+        
+        let submitLogin = document.getElementById("submitLogin");
+        let submitConfigApi = document.getElementById("submitConfigApi");
+
+        if (submitLogin && pageState === "login") {
+            submitLogin.click();
+        } else if (submitConfigApi && (pageState === "config" || pageState == "editingConfig")) {
+            submitConfigApi.click();
+        }
+    });
 
     function createRequiredWarning(elToAttachTo, warningId, warningMsg, display) {
         var warningEl = document.createElement("div");
@@ -123,6 +142,7 @@
     function hideAnimation(elId, durationOfAnimation) { //INPUTS MUST BE STRINGS
         document.getElementById(elId).style.animation = "hide " + durationOfAnimation + "s";
         document.getElementById(elId).style.animationFillMode = "forwards";
+        setTimeout(function(){ document.getElementById(elId).style.display = "none"; }, durationOfAnimation*1000);
     }
     function showAnimation(elId, durationOfAnimation, delayOfAnimation) {
         document.getElementById(elId).style.visibility = "hidden";
@@ -130,6 +150,42 @@
         document.getElementById(elId).style.animation = "show " + durationOfAnimation + "s";
         document.getElementById(elId).style.animationFillMode = "forwards";
         document.getElementById(elId).style.animationDelay = delayOfAnimation + "s";
+    }
+
+    function createLoadingBar() {
+        var loadingElHandle = document.createElement("div");
+        loadingElHandle.setAttribute("id", "loadingBarHandle");
+        document.getElementById("loadingDiv").appendChild(loadingElHandle);
+
+        var loadingEl = document.createElement("div");
+        loadingEl.setAttribute("id", "loadingCircle");
+        document.getElementById("loadingBarHandle").appendChild(loadingEl);
+        let loadingHtml =   `<div class="sk-circle">
+                                <div class="sk-circle1 sk-child"></div>
+                                <div class="sk-circle2 sk-child"></div>
+                                <div class="sk-circle3 sk-child"></div>
+                                <div class="sk-circle4 sk-child"></div>
+                                <div class="sk-circle5 sk-child"></div>
+                                <div class="sk-circle6 sk-child"></div>
+                                <div class="sk-circle7 sk-child"></div>
+                                <div class="sk-circle8 sk-child"></div>
+                                <div class="sk-circle9 sk-child"></div>
+                                <div class="sk-circle10 sk-child"></div>
+                                <div class="sk-circle11 sk-child"></div>
+                                <div class="sk-circle12 sk-child"></div>
+                            </div>`
+        document.getElementById("loadingBarHandle").innerHTML = loadingHtml;
+    }
+    function removeLoadingBar() {
+        document.getElementById("loadingBarHandle").remove();
+        showAnimation('postSimulationContent', "0.35", "0.35");
+        //loadVisualization();
+    }
+
+    function handleDefaultConfigValue(inputId) {
+        if (document.getElementById(inputId).value === "") {
+            document.getElementById(inputId).value = document.getElementById(inputId).getAttribute("placeholder");
+        }
     }
 
     var getStatus = function () {
@@ -154,7 +210,7 @@
             .go();
     }
 
-    //Submitting Login Form
+    // Submitting Login Form
     d3.select("#submitLogin").on("click", function() {
         let username = document.getElementById('username').value;
         let password = document.getElementById('password').value;
@@ -169,6 +225,9 @@
     
                     hideAnimation('loginDiv', "0.35");
                     showAnimation('passwordProtected', "0.35", "0.35");
+
+                    pageState = "config";
+                    setTimeout(function(){ document.getElementById('startdate').focus(); }, 500);   // need to wait until animation is complete for keyfocus
     
                 } else {
                     createRequiredWarning("loginDiv", "requiredWarning", "Incorrect username and/or password", "inline-block");
@@ -177,7 +236,7 @@
         }
     });
 
-    //Submitting ConfigAPI Form
+    // Submitting ConfigAPI Form
     d3.select("#submitConfigApi").on("click", function() {
         //Manually checking if required inputs have values (using type="submit" on button messed up animation) 
         if (document.getElementById('startdate').value === "" || document.getElementById('runtime_days').value === "") {
@@ -186,138 +245,120 @@
 
         } else {
             removeRequiredWarning("requiredWarning");
+
         }
+        
+        if (document.getElementById('postSimulationContent').style.display != "none") {
+            hideAnimation("postSimulationContent", "0.35");
+        }
+        hideAnimation("configApi", "0.35");
 
-        // document.getElementById('configApi').style.animation = "hide 0.35s";
-        // document.getElementById('configApi').style.animationFillMode = "forwards";
-        hideAnimation('configApi', "0.35");
+        // Form Submission Logic
+        handleDefaultConfigValue('transmissibilityval');
+        handleDefaultConfigValue('exposed_confirmed_ratioval');
+        handleDefaultConfigValue('mean_incubation_duration_in_daysval');
+        handleDefaultConfigValue('mean_infection_duration_in_daysval');
+        handleDefaultConfigValue('mortality_ratioval');
+        handleDefaultConfigValue('update_trig_interval_in_hrsval');
+        handleDefaultConfigValue('graph_param_Kval');
+        handleDefaultConfigValue('graph_param_betaval');
+        handleDefaultConfigValue('diffusion_trig_interval_in_hrsval');
+        handleDefaultConfigValue('avg_transport_speedval');
+        handleDefaultConfigValue('max_diffusion_cntval');
 
-    //Form Submission Logic
-    var postdata = {
-        'start_date' : {
-            'value':document.getElementById('startdate').value
-        }, 'runtime_days' : {
-            'value':document.getElementById('runtime_days').value
-        }, 'transmissibility':{
-            'ifchecked':document.getElementById('transmissibility').checked,
-            'value':document.getElementById('transmissibilityval').value
-        }, 'exposed_confirmed_ratio':{
-            'ifchecked':document.getElementById('exposed_confirmed_ratio').checked,
-            'value':document.getElementById('exposed_confirmed_ratioval').value
-        }, 'mean_incubation_duration_in_days':{
-            'ifchecked':document.getElementById('mean_incubation_duration_in_days').checked,
-            'value':document.getElementById('mean_incubation_duration_in_daysval').value
-        }, 'mean_infection_duration_in_days':{
-            'ifchecked':document.getElementById('mean_infection_duration_in_days').checked,
-            'value':document.getElementById('mean_infection_duration_in_daysval').value
-        }, 'mortality_ratio':{
-            'ifchecked':document.getElementById('mortality_ratio').checked,
-            'value':document.getElementById('mortality_ratioval').value
-        }, 'update_trig_interval_in_hrs':{
-            'ifchecked':document.getElementById('update_trig_interval_in_hrs').checked,
-            'value':document.getElementById('update_trig_interval_in_hrsval').value//'value':document.getElementById('transmissibilityval').value
-        }, 'graph_type':{
-            'ifchecked':document.getElementById('graph_type').checked,
-            'value':document.getElementById('graph_typeoption').options[document.getElementById('graph_typeoption').selectedIndex].value//'value':graph_type
-        }, 'graph_params':{
-            'ifchecked':document.getElementById('graph_params').checked,
-            'K_val':document.getElementById('graph_param_Kval').value,
-            'beta_val':document.getElementById('graph_param_betaval').value
-        }, 'diffusion_trig_interval_in_hrs':{
-            'ifchecked':document.getElementById('diffusion_trig_interval_in_hrs').checked,
-            'value':document.getElementById('diffusion_trig_interval_in_hrsval').value
-        }, 'avg_transport_speed':{
-            'ifchecked':document.getElementById('avg_transport_speed').checked,
-            'value':document.getElementById('avg_transport_speedval').value
-        }, 'max_diffusion_cnt':{
-            'ifchecked':document.getElementById('max_diffusion_cnt').checked,
-            'value':document.getElementById('max_diffusion_cntval').value
-        }/*, 'fipslist': {
-            'value': document.getElementById('fipslist').value
-        }*/
-    };
+        // Creation of API object to be sent
+        var postdata = {
+            'start_date' : {
+                'value':document.getElementById('startdate').value
+            }, 'runtime_days' : {
+                'value':document.getElementById('runtime_days').value
+            }, 'transmissibility':{
+                'ifchecked':document.getElementById('transmissibility').checked,
+                'value':document.getElementById('transmissibilityval').value
+            }, 'exposed_confirmed_ratio':{
+                'ifchecked':document.getElementById('exposed_confirmed_ratio').checked,
+                'value':document.getElementById('exposed_confirmed_ratioval').value
+            }, 'mean_incubation_duration_in_days':{
+                'ifchecked':document.getElementById('mean_incubation_duration_in_days').checked,
+                'value':document.getElementById('mean_incubation_duration_in_daysval').value
+            }, 'mean_infection_duration_in_days':{
+                'ifchecked':document.getElementById('mean_infection_duration_in_days').checked,
+                'value':document.getElementById('mean_infection_duration_in_daysval').value
+            }, 'mortality_ratio':{
+                'ifchecked':document.getElementById('mortality_ratio').checked,
+                'value':document.getElementById('mortality_ratioval').value
+            }, 'update_trig_interval_in_hrs':{
+                'ifchecked':document.getElementById('update_trig_interval_in_hrs').checked,
+                'value':document.getElementById('update_trig_interval_in_hrsval').value//'value':document.getElementById('transmissibilityval').value
+            }, 'graph_type':{
+                'ifchecked':document.getElementById('graph_type').checked,
+                'value':document.getElementById('graph_typeoption').options[document.getElementById('graph_typeoption').selectedIndex].value//'value':graph_type
+            }, 'graph_params':{
+                'ifchecked':document.getElementById('graph_params').checked,
+                'K_val':document.getElementById('graph_param_Kval').value,
+                'beta_val':document.getElementById('graph_param_betaval').value
+            }, 'diffusion_trig_interval_in_hrs':{
+                'ifchecked':document.getElementById('diffusion_trig_interval_in_hrs').checked,
+                'value':document.getElementById('diffusion_trig_interval_in_hrsval').value
+            }, 'avg_transport_speed':{
+                'ifchecked':document.getElementById('avg_transport_speed').checked,
+                'value':document.getElementById('avg_transport_speedval').value
+            }, 'max_diffusion_cnt':{
+                'ifchecked':document.getElementById('max_diffusion_cnt').checked,
+                'value':document.getElementById('max_diffusion_cntval').value
+            }/*, 'fipslist': {
+                'value': document.getElementById('fipslist').value
+            }*/
+        };
 
-    // console.log(postdata);
-    // console.log(JSON.stringify(postdata));
-    
-    // aja()
-    //     .method('POST')
-    //     // .header('Content-Type', 'application/json')
-    //     .data({'data':JSON.stringify(postdata)})
-    //     .url('localhost:8081/simulate')
-    //     .timeout(3000)
-    //     .on('200', function (response) {
-    //         console.log("simulate response:", response);
+        // console.log(postdata);
+        // console.log(JSON.stringify(postdata));
+        
+        // aja()
+        //     .method('POST')
+        //     // .header('Content-Type', 'application/json')
+        //     .data({'data':JSON.stringify(postdata)})
+        //     .url('localhost:8081/simulate')
+        //     .timeout(3000)
+        //     .on('200', function (response) {
+        //         console.log("simulate response:", response);
 
-    //         // document.getElementById("statusmsg").innerText = response["statusmsg"]
+        //         // document.getElementById("statusmsg").innerText = response["statusmsg"]
 
-    //         if (getstatusTimeout) {
-    //             clearInterval(getstatusTimeout);
-    //             getstatusTimeout = setTimeout(getStatus, 200, false);
-    //         } else {
-    //             getstatusTimeout = setTimeout(getStatus, 200, false);
-    //         }
+        //         if (getstatusTimeout) {
+        //             clearInterval(getstatusTimeout);
+        //             getstatusTimeout = setTimeout(getStatus, 200, false);
+        //         } else {
+        //             getstatusTimeout = setTimeout(getStatus, 200, false);
+        //         }
 
-    //         // console.log("/simulate: set timeout");
-    //     })
-    //     .go();
+        //         // console.log("/simulate: set timeout");
+        //     })
+        //     .go();
 
+        pageState = "viewingMap";
+        document.getElementById('map').style.display = "none";
+        document.getElementById('plotButton').disabled = false;
         waitForSimulationData();
 
     });
 
     function waitForSimulationData() {
-    //Create loading spinner and wait for simulation data
-        setTimeout(() => { 
-            var loadingEl = document.createElement("div");
-            loadingEl.setAttribute("id", "loadingCircle");
-            document.getElementById("loadingDiv").appendChild(loadingEl);
-            let loadingHtml =   `<div class="sk-circle">
-                                    <div class="sk-circle1 sk-child"></div>
-                                    <div class="sk-circle2 sk-child"></div>
-                                    <div class="sk-circle3 sk-child"></div>
-                                    <div class="sk-circle4 sk-child"></div>
-                                    <div class="sk-circle5 sk-child"></div>
-                                    <div class="sk-circle6 sk-child"></div>
-                                    <div class="sk-circle7 sk-child"></div>
-                                    <div class="sk-circle8 sk-child"></div>
-                                    <div class="sk-circle9 sk-child"></div>
-                                    <div class="sk-circle10 sk-child"></div>
-                                    <div class="sk-circle11 sk-child"></div>
-                                    <div class="sk-circle12 sk-child"></div>
-                                </div>`
-            document.getElementById("loadingDiv").innerHTML = loadingHtml;
-        }, 500);
+    // Create loading spinner and wait for simulation data
+        setTimeout(() => { createLoadingBar(); }, 500);
 
         // getStatus();
 
-        setTimeout(function(){ removeLoadingBar(); }, 3000);
-    }
-
-    function removeLoadingBar() {
-        document.getElementById("loadingDiv").remove();
-
-        // document.getElementById('postSimulationContent').style.visibility = "hidden";
-        // document.getElementById('postSimulationContent').style.display = "block";
-
-        // document.getElementById('postSimulationContent').style.animation = "show 0.35s";
-        // document.getElementById('postSimulationContent').style.animationFillMode = "forwards";
-        // document.getElementById('postSimulationContent').style.animationDelay = "0.35s";
-        showAnimation('postSimulationContent', "0.35", "0.35");
-
-        loadVisualization();
+        setTimeout(function(){ removeLoadingBar(); }, 1000);
     }
 
     // getStatus();
 
     d3.select("#editConfig").on("click", function() {
-        // document.getElementById('configApi').style.animation = "show 0.50s";
-        // document.getElementById('configApi').style.animationFillMode = "forwards";
         showAnimation('configApi', "0.50", "0.00");
+        pageState = "editingConfig";
     });
-
-    //document.getElementById('plotButton').disabled = true;
-    //document.getElementById('map').innerHTML = "";
+    
     document.getElementById('map').style.display = "none";
     document.getElementById('legend').style.display = "none";
     
@@ -392,12 +433,15 @@
         //Plot Button Press
         d3.select("#plotButton").on("click", function() {
             loadNewData();
-            document.getElementById('map').style.display = "block";
-            document.getElementById('legend').style.display = "block";
-            d3.select(this).attr("disabled", true);
+
+            setTimeout(function(){ 
+                document.getElementById('map').style.display = "block";
+                document.getElementById('legend').style.display = "block";
+                d3.select("#plotButton").attr("disabled", true);
+            }, 50);
         });
 
-        //Increment/Decrement Button Press
+        // Increment/Decrement Button Press
         d3.selectAll(".arrow").on("click", function(){
             //get which button pressed
             var direction = 0
@@ -409,7 +453,7 @@
                 throw "unknown button pressed"
             }
     
-            //increment dates appropriately
+            // Increment dates appropriately
             var startDateValue = new Date(startDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
     
             if(document.getElementById('isDateRange').checked){
@@ -443,7 +487,7 @@
             loadNewData();
         });
 
-        //Date Range New Input
+        // Date Range New Input
         var timelapseToggle = 1;
         var intervalId;
         d3.select("#timelapseButton").on("click", function() {
@@ -464,7 +508,7 @@
             //needs a stopping function when at end of data
         });
 
-        //Date Range New Input
+        // Date Range New Input
         d3.selectAll(".dateInput").on("input", function() {
             //get which button pressed
             var startOrEnd = 0
@@ -485,7 +529,7 @@
             document.getElementById('plotButton').disabled = false;
         });
 
-        //Range? Checkbox Toggle
+        // Range? Checkbox Toggle
         d3.select("#isDateRange").on("click", function() {
             if(isDateRange.checked){
                 document.getElementById('endDate').disabled = false;
@@ -504,7 +548,7 @@
 
 
 /* NON-EVENT FUNCTIONS */
-        //Updates #mapDate value
+        // Updates #mapDate value
         function updateMapDateValue(startDateParam, endDateParam) {
             if (endDateParam === undefined) {
                 document.getElementById('mapDate').innerHTML = startDateParam;
@@ -513,7 +557,7 @@
             }
         }
 
-        //Grabs Dates from Input and Plots to D3 Map
+        // Grabs Dates from Input and Plots to D3 Map
         function loadNewData() {
             if (isDateRange.checked) {    //load all data from files across range
                 let startDateValue = new Date(startDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
@@ -584,7 +628,7 @@
             }
         };
 
-        //The Plotting of Colors to Each County    -----------DYNAMIC MAX PERCENTAGE BUT DOESNT WORK WELL BECAUSE OF OUTLIERS....---------
+        // The Plotting of Colors to Each County    -----------DYNAMIC MAX PERCENTAGE BUT DOESNT WORK WELL BECAUSE OF OUTLIERS....---------
         function rePlot(covidStats){
             var highestPercentage = 0;
             for (i = 0; i < covidStats.locations.length; i++) {
@@ -674,9 +718,9 @@
         .attr("class", "state")
         .attr("d", path)
 
-        //Loads County Map for Plotting?
+        // Loads County Map for Plotting?
         var counties = topojson.feature(data, data.objects.counties).features
-        //Applies County Data and Logic to Counties
+        // Applies County Data and Logic to Counties
         svg.selectAll(".county")
             .data(counties)
             .enter().append("path")
@@ -685,6 +729,9 @@
             .on("mouseover", function(d) {
                 d3.select(this).classed("selected", true);
                 d3.select("#tt").style("display", "inline-block");
+                // d3.select("#tt").style("top", ((d3.mouse(this)[1]  + document.getElementById('map').getBoundingClientRect().top + window.pageYOffset) - document.getElementById('postSimulationContent').getBoundingClientRect().top) + 'px');
+                // d3.select("#tt").style("left", (d3.mouse(this)[0]  + document.getElementById('map').getBoundingClientRect().left + window.pageXOffset) + 'px');
+
                 
                 var prnt = d3.select(this);
                 var loc;
