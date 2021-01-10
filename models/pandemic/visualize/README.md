@@ -7,17 +7,12 @@ LOTS OF DATA IS MISSING IN CERTAIN DAYS (5/26/2020)(8/23/2020 only with range) W
 
 ## **TODO**
 ### ***Front End***
-Create single username password for webapp  
 Create information icon hover for each parameter  
-Have placeholder values  
+Replace placeholder placeholders (waiting for actual placeholders) with correct placeholder values
 Remove checkboxes if placeholder values (placeholder values as background unless typed then forget placeholder values)  
-Make calendar picker for start date (MM-DD-YYYY dash delimeter)  
 Re-add slider to bottom of map  
-Make statistics on county appear in bottom right of map since tooltip is not consistent?  
 Update tooltip data on new day when hovering with timelapse function enabled  
-Make timelapse clearly enabled/disabled  
-Fix bug where ranges can cause not all files to load and cumulate (can test with a ~7 day range at end of july) (possibly bad data)  
-Position legend properly for windows resizing  
+Improve timelapse placement  
 Cleanup front-end (ongoing)  
 ### ***Back End***
 Create basic API to load dummy data  
@@ -44,6 +39,13 @@ Calculate the true minimum and maximums for each data file, not hardcoded as it 
 Add legend to heatmap  
 Add current date to top right corner of map  
 Add new form for viveks api  
+Create single username password for webapp (user=admin, pass=warped2)  
+Make calendar picker for start date (MM-DD-YYYY dash delimeter)  
+Fixed tooltip position consistency (position was modified relative to parent element to page)  
+Fix bug where ranges can cause not all files to load and cumulate (can test with a ~7 day range at end of july) (possibly bad data) (currently irrelevant since switching how data is loaded)  
+Position legend properly for windows resizing  
+Use placeholder values on configApi form submit  
+Make timelapse clearly enabled/disabled  
 
 ## **Resources**
 https://www.youtube.com/watch?v=aNbgrqRuoiE  --Help for US state map  

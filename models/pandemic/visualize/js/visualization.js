@@ -39,6 +39,10 @@
     var pageState = "login"; // login, config, viewingMap, editingConfig
     document.getElementById('username').focus();
 
+    var startDate = document.getElementById('startDate');
+    var endDate = document.getElementById('endDate');
+    var isDateRange = document.getElementById('isDateRange');
+
     var tooltip = document.getElementById('tt');
     var color_wheel = ["#ffffcc", "#ffeda0", "#fed976", "#feb24c", "#fd8d3c", "#fc4e2a", "#e31a1c", "#bd0026", "#800026"];
     //var color_wheel = ["#00FF00", "#33FF33", "#66FF66", "#99FF99", "#800026", "#bd0026", "#e31a1c", "#fc4e2a", "#fd8d3c"];
@@ -62,12 +66,6 @@
         document.getElementById('legendColor' + i).style.backgroundColor = color_wheel[i];
         document.getElementById('legendValue' + i).innerHTML = 0 + "%";
     }
-    
-
-    var startDate = document.getElementById('startDate');
-    startDate.value = "2020-07-22"; //"2020-03-25"
-    var endDate = document.getElementById('endDate');
-    var isDateRange = document.getElementById('isDateRange');
 
 // Frontend Basic Functions
     window.onmousemove = function (e) { //function gets location of mouse for tooltip
@@ -77,17 +75,25 @@
         tooltip.style.left = (x + 5) + 'px';
     };
 
-    // Function for handling dates
-    function formatDate(dateValue, dateFormat) {
-        let year = dateValue.getFullYear();
-        let month = dateValue.getMonth() + 1;
-        let day = dateValue.getDate()
-
-        if(month < 10) {
-            month = "0" + month;
-        }
-        if(day < 10) {
-            day = "0" + day;
+    // Function for handling javascript and html dates
+    function formatDate(dateValue, dateFormat, dateType) {
+        var year, month, day;
+        if (dateType == "javascript") {
+            year = dateValue.getFullYear();
+            month = dateValue.getMonth() + 1;
+            day = dateValue.getDate()
+    
+            if(month < 10) {
+                month = "0" + month;
+            }
+            if(day < 10) {
+                day = "0" + day;
+            }
+        } else if (dateType == "html") {
+            let dateArray = dateValue.split("-");
+            year = dateArray[0];
+            month = dateArray[1];
+            day = dateArray[2];
         }
 
         if(dateFormat == "YYYY-MM-DD") {
@@ -238,22 +244,15 @@
 
     // Submitting ConfigAPI Form
     d3.select("#submitConfigApi").on("click", function() {
-        //Manually checking if required inputs have values (using type="submit" on button messed up animation) 
-        if (document.getElementById('startdate').value === "" || document.getElementById('runtime_days').value === "") {
-            createRequiredWarning("startdate_runtime", "requiredWarning", "Both \"start date\" and \"runtime in days\" needs to be provided to submit", "block");
-            return
-
-        } else {
-            removeRequiredWarning("requiredWarning");
-
-        }
-        
         if (document.getElementById('postSimulationContent').style.display != "none") {
             hideAnimation("postSimulationContent", "0.35");
         }
         hideAnimation("configApi", "0.35");
 
+        document.getElementById('startDate').value = document.getElementById('startdate').value;
+
         // Form Submission Logic
+        handleDefaultConfigValue('runtime_days');
         handleDefaultConfigValue('transmissibilityval');
         handleDefaultConfigValue('exposed_confirmed_ratioval');
         handleDefaultConfigValue('mean_incubation_duration_in_daysval');
@@ -269,7 +268,7 @@
         // Creation of API object to be sent
         var postdata = {
             'start_date' : {
-                'value':document.getElementById('startdate').value
+                'value':formatDate(document.getElementById('startdate').value, "MM-DD-YYYY", "html") //document.getElementById('startdate').value
             }, 'runtime_days' : {
                 'value':document.getElementById('runtime_days').value
             }, 'transmissibility':{
@@ -358,7 +357,7 @@
         showAnimation('configApi', "0.50", "0.00");
         pageState = "editingConfig";
     });
-    
+
     document.getElementById('map').style.display = "none";
     document.getElementById('legend').style.display = "none";
     
@@ -470,8 +469,8 @@
                 }
                 startDateValue = new Date(startDateValue)
                 endDateValue = new Date(endDateValue)
-                startDate.value = formatDate(startDateValue, "YYYY-MM-DD");
-                endDate.value = formatDate(endDateValue, "YYYY-MM-DD");
+                startDate.value = formatDate(startDateValue, "YYYY-MM-DD", "javascript");
+                endDate.value = formatDate(endDateValue, "YYYY-MM-DD", "javascript");
     
             } else {
                 if(direction){
@@ -480,7 +479,7 @@
                     startDateValue.setDate(startDateValue.getDate() - 1);
                 }
     
-                startDate.value = formatDate(startDateValue, "YYYY-MM-DD");
+                startDate.value = formatDate(startDateValue, "YYYY-MM-DD", "javascript");
             }
     
             //load new data for new dates
@@ -499,10 +498,24 @@
             if(timelapseToggle){
                 intervalId = setInterval(function() {
                     document.getElementById("incrementButton").click();
-                }, 2000);
+                }, 1500);
                 timelapseToggle = 0;
+
+                var timelapseEl = document.createElement("div");
+                timelapseEl.setAttribute("id", "timelapseAnimation");
+                document.getElementById("timelapseButton").appendChild(timelapseEl);
+                let timelapseHtml = 
+                `<div class="timelapseIndicator"></div>`;
+                document.getElementById("timelapseAnimation").innerHTML = timelapseHtml;
+                document.getElementById("timelapseAnimation").style.position = "absolute";
+                document.getElementById("timelapseAnimation").style.display = "inline-block";
+                let top = document.getElementById("timelapseButton").offsetTop + document.getElementById("timelapseButton").offsetHeight/2 - 2.5;
+                let left = document.getElementById("timelapseButton").offsetLeft + document.getElementById("timelapseButton").offsetWidth/2 - document.getElementById("timelapseAnimation").offsetWidth/2 + 0.45;
+                document.getElementById("timelapseAnimation").style.top = top + "px";
+                document.getElementById("timelapseAnimation").style.left = left + "px";
             } else {
                 clearInterval(intervalId);
+                document.getElementById('timelapseAnimation').remove();
                 timelapseToggle = 1;
             }
             //needs a stopping function when at end of data
@@ -536,7 +549,7 @@
                 var endDateValue = new Date(startDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
                 endDateValue = endDateValue.setDate(endDateValue.getDate() + 1);
                 endDateValue = new Date(endDateValue);
-                endDate.value = formatDate(endDateValue, "YYYY-MM-DD");
+                endDate.value = formatDate(endDateValue, "YYYY-MM-DD", "javascript");
     
             } else {
                 document.getElementById('endDate').disabled = true;
@@ -564,8 +577,8 @@
                 let endDateValue = new Date(endDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
                 let timeDiffInDays = (endDateValue.getTime() - startDateValue.getTime())/(1000*60*60*24);
 
-                var startDateParam = formatDate(startDateValue, "MM-DD-YYYY");
-                var endDateParam = formatDate(endDateValue, "MM-DD-YYYY");
+                var startDateParam = formatDate(startDateValue, "MM-DD-YYYY", "javascript");
+                var endDateParam = formatDate(endDateValue, "MM-DD-YYYY", "javascript");
                 
                 updateMapDateValue(startDateParam, endDateParam);
 
@@ -616,7 +629,7 @@
 
             } else {
                 let startDateValue = new Date(startDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
-                var startDateParam = formatDate(startDateValue, "MM-DD-YYYY");
+                var startDateParam = formatDate(startDateValue, "MM-DD-YYYY", "javascript");
 
                 updateMapDateValue(startDateParam, endDateParam);
 

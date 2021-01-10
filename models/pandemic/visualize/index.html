@@ -30,9 +30,15 @@
                 <form class="configApiForm">
                 <h2 style="text-align: center;">Simulation Config</h2>
 
-                    <div id="startdate_runtime" style="text-align: center;">
-                        <input id="startdate" placeholder="start date" required>
-                        <input id="runtime_days" placeholder="runtime in days" required>
+                    <div id="startdate_runtime" style="text-align: center; height: 40px;">
+                        <div style="float: left; margin-left: 18%;">
+                            <label for="startdate" style="display: block;">Start Date</label>
+                            <input id="startdate" type="date" value="2020-07-22" style="display: block;" required>
+                        </div>
+                        <div style="float: right; margin-right: 18%;">
+                            <label for="runtime_days" style="display: block;">Runtime in Days</label>
+                            <input id="runtime_days" placeholder="1" style="display: block;" required>
+                        </div>
                     </div>
                     <br>
                     <div>
@@ -139,7 +145,7 @@
                     </div>
                     <div>
                         <p id="decrementButton" class="arrow" style="padding-right: 2px;">&#x25C0;</p>
-                        <p id="timelapseButton" class="timelapse" style="color: black;">&#x23F1;</p>
+                        <p id="timelapseButton" class="timelapse" style="color: black; width: 28px;">&#x23F1;</p>
                         <p id="incrementButton" class="arrow" style="padding-left: 2px;">&#x25B6;</p>
                     </div>
                     <!-- <div>
