@@ -98,7 +98,7 @@ svg {
 
 
 
-/* ANIMATIONS */
+/* ANIMATIONS BEGIN */
 @keyframes hide {
     0% {
         opacity: 1;
@@ -132,6 +132,61 @@ svg {
         visibility: visible;
     }
 }
+/* ANIMATIONS END */
+
+
+
+/* INFO TOOLTIP BEGIN */
+.infoTooltip {
+  position:relative; /* making the .tooltip span a container for the tooltip text */
+   /*border-bottom:1px dashed #000; /* little indicater to indicate it's hoverable */
+}
+.infoTooltip:before {
+  content: attr(data-tooltipText); /* here's the magic */
+  position:absolute;
+  
+  /* vertically center */
+  top:50%;
+  transform:translateY(-50%);
+  
+  /* move to right */
+  left:100%;
+  margin-left:15px; /* and add a small left margin */
+  
+  /* basic styles */
+  width:200px;
+  padding:10px;
+  border-radius:10px;
+  background:#333333;
+  color: #fff;
+  text-align:center;
+
+  display:none; /* hide by default */
+}
+.infoTooltip:after {
+  content: "";
+  position:absolute;
+  
+  /* position tooltip correctly */
+  left:100%;
+  margin-left:-5px;
+ 
+  /* vertically center */
+  top:50%;
+  transform:translateY(-50%);
+ 
+  /* the arrow */
+  border:10px solid #333333;
+  border-color: transparent #333333 transparent transparent;
+  
+  display:none;
+}
+.infoTooltip:hover:before, .infoTooltip:hover:after {
+  display:block;
+}
+/* INFO TOOLTIP END */
+
+
 
 /* TIMELAPSE INDICATOR */
 .timelapseIndicator {
@@ -153,10 +208,11 @@ svg {
   100% {
     transform: scale(1);
     opacity: 0; } }
-/* END TIMELAPSE INDICATOR */
+/* TIMELAPSE INDICATOR END */
 
 
-/* LOADING CIRCLE FOR DATA */
+
+/* LOADING CIRCLE */
 .sk-circle {
     margin: 100px auto;
     width: 40px;
@@ -278,4 +334,4 @@ svg {
               transform: scale(1);
     }
   }
-  /* END OF LOADING CIRCLE */
+  /* LOADING CIRCLE END */

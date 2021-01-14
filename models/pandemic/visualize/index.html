@@ -30,55 +30,66 @@
                 <form class="configApiForm">
                 <h2 style="text-align: center;">Simulation Config</h2>
 
-                    <div id="startdate_runtime" style="text-align: center; height: 40px;">
-                        <div style="float: left; margin-left: 18%;">
-                            <label for="startdate" style="display: block;">Start Date</label>
-                            <input id="startdate" type="date" value="2020-07-22" style="display: block;" required>
+                    <div id="startdate_runtime" style="text-align: center; height: 40px; white-space: nowrap;">
+                        <div style="display: inline-block; width: 45%;">
+                            <div style="display: inline-block;">
+                                <span id="startdate_info" class="info infoTooltip" data-tooltipText="Beginning date of simulation">&#9432;</span>
+                            </div>
+                            <div style="display: inline-block;">
+                                <label for="startdate" style="display: block;">Start Date</label>
+                                <input id="startdate" type="date" value="2020-07-22" style="display: block;" required>
+                            </div>
                         </div>
-                        <div style="float: right; margin-right: 18%;">
-                            <label for="runtime_days" style="display: block;">Runtime in Days</label>
-                            <input id="runtime_days" placeholder="1" style="display: block;" required>
+                        <div style="display: inline-block; width: 45%;">
+                            <div style="display: inline-block;">
+                                <span id="runtime_days_info" class="info infoTooltip" data-tooltipText="Number of simulated days.">&#9432;</span>
+                            </div>
+                            <div style="display: inline-block;">
+                                <label for="runtime_days" style="display: block;">Runtime in Days</label>
+                                <input id="runtime_days" placeholder="1" style="display: block;" required>
+                            </div>
                         </div>
                     </div>
                     <br>
+                    <br>
                     <div>
-                        <span class="info">&#9432;</span>
+                        <span id="transmissibility_info" class="info infoTooltip" data-tooltipText="Placeholder for info.">&#9432;</span>
                         <input type="checkbox" id="transmissibility">
                         <p style="display: inline;"> Transmissibility </p>
                         <input id="transmissibilityval" placeholder="1.00">
                     </div>
                     <div>
-                        <span class="info">&#9432;</span>
+                        <span id="exposed_confirmed_ratio_info" class="info infoTooltip" data-tooltipText="Placeholder for info.">&#9432;</span>
                         <input type="checkbox" id="exposed_confirmed_ratio">
                         <p style="display: inline;"> Exposed-Confirmed Factor </p>
                         <input id="exposed_confirmed_ratioval" placeholder="2.00">
                     </div>
                     <div>
-                        <span class="info">&#9432;</span>
+                        <span id="mean_incubation_duration_in_days_info" class="info infoTooltip" data-tooltipText="Placeholder for info.">&#9432;</span>
                         <input type="checkbox" id="mean_incubation_duration_in_days">
                         <p style="display: inline;"> mean_incubation_duration_in_days </p>
                         <input id="mean_incubation_duration_in_daysval" placeholder="3.00">
                     </div>
                     <div>
-                        <span class="info">&#9432;</span>
+                        <span id="mean_infection_duration_in_days_info" class="info infoTooltip" data-tooltipText="Placeholder for info.">&#9432;</span>
                         <input type="checkbox" id="mean_infection_duration_in_days">
                         <p style="display: inline;"> mean_infection_duration_in_days </p>
                         <input id="mean_infection_duration_in_daysval" placeholder="4.00">
                     </div>
                     <div>
-                        <span class="info">&#9432;</span>
+                        <span id="mortality_ratio_info" class="info infoTooltip" data-tooltipText="Placeholder for info.">&#9432;</span>
                         <input type="checkbox" id="mortality_ratio">
                         <p style="display: inline;"> mortality_ratio </p>
                         <input id="mortality_ratioval" placeholder="5.00">
                     </div>
                     <div>
-                        <span class="info">&#9432;</span>
+                        <span id="update_trig_interval_in_hrs_info" class="info infoTooltip" data-tooltipText="Placeholder for info.">&#9432;</span>
                         <input type="checkbox" id="update_trig_interval_in_hrs">
                         <p style="display: inline;"> update_trig_interval_hrs </p>
                         <input id="update_trig_interval_in_hrsval" placeholder="6.00">
                     </div>
                     <div>
-                        <span class="info">&#9432;</span>
+                        <span id="graph_type_info" class="info infoTooltip" data-tooltipText="Placeholder for info.">&#9432;</span>
                         <input type="checkbox" id="graph_type">
                         <p style="display: inline;"> Graph Type </p>
                         <select id="graph_typeoption">
@@ -87,26 +98,26 @@
                         </select>
                     </div>
                     <div>
-                        <span class="info">&#9432;</span>
+                        <span id="graph_params_info" class="info infoTooltip" data-tooltipText="Placeholder for info.">&#9432;</span>
                         <input type="checkbox" id="graph_params">
                         <p style="display: inline;"> graph params (k) (beta) </p>
                         <input id="graph_param_Kval" placeholder="7.00 (K)">
                         <input id="graph_param_betaval" placeholder="8.00 (beta)">
                     </div>
                     <div>
-                        <span class="info">&#9432;</span>
+                        <span id="diffusion_trig_interval_in_hrs_info" class="info infoTooltip" data-tooltipText="Placeholder for info.">&#9432;</span>
                         <input type="checkbox" id="diffusion_trig_interval_in_hrs">
                         <p style="display: inline;"> diffusion_trig_interval_in_hrs </p>
                         <input id="diffusion_trig_interval_in_hrsval" placeholder="9.00">
                     </div>
                     <div>
-                        <span class="info">&#9432;</span>
+                        <span id="avg_transport_speed_info" class="info infoTooltip" data-tooltipText="Placeholder for info.">&#9432;</span>
                         <input type="checkbox" id="avg_transport_speed">
                         <p style="display: inline;"> avg_transport_speed </p>
                         <input id="avg_transport_speedval" placeholder="10.00">
                     </div>
                     <div>
-                        <span class="info">&#9432;</span>
+                        <span id="max_diffusion_cnt_info" class="info infoTooltip" data-tooltipText="Placeholder for info.">&#9432;</span>
                         <input type="checkbox" id="max_diffusion_cnt">
                         <p style="display: inline;"> max_diffusion_cnt </p>
                         <input id="max_diffusion_cntval" placeholder="11.00">

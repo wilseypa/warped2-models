@@ -188,6 +188,19 @@
         //loadVisualization();
     }
 
+    function createInfoTooltip(elToAttachTo) {
+        // console.log(elToAttachTo)
+        // var infoTooltipEl = document.createElement("div");
+        // infoTooltipEl.setAttribute("id", "infoTooltip");
+        // document.getElementById(elToAttachTo.id).appendChild(infoTooltipEl);
+        // let infoTooltipHtml =   `Placeholder info.`
+        // document.getElementById("infoTooltip").innerHTML = infoTooltipHtml;
+
+    }
+    function removeInfoTooltip() {
+        // document.getElementById("infoTooltip").remove();
+    }
+
     function handleDefaultConfigValue(inputId) {
         if (document.getElementById(inputId).value === "") {
             document.getElementById(inputId).value = document.getElementById(inputId).getAttribute("placeholder");
@@ -218,6 +231,17 @@
 
     // Submitting Login Form
     d3.select("#submitLogin").on("click", function() {
+        if(isDevEnv) {
+            removeRequiredWarning("requiredWarning");
+    
+            hideAnimation('loginDiv', "0.35");
+            showAnimation('passwordProtected', "0.35", "0.35");
+
+            pageState = "config";
+            setTimeout(function(){ document.getElementById('startdate').focus(); }, 500);   // need to wait until animation is complete for keyfocus
+            return
+        }
+
         let username = document.getElementById('username').value;
         let password = document.getElementById('password').value;
 
@@ -429,6 +453,17 @@
 
     function ready (data){   //function ready (error, data, data22, data23, data24, data25){
 /* D3 EVENT FUNCTIONS */
+        // //Info Icon Hover
+        // d3.selectAll(".info")
+        // .on("mouseover", function() {
+        //     //code for creating popup
+        //     createInfoTooltip(this);
+        // })
+        // .on("mouseout", function() {
+        //     //code for removing popup
+        //     removeInfoTooltip();
+        // });
+
         //Plot Button Press
         d3.select("#plotButton").on("click", function() {
             loadNewData();
