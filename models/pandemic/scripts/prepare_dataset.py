@@ -263,6 +263,22 @@ def get_jhu_csse_data_filepath(jhu_csse_path, dateStr):
 
     return filepath
 
+def get_true_us_states_active_count(date_str):
+    """
+    """
+    us_states_metrics_df = pd.read_csv(DEFAULT_JHU_CSSE_PATH
+                                       + "/csse_covid_19_data/csse_covid_19_daily_reports_us/"
+                                       + date_str + ".csv", usecols=['Province_State', 'Active'],
+                                       dtype={'Active': int})
+
+    dict_state_active = {}
+
+    for index, row in us_states_metrics_df.iterrows():
+        dict_state_active[row['Province_State']] = row['Active']
+
+    return dict_state_active
+
+    
 def get_true_us_active_count(date_str):
     """
 
@@ -271,10 +287,8 @@ def get_true_us_active_count(date_str):
     """
     us_states_metrics_df = pd.read_csv(DEFAULT_JHU_CSSE_PATH
                                        + "/csse_covid_19_data/csse_covid_19_daily_reports_us/"
-                                       + date_str + ".csv", usecols=['Active'], dtype={'Active': int})
-
-    return us_states_metrics_df['Active'].sum()
-
+                                       + date_str + ".csv", usecols=[ 'Active'],
+                                       dtype={'Active': int})
 
 
 def fix_metrics_values(jhu_csse_path, main_df, curr_date_str):
@@ -295,8 +309,10 @@ def fix_metrics_values(jhu_csse_path, main_df, curr_date_str):
     if 'FIPS' not in prev_date_csse_df.columns:
         return
 
-    total_us_active = get_true_us_active_count(curr_date_str)
+    # total_us_active = get_true_us_active_count(curr_date_str)
 
+    total_us_states_active = get_true_us_states_active_count(curr_date_str)
+    
     # print(prev_date_csse_df.iloc[2000:2010])
     # sys.exit(1)
 
@@ -324,7 +340,7 @@ def fix_metrics_values(jhu_csse_path, main_df, curr_date_str):
 
         if fips not in prev_date_csse_df['FIPS'].values:
             # print("h3")
-            dict_fips_newActive[fips] = main_active_val
+            dict_fips_newActive[fips] = (main_active_val, row['State'])
             continue
 
         prev_active_val = int((prev_date_csse_df[prev_date_csse_df['FIPS'] == fips]['Active']).values.tolist()[0])
@@ -334,22 +350,49 @@ def fix_metrics_values(jhu_csse_path, main_df, curr_date_str):
         if new_active_val < 0:
             new_active_val = 0
 
-        dict_fips_newActive[fips] = new_active_val
+        # add state info, in tuple
+        dict_fips_newActive[fips] = (new_active_val, row['State'])
 
     # calculate ratio
-    total_us_new_active = sum(dict_fips_newActive.values())
-    ratio_actual_calculated_active = total_us_active / total_us_new_active
+    # total_us_new_active = sum(dict_fips_newActive.values())
+    # ratio_actual_calculated_active = total_us_active / total_us_new_active
 
-    population_data_df = pd.read_csv(DEFAULT_POPULATION_FILEPATH, dtype={'FIPS': object}, skipinitialspace=True)
+    # calculate ratio_active for each state
 
+    
+    dict_states_new_total_active = {}
+    for fips in dict_fips_newActive:
+        print(fips, dict_fips_newActive[fips])
+        # sys.exit(1)
+        state_name = dict_fips_newActive[fips][1]
+        fips_new_active = dict_fips_newActive[fips][0]
 
+        print(state_name, fips_new_active)
+        # sys.exit(1)
+
+        if state_name not in dict_states_new_total_active.keys():
+            dict_states_new_total_active[state_name] = 0
+        else:
+            dict_states_new_total_active[state_name] += fips_new_active
+
+    # calculate ratios
+    dict_ratio_state_active = {}
+    for state in dict_states_new_total_active:
+        if dict_states_new_total_active[state] == 0:
+            dict_ratio_state_active[state] = 1
+        else:
+            dict_ratio_state_active[state] = total_us_states_active[state] / dict_states_new_total_active[state]
+
+    # population_data_df = pd.read_csv(DEFAULT_POPULATION_FILEPATH, dtype={'FIPS': object}, skipinitialspace=True)
 
     # now, run loop to fix main_df
     for index, row in main_df.iterrows():
 
         fips = row['FIPS']
+        state = row['State']
 
-        new_scaled_active = int(dict_fips_newActive[fips] * ratio_actual_calculated_active)
+        # new_scaled_active = int(dict_fips_newActive[fips] * ratio_actual_calculated_active)
+        new_scaled_active = int(dict_fips_newActive[fips][0] * dict_ratio_state_active[state])
 
         if new_scaled_active < 0:
             new_scaled_active = 0
@@ -379,7 +422,7 @@ def fix_metrics_values(jhu_csse_path, main_df, curr_date_str):
 
         new_recovered_val = main_confirmed_val - new_scaled_active - main_deaths_val
 
-        if new_recovered_val < 0:
+        if new_recovered_val < 0: # redundant?
             new_recovered_val = 0
 
         # TODO problem, eg.:
