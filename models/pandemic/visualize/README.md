@@ -7,8 +7,7 @@ LOTS OF DATA IS MISSING IN CERTAIN DAYS (5/26/2020)(8/23/2020 only with range) W
 
 ## **TODO**
 ### ***Front End***
-Create information icon hover for each parameter  
-Replace placeholder placeholders (waiting for actual placeholders) with correct placeholder values
+Replace placeholder placeholders (waiting for actual placeholders) with correct placeholder values  
 Remove checkboxes if placeholder values (placeholder values as background unless typed then forget placeholder values)  
 Re-add slider to bottom of map  
 Update tooltip data on new day when hovering with timelapse function enabled  
@@ -46,6 +45,7 @@ Fix bug where ranges can cause not all files to load and cumulate (can test with
 Position legend properly for windows resizing  
 Use placeholder values on configApi form submit  
 Make timelapse clearly enabled/disabled  
+Create information icon hover for each parameter  
 
 ## **Resources**
 https://www.youtube.com/watch?v=aNbgrqRuoiE  --Help for US state map  
