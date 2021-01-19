@@ -207,6 +207,7 @@
         }
     }
 
+    var getstatusTimeout = undefined;
     var getStatus = function () {
         clearTimeout(getstatusTimeout);
         getstatusTimeout = setTimeout(getStatus, 6000, false);
@@ -337,27 +338,27 @@
         // console.log(postdata);
         // console.log(JSON.stringify(postdata));
         
-        // aja()
-        //     .method('POST')
-        //     // .header('Content-Type', 'application/json')
-        //     .data({'data':JSON.stringify(postdata)})
-        //     .url('localhost:8081/simulate')
-        //     .timeout(3000)
-        //     .on('200', function (response) {
-        //         console.log("simulate response:", response);
+        aja()
+            .method('POST')
+            // .header('Content-Type', 'application/json')
+            .data({'data':JSON.stringify(postdata)})
+            .url('localhost:8081/simulate')
+            .timeout(3000)
+            .on('200', function (response) {
+                console.log("simulate response:", response);
 
-        //         // document.getElementById("statusmsg").innerText = response["statusmsg"]
+                // document.getElementById("statusmsg").innerText = response["statusmsg"]
 
-        //         if (getstatusTimeout) {
-        //             clearInterval(getstatusTimeout);
-        //             getstatusTimeout = setTimeout(getStatus, 200, false);
-        //         } else {
-        //             getstatusTimeout = setTimeout(getStatus, 200, false);
-        //         }
+                if (getstatusTimeout) {
+                    clearInterval(getstatusTimeout);
+                    getstatusTimeout = setTimeout(getStatus, 200, false);
+                } else {
+                    getstatusTimeout = setTimeout(getStatus, 200, false);
+                }
 
-        //         // console.log("/simulate: set timeout");
-        //     })
-        //     .go();
+                // console.log("/simulate: set timeout");
+            })
+            .go();
 
         pageState = "viewingMap";
         document.getElementById('map').style.display = "none";
@@ -370,7 +371,7 @@
     // Create loading spinner and wait for simulation data
         setTimeout(() => { createLoadingBar(); }, 500);
 
-        // getStatus();
+        getStatus();
 
         setTimeout(function(){ removeLoadingBar(); }, 1000);
     }
