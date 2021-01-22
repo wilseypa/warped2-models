@@ -77,8 +77,8 @@ app.get('/callGetstatus', (req, res) => {
     //     })
     //     .go();
 	// // response.status(200).send({path: envPath});
-	request('localhost:8082/getstatus', { json: true }, (err, res, body) => {
-		if (err) { return console.log(err); }
+	request('http://ec2-3-22-85-65.us-east-2.compute.amazonaws.com:7096/getstatus', { json: true }, (err, res, body) => {
+		if (err) { return console.log(err); }//Error: Invalid protocol: localhost
 		console.log(body.url);
 		console.log(body.explanation);
 		res.status(200).send({statusmsg: body});
