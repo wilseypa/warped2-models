@@ -9,25 +9,28 @@
         <h1 style="text-align: center">Pandemic model in the US</h1>
 
         <div id="loginDiv" style="text-align: center;">
-            <br>
-            <h2>Login</h2>
-            <form autocomplete="off">
-                <div>
-                    <input id="username" style="margin: 2.5px;" placeholder="username">
+            <div id="loginStyleDiv" class="basicBorder center" style="margin-top: 10vh;">
+                <div style="margin: 20px 5px 10px 5px;">
+                    <h2 style="margin: 0px 0px 20px 0px;">Login</h2>
+                    <form autocomplete="off">
+                        <div>
+                            <input id="username" style="margin: 3px;" placeholder="username">
+                        </div>
+                        <div>
+                            <input id="password" type="password" style="margin: 3px; -webkit-text-security: disc;" placeholder="password">
+                        </div>
+                        <div>
+                            <input type="button" id="submitLogin" style="margin: 10px 0px 0px 0px;" value="Submit">
+                        </div>
+                    </form>
                 </div>
-                <div>
-                    <input id="password" type="password" style="margin: 2.5px; -webkit-text-security: disc;" placeholder="password">
-                </div>
-                <div>
-                    <input type="button" id="submitLogin" style="margin: 3px;" value="Submit">
-                </div>
-            </form>
+            </div>
         </div>
 
         <div id="passwordProtected" style="display: none;">
 
             <div id="configApi" class="configApi">
-                <form class="configApiForm">
+                <form class="configApiForm basicBorder">
                 <h2 style="text-align: center;">Simulation Config</h2>
 
                     <div id="startdate_runtime" style="text-align: center; height: 40px; white-space: nowrap;">
@@ -52,80 +55,82 @@
                     </div>
                     <br>
                     <br>
-                    <div>
-                        <span id="transmissibility_info" class="info infoTooltip" data-tooltipText="Placeholder for info.">&#9432;</span>
-                        <input type="checkbox" id="transmissibility">
-                        <p style="display: inline;"> Transmissibility </p>
-                        <input id="transmissibilityval" placeholder="2.2">
-                    </div>
-                    <div>
-                        <span id="exposed_confirmed_ratio_info" class="info infoTooltip" data-tooltipText="Placeholder for info.">&#9432;</span>
-                        <input type="checkbox" id="exposed_confirmed_ratio">
-                        <p style="display: inline;"> Exposed-Confirmed Factor </p>
-                        <input id="exposed_confirmed_ratioval" placeholder="0.00">
-                    </div>
-                    <div>
-                        <span id="mean_incubation_duration_in_days_info" class="info infoTooltip" data-tooltipText="Placeholder for info.">&#9432;</span>
-                        <input type="checkbox" id="mean_incubation_duration_in_days">
-                        <p style="display: inline;"> mean_incubation_duration_in_days </p>
-                        <input id="mean_incubation_duration_in_daysval" placeholder="2.2">
-                    </div>
-                    <div>
-                        <span id="mean_infection_duration_in_days_info" class="info infoTooltip" data-tooltipText="Placeholder for info.">&#9432;</span>
-                        <input type="checkbox" id="mean_infection_duration_in_days">
-                        <p style="display: inline;"> mean_infection_duration_in_days </p>
-                        <input id="mean_infection_duration_in_daysval" placeholder="2.3">
-                    </div>
-                    <div>
-                        <span id="mortality_ratio_info" class="info infoTooltip" data-tooltipText="Placeholder for info.">&#9432;</span>
-                        <input type="checkbox" id="mortality_ratio">
-                        <p style="display: inline;"> mortality_ratio </p>
-                        <input id="mortality_ratioval" placeholder="0.05">
-                    </div>
-                    <div>
-                        <span id="update_trig_interval_in_hrs_info" class="info infoTooltip" data-tooltipText="Placeholder for info.">&#9432;</span>
-                        <input type="checkbox" id="update_trig_interval_in_hrs">
-                        <p style="display: inline;"> update_trig_interval_hrs </p>
-                        <input id="update_trig_interval_in_hrsval" placeholder="24">
-                    </div>
-                    <div>
-                        <span id="graph_type_info" class="info infoTooltip" data-tooltipText="Placeholder for info.">&#9432;</span>
-                        <input type="checkbox" id="graph_type">
-                        <p style="display: inline;"> Graph Type </p>
-                        <select id="graph_typeoption">
-                            <option>Watts-Strogatz</option>
-                            <option>Barabasi-Albert</option>
-                        </select>
-                    </div>
-                    <div>
-                        <span id="graph_params_info" class="info infoTooltip" data-tooltipText="Placeholder for info.">&#9432;</span>
-                        <input type="checkbox" id="graph_params">
-                        <p style="display: inline;"> graph params (k) (beta) </p>
-                        <input id="graph_param_Kval" placeholder="8">
-                        <input id="graph_param_betaval" placeholder="0.1">
-                    </div>
-                    <div>
-                        <span id="diffusion_trig_interval_in_hrs_info" class="info infoTooltip" data-tooltipText="Placeholder for info.">&#9432;</span>
-                        <input type="checkbox" id="diffusion_trig_interval_in_hrs">
-                        <p style="display: inline;"> diffusion_trig_interval_in_hrs </p>
-                        <input id="diffusion_trig_interval_in_hrsval" placeholder="48">
-                    </div>
-                    <div>
-                        <span id="avg_transport_speed_info" class="info infoTooltip" data-tooltipText="Placeholder for info.">&#9432;</span>
-                        <input type="checkbox" id="avg_transport_speed">
-                        <p style="display: inline;"> avg_transport_speed </p>
-                        <input id="avg_transport_speedval" placeholder="100">
-                    </div>
-                    <div>
-                        <span id="max_diffusion_cnt_info" class="info infoTooltip" data-tooltipText="Placeholder for info.">&#9432;</span>
-                        <input type="checkbox" id="max_diffusion_cnt">
-                        <p style="display: inline;"> max_diffusion_cnt </p>
-                        <input id="max_diffusion_cntval" placeholder="10">
-                    </div>
-                    <br>
-                    <div style="text-align: center;">
-                        <input type="button" id="submitConfigApi" value="Submit">
-                        <!-- needs an action tag for api ^^^ -->
+                    <div style="margin: 20px;">
+                        <div>
+                            <span id="transmissibility_info" class="info infoTooltip" data-tooltipText="Placeholder for info.">&#9432;</span>
+                            <input type="checkbox" id="transmissibility">
+                            <p style="display: inline;"> Transmissibility </p>
+                            <input id="transmissibilityval" placeholder="2.2">
+                        </div>
+                        <div>
+                            <span id="exposed_confirmed_ratio_info" class="info infoTooltip" data-tooltipText="Placeholder for info.">&#9432;</span>
+                            <input type="checkbox" id="exposed_confirmed_ratio">
+                            <p style="display: inline;"> Exposed-Confirmed Factor </p>
+                            <input id="exposed_confirmed_ratioval" placeholder="0.00">
+                        </div>
+                        <div>
+                            <span id="mean_incubation_duration_in_days_info" class="info infoTooltip" data-tooltipText="Placeholder for info.">&#9432;</span>
+                            <input type="checkbox" id="mean_incubation_duration_in_days">
+                            <p style="display: inline;"> mean_incubation_duration_in_days </p>
+                            <input id="mean_incubation_duration_in_daysval" placeholder="2.2">
+                        </div>
+                        <div>
+                            <span id="mean_infection_duration_in_days_info" class="info infoTooltip" data-tooltipText="Placeholder for info.">&#9432;</span>
+                            <input type="checkbox" id="mean_infection_duration_in_days">
+                            <p style="display: inline;"> mean_infection_duration_in_days </p>
+                            <input id="mean_infection_duration_in_daysval" placeholder="2.3">
+                        </div>
+                        <div>
+                            <span id="mortality_ratio_info" class="info infoTooltip" data-tooltipText="Placeholder for info.">&#9432;</span>
+                            <input type="checkbox" id="mortality_ratio">
+                            <p style="display: inline;"> mortality_ratio </p>
+                            <input id="mortality_ratioval" placeholder="0.05">
+                        </div>
+                        <div>
+                            <span id="update_trig_interval_in_hrs_info" class="info infoTooltip" data-tooltipText="Placeholder for info.">&#9432;</span>
+                            <input type="checkbox" id="update_trig_interval_in_hrs">
+                            <p style="display: inline;"> update_trig_interval_hrs </p>
+                            <input id="update_trig_interval_in_hrsval" placeholder="24">
+                        </div>
+                        <div>
+                            <span id="graph_type_info" class="info infoTooltip" data-tooltipText="Placeholder for info.">&#9432;</span>
+                            <input type="checkbox" id="graph_type">
+                            <p style="display: inline;"> Graph Type </p>
+                            <select id="graph_typeoption">
+                                <option>Watts-Strogatz</option>
+                                <option>Barabasi-Albert</option>
+                            </select>
+                        </div>
+                        <div>
+                            <span id="graph_params_info" class="info infoTooltip" data-tooltipText="Placeholder for info.">&#9432;</span>
+                            <input type="checkbox" id="graph_params">
+                            <p style="display: inline;"> graph params (k) (beta) </p>
+                            <input id="graph_param_Kval" placeholder="8">
+                            <input id="graph_param_betaval" placeholder="0.1">
+                        </div>
+                        <div>
+                            <span id="diffusion_trig_interval_in_hrs_info" class="info infoTooltip" data-tooltipText="Placeholder for info.">&#9432;</span>
+                            <input type="checkbox" id="diffusion_trig_interval_in_hrs">
+                            <p style="display: inline;"> diffusion_trig_interval_in_hrs </p>
+                            <input id="diffusion_trig_interval_in_hrsval" placeholder="48">
+                        </div>
+                        <div>
+                            <span id="avg_transport_speed_info" class="info infoTooltip" data-tooltipText="Placeholder for info.">&#9432;</span>
+                            <input type="checkbox" id="avg_transport_speed">
+                            <p style="display: inline;"> avg_transport_speed </p>
+                            <input id="avg_transport_speedval" placeholder="100">
+                        </div>
+                        <div>
+                            <span id="max_diffusion_cnt_info" class="info infoTooltip" data-tooltipText="Placeholder for info.">&#9432;</span>
+                            <input type="checkbox" id="max_diffusion_cnt">
+                            <p style="display: inline;"> max_diffusion_cnt </p>
+                            <input id="max_diffusion_cntval" placeholder="10">
+                        </div>
+                        <br>
+                        <div style="text-align: center;">
+                            <input type="button" id="submitConfigApi" value="Submit">
+                            <!-- needs an action tag for api ^^^ -->
+                        </div>
                     </div>
                 </form>
                 <br>
@@ -143,34 +148,42 @@
 
             <div id="postSimulationContent" style="display: none;">
                 <div style="text-align: center;">
-
-                <input type="button" id="editConfig" value="Edit Config">
-                <br>
-                <br>
-                
-                    <div id="dateInputDiv">
-                        <input id="startDate" class="dateInput" type="date">
-                        <input id="endDate" class="dateInput" type="date" disabled>
-                        <input type="checkbox" class="checkbox" name="isDateRange" id="isDateRange">
-                        <label for="isDateRange">Range?</label>
+                    <div class="basicBorder center" style="width: 408px;">
+                        <div style="margin: 10px;">
+                            <span id="minMaxMapControls">&minus;</span>
+                            <div id="editConfigBtnContainer" style="display: inline;">
+                                <input type="button" id="editConfig" value="Edit Config">
+                            </div>
+                            <div id="minMaxControlsContent">
+                                <br>
+                                <br>
+                        
+                                <div id="dateInputDiv">
+                                    <input id="startDate" class="dateInput" type="date">
+                                    <input id="endDate" class="dateInput" type="date" disabled>
+                                    <input type="checkbox" class="checkbox" name="isDateRange" id="isDateRange">
+                                    <label for="isDateRange">Range?</label>
+                                </div>
+                                <div>
+                                    <p id="decrementButton" class="arrow" style="padding-right: 2px;">&#x25C0;</p>
+                                    <p id="timelapseButton" class="timelapse" style="color: black; width: 28px;">&#x23F1;</p>
+                                    <p id="incrementButton" class="arrow" style="padding-left: 2px;">&#x25B6;</p>
+                                </div>
+                                <!-- <div>
+                                    <p id="timelapseButton" class="timelapse" style="color: black;">&#x23F1;</p>
+                                </div> -->
+                                <br>
+                                <button id="plotButton" style="width: 55px; height: 33px;">Plot</button>
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <p id="decrementButton" class="arrow" style="padding-right: 2px;">&#x25C0;</p>
-                        <p id="timelapseButton" class="timelapse" style="color: black; width: 28px;">&#x23F1;</p>
-                        <p id="incrementButton" class="arrow" style="padding-left: 2px;">&#x25B6;</p>
-                    </div>
-                    <!-- <div>
-                        <p id="timelapseButton" class="timelapse" style="color: black;">&#x23F1;</p>
-                    </div> -->
-                    <br>
-                    <button id="plotButton" style="width: 55px; height: 33px;">Plot</button>
                 </div>
 
                 <br>
                 <br>
                 
                 <div>
-                    <div style="text-align:center">
+                    <div id="mapStatCheckboxes" style="text-align:center; display: none;">
                         <input type="checkbox" class="checkbox" name="Confirmed" id="Confirmed">
                         <label for="Confirmed">Confirmed</label>
                         <input type="checkbox" class="checkbox" name="Dead" id="Dead">

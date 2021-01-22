@@ -12,6 +12,7 @@ Remove checkboxes if placeholder values (placeholder values as background unless
 Re-add slider to bottom of map  
 Update tooltip data on new day when hovering with timelapse function enabled  
 Improve timelapse placement  
+Make timelapse stop at end of data  
 Cleanup front-end (ongoing)  
 ### ***Back End***
 Create basic API to load dummy data  

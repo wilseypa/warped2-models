@@ -2,6 +2,18 @@
     font-family: Arial, Helvetica, sans-serif;
 }*/
 
+.basicBorder {
+  width: fit-content;
+  border: 1px solid black;
+  border-radius: 3px;
+  box-shadow: 0px 0px 5px 1px rgb(150, 150, 150);
+}
+
+.center {
+  margin-left: 50vw;
+  transform: translateX(-50%);
+}
+
 .configApi {
     /* height: 500px; */
     /* width: 100%; */
@@ -17,6 +29,28 @@
 .info {
   cursor: default;
   margin: 5px;
+}
+
+#minMaxMapControls {
+  float: right;
+  position: relative;
+  top: -10px;
+  margin: 0px;
+  cursor: pointer;
+}
+#minMaxMapControls:before {
+  content: "";
+  position: absolute;
+  height: 10px;
+  width: 15px;
+  top: 5px;
+  left: -2.5px;
+  z-index: -1;
+}
+#minMaxMapControls:hover:before {
+  border-radius: 2px;
+  background-color: rgb(222, 222, 222);
+  box-shadow: 0px 0px 1px 1px rgb(222, 222, 222);
 }
 
 svg {
@@ -99,6 +133,8 @@ svg {
 
 
 /* ANIMATIONS BEGIN */
+
+/* Generic hide animation */
 @keyframes hide {
     0% {
         opacity: 1;
@@ -115,7 +151,7 @@ svg {
         visibility: hidden;
     }
 }
-
+/* Generic show animation */
 @keyframes show {
     0% {
         opacity: 0;
@@ -132,6 +168,67 @@ svg {
         visibility: visible;
     }
 }
+
+/* Minimize Map Controls Content */
+@keyframes minimizeMapControlsContent {
+  0% {
+      opacity: 1;
+      height: 100%;
+      width: 408px;
+      font-size: inherit;
+      transform: scaleY(1);
+      visibility: visible;
+  }
+  100% {
+      opacity: 0;
+      height: 0px;
+      width: 408px;
+      font-size: 0px;
+      transform: scaleY(0);
+      visibility: hidden;
+  }
+}
+/* Maximize Map Controls Content */
+@keyframes maximizeMapControlsContent {
+  0% {
+      opacity: 0;
+      height: 0px;
+      font-size: 0px;
+      transform: scaleY(0);
+      visibility: hidden;
+  }
+  100% {
+      opacity: 1;
+      height: 100%;
+      font-size: inherit;
+      transform: scaleY(1);
+      visibility: visible;
+  }
+}
+
+/* Minimize Map Controls Content */
+@keyframes fadeOutDisplay {
+  0% {
+      opacity: 1;
+      visibility: visible;
+  }
+  100% {
+      opacity: 0;
+      visibility: hidden;
+  }
+}
+/* Maximize Map Controls Content */
+@keyframes fadeInDisplay {
+  0% {
+      opacity: 0;
+      visibility: hidden;
+  }
+  100% {
+      opacity: 1;
+      visibility: visible;
+  }
+}
+
 /* ANIMATIONS END */
 
 
