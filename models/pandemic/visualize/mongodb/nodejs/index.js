@@ -79,8 +79,7 @@ app.get('/callGetstatus', (req, res) => {
 	// // response.status(200).send({path: envPath});
 	request('http://localhost:8082/getstatus', { json: true }, (error, response, body) => {
 		if (error) { return console.log(error); }//Error: Invalid protocol: localhost
-		console.log(body.url);
-		console.log(body.explanation);
+		console.log(body);
 		res.status(200).send({statusmsg: body});
 	});
 });
