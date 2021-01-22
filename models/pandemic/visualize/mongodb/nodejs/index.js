@@ -1,6 +1,6 @@
 const path = require('path');
 const fs = require('fs');
-const https = require('https')
+const https = require('https');
 
 const directoryPath = path.join(__dirname, 'visualize', 'mongodb',  'Pandemic_Data');
 const Datastore = require('nedb');
