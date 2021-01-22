@@ -66,7 +66,7 @@ app.post('/callSimulate', (req, res) => {
 	headers: {
 		"Content-Length":"40",
 		"Content-Type":"application/x-www-form-urlencoded",
-		"Host":"ec2-3-22-85-65.us-east-2.compute.amazonaws.com:7097",
+		"Host":"http://localhost:8082/simulate",
 		"User-Agent":"Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:84.0) Gecko/20100101 Firefox/84.0",
 		"Accept":"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
 		"Accept-Language":"en-US,en;q=0.5",
