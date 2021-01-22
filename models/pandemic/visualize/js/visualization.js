@@ -32,6 +32,18 @@ async function requestLogin(username, password) {
     //console.log(data);
     return data;
 }
+async function callSimulate(jsonObj) {
+    const response = await fetch('/callSimulate');
+    const data = await response.json();
+    //console.log(data);
+    return data;
+}
+async function callGetstatus() {
+    const response = await fetch('/callGetstatus');
+    const data = await response.json();
+    console.log(data);
+    return data;
+}
 
 // Frontend Globals and Setup
 var pageState = "login"; // login, config, viewingMap, editingConfig
@@ -222,22 +234,23 @@ var getStatus = function () {
     clearTimeout(getstatusTimeout);
     getstatusTimeout = setTimeout(getStatus, 6000, false);
 
-    // main logic
-    aja()
-        .method('GET')
-        // .header('Content-Type', 'application/json')
-        // .data({'data':JSON.stringify(postdata)})
-        .url('localhost:8081/getstatus')
-        .timeout(2500)
-        .on('200', function (response) {
-            if ("statusmsg" in response) {
-                document.getElementById("statusmsg").innerText = response["statusmsg"]
-                if (response.statusmsg == "job finished") {
-                    removeLoadingBar();
-                }
-            }
-        })
-        .go();
+    // // main logic
+    // aja()
+    //     .method('GET')
+    //     // .header('Content-Type', 'application/json')
+    //     // .data({'data':JSON.stringify(postdata)})
+    //     .url('localhost:8082/getstatus')
+    //     .timeout(2500)
+    //     .on('200', function (response) {
+    //         if ("statusmsg" in response) {
+    //             document.getElementById("statusmsg").innerText = response["statusmsg"]
+    //             if (response.statusmsg == "job finished") {
+    //                 removeLoadingBar();
+    //             }
+    //         }
+    //     })
+    //     .go();
+    callGetstatus();
 }
 
 // Submitting Login Form
@@ -352,7 +365,7 @@ d3.select("#submitConfigApi").on("click", function() {
         .method('POST')
         // .header('Content-Type', 'application/json')
         .data({'data':JSON.stringify(postdata)})
-        .url('localhost:8081/simulate')
+        .url('localhost:8082/simulate')
         .timeout(3000)
         .on('200', function (response) {
             console.log("simulate response:", response);

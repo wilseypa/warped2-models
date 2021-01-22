@@ -56,6 +56,27 @@ app.get('/isDevEnv', (request, response) => {
 	response.status(200).send({path: envPath});
 });
 
+app.get('/callGetstatus', (request, res) => {
+	// main logic
+    aja()
+        .method('GET')
+        // .header('Content-Type', 'application/json')
+        // .data({'data':JSON.stringify(postdata)})
+        .url('localhost:8082/getstatus')
+        .timeout(2500)
+        .on('200', function (response) {
+            if ("statusmsg" in response) {
+                // document.getElementById("statusmsg").innerText = response["statusmsg"]
+                if (response.statusmsg == "job finished") {
+					// removeLoadingBar();
+					res.status(200).send({statusmsg: response.statusmsg});
+                }
+            }
+        })
+        .go();
+	// response.status(200).send({path: envPath});
+});
+
 app.get('/send_data', (request, response) => {
 	// Function call to send back files from Vivek's directory to our frontend
 	const vivek_path = '/work/vivek/warped2-models/warped2-models/models/pandemic/scripts/tuningapp/simOutfiles';
