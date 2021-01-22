@@ -231,7 +231,6 @@ function handleDefaultConfigValue(inputId) {
 
 var getstatusTimeout = undefined;
 var getStatus = function () {
-    clearTimeout(getstatusTimeout);
     getstatusTimeout = setTimeout(getStatus, 6000, false);
 
     // // main logic
@@ -252,6 +251,9 @@ var getStatus = function () {
     //     .go();
     callGetstatus().then(function(data) {
         console.log(data);
+        if (data.statusmsg == "no job added" || data.statusmsg == "job finished") {
+            clearTimeout(getstatusTimeout);
+        }
     });
 }
 
