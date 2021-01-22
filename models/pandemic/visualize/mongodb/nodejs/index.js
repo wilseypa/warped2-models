@@ -66,7 +66,8 @@ app.get('/callGetstatus', (request, res) => {
         .timeout(2500)
         .on('200', function (response) {
             if ("statusmsg" in response) {
-                // document.getElementById("statusmsg").innerText = response["statusmsg"]
+				// document.getElementById("statusmsg").innerText = response["statusmsg"]
+				console.log(response);
                 if (response.statusmsg == "job finished") {
 					// removeLoadingBar();
 					res.status(200).send({statusmsg: response.statusmsg});
