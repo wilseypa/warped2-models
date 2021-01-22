@@ -62,7 +62,7 @@ app.get('/isDevEnv', (request, response) => {
 app.post('/callSimulate', (req, res) => {
   console.log(typeof(req.body));
   request.post({
-	headers: {'content-type' : 'application/x-www-form-urlencoded'},
+	//headers: {'content-type' : 'application/x-www-form-urlencoded'},
 	url:     'http://localhost:8082/simulate',
 	body:    JSON.stringify(req.body)
   }, function(error, response, bodyRes){
