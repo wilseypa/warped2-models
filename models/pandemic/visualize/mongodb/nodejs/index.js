@@ -1,7 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 const request = require('request');
-const axios = require('axios')
+const axios = require('axios');
 
 const directoryPath = path.join(__dirname, 'visualize', 'mongodb',  'Pandemic_Data');
 const Datastore = require('nedb');
