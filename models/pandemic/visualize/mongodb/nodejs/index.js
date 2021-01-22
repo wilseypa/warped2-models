@@ -1,6 +1,6 @@
 const path = require('path');
 const fs = require('fs');
-const https = require('https');
+const request = require('request');
 
 const directoryPath = path.join(__dirname, 'visualize', 'mongodb',  'Pandemic_Data');
 const Datastore = require('nedb');
@@ -57,7 +57,7 @@ app.get('/isDevEnv', (request, response) => {
 	response.status(200).send({path: envPath});
 });
 
-app.get('/callGetstatus', (request, res) => {
+app.get('/callGetstatus', (req, res) => {
 	// // main logic
     // aja()
     //     .method('GET')
@@ -77,29 +77,12 @@ app.get('/callGetstatus', (request, res) => {
     //     })
     //     .go();
 	// // response.status(200).send({path: envPath});
-	const options = {
-		hostname: 'localhost',
-		port: 8082,
-		path: '/getstatus',
-		method: 'GET'
-	  }
-
-
-	const req = https.request(options, res => {
-		console.log(`statusCode: ${res.statusCode}`)
-	
-		res.on('data', d => {
-		// process.stdout.write(d)
-		console.log(d);
-		res.status(200).send({statusmsg: d});
-		})
-	})
-	
-	req.on('error', error => {
-		console.error(error)
-	})
-	
-	req.end()
+	request('localhost:8082/getstatus', { json: true }, (err, res, body) => {
+		if (err) { return console.log(err); }
+		console.log(body.url);
+		console.log(body.explanation);
+		res.status(200).send({statusmsg: body});
+	});
 });
 
 app.get('/send_data', (request, response) => {
