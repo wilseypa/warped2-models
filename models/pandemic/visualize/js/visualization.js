@@ -32,8 +32,15 @@ async function requestLogin(username, password) {
     //console.log(data);
     return data;
 }
-async function callSimulate(jsonObj) {
-    const response = await fetch('/callSimulate');
+async function callSimulate(simulateJson) {
+    const params = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: simulateJson
+    };
+    const response = await fetch('/callSimulate', params);
     const data = await response.json();
     //console.log(data);
     return data;
@@ -251,7 +258,7 @@ var getStatus = function () {
     //     })
     //     .go();
     callGetstatus().then(function(data) {
-        console.log(data);
+        //console.log(data);
         if (data.statusmsg == "no job added" || data.statusmsg == "job finished") {
             removeLoadingBar();
         } else {
@@ -368,27 +375,30 @@ d3.select("#submitConfigApi").on("click", function() {
     // console.log(postdata);
     // console.log(JSON.stringify(postdata));
     
-    aja()
-        .method('POST')
-        // .header('Content-Type', 'application/json')
-        .data({'data':JSON.stringify(postdata)})
-        .url('localhost:8082/simulate')
-        .timeout(3000)
-        .on('200', function (response) {
-            console.log("simulate response:", response);
+    // aja()
+    //     .method('POST')
+    //     // .header('Content-Type', 'application/json')
+    //     .data({'data':JSON.stringify(postdata)})
+    //     .url('localhost:8082/simulate')
+    //     .timeout(3000)
+    //     .on('200', function (response) {
+    //         console.log("simulate response:", response);
 
-            // document.getElementById("statusmsg").innerText = response["statusmsg"]
+    //         // document.getElementById("statusmsg").innerText = response["statusmsg"]
 
-            if (getstatusTimeout) {
-                clearInterval(getstatusTimeout);
-                getstatusTimeout = setTimeout(getStatus, 200, false);
-            } else {
-                getstatusTimeout = setTimeout(getStatus, 200, false);
-            }
+    //         if (getstatusTimeout) {
+    //             clearInterval(getstatusTimeout);
+    //             getstatusTimeout = setTimeout(getStatus, 200, false);
+    //         } else {
+    //             getstatusTimeout = setTimeout(getStatus, 200, false);
+    //         }
 
-            // console.log("/simulate: set timeout");
-        })
-        .go();
+    //         // console.log("/simulate: set timeout");
+    //     })
+    //     .go();
+    callSimulate(JSON.stringify(postdata)).then(function(data) {
+        console.log(data);
+    });
 
     pageState = "viewingMap";
     document.getElementById('map').style.display = "none";
