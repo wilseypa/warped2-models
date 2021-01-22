@@ -64,7 +64,7 @@ app.post('/callSimulate', (req, res) => {
   request.post({
 	headers: {'content-type' : 'application/x-www-form-urlencoded'},
 	url:     'http://localhost:8082/simulate',
-	body:    req.body
+	body:    JSON.stringify(req.body)
   }, function(error, response, bodyRes){
 	if (error) { return console.log(error); }
 	console.log(response)
