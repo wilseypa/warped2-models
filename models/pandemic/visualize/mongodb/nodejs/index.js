@@ -82,7 +82,7 @@ app.post('/callSimulate', (req, res) => {
 			}
 	};
 
-	request.post(options, (err, res, body) => {
+	request.post(options, (err, reqRes, body) => {
 		if (err) {
 			res.status(400).send({Error: err});
 			return console.log(err);
