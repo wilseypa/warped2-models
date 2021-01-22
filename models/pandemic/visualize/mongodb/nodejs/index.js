@@ -64,17 +64,17 @@ app.post('/callSimulate', (req, res) => {
   console.log(typeof(JSON.stringify(req.body)));
   console.log(JSON.stringify(req.body));
 
-  var bodyContent = querystring.stringify(req.body);
-  request.post({
-	headers: {'content-type' : 'application/x-www-form-urlencoded'},
-	url:     'http://localhost:8082/simulate',
-	body:    bodyContent
-  }, function(error, response, bodyRes){
-	if (error) { return console.log(error); }
-	//console.log(response)
-	//console.log(bodyRes);
-	res.status(200).send({response: bodyRes});
-  });
+	const options = {
+		url: 'http://localhost:8082/simulate',
+		form: { body: req.body }
+	};
+
+	request.post(options, (err, res, body) => {
+		if (err) {
+			return console.log(err);
+		}
+		console.log(body);
+	});
 })
 
 app.get('/callGetstatus', (req, res) => {
