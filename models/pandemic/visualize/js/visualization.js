@@ -33,6 +33,7 @@ async function requestLogin(username, password) {
     return data;
 }
 async function callSimulate(simulateJson) {
+    console.log(simulateJson)
     const params = {
         method: 'POST',
         headers: {
