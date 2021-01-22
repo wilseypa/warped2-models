@@ -1,5 +1,6 @@
 const path = require('path');
 const fs = require('fs');
+const https = require('https')
 
 const directoryPath = path.join(__dirname, 'visualize', 'mongodb',  'Pandemic_Data');
 const Datastore = require('nedb');
@@ -57,25 +58,48 @@ app.get('/isDevEnv', (request, response) => {
 });
 
 app.get('/callGetstatus', (request, res) => {
-	// main logic
-    aja()
-        .method('GET')
-        // .header('Content-Type', 'application/json')
-        // .data({'data':JSON.stringify(postdata)})
-        .url('localhost:8082/getstatus')
-        .timeout(2500)
-        .on('200', function (response) {
-            if ("statusmsg" in response) {
-				// document.getElementById("statusmsg").innerText = response["statusmsg"]
-				console.log(response);
-                if (response.statusmsg == "job finished") {
-					// removeLoadingBar();
-					res.status(200).send({statusmsg: response.statusmsg});
-                }
-            }
-        })
-        .go();
-	// response.status(200).send({path: envPath});
+	// // main logic
+    // aja()
+    //     .method('GET')
+    //     // .header('Content-Type', 'application/json')
+    //     // .data({'data':JSON.stringify(postdata)})
+    //     .url('localhost:8082/getstatus')
+    //     .timeout(2500)
+    //     .on('200', function (response) {
+    //         if ("statusmsg" in response) {
+	// 			// document.getElementById("statusmsg").innerText = response["statusmsg"]
+	// 			console.log(response);
+    //             if (response.statusmsg == "job finished") {
+	// 				// removeLoadingBar();
+	// 				res.status(200).send({statusmsg: response.statusmsg});
+    //             }
+    //         }
+    //     })
+    //     .go();
+	// // response.status(200).send({path: envPath});
+	const options = {
+		hostname: 'localhost',
+		port: 8082,
+		path: '/getstatus',
+		method: 'GET'
+	  }
+
+
+	const req = https.request(options, res => {
+		console.log(`statusCode: ${res.statusCode}`)
+	
+		res.on('data', d => {
+		// process.stdout.write(d)
+		console.log(d);
+		res.status(200).send({statusmsg: d});
+		})
+	})
+	
+	req.on('error', error => {
+		console.error(error)
+	})
+	
+	req.end()
 });
 
 app.get('/send_data', (request, response) => {
