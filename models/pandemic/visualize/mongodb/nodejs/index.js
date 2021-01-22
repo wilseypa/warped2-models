@@ -10,7 +10,7 @@ const app = express();
 app.listen(3000, () => console.log('listening at port 3000'));
 app.use(express.static('../../../visualize'));
 
-app.use(express.json({}));
+app.use(express.json({}));	//NEEDED FOR req.body TO PRINT
 
 const database = new Datastore('database.db');
 database.loadDatabase();
@@ -61,14 +61,16 @@ app.get('/isDevEnv', (request, response) => {
 
 app.post('/callSimulate', (req, res) => {
   console.log(req.body);
-//   request.post({
-// 	headers: {'content-type' : 'application/x-www-form-urlencoded'},
-// 	url:     'http://localhost:8082/simulate',
-// 	body:    req.body
-//   }, function(error, response, bodyRes){
-// 	console.log(bodyRes);
-// 	res.status(200).send({response: bodyRes});
-//   });
+  request.post({
+	headers: {'content-type' : 'application/x-www-form-urlencoded'},
+	url:     'http://localhost:8082/simulate',
+	body:    req.body
+  }, function(error, response, bodyRes){
+	if (error) { return console.log(error); }
+	console.log(response)
+	console.log(bodyRes);
+	res.status(200).send({response: bodyRes});
+  });
 })
 
 app.get('/callGetstatus', (req, res) => {
