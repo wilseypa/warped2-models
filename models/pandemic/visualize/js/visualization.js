@@ -41,7 +41,7 @@ async function callSimulate(jsonObj) {
 async function callGetstatus() {
     const response = await fetch('/callGetstatus');
     const data = await response.json();
-    console.log(data);
+    //console.log(data);
     return data;
 }
 
@@ -250,7 +250,9 @@ var getStatus = function () {
     //         }
     //     })
     //     .go();
-    callGetstatus();
+    callGetstatus().then(function(data) {
+        console.log(data);
+    });
 }
 
 // Submitting Login Form

@@ -58,28 +58,9 @@ app.get('/isDevEnv', (request, response) => {
 });
 
 app.get('/callGetstatus', (req, res) => {
-	// // main logic
-    // aja()
-    //     .method('GET')
-    //     // .header('Content-Type', 'application/json')
-    //     // .data({'data':JSON.stringify(postdata)})
-    //     .url('localhost:8082/getstatus')
-    //     .timeout(2500)
-    //     .on('200', function (response) {
-    //         if ("statusmsg" in response) {
-	// 			// document.getElementById("statusmsg").innerText = response["statusmsg"]
-	// 			console.log(response);
-    //             if (response.statusmsg == "job finished") {
-	// 				// removeLoadingBar();
-	// 				res.status(200).send({statusmsg: response.statusmsg});
-    //             }
-    //         }
-    //     })
-    //     .go();
-	// // response.status(200).send({path: envPath});
 	request('http://localhost:8082/getstatus', { json: true }, (error, response, body) => {
-		if (error) { return console.log(error); }//Error: Invalid protocol: localhost
-		console.log(body);
+		if (error) { return console.log(error); }
+		//console.log(body);
 		res.status(200).send({statusmsg: body});
 	});
 });
