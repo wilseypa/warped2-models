@@ -57,7 +57,7 @@ app.get('/isDevEnv', (request, response) => {
 	response.status(200).send({path: envPath});
 });
 
-app.get('/callGetstatus', (req, response) => {
+app.get('/callGetstatus', (req, res) => {
 	// // main logic
     // aja()
     //     .method('GET')
@@ -77,11 +77,11 @@ app.get('/callGetstatus', (req, response) => {
     //     })
     //     .go();
 	// // response.status(200).send({path: envPath});
-	request('http://ec2-3-22-85-65.us-east-2.compute.amazonaws.com:7096/getstatus', { json: true }, (err, res, body) => {
-		if (err) { return console.log(err); }//Error: Invalid protocol: localhost
+	request('http://localhost:8082/getstatus', { json: true }, (error, response, body) => {
+		if (error) { return console.log(error); }//Error: Invalid protocol: localhost
 		console.log(body.url);
 		console.log(body.explanation);
-		response.status(200).send({statusmsg: body});
+		res.status(200).send({statusmsg: body});
 	});
 });
 
