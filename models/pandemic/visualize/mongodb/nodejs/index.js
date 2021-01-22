@@ -66,14 +66,29 @@ app.post('/callSimulate', (req, res) => {
 
 	const options = {
 		url: 'http://localhost:8082/simulate',
-		form: { body: req.body }
+		form: { start_date:{value:"07-22-2020"},
+				runtime_days:{value:"1"},
+				transmissibility:{ifchecked:true,value:"2.2"},
+				exposed_confirmed_ratio:{ifchecked:false,value:"0.00"},
+				mean_incubation_duration_in_days:{ifchecked:false,value:"2.2"},
+				mean_infection_duration_in_days:{ifchecked:false,value:"2.3"},
+				mortality_ratio:{ifchecked:false,value:"0.05"},
+				update_trig_interval_in_hrs:{ifchecked:false,value:"24"},
+				graph_type:{ifchecked:false,value:"Watts-Strogatz"},
+				graph_params:{ifchecked:false,K_val:"8",beta_val:"0.1"},
+				diffusion_trig_interval_in_hrs:{ifchecked:false,value:"48"},
+				avg_transport_speed:{ifchecked:false,value:"100"},
+				max_diffusion_cnt:{ifchecked:false,value:"10"} 
+			}
 	};
 
 	request.post(options, (err, res, body) => {
 		if (err) {
+			res.status(400).send({Error: err});
 			return console.log(err);
 		}
 		console.log(body);
+		res.status(200).send({response: body});
 	});
 })
 
