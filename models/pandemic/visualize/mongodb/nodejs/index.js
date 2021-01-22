@@ -58,15 +58,15 @@ app.get('/isDevEnv', (request, response) => {
 });
 
 app.post('/callSimulate', (req, res) => {
-  console.log(req.body)
-  request.post({
-	headers: {'content-type' : 'application/x-www-form-urlencoded'},
-	url:     'http://localhost:8082/simulate',
-	body:    req.body
-  }, function(error, response, bodyRes){
-	console.log(bodyRes);
-	res.status(200).send({response: bodyRes});
-  });
+  console.log(req);
+//   request.post({
+// 	headers: {'content-type' : 'application/x-www-form-urlencoded'},
+// 	url:     'http://localhost:8082/simulate',
+// 	body:    req.body
+//   }, function(error, response, bodyRes){
+// 	console.log(bodyRes);
+// 	res.status(200).send({response: bodyRes});
+//   });
 })
 
 app.get('/callGetstatus', (req, res) => {
