@@ -57,7 +57,7 @@ app.get('/isDevEnv', (request, response) => {
 	response.status(200).send({path: envPath});
 });
 
-app.get('/callGetstatus', (req, res) => {
+app.get('/callGetstatus', (req, response) => {
 	// // main logic
     // aja()
     //     .method('GET')
@@ -81,7 +81,7 @@ app.get('/callGetstatus', (req, res) => {
 		if (err) { return console.log(err); }//Error: Invalid protocol: localhost
 		console.log(body.url);
 		console.log(body.explanation);
-		res.status(200).send({statusmsg: body});
+		response.status(200).send({statusmsg: body});
 	});
 });
 
