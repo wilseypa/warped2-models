@@ -12,5 +12,11 @@
     "model"
   ],
   "author": "Jay Hayes",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.17.1",
+    "nedb": "^1.8.0",
+    "querystring": "^0.2.0",
+    "request": "^2.88.2"
+  }
 }

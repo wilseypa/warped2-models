@@ -228,7 +228,7 @@ function createLoadingBar() {
 }
 function removeLoadingBar() {
     document.getElementById("loadingBarHandle").remove();
-    showAnimation('postSimulationContent', "0.35", "0.35");
+    showAnimation('postSimulationContent', "0.15", "0.15");
 }
 
 function handleDefaultConfigValue(inputId) {
@@ -273,8 +273,8 @@ d3.select("#submitLogin").on("click", function() {
     if(isDevEnv) {
         removeRequiredWarning("requiredWarning");
 
-        hideAnimation('loginDiv', "0.35");
-        showAnimation('passwordProtected', "0.35", "0.35");
+        hideAnimation('loginDiv', "0.15");
+        showAnimation('passwordProtected', "0.15", "0.15");
 
         pageState = "config";
         setTimeout(function(){ document.getElementById('startdate').focus(); }, 500);   // need to wait until animation is complete for keyfocus
@@ -292,8 +292,8 @@ d3.select("#submitLogin").on("click", function() {
             if(response.response == "success") {
                 removeRequiredWarning("requiredWarning");
 
-                hideAnimation('loginDiv', "0.35");
-                showAnimation('passwordProtected', "0.35", "0.35");
+                hideAnimation('loginDiv', "0.15");
+                showAnimation('passwordProtected', "0.15", "0.15");
 
                 pageState = "config";
                 setTimeout(function(){ document.getElementById('startdate').focus(); }, 500);   // need to wait until animation is complete for keyfocus
@@ -308,9 +308,9 @@ d3.select("#submitLogin").on("click", function() {
 // Submitting ConfigAPI Form
 d3.select("#submitConfigApi").on("click", function() {
     if (document.getElementById('postSimulationContent').style.display != "none") {
-        hideAnimation("postSimulationContent", "0.35");
+        hideAnimation("postSimulationContent", "0.15");
     }
-    hideAnimation("configApi", "0.35");
+    hideAnimation("configApi", "0.15");
 
     document.getElementById('startDate').value = document.getElementById('startdate').value;
 
@@ -420,7 +420,7 @@ function waitForSimulationData() {
 // getStatus();
 
 d3.select("#editConfig").on("click", function() {
-    showAnimation('configApi', "0.50", "0.00");
+    showAnimation('configApi', "0.15", "0.00");
     pageState = "editingConfig";
 });
 
