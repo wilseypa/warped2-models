@@ -7,6 +7,14 @@
   border-radius: 2px;
   background-color: #daf0ff;
 }  */
+input, select {
+  box-shadow: inset 3px 3px 3px 0 rgba(0, 0, 0, 0.2),
+  inset -6px -6px 10px 0 rgba(255, 255, 255, 0.5);
+  border: 1px solid grey;
+  border-radius: 5px;
+  padding-top: 2px;
+  padding-left: 5px;
+}
 /* .basicBorder {
   width: fit-content;
   /* background-color: #daf0ff; *
@@ -17,6 +25,7 @@
 .basicBorder {
   align-items: center;
   background-color: rgb(233, 233, 233);
+  /* background: linear-gradient(-45deg, rgba(0,0,0,0.22), rgba(255,255,255,0.25)); */
   box-shadow: 
     12px 12px 16px 0 rgba(0, 0, 0, 0.25),
     -8px -8px 12px 0 rgba(255, 255, 255, 0.3);
@@ -53,7 +62,7 @@
 #mapStatCheckboxes {
   text-align: center;
   display: none;
-  padding: 2%;
+  padding: 1%;
 }
 
 #minMaxMapControls {
@@ -82,8 +91,12 @@
 svg {
     /* background: #3987c9; */
     background: radial-gradient(#3987c9 0%, #9cd9ff 70%);
-    box-shadow: 0px 0px 1px 1px #9cd9ff;
+    /* box-shadow: 0px 0px 1px 1px #9cd9ff; */
     border-radius: 2px;
+    box-shadow: 
+      0px 0px 1px 1px #9cd9ff,
+      12px 12px 16px 0 rgba(0, 0, 0, 0.25),
+      -8px -8px 12px 0 rgba(255, 255, 255, 0.3);
 }
 .tooltiptext {
     display: none;
