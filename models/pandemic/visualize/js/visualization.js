@@ -597,7 +597,7 @@ d3.select("#minMaxMapControls").on("click", function() {
     var editConfigHtml = `<input type="button" id="editConfig" value="Edit Config">`;
     var labelHtml = `<h3 id="tempLabel" style="margin: 0px;">Map Controls</h3>`;
     if(document.getElementById('minMaxControlsContent').style.display == "none") {
-        maximizeMapControlContent("minMaxControlsContent", "0.35");
+        maximizeMapControlContent("minMaxControlsContent", "0.15");
         document.getElementById('minMaxMapControls').innerHTML = "&minus;";
         // fadeOutDisplay("tempLabel", "0.175");
         // document.getElementById('editConfigBtnContainer').innerHTML = editConfigHtml;
@@ -605,7 +605,7 @@ d3.select("#minMaxMapControls").on("click", function() {
         
 
     } else {
-        minimizeMapControlsContent("minMaxControlsContent", "0.35");
+        minimizeMapControlsContent("minMaxControlsContent", "0.15");
         document.getElementById('minMaxMapControls').innerHTML = "&plus;";
         // fadeOutDisplay("editConfig", "0.175");
         // document.getElementById('editConfigBtnContainer').innerHTML = labelHtml;

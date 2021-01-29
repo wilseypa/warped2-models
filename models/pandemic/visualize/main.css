@@ -1,5 +1,5 @@
 /* body {
-    /* font-family: Arial, Helvetica, sans-serif; *
+    font-family: Arial, Helvetica, sans-serif;
     background-color: #9cd9ff;
 } */
 /* input, select {
@@ -7,12 +7,25 @@
   border-radius: 2px;
   background-color: #daf0ff;
 }  */
-.basicBorder {
+/* .basicBorder {
   width: fit-content;
-  /* background-color: #daf0ff; */
+  /* background-color: #daf0ff; *
   border: 1px solid black;
   border-radius: 3px;
   box-shadow: 0px 0px 5px 1px rgb(150, 150, 150);
+} */
+.basicBorder {
+  align-items: center;
+  background-color: rgb(233, 233, 233);
+  box-shadow: 
+    12px 12px 16px 0 rgba(0, 0, 0, 0.25),
+    -8px -8px 12px 0 rgba(255, 255, 255, 0.3);
+  border-radius: 50px;
+  display: flex;
+  /* height: 200px; */
+  justify-content: center;
+  /* margin-right: 4rem; */
+  /* width: 200px; */
 }
 
 .center {
@@ -46,7 +59,8 @@
 #minMaxMapControls {
   float: right;
   position: relative;
-  top: -10px;
+  top: 1px;
+  right: 12px;
   margin: 0px;
   cursor: pointer;
 }
