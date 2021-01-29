@@ -588,6 +588,7 @@ d3.select("#plotButton").on("click", function() {
         document.getElementById('map').style.display = "block";
         document.getElementById('legend').style.display = "block";
         d3.select("#plotButton").attr("disabled", true);
+        // document.body.style.backgroundColor = "lightskyblue";
     }, 50);
 });
 

@@ -1,9 +1,15 @@
-/*body {
-    font-family: Arial, Helvetica, sans-serif;
-}*/
-
+/* body {
+    /* font-family: Arial, Helvetica, sans-serif; *
+    background-color: #9cd9ff;
+} */
+/* input, select {
+  border: 1px solid black;
+  border-radius: 2px;
+  background-color: #daf0ff;
+}  */
 .basicBorder {
   width: fit-content;
+  /* background-color: #daf0ff; */
   border: 1px solid black;
   border-radius: 3px;
   box-shadow: 0px 0px 5px 1px rgb(150, 150, 150);
@@ -31,6 +37,12 @@
   margin: 5px;
 }
 
+#mapStatCheckboxes {
+  text-align: center;
+  display: none;
+  padding: 2%;
+}
+
 #minMaxMapControls {
   float: right;
   position: relative;
@@ -54,7 +66,10 @@
 }
 
 svg {
-    background: #3987c9;
+    /* background: #3987c9; */
+    background: radial-gradient(#3987c9 0%, #9cd9ff 70%);
+    box-shadow: 0px 0px 1px 1px #9cd9ff;
+    border-radius: 2px;
 }
 .tooltiptext {
     display: none;
@@ -109,6 +124,7 @@ svg {
     padding: 5px;
     border-style: solid;
     border-width: 1px;
+    border-radius: 2px;
 }
 .legend-fill {
     height: 10px;
@@ -125,7 +141,8 @@ svg {
     display: inline-block;
     width: 895px;
     color: white;
-    text-align: right;
+    font-size: x-large;
+    text-align: center;
     padding-right: 5px;
     padding-top: 5px;
 }
