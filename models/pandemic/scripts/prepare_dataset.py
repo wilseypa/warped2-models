@@ -268,8 +268,8 @@ def get_true_us_states_active_count(date_str):
     """
     us_states_metrics_df = pd.read_csv(DEFAULT_JHU_CSSE_PATH
                                        + "/csse_covid_19_data/csse_covid_19_daily_reports_us/"
-                                       + date_str + ".csv", usecols=['Province_State', 'Active'],
-                                       dtype={'Active': int})
+                                       + date_str + ".csv", usecols=['Province_State', 'Active'])
+    us_states_metrics_df['Active'].fillna(value=0, inplace=True, downcast='infer')
 
     dict_state_active = {}
 
@@ -299,7 +299,7 @@ def fix_metrics_values(jhu_csse_path, main_df, curr_date_str):
     curr_date = datetime.strptime(curr_date_str, "%m-%d-%Y")
 
     prev_date_filepath = get_jhu_csse_data_filepath(jhu_csse_path,
-                                                    (curr_date - timedelta(days=14)).strftime("%m-%d-%Y"))
+                                                    (curr_date - timedelta(days=30)).strftime("%m-%d-%Y"))
 
     # print("prev_date_filepath", prev_date_filepath)
     # print("main dtypes", main_df.dtypes)
@@ -362,12 +362,12 @@ def fix_metrics_values(jhu_csse_path, main_df, curr_date_str):
     
     dict_states_new_total_active = {}
     for fips in dict_fips_newActive:
-        print(fips, dict_fips_newActive[fips])
+        # print(fips, dict_fips_newActive[fips])
         # sys.exit(1)
         state_name = dict_fips_newActive[fips][1]
         fips_new_active = dict_fips_newActive[fips][0]
 
-        print(state_name, fips_new_active)
+        # print(state_name, fips_new_active)
         # sys.exit(1)
 
         if state_name not in dict_states_new_total_active.keys():
@@ -382,6 +382,8 @@ def fix_metrics_values(jhu_csse_path, main_df, curr_date_str):
             dict_ratio_state_active[state] = 1
         else:
             dict_ratio_state_active[state] = total_us_states_active[state] / dict_states_new_total_active[state]
+
+    # print("dict_ratio_state_active", dict_ratio_state_active)
 
     # population_data_df = pd.read_csv(DEFAULT_POPULATION_FILEPATH, dtype={'FIPS': object}, skipinitialspace=True)
 
