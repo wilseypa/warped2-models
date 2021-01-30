@@ -49,7 +49,7 @@ std::vector<std::shared_ptr<warped::Event> > Location::receiveEvent(const warped
                  b. We won't consider Recovered in the diffusion mechanism since their
                     diffusion has no impact if we assume they have acquired immunity.
                     If not, the diffusion mechanism needs to be updated.
-         */
+        */
         auto diffusion_cnt = diffusionCount();
         while (diffusion_cnt--) {
             if (state_->population_[infection_state_t::SUSCEPTIBLE] == 0) break;
@@ -63,7 +63,18 @@ std::vector<std::shared_ptr<warped::Event> > Location::receiveEvent(const warped
             timestamp + CONFIG->diffusion_trig_interval_in_hrs_, event_type_t::DIFFUSION_TIMER});
 
     } else if (pandemic_event.type_ == event_type_t::UPDATE_TIMER) { /* Update Timer event */
-        reaction();
+        // commenting out for new test
+
+        // std::cout << "::::::UPDATE_TIMER location_name_ " << location_name_ << " timestamp "
+        //           << timestamp << std::endl;
+        // // BUG?? if CONFIG->update_trig_interval_in_hrs_ isn;t multiple of 24
+        // if (timestamp % (10 * 24) == 0) {
+        //     if (dynamic_transmissibility_ > 0.2) {
+        //         dynamic_transmissibility_ /= 2;
+        //     }
+        // }
+
+        reaction(timestamp);
         events.emplace_back(new PandemicEvent {location_name_,
             timestamp + CONFIG->update_trig_interval_in_hrs_, event_type_t::UPDATE_TIMER});
 

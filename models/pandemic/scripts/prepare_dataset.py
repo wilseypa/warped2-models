@@ -13,7 +13,7 @@ try:
     import pathlib
     from concurrent_log_handler import ConcurrentRotatingFileHandler
     from math import radians, cos, sin, asin, sqrt
-    from datetime import datetime
+    from datetime import datetime, timedelta
     import subprocess
 except Exception as e:
     print(str(type(e).__name__) + ": " + str(e), file=sys.stderr)
@@ -93,6 +93,11 @@ def parse_cmdargs(population_data, graph_input_param_string):
     parser.add_argument('--population_data', help='filepath for Population data csv',
                         default=DEFAULT_POPULATION_FILEPATH,
                         required=False)
+
+    # parser.add_argument('--exposed_confirmed_ratio', help='ratio of exposed to confirmed',
+    #                     type=float,
+    #                     default=2.5,
+    #                     required=False)
 
     parser.add_argument('--graph_type', help="'ws' for Watts-Strogatz, and 'ba' for Barabasi-Albert",
                         choices=['ws', 'ba'],
@@ -192,7 +197,7 @@ def create_merged_DF_jhu_population(covid_csse_data_filepath, pop_data_filepath)
                                                    + csse_data_daily_report_df.Province_State.str.lower()
 
     # now, create DF from population data, add 'Combined_Key_US' column
-    population_data_df = pd.read_csv(pop_data_filepath, skipinitialspace=True)
+    population_data_df = pd.read_csv(pop_data_filepath, dtype={'FIPS': object}, skipinitialspace=True)
     population_data_df['Combined_Key_US'] = population_data_df.County.str.lower() + "," + \
                                             population_data_df.State.str.lower()
 
@@ -202,6 +207,7 @@ def create_merged_DF_jhu_population(covid_csse_data_filepath, pop_data_filepath)
             csse_data_daily_report_df.shape[1],
             population_data_df.shape[0],
             population_data_df.shape[1]))
+
     # now, join
     csse_data_daily_report_merged_df = pd.merge(population_data_df,
                                                 csse_data_daily_report_df[['Country_Region',
@@ -257,9 +263,192 @@ def get_jhu_csse_data_filepath(jhu_csse_path, dateStr):
 
     return filepath
 
+def get_true_us_states_active_count(date_str):
+    """
+    """
+    us_states_metrics_df = pd.read_csv(DEFAULT_JHU_CSSE_PATH
+                                       + "/csse_covid_19_data/csse_covid_19_daily_reports_us/"
+                                       + date_str + ".csv", usecols=['Province_State', 'Active'])
+    us_states_metrics_df['Active'].fillna(value=0, inplace=True, downcast='infer')
+
+    dict_state_active = {}
+
+    for index, row in us_states_metrics_df.iterrows():
+        dict_state_active[row['Province_State']] = row['Active']
+
+    return dict_state_active
+
+    
+def get_true_us_active_count(date_str):
+    """
+
+    :param date_val:
+    :return:
+    """
+    us_states_metrics_df = pd.read_csv(DEFAULT_JHU_CSSE_PATH
+                                       + "/csse_covid_19_data/csse_covid_19_daily_reports_us/"
+                                       + date_str + ".csv", usecols=[ 'Active'],
+                                       dtype={'Active': int})
+
+
+def fix_metrics_values(jhu_csse_path, main_df, curr_date_str):
+    """
+    """
+    # print("h1\n", main_df.dtypes)
+
+    curr_date = datetime.strptime(curr_date_str, "%m-%d-%Y")
+
+    prev_date_filepath = get_jhu_csse_data_filepath(jhu_csse_path,
+                                                    (curr_date - timedelta(days=30)).strftime("%m-%d-%Y"))
+
+    # print("prev_date_filepath", prev_date_filepath)
+    # print("main dtypes", main_df.dtypes)
+
+    prev_date_csse_df = pd.read_csv(prev_date_filepath, skipinitialspace=True, dtype={'FIPS': 'object'})  # ',
+    # 'Active':'object'})
+    if 'FIPS' not in prev_date_csse_df.columns:
+        return
+
+    # total_us_active = get_true_us_active_count(curr_date_str)
+
+    total_us_states_active = get_true_us_states_active_count(curr_date_str)
+    
+    # print(prev_date_csse_df.iloc[2000:2010])
+    # sys.exit(1)
+
+    # print("prev_date_csse_df dtypes\n", prev_date_csse_df.dtypes)
+    # print("prev_date_csse_df[FIPS]", list(prev_date_csse_df['FIPS']))
+    # print(prev_date_csse_df.loc[prev_date_csse_df.FIPS == '32003'])
+    # sys.exit(1)
+
+    dict_fips_newActive = {}
+
+    for index, row in main_df.iterrows():
+
+        fips = row['FIPS']
+
+        # print("type", type(fips))
+        # print("fips", fips)
+
+        # sys.exit(1)
+
+        # if not fips:
+        #     print("null true")
+        #     sys.exit(1)
+
+        main_active_val = int(main_df[main_df['FIPS'] == fips]['Active'])
+
+        if fips not in prev_date_csse_df['FIPS'].values:
+            # print("h3")
+            dict_fips_newActive[fips] = (main_active_val, row['State'])
+            continue
+
+        prev_active_val = int((prev_date_csse_df[prev_date_csse_df['FIPS'] == fips]['Active']).values.tolist()[0])
+
+        new_active_val = main_active_val - prev_active_val
+
+        if new_active_val < 0:
+            new_active_val = 0
+
+        # add state info, in tuple
+        dict_fips_newActive[fips] = (new_active_val, row['State'])
+
+    # calculate ratio
+    # total_us_new_active = sum(dict_fips_newActive.values())
+    # ratio_actual_calculated_active = total_us_active / total_us_new_active
+
+    # calculate ratio_active for each state
+
+    
+    dict_states_new_total_active = {}
+    for fips in dict_fips_newActive:
+        # print(fips, dict_fips_newActive[fips])
+        # sys.exit(1)
+        state_name = dict_fips_newActive[fips][1]
+        fips_new_active = dict_fips_newActive[fips][0]
+
+        # print(state_name, fips_new_active)
+        # sys.exit(1)
+
+        if state_name not in dict_states_new_total_active.keys():
+            dict_states_new_total_active[state_name] = 0
+        else:
+            dict_states_new_total_active[state_name] += fips_new_active
+
+    # calculate ratios
+    dict_ratio_state_active = {}
+    for state in dict_states_new_total_active:
+        if dict_states_new_total_active[state] == 0:
+            dict_ratio_state_active[state] = 1
+        else:
+            dict_ratio_state_active[state] = total_us_states_active[state] / dict_states_new_total_active[state]
+
+    # print("dict_ratio_state_active", dict_ratio_state_active)
+
+    # population_data_df = pd.read_csv(DEFAULT_POPULATION_FILEPATH, dtype={'FIPS': object}, skipinitialspace=True)
+
+    # now, run loop to fix main_df
+    for index, row in main_df.iterrows():
+
+        fips = row['FIPS']
+        state = row['State']
+
+        # new_scaled_active = int(dict_fips_newActive[fips] * ratio_actual_calculated_active)
+        new_scaled_active = int(dict_fips_newActive[fips][0] * dict_ratio_state_active[state])
+
+        if new_scaled_active < 0:
+            new_scaled_active = 0
+
+        # add population check
+        # REDUNDANT??? if fips not in population_data_df['FIPS'].values():
+        # fips_population = int(population_data_df[population_data_df['FIPS'] ==
+        #                                          "6037"]['Population'].values.tolist()[0])
+
+        # TODO change to .tolist()
+        main_confirmed_val = int(main_df[main_df['FIPS'] == fips]['Confirmed'])
+        main_deaths_val = int(main_df[main_df['FIPS'] == fips]['Deaths'])
+
+
+        # if new_scaled_active >= fips_population:
+        #     new_scaled_active = fips_population
+
+        # csv recovered is always zero, so no need to factor that
+        if new_scaled_active >= main_confirmed_val - main_deaths_val:
+            new_scaled_active = main_confirmed_val - main_deaths_val
+
+        # main_recovered_val = int(main_df[main_df['FIPS'] == fips]['Recovered'])
+        # print("prev_active_val", prev_active_val, main_active_val)
+
+        # print(main_df[main_df['FIPS'] == fips])
+        # print("h2")
+
+        new_recovered_val = main_confirmed_val - new_scaled_active - main_deaths_val
+
+        if new_recovered_val < 0: # redundant?
+            new_recovered_val = 0
+
+        # TODO problem, eg.:
+        # ["41059", "Umatilla", "Oregon", "US", 45.59073056, -118.7353826, 533, 4, 0, 533, 77950],
+
+        # now, update
+        main_df.loc[(main_df['FIPS'] == fips), 'Active'] = new_scaled_active
+        main_df.loc[(main_df['FIPS'] == fips), 'Recovered'] = new_recovered_val
+
+    print("total 'Confirmed'", main_df['Confirmed'].sum())
+    print("total 'Active'", main_df['Active'].sum())
+    print("total 'Recovered'", main_df['Recovered'].sum())
+
+        # print(main_df.loc[index])
+
+        # print(main_df[main_df['FIPS'] == fips])
+        # sys.exit(1)
+
+        # main_df[main_df['FIPS'] == fips]['Active'] = main_active_val - prev_active_val
+
 
 def prepare_data(jhu_csse_path=DEFAULT_JHU_CSSE_PATH, covid_csse_data_date=None,
                  pop_data_filepath=DEFAULT_POPULATION_FILEPATH,
+                 # exposed_confirmed_ratio=2.5,
                  graph_type=DEFAULT_GRAPH_TYPE,
                  graph_input_param_string=DEFAULT_GRAPH_INPUT_PARAM_STRING,
                  logger=None):
@@ -275,26 +464,29 @@ def prepare_data(jhu_csse_path=DEFAULT_JHU_CSSE_PATH, covid_csse_data_date=None,
         # parse command-line arguments
         # global logger
 
-        if not (jhu_csse_path and covid_csse_data_date and pop_data_filepath and graph_type
-                and graph_input_param_string):
+        # TODO add comment
+        if not covid_csse_data_date:
             # print("h1", covid_csse_data_date, pop_data_filepath, graph_type, graph_input_param_string)
             # print("h2", "calling cmdargs")
-            (jhu_csse_path, covid_csse_data_date, pop_data_filepath, graph_type, graph_input_param_string) = \
-                parse_cmdargs(pop_data_filepath, graph_input_param_string)
+            (jhu_csse_path, covid_csse_data_date, pop_data_filepath, graph_type,
+             graph_input_param_string) = parse_cmdargs(pop_data_filepath, graph_input_param_string)
 
         # pathlib.Path(SCRIPTS_LOGS_DIR_PATH).mkdir(parents=True, exist_ok=True)
         setup_logging()
 
-        # hard-coded values
-        transmissibility, mean_incubation_duration_in_days, mean_infection_duration_in_days, \
-        mortality_ratio, update_trig_interval_in_hrs, diffusion_trig_interval_in_hrs, \
-        avg_transport_speed, max_diffusion_cnt = 2.2, 2.2, 2.3, 0.05, 24, 48, 100, 10
+        # Default values
+        (transmissibility, exposed_confirmed_ratio, mean_incubation_duration_in_days,
+         mean_infection_duration_in_days,
+         mortality_ratio,
+         update_trig_interval_in_hrs,
+         diffusion_trig_interval_in_hrs,
+         avg_transport_speed,
+         max_diffusion_cnt) = 2.2, 2.5, 2.2, 2.3, 0.05, 24, 48, 100, 10
 
         covid_csse_data_filepath = get_jhu_csse_data_filepath(jhu_csse_path, covid_csse_data_date)
 
+        # get csv`filename and set output json full filepath
         out_fname = os.path.splitext(os.path.basename(covid_csse_data_filepath))[0] + ".formatted-JHU-data.json"
-
-        # set filepath
         out_filepath = os.getcwd() + "/../data/" + out_fname
 
         if os.path.isfile(out_filepath):
@@ -304,6 +496,7 @@ def prepare_data(jhu_csse_path=DEFAULT_JHU_CSSE_PATH, covid_csse_data_date=None,
 
         disease_model = {
             "transmissibility": transmissibility,
+            "exposed_confirmed_ratio": exposed_confirmed_ratio,
             "mean_incubation_duration_in_days": mean_incubation_duration_in_days,
             "mean_infection_duration_in_days": mean_infection_duration_in_days,
             "mortality_ratio": mortality_ratio,
@@ -321,6 +514,18 @@ def prepare_data(jhu_csse_path=DEFAULT_JHU_CSSE_PATH, covid_csse_data_date=None,
         # create dataframe
         csse_data_daily_report_merged_sorted_df = create_merged_DF_jhu_population(covid_csse_data_filepath,
                                                                                   pop_data_filepath)
+        #
+        # covid_csse_data_prev_date = (datetime.strptime(covid_csse_data_date, "%m-%d-%Y") -
+        #                              timedelta(days=14)).strftime("%m-%d-%Y")
+        #
+        # covid_csse_prev_data_filepath = get_jhu_csse_data_filepath(jhu_csse_path, covid_csse_data_prev_date)
+        #
+        # csse_data_daily_report_merged_sorted_prev_df = \
+        #     create_merged_DF_jhu_population(covid_csse_prev_data_filepath,
+        #                                     pop_data_filepath)
+
+        fix_metrics_values(jhu_csse_path, csse_data_daily_report_merged_sorted_df, covid_csse_data_date)
+
         tweakable_params = ["disease_model", "diffusion_model"]
 
         final_dict = {

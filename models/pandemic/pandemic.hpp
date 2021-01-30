@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <random>
 #include <tuple>
+#include <cmath>
 #include <algorithm>
 #include "memory.hpp"
 #include "warped.hpp"
@@ -107,6 +108,7 @@ public:
     }
 
     double transmissibility_                = 2.2;          /* equals beta     */
+    double exposed_confirmed_ratio_         = 2.5;
     double mean_incubation_duration_        = 5.2 * TIME_UNITS_IN_DAY;    /* equals 1/sigma  */
     double mean_infection_duration_         = 2.3 * TIME_UNITS_IN_DAY;    /* equals 1/gamma  */
 
@@ -115,10 +117,10 @@ public:
     /* NOTE: An arbitrary factor to account for discrepancy between actual
              and reported confirmed cases.
        Source: https://fortune.com/2020/06/25/us-coronavirus-cases-how-many-\
-               total-20-million-asymptomatic-confirmed-tests-covid-19-case-count-cdc-estimate/
-     */
-    double exposed_confirmed_ratio_         = 10.0;
+                total-20-million-asymptomatic-confirmed-tests-covid-19-case-count-cdc-estimate/
 
+                double exposed_confirmed_ratio_         = 10.0; */
+    
     unsigned int update_trig_interval_in_hrs_;
     unsigned int diffusion_trig_interval_in_hrs_;
     unsigned int avg_transport_speed_;
@@ -184,7 +186,9 @@ public:
               number of infected who are still alive and not recovered.
      */
     Location(   const std::string& name,
-                unsigned long num_confirmed,
+                // double transmissibility_,
+                // unsigned long num_confirmed,
+                unsigned long num_active,
                 unsigned long num_deaths,
                 unsigned long num_recovered,
                 unsigned long population_size,
@@ -193,12 +197,16 @@ public:
             state_(),
             location_name_(name),
             rng_(new std::default_random_engine(index)) {
-
+        // dynamic_transmissibility_ = transmissibility_;
         state_ = std::make_shared<LocationState>();
-        state_->population_[infection_state_t::EXPOSED] =
-            std::min<unsigned long>(CONFIG->exposed_confirmed_ratio_ * (double)num_confirmed, population_size/2);
+        // state_->population_[infection_state_t::EXPOSED] =
+        //     std::min<unsigned long>(CONFIG->exposed_confirmed_ratio_ * (double)num_confirmed, population_size/2);
 
-        state_->population_[infection_state_t::INFECTIOUS]  = num_confirmed;
+        state_->population_[infection_state_t::EXPOSED] =
+            std::min<unsigned long>(CONFIG->exposed_confirmed_ratio_ * (double)num_active, population_size/2);
+        
+        // state_->population_[infection_state_t::INFECTIOUS]  = num_confirmed;
+        state_->population_[infection_state_t::INFECTIOUS]  = num_active;
         state_->population_[infection_state_t::RECOVERED]   = num_recovered;
         state_->population_[infection_state_t::DECEASED]    = num_deaths;
         state_->population_[infection_state_t::SUSCEPTIBLE] = population_size
@@ -232,7 +240,10 @@ public:
         return distribution(*rng_);
     }
 
-    void reaction() {
+    void reaction(unsigned int timestamp) {
+
+        timestamp += 0;
+
         auto N = 0U;
         for (auto i = 0; i < infection_state_t::DECEASED; i++) {
             N += state_->population_[i];
@@ -245,9 +256,18 @@ public:
          *  R' = gamma * I - mortality_ratio * R
          *  D' = mortality_ratio * R
          */
-        unsigned int delta_S = ( CONFIG->transmissibility_ *
+        // double exponent = (double) -1 * (48 * timestamp);
+        double exponent = (double) -1 * (timestamp / 70);
+
+        double dynamic_transmissibility_ = CONFIG->transmissibility_ * pow(2.71828, exponent);
+
+        // unsigned int delta_S = (int)( dynamic_transmissibility_ *
+        unsigned int delta_S = ( dynamic_transmissibility_ *
                             state_->population_[infection_state_t::SUSCEPTIBLE] *
                             state_->population_[infection_state_t::INFECTIOUS] ) / N;
+
+        // std::cout << "dynamic_transmissibility_[" << pow(2.71828, exponent) << "]\n"
+        //           << "delta_S " << delta_S << std::endl;
 
         state_->population_[infection_state_t::SUSCEPTIBLE] -= delta_S;
         state_->population_[infection_state_t::EXPOSED]     += delta_S;
@@ -255,6 +275,10 @@ public:
 
         unsigned int delta_E = state_->population_[infection_state_t::EXPOSED] /
                                                     CONFIG->mean_incubation_duration_;
+
+
+        // unsigned int delta_E = state_->population_[infection_state_t::EXPOSED] / pow(2.71828,
+        //                                                                             CONFIG->mean_incubation_duration_ * 24 / timestamp);
 
         state_->population_[infection_state_t::EXPOSED]     -= delta_E;
         state_->population_[infection_state_t::INFECTIOUS]  += delta_E;
@@ -290,6 +314,7 @@ protected:
     std::shared_ptr<LocationState> state_;
     std::string location_name_;
     std::shared_ptr<std::default_random_engine> rng_;
+    // double dynamic_transmissibility_;
 };
 
 class ConfigFileHandler {
@@ -308,6 +333,9 @@ public:
         jsoncons::ojson data = jsoncons::ojson::parse(is);
 
         CONFIG->transmissibility_ = data["disease_model"]["transmissibility"].as<double>();
+
+        // TODO rename this
+        CONFIG->exposed_confirmed_ratio_ = data["disease_model"]["exposed_confirmed_ratio"].as<double>();
 
         CONFIG->mean_incubation_duration_ =
             data["disease_model"]["mean_incubation_duration_in_days"].as<double>() * TIME_UNITS_IN_DAY;
@@ -342,10 +370,12 @@ public:
             double longitude         = location[loc_data_field_t::LONGITUDE].as<double>();
             unsigned long deaths     = location[loc_data_field_t::NUM_DEATHS].as<unsigned long>();
             unsigned long recovered  = location[loc_data_field_t::NUM_RECOVERED].as<unsigned long>();
-            unsigned long confirmed  = location[loc_data_field_t::NUM_ACTIVE].as<unsigned long>();
+            // unsigned long confirmed  = location[loc_data_field_t::NUM_ACTIVE].as<unsigned long>();
+            unsigned long active     = location[loc_data_field_t::NUM_ACTIVE].as<unsigned long>();
             unsigned long population = location[loc_data_field_t::POPULATION_SIZE].as<unsigned long>();
 
-            lps.emplace_back(Location(fips_code, confirmed, deaths, recovered, population, index++));
+            // lps.emplace_back(Location(fips_code, confirmed, deaths, recovered, population, index++));
+            lps.emplace_back(Location(fips_code, active, deaths, recovered, population, index++));
             CONFIG->addMapEntry(fips_code, std::make_tuple(county, state, country, latitude, longitude, population));
         }
 
@@ -384,7 +414,7 @@ public:
 
         jsoncons::ojson jsontowrite;
         jsoncons::ojson disease_model(jsoncons::json_object_arg, {
-                {"transmissibility", CONFIG->transmissibility_},
+                {"transmissibility", CONFIG->transmissibility_}, // TODO
                 {"mean_incubation_duration_in_days", CONFIG->mean_incubation_duration_ / TIME_UNITS_IN_DAY},
                 {"mean_infection_duration_in_days", CONFIG->mean_infection_duration_ / TIME_UNITS_IN_DAY},
                 {"mortality_ratio", CONFIG->mortality_ratio_},

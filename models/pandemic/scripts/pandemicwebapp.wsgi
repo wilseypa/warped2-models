@@ -16,6 +16,7 @@ try:
     import multiprocessing as mp
     import pathlib
     from bottle import auth_basic, run, route, default_app, template, get, post, request, static_file, response, debug
+    import pandas
 
     # import helper
 except Exception as e:
@@ -67,25 +68,20 @@ def create_paramtweaks_file(reqdata):
         # print("paramRollingCounter", paramRollingCounter)
         dictTweak = {}
         for item in paramRollingCounter:
-
+            # copy reference
             dictTemp = dictTweak
 
             for key in item[0]:
-                # print("key", key)
                 if key not in dictTemp:
                     dictTemp[key] = {}
 
                 dictTemp2 = dictTemp
                 dictTemp = dictTemp[key]
-                # print("dicttemp", dictTemp)
 
             if dictTemp2:
                 dictTemp2[key] = item[4]
-            # dictTemp[key] = item[3]
 
         return dictTweak
-
-    # END get_tweak_dict()
 
     # helper function
     def roll_param_meter():
@@ -132,15 +128,10 @@ def create_paramtweaks_file(reqdata):
     # HELPER function
     def add_tweak_dict_to_file(dictTweak):
         """
-
-        :param dictTweak:
-        :return:
+        TODO purpose ??
         """
-        if not dictTweak:  # check if empty
+        if not dictTweak:
             return
-
-        # print("dicttweak", dictTweak)
-        # sys.exit(-1)
 
         # TODO add comment
         if 'diffusion_model' in dictTweak and 'graph_params_K' in dictTweak['diffusion_model'] and \
@@ -158,21 +149,63 @@ def create_paramtweaks_file(reqdata):
         tweakfilesobj[tweakFileIndex].write(json.dumps(dictTweak) + '\n')
 
     # END addTweakDictToFile()
+    ################ END HELPER FUNCTIONS ################
 
-    # tweakscount = int(reqdata['tweakscount']['value'])
+    # TODO comment
+    yyg_df = pandas.read_csv(os.getcwd() + "/../data/" + \
+                             "cumulative-estimated-infections-of-covid-19.dateFormatted.csv")
+
+    simStartDate = reqdata['start_date']['value']
+
+    if simStartDate in yyg_df.Date.values:
+        confirmedCount = yyg_df.loc[yyg_df['Date'] == simStartDate]["Cumulative_confirmed_cases"].iloc[0]
+        estimatedInfectedCount = yyg_df.loc[yyg_df['Date'] == \
+                                            simStartDate]["Cumulative_estimated_infections_YYG"].iloc[0]
+
+        if confirmedCount == 0 or estimatedInfectedCount == 0:
+            yygExposedConfirmedRatio = 4
+        else:
+            yygExposedConfirmedRatio = round(estimatedInfectedCount / confirmedCount, 4)
+
+    else:
+        # if date not found in csv
+        yygExposedConfirmedRatio = 4
 
     # create counter limit lists
-    paramRollingCounter = []
-    # graph_param_betaIndex = None
+    paramRollingCounter = []    # graph_param_betaIndex = None
 
     if reqdata['transmissibility']['ifchecked'] is True:
         transmissibilityfrom = float(reqdata['transmissibility']['fromval'])
         transmissibilityto = float(reqdata['transmissibility']['toval'])
         transmissibilitystep = float(reqdata['transmissibility']['step'])
 
+        # [4] index holds current value
         paramRollingCounter.append([('disease_model', 'transmissibility'), transmissibilityfrom, transmissibilityto,
                                     transmissibilitystep,
                                     transmissibilityfrom])
+
+    # for exposed confirmed factor
+    # TODO since this value does not vary, all tweaklines will contain same value, wasting space
+
+    if reqdata['exposed_confirmed_ratio']['ifchecked'] is True:
+        if reqdata['exposed_confirmed_ratio']['ifYYGchecked'] is True:
+            exposed_confirmed_ratio = yygExposedConfirmedRatio
+
+            paramRollingCounter.append([('disease_model', 'exposed_confirmed_ratio'),
+                                        exposed_confirmed_ratio,
+                                        exposed_confirmed_ratio,
+                                        0,
+                                        exposed_confirmed_ratio])
+        else:
+            exposed_confirmed_ratiofrom = float(reqdata['exposed_confirmed_ratio']['fromval'])
+            exposed_confirmed_ratioto = float(reqdata['exposed_confirmed_ratio']['toval'])
+            exposed_confirmed_ratiostep = float(reqdata['exposed_confirmed_ratio']['step'])
+
+            paramRollingCounter.append([('disease_model', 'exposed_confirmed_ratio'),
+                                        exposed_confirmed_ratiofrom,
+                                        exposed_confirmed_ratioto,
+                                        exposed_confirmed_ratiostep,
+                                        exposed_confirmed_ratiofrom])
 
     if reqdata['mean_incubation_duration_in_days']['ifchecked'] is True:
         mean_incubation_duration_in_daysfrom = \
@@ -255,14 +288,6 @@ def create_paramtweaks_file(reqdata):
                                     graph_param_betastep,
                                     graph_param_betafrom])
 
-        # graph_param_betaIndex = len(paramRollingCounter) - 1
-
-        # graph_param1 = graph_param1from + i * ((graph_param1to - graph_param1from) / (tweakscount - 1))
-        # graph_param2 = graph_param2from + i * ((graph_param2to - graph_param2from) / (tweakscount - 1))
-        #
-        # dicttweakline["diffusion_model"]['graph_params'] = str(round(graph_param1, 3)) + ',' + str(
-        #     round(graph_param2, 3))
-
     if reqdata['diffusion_trig_interval_in_hrs']['ifchecked'] is True:
         diffusion_trig_interval_in_hrsfrom = float(reqdata['diffusion_trig_interval_in_hrs']['fromval'])
         diffusion_trig_interval_in_hrsto = float(reqdata['diffusion_trig_interval_in_hrs']['toval'])
@@ -296,25 +321,20 @@ def create_paramtweaks_file(reqdata):
                                     max_diffusion_cntstep,
                                     max_diffusion_cntfrom])
 
-    # print("paramRollingCounter", paramRollingCounter)
-    # sys.exit(-1)
-
-    # if graph_param_betaIndex:
-    #     par
-    #################################################
-
     tweakfiles = []
     tweakfilesobj = []
 
     tweakFileIndex = 0
     while True:
+        # create as many tweakfiles as 'taskCount' value
         if tweakFileIndex > len(tweakfiles) - 1:
             tweakfiles.append(TWEAKFILES_DIR_PATH + "diseaseparamtweakfile_" + str(uuid.uuid4()))
             tweakfilesobj.append(open(tweakfiles[-1], "w"))
 
+        # add next tweak-set to current index-ed tweakfile
         add_tweak_dict_to_file(get_tweak_dict())  # TODO change get_tweak_dict name
 
-        # reset
+        # next tweak-set should go to the next tweakfile; reset index to loop to the first tweakfile
         tweakFileIndex += 1
         if tweakFileIndex == taskCount:
             tweakFileIndex = 0
@@ -351,8 +371,7 @@ def send_static(filename):
 
 def triggersimulation(pandemic_sim_driver_args):
     """
-    :param:
-    :return:
+    TODO add comment
     """
 
     subprocessArgs = [pandemic_sim_driver_path, "--sim_start_date", pandemic_sim_driver_args['start_date'],
@@ -372,10 +391,12 @@ def triggersimulation(pandemic_sim_driver_args):
 
 def simulate_func(dictreq):
     """
-
-    :return:
+    TODO purpose??
     """
     tweakfiles = create_paramtweaks_file(dictreq)  # expensive function
+
+    print("tweakfiles", tweakfiles)
+    # sys.exit(1)
 
     listDistmetrics = []
     if dictreq['distmetrictype']['ifchecked'] == True:
@@ -429,6 +450,7 @@ def getstatus():
 
     dictToSend = {}
 
+    # TODO add comment
     dictToSend["statusmsg"] = ""
 
     global jobstatus
@@ -509,6 +531,8 @@ def simulate():
 
     dictreq = json.loads(request.forms.get('data'))
     print("post data", dictreq)
+
+    # sys.exit(1)
 
     response.content_type = 'application/json'
 

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pandemic tuning</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jgthms/minireset.css@master/minireset.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+<div id="wrapper">
+    <div class="main">
+        <h1>Plot & compare pandemic simulation results with actual data</h1>
+        <form id="simform" action="/simulate" method="post">
+
+            <div class="form-group">
+                <input class="form-inline" id="startdate" type="text"
+                       name="startdate" placeholder="Start date" value="">
+            </div>
+            <div class="form-group">
+                <input class="form-inline" id="runtime_days" type="text"
+                       name="enddate" placeholder="runtime in days" value="">
+            </div>
+            <div class="form-group">
+                <input class="form-inline" id="transmissibility" type="checkbox">
+                <label class="form-inline" for="transmissibility">Transmissibility</label>
+                <input class="form-inline" id="transmissibilityval" type="text">
+            </div>
+
+            <div class="form-group">
+                <input class="form-inline" id="exposed_confirmed_ratio" type="checkbox">
+                <label class="form-inline" for="exposed_confirmed_ratio">Exposed-Confirmed factor</label>
+                <input class="form-inline" id="exposed_confirmed_ratioval" type="text">
+            </div>
+
+            <div class="form-group">
+                <input class="form-inline" id="mean_incubation_duration_in_days" type="checkbox">
+                <label class="form-inline"
+                       for="mean_incubation_duration_in_days">mean_incubation_duration_in_days</label>
+                <input class="form-inline" id="mean_incubation_duration_in_daysval" type="text">
+            </div>
+            <div class="form-group">
+                <input class="form-inline" id="mean_infection_duration_in_days" type="checkbox">
+                <label class="form-inline" for="mean_infection_duration_in_days">mean_infection_duration_in_days</label>
+                <input class="form-inline" id="mean_infection_duration_in_daysval" type="text">
+            </div>
+
+            <div class="form-group">
+                <input class="form-inline" id="mortality_ratio" type="checkbox">
+                <label class="form-inline" for="mortality_ratio">mortality_ratio</label>
+                <input class="form-inline" id="mortality_ratioval" type="text">
+            </div>
+
+            <div class="form-group">
+                <input class="form-inline" id="update_trig_interval_in_hrs" type="checkbox">
+                <label class="form-inline" for="update_trig_interval_in_hrs">update_trig_interval_hrs</label>
+                <input class="form-inline" id="update_trig_interval_in_hrsval" type="text">
+            </div>
+
+            <div class="form-group">
+                <input class="form-inline" id="graph_type" type="checkbox">
+                <label class="form-inline" for="graph_type">Graph type</label>
+
+                <select class="form-inline" id="graph_typeoption">
+                    <option>Watts-Strogatz</option>
+                    <option>Barabasi-Albert</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <input class="form-inline" id="graph_params" type="checkbox">
+                <label class="form-inline" for="graph_params">graph params</label>
+                <input class="form-inline" id="graph_param_Kval" type="text" placeholder="K">
+
+                <input class="form-inline" id="graph_param_betaval" type="text" placeholder="beta">
+            </div>
+
+            <div class="form-group">
+                <input class="form-inline" id="diffusion_trig_interval_in_hrs" type="checkbox">
+                <label class="form-inline" for="diffusion_trig_interval_in_hrs">diffusion_trig_interval_in_hrs</label>
+                <input class="form-inline" id="diffusion_trig_interval_in_hrsval" type="text">
+            </div>
+
+            <div class="form-group">
+                <input class="form-inline" id="avg_transport_speed" type="checkbox">
+                <label class="form-inline" for="avg_transport_speed">avg_transport_speed</label>
+                <input class="form-inline" id="avg_transport_speedval" type="text">
+            </div>
+
+            <div class="form-group">
+                <input class="form-inline" id="max_diffusion_cnt" type="checkbox">
+                <label class="form-inline" for="max_diffusion_cnt">max_diffusion_cnt</label>
+                <input class="form-inline" id="max_diffusion_cntval" type="text">
+            </div>
+
+            <div class="form-group">
+                <textarea rows="6" cols="60" name="fipslist" id="fipslist"
+                          placeholder="List of FIPS of counties to plot (optional)"></textarea>
+            </div>
+
+            <div id="sbmt-btn" class="form-group">
+                <input id="sbmt-btn" type="submit" class="btn btn-primary btn-lg" value="Submit">
+            </div>
+        </form>
+        <p id="statusmsg"></p>
+    </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/aja/0.4.1/aja.js" crossorigin="anonymous"></script>
+<script src="script.js"></script>
+</body>
+</html>
