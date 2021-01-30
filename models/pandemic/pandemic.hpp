@@ -257,7 +257,7 @@ public:
          *  D' = mortality_ratio * R
          */
         // double exponent = (double) -1 * (48 * timestamp);
-        double exponent = (double) -1 * (timestamp / 70);
+        double exponent = (double) -1 * (timestamp / 24);
 
         double dynamic_transmissibility_ = CONFIG->transmissibility_ * pow(2.71828, exponent);
 
