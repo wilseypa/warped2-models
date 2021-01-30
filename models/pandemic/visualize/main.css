@@ -94,11 +94,11 @@ input:focus, select:focus {
 
 svg {
     /* background: #3987c9; */
-    background: radial-gradient(#3987c9 0%, #9cd9ff 70%);
+    background: radial-gradient(#9cd9ff 0%, #3987c9 70%);
     /* box-shadow: 0px 0px 1px 1px #9cd9ff; */
     border-radius: 2px;
     box-shadow: 
-      0px 0px 1px 1px #9cd9ff,
+      0px 0px 1px 1px #3987c9,
       12px 12px 16px 0 rgba(0, 0, 0, 0.25),
       -8px -8px 12px 0 rgba(255, 255, 255, 0.3);
 }
