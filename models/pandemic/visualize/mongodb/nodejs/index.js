@@ -1,6 +1,6 @@
 const path = require('path');
 const fs = require('fs');
-const request = require('request');
+//const request = require('request');
 const querystring = require('querystring');
 
 const directoryPath = path.join(__dirname, 'visualize', 'mongodb',  'Pandemic_Data');
