@@ -434,9 +434,9 @@ def fix_metrics_values(jhu_csse_path, main_df, curr_date_str):
         main_df.loc[(main_df['FIPS'] == fips), 'Active'] = new_scaled_active
         main_df.loc[(main_df['FIPS'] == fips), 'Recovered'] = new_recovered_val
 
-    print("total 'Confirmed'", main_df['Confirmed'].sum())
-    print("total 'Active'", main_df['Active'].sum())
-    print("total 'Recovered'", main_df['Recovered'].sum())
+    # print("total 'Confirmed'", main_df['Confirmed'].sum())
+    # print("total 'Active'", main_df['Active'].sum())
+    # print("total 'Recovered'", main_df['Recovered'].sum())
 
         # print(main_df.loc[index])
 
