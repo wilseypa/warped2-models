@@ -4,7 +4,7 @@ async function isDevEnvFunc() {
     const response = await fetch('/isDevEnv');
     const data = await response.json();
     //console.log(data);
-    if(data.path === "/work/") {
+    if(data.path === "/work/" || data.path === "/home/") {
         isDevEnv = false;
     } else {
         isDevEnv = true;
