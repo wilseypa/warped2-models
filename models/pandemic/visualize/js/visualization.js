@@ -69,9 +69,10 @@ async function send_plot_data() {
     console.log(data);
     return data;
 }
+var padsData;
 isDevEnvFunc().then(function() {
     if (!isDevEnv) {
-        send_plot_data();
+        padsData = send_plot_data();
     }
 });
 
@@ -613,6 +614,20 @@ d3.select("#plotButton").on("click", function() {
         // document.body.style.backgroundColor = "lightskyblue";
     }, 50);
 });
+//PADS Plot Button Press
+var padsNum = 0;
+d3.select("#padsPlotButton").on("click", function() {
+    padsloadNewData(padsNum);
+    padsNum = padsNum + 1;
+
+    setTimeout(function(){ 
+        document.getElementById('mapStatCheckboxes').style.display = "block";
+        document.getElementById('map').style.display = "block";
+        document.getElementById('legend').style.display = "block";
+        d3.select("#plotButton").attr("disabled", true);
+        // document.body.style.backgroundColor = "lightskyblue";
+    }, 50);
+});
 
 //Minimize_Maximize Button Press
 d3.select("#minMaxMapControls").on("click", function() {
@@ -789,6 +804,76 @@ function loadNewData() {
 
             for (var i = 0; i < locationsLength; i++) {
                 for(var n = 0; n < locationsDataLength; n++) {
+                    if(n == 6 || n == 7 || n == 8 || n == 9) {
+                        covidStats.locations[i][n] = 0;
+                    }
+                }
+            }
+
+            covidStatsAPIArray.forEach(function (value, index) { // (item, index)
+                locationsLength = covidStatsAPIArray[index][0].locations.length;
+                locationsDataLength = covidStatsAPIArray[index][0].locations[0].length;
+
+                for (var i = 0; i < locationsLength; i++) {
+                    //console.log(covidStats.locations[i])
+                    for (var n = 0; n < locationsDataLength; n++) {
+                        if (n == 6 || n == 7 || n == 8 || n == 9) {
+                            covidStats.locations[i][n] += covidStatsAPIArray[index][0].locations[i][n];
+                        } /*else {    //ELSE NOT NEEDED BC OF NEXT IF STATEMENT
+                                covidStats.locations[i][n] = covidStatsAPIArray[index][0].locations[i][n];
+                            }*/
+                    }
+                }
+
+                if ((index) == timeDiffInDays) {   //final file iteration
+                    for (var i = 0; i < locationsLength; i++) {
+                        for (var n = 0; n < locationsDataLength; n++) {
+                            if (n != 6 && n != 7 && n != 8 && n != 9) {
+                                covidStats.locations[i][n] = covidStatsAPIArray[index][0].locations[i][n];  //get stats (population) of latest date in range
+                            }
+                        }
+                    }
+                    rePlot(covidStats);
+                }
+            })
+        })
+
+    } else {
+        let startDateValue = new Date(startDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
+        var startDateParam = formatDate(startDateValue, "MM-DD-YYYY", "javascript");
+
+        updateMapDateValue(startDateParam, endDateParam);
+
+        //console.log(startDateParam);
+        getData(startDateParam, startDateParam).then((data) => {
+            covidStats = data[0][0];
+            rePlot(covidStats);
+        })
+    }
+};
+// Grabs Dates from Input and Plots to D3 Map
+function padsloadNewData(pressNum) {
+    if (isDateRange.checked) {    //load all data from files across range
+        let startDateValue = new Date(startDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
+        let endDateValue = new Date(endDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
+        let timeDiffInDays = (endDateValue.getTime() - startDateValue.getTime())/(1000*60*60*24);
+
+        var startDateParam = formatDate(startDateValue, "MM-DD-YYYY", "javascript");
+        var endDateParam = formatDate(endDateValue, "MM-DD-YYYY", "javascript");
+        
+        updateMapDateValue(startDateParam, endDateParam);
+
+        //console.log(startDateParam + "   " + endDateParam);
+        var covidStatsAPIArray;
+        getData(startDateParam, endDateParam).then((data) => {
+            covidStatsAPIArray = data;
+            //console.log(covidStatsAPIArray);
+
+            // var locationsLength = covidStats.locations.length;
+            // var locationsDataLength = covidStats.locations[0].length;
+
+            for (var i = 0; i < padsData[pressNum].locations.length; i++) {
+                for(var n = 0; n < padsData[pressNum].locations[0].length; n++) {
                     if(n == 6 || n == 7 || n == 8 || n == 9) {
                         covidStats.locations[i][n] = 0;
                     }
