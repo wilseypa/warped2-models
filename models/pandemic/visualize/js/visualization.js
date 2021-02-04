@@ -281,14 +281,14 @@ var getStatus = function () {
     //         }
     //     })
     //     .go();
-    callGetstatus().then(function(data) {
-        //console.log(data);
-        if (data.statusmsg == "no job added" || data.statusmsg == "job finished") {
-            removeLoadingBar();
-        } else {
-            setTimeout(function(){ getStatus }, 6000);
-        }
-    });
+    // callGetstatus().then(function(data) {    //UNCOMMENT WHEN WORKING
+    //     //console.log(data);
+    //     if (data.statusmsg == "no job added" || data.statusmsg == "job finished") {
+    //         removeLoadingBar();
+    //     } else {
+    //         setTimeout(function(){ getStatus }, 6000);
+    //     }
+    // });
 }
 
 // Submitting Login Form
@@ -420,9 +420,9 @@ d3.select("#submitConfigApi").on("click", function() {
     //         // console.log("/simulate: set timeout");
     //     })
     //     .go();
-    callSimulate(JSON.stringify(postdata)).then(function(data) {
-        console.log(data);
-    });
+    // callSimulate(JSON.stringify(postdata)).then(function(data) { //UNCOMMENT WHEN WORKING
+    //     console.log(data);
+    // });
 
     pageState = "viewingMap";
     document.getElementById('map').style.display = "none";
@@ -866,7 +866,8 @@ function padsloadNewData(pressNum) {
         //console.log(startDateParam + "   " + endDateParam);
         var covidStatsAPIArray;
         getData(startDateParam, endDateParam).then((data) => {
-            covidStatsAPIArray = data;
+            //covidStatsAPIArray = data;
+            covidStatsAPIArray = padsData[pressNum];
             //console.log(covidStatsAPIArray);
 
             // var locationsLength = covidStats.locations.length;
