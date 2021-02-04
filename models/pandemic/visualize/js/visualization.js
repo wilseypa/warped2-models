@@ -49,13 +49,13 @@ async function callSimulate(simulateJson) {
 async function callGetstatus() {
     const response = await fetch('/callGetstatus');
     const data = await response.json();
-    console.log(data);
+    //console.log(data);
     return data;
 }
 async function send_simulated_data() {
     const response = await fetch('/send_simulated_data');
     const data = await response.json();
-    //console.log(data);
+    console.log(data);
     return data;
 }
 async function send_actual_data() {
