@@ -73,6 +73,7 @@ var padsData;
 isDevEnvFunc().then(function() {
     if (!isDevEnv) {
         padsData = send_plot_data();
+        console.log(padsData);
     }
 });
 
