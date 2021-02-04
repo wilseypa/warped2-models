@@ -101,9 +101,10 @@ app.get('/callGetstatus', (req, res) => {
 	});
 });
 
-app.get('/send_data', (request, response) => {
+app.get('/send_simulated_data', (request, response) => {
 	// Function call to send back files from Vivek's directory to our frontend
-	const vivek_path = '/work/vivek/warped2-models/warped2-models/models/pandemic/scripts/tuningapp/simOutfiles';
+	// const vivek_path = '/work/vivek/warped2-models/warped2-models/models/pandemic/scripts/tuningapp/simOutfiles';
+	const vivek_path = '/work/vivek/warped2/warped2-models/models/pandemic/data';
 	const data_folder2 = path.join(__dirname, '../../../../../../../../../', vivek_path);
 
 	let responseArray = [];
@@ -118,6 +119,25 @@ app.get('/send_data', (request, response) => {
 		response.json(responseArray);
 	});
 });
+
+app.get('/send_actual_data', (request, response) => {
+	// Function call to send back files from Vivek's directory to our frontend
+	const vivek_path = '/work/vivek/warped2/warped2-models/models/pandemic/data';
+	const data_folder2 = path.join(__dirname, '../../../../../../../../../', vivek_path);
+
+	let responseArray = [];
+	fs.readdir(data_folder2, (err, files) => {
+		files.forEach(file => {
+			// console.log(file);
+			let filepath = path.join(data_folder2, file);
+			let rawdata = fs.readFileSync(filepath);
+			let pandemic_data = JSON.parse(rawdata);
+			responseArray.push(pandemic_data);
+		});
+		response.json(responseArray);
+	});
+});
+
 
 app.get('/pandemic_data/:start_date/:end_date', (request, response) => {
 	var startDate = new Date(request.params.start_date);
