@@ -110,11 +110,15 @@ app.get('/send_simulated_data', (request, response) => {
 	let responseArray = [];
 	fs.readdir(data_folder2, (err, files) => {
 		files.forEach(file => {
-			// console.log(file);
-			let filepath = path.join(data_folder2, file);
-			let rawdata = fs.readFileSync(filepath);
-			let pandemic_data = JSON.parse(rawdata);
-			responseArray.push(pandemic_data);
+			/// console.log(file);
+			let extension = path.extname(file);
+			if (extension == '.json') {
+				let filepath = path.join(data_folder2, file);
+				let rawdata = fs.readFileSync(filepath);
+				let pandemic_data = JSON.parse(rawdata);
+				responseArray.push(pandemic_data);
+			}
+
 		});
 		response.json(responseArray);
 	});
@@ -129,10 +133,13 @@ app.get('/send_actual_data', (request, response) => {
 	fs.readdir(data_folder2, (err, files) => {
 		files.forEach(file => {
 			// console.log(file);
-			let filepath = path.join(data_folder2, file);
-			let rawdata = fs.readFileSync(filepath);
-			let pandemic_data = JSON.parse(rawdata);
-			responseArray.push(pandemic_data);
+			let extension = path.extname(file);
+			if (extension == '.json') {
+				let filepath = path.join(data_folder2, file);
+				let rawdata = fs.readFileSync(filepath);
+				let pandemic_data = JSON.parse(rawdata);
+				responseArray.push(pandemic_data);
+			}
 		});
 		response.json(responseArray);
 	});
