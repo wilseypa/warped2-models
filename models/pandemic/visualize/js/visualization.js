@@ -64,6 +64,8 @@ async function send_actual_data() {
     console.log(data);
     return data;
 }
+send_simulated_data();
+send_actual_data();
 
 // Frontend Globals and Setup
 var pageState = "login"; // login, config, viewingMap, editingConfig
