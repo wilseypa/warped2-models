@@ -11,7 +11,7 @@
 			getData();
 			
 			async function getData() {
-				const response = await fetch('/send_actual_data');
+				const response = await fetch('/send_plot_data');
 				const data = await response.json();
 				console.log(data);
 			}

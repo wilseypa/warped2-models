@@ -104,7 +104,7 @@ app.get('/callGetstatus', (req, res) => {
 app.get('/send_simulated_data', (request, response) => {
 	// Function call to send back files from Vivek's directory to our frontend
 	// const vivek_path = '/work/vivek/warped2-models/warped2-models/models/pandemic/scripts/tuningapp/simOutfiles';
-	const vivek_path = '/work/vivek/warped2/warped2-models/models/pandemic/data';
+	const vivek_path =  '/work/vivek/warped2/warped2-models/models/pandemic/scripts/tuningapp/simOutfiles.bkp';
 	const data_folder2 = path.join(__dirname, '../../../../../../../../../', vivek_path);
 
 	let responseArray = [];
@@ -122,6 +122,40 @@ app.get('/send_simulated_data', (request, response) => {
 		});
 		response.json(responseArray);
 	});
+});
+
+app.get('/send_plot_data', (request, response) => {
+
+	const first_date = '08-01-2020.simulated-data.json';
+	const second_date = '09-15-2020.simulated-data.json';
+	const first_date2 = '08-01-2020.formatted-JHU-data.json';
+	const second_date2 = '09-15-2020.formatted-JHU-data.json';
+
+	const vivek_actual_path = '/work/vivek/warped2/warped2-models/models/pandemic/data';
+	const vivek_simulated_path = '/work/vivek/warped2/warped2-models/models/pandemic/scripts/tuningapp/simOutfiles.bkp';
+	const actual_data_folder = path.join(__dirname, '../../../../../../../../../', vivek_actual_path);
+	const simulated_data_folder = path.join(__dirname, '../../../../../../../../../', vivek_simulated_path);
+	const auguest_simulated = path.join(simulated_data_folder, first_date);
+	const auguest_actual = path.join(actual_data_folder, first_date2);
+	const september_simulted = path.join(simulated_data_folder, second_date);
+	const september_actual = path.join(actual_data_folder, second_date2);
+
+	let rawdata1 = fs.readFileSync(auguest_simulated);
+	let data1 = JSON.parse(rawdata1);
+
+	let rawdata2 = fs.readFileSync(auguest_actual);
+	let data2 = JSON.parse(rawdata2);
+
+	let rawdata3 = fs.readFileSync(september_simulted);
+	let data3 = JSON.parse(rawdata3);
+
+	let rawdata4 = fs.readFileSync(september_actual);
+	let data4 = JSON.parse(rawdata4);
+
+	let responseArray = [data1, data2, data3, data4];
+	response.json(responseArray);
+
+
 });
 
 app.get('/send_actual_data', (request, response) => {
