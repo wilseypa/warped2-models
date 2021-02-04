@@ -12,7 +12,6 @@ async function isDevEnvFunc() {
     //console.log(isDevEnv);
     return data;
 }
-isDevEnvFunc();
 async function sendData() {
     const response = await fetch('/send_data/');
     const data = await response.json();
@@ -55,17 +54,26 @@ async function callGetstatus() {
 async function send_simulated_data() {
     const response = await fetch('/send_simulated_data');
     const data = await response.json();
-    console.log(data);
+    //console.log(data);
     return data;
 }
 async function send_actual_data() {
     const response = await fetch('/send_actual_data');
     const data = await response.json();
+    //console.log(data);
+    return data;
+}
+async function send_plot_data() {
+    const response = await fetch('/send_plot_data');
+    const data = await response.json();
     console.log(data);
     return data;
 }
-send_simulated_data();
-send_actual_data();
+isDevEnvFunc().then(function() {
+    if (!isDevEnv) {
+        send_plot_data();
+    }
+});
 
 // Frontend Globals and Setup
 var pageState = "login"; // login, config, viewingMap, editingConfig
