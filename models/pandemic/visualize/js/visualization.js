@@ -72,8 +72,10 @@ async function send_plot_data() {
 var padsData;
 isDevEnvFunc().then(function() {
     if (!isDevEnv) {
-        padsData = send_plot_data();
-        console.log(padsData);
+        send_plot_data().then(function(data) {
+            padsData = data;
+            console.log(padsData);
+        });
     }
 });
 
