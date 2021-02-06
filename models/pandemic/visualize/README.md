@@ -9,6 +9,7 @@ LOTS OF DATA IS MISSING IN CERTAIN DAYS (5/26/2020)(8/23/2020 only with range) W
 ### ***Front End***
 Replace placeholder placeholders (waiting for actual placeholders) with correct placeholder values  
 Remove checkboxes if placeholder values (placeholder values as background unless typed then forget placeholder values)  
+Add black to top of legend to denote that no data is available  
 Re-add slider to bottom of map  
 Update tooltip data on new day when hovering with timelapse function enabled  
 Improve timelapse placement  
