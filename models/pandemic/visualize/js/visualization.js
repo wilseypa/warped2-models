@@ -1029,9 +1029,9 @@ function padsRePlot(covidStats, pressNum){
         percentageArray = [0, 0.7, 1.4, 2.1, 2.8, 3.5, 4.2, 4.9, 5.6];
     } else if (pressNum == 1) { // August1 Actual
         percentageArray = [0, 1.5, 3, 4.5, 6, 7.5, 9, 10.5, 12];
-    } else if (pressNum == 1) { // September15 Simulated
+    } else if (pressNum == 2) { // September15 Simulated
         percentageArray = [0, 0.7, 1.4, 2.1, 2.8, 3.5, 4.2, 4.9, 5.6];
-    } else if (pressNum == 1) { // September15 Actual
+    } else if (pressNum == 3) { // September15 Actual
         percentageArray = [0, 1.5, 3, 4.5, 6, 7.5, 9, 10.5, 12];
     } else {
         console.log("PADS Plots completed");
