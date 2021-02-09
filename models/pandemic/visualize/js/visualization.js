@@ -92,23 +92,48 @@ var color_wheel = ["#ffffcc", "#ffeda0", "#fed976", "#feb24c", "#fd8d3c", "#fc4e
 //var color_wheel = ["#00FF00", "#33FF33", "#66FF66", "#99FF99", "#800026", "#bd0026", "#e31a1c", "#fc4e2a", "#fd8d3c"];
 var percentageArray = new Array(9);
 var colorWheelIndex = 0;
-for(var i = 0; i < color_wheel.length; i++) {
-    var legendInnerContainers = document.createElement("div");
-    legendInnerContainers.setAttribute("id", "legendInnerContainer" + i);
-    document.getElementById("legend").appendChild(legendInnerContainers);
-
-    var legendColorEl = document.createElement("div");
-    legendColorEl.setAttribute("id", "legendColor" + i);
-    legendColorEl.setAttribute("class", "legend-fill");
-    document.getElementById("legendInnerContainer" + i).appendChild(legendColorEl);
-
-    var legendValueEl = document.createElement("div");
-    legendValueEl.setAttribute("id", "legendValue" + i);
-    legendValueEl.setAttribute("class", "legend-value");
-    document.getElementById("legendInnerContainer" + i).appendChild(legendValueEl);
+for(var i = 0; i < color_wheel.length + 1; i++) {
+    if (i < color_wheel.length) {
+        var legendInnerContainers = document.createElement("div");
+        legendInnerContainers.setAttribute("id", "legendInnerContainer" + i);
+        document.getElementById("legend").appendChild(legendInnerContainers);
     
-    document.getElementById('legendColor' + i).style.backgroundColor = color_wheel[i];
-    document.getElementById('legendValue' + i).innerHTML = 0 + "%";
+        var legendColorEl = document.createElement("div");
+        legendColorEl.setAttribute("id", "legendColor" + i);
+        legendColorEl.setAttribute("class", "legend-fill");
+        document.getElementById("legendInnerContainer" + i).appendChild(legendColorEl);
+    
+        var legendValueEl = document.createElement("div");
+        legendValueEl.setAttribute("id", "legendValue" + i);
+        legendValueEl.setAttribute("class", "legend-value");
+        document.getElementById("legendInnerContainer" + i).appendChild(legendValueEl);
+        
+        document.getElementById('legendColor' + i).style.backgroundColor = color_wheel[i];
+        document.getElementById('legendValue' + i).innerHTML = 0 + "%";
+    }
+
+    if (i == color_wheel.length) {
+        var legendInnerContainers = document.createElement("div");
+        legendInnerContainers.setAttribute("id", "legendInnerContainer" + i);
+        document.getElementById("legend").appendChild(legendInnerContainers);
+    
+        var legendColorEl = document.createElement("div");
+        legendColorEl.setAttribute("id", "legendColor" + i);
+        legendColorEl.setAttribute("class", "legend-fill");
+        document.getElementById("legendInnerContainer" + i).appendChild(legendColorEl);
+    
+        var legendValueEl = document.createElement("div");
+        legendValueEl.setAttribute("id", "legendValue" + i);
+        legendValueEl.setAttribute("class", "legend-value");
+        document.getElementById("legendInnerContainer" + i).appendChild(legendValueEl);
+        
+        document.getElementById('legendColor' + i).style.backgroundColor = "black";
+        document.getElementById('legendValue' + i).innerHTML = 0 + "%";
+
+        let selectString = "#legendValue" + i;
+        let htmlString = "No Data"
+        d3.select(selectString).html(htmlString);
+    }
 }
 
 // Frontend Basic Functions
@@ -939,8 +964,17 @@ function rePlot(covidStats){
     // for (i = 0; i < percentageArray.length; i++) {   // DYNAMIC LEGEND RANGE
     //     percentageArray[i] = ((highestPercentage / percentageArray.length) * i).toFixed(2);
     // }
-
-    percentageArray = [0, 1.5, 3, 4.5, 6, 7.5, 9, 10.5, 12];
+    if (padsNum == 0) { // August1 Simulated
+        percentageArray = [0, 0.7, 1.4, 2.1, 2.8, 3.5, 4.2, 4.9, 5.6];
+    } else if (padsNum == 1) { // August1 Actual
+        percentageArray = [0, 1.5, 3, 4.5, 6, 7.5, 9, 10.5, 12];
+    } else if (padsNum == 1) { // September15 Simulated
+        percentageArray = [0, 0.7, 1.4, 2.1, 2.8, 3.5, 4.2, 4.9, 5.6];
+    } else if (padsNum == 1) { // September15 Actual
+        percentageArray = [0, 1.5, 3, 4.5, 6, 7.5, 9, 10.5, 12];
+    } else {
+        console.log("PADS Plots completed");
+    }
     
     for (i = 0; i < percentageArray.length; i++) {
         let selectString = "#legendValue" + i;
