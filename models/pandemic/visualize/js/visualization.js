@@ -932,7 +932,7 @@ function padsloadNewData(pressNum) {
                             }
                         }
                     }
-                    padsRePlot(covidStats);
+                    padsRePlot(covidStats, pressNum);
                 }
             })
         })
@@ -1014,7 +1014,7 @@ function rePlot(covidStats){
 }
 
 // The Plotting of Colors to Each County    -----------DYNAMIC MAX PERCENTAGE BUT DOESNT WORK WELL BECAUSE OF OUTLIERS....---------
-function padsRePlot(covidStats, padsNum){
+function padsRePlot(covidStats, pressNum){
     var highestPercentage = 0;
     for (i = 0; i < covidStats.locations.length; i++) {
         tempHighestPercentage =  ((covidStats.locations[i][9] / covidStats.locations[i][10]) * 100);
@@ -1025,13 +1025,13 @@ function padsRePlot(covidStats, padsNum){
     // for (i = 0; i < percentageArray.length; i++) {   // DYNAMIC LEGEND RANGE
     //     percentageArray[i] = ((highestPercentage / percentageArray.length) * i).toFixed(2);
     // }
-    if (padsNum == 0) { // August1 Simulated
+    if (pressNum == 0) { // August1 Simulated
         percentageArray = [0, 0.7, 1.4, 2.1, 2.8, 3.5, 4.2, 4.9, 5.6];
-    } else if (padsNum == 1) { // August1 Actual
+    } else if (pressNum == 1) { // August1 Actual
         percentageArray = [0, 1.5, 3, 4.5, 6, 7.5, 9, 10.5, 12];
-    } else if (padsNum == 1) { // September15 Simulated
+    } else if (pressNum == 1) { // September15 Simulated
         percentageArray = [0, 0.7, 1.4, 2.1, 2.8, 3.5, 4.2, 4.9, 5.6];
-    } else if (padsNum == 1) { // September15 Actual
+    } else if (pressNum == 1) { // September15 Actual
         percentageArray = [0, 1.5, 3, 4.5, 6, 7.5, 9, 10.5, 12];
     } else {
         console.log("PADS Plots completed");
