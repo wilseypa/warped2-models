@@ -947,7 +947,7 @@ function padsloadNewData(pressNum) {
         getData(startDateParam, startDateParam).then((data) => {
             // covidStats = data[0][0];
             covidStats = padsData[pressNum];
-            rePlot(covidStats);
+            padsRePlot(covidStats, pressNum);
         })
     }
 };
