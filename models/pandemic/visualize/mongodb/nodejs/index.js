@@ -50,7 +50,7 @@ app.get('/login/:username/:password', (request, response) => {
 	}
 	else {
 		// console.log('Bad');
-		response.status(400).send({response: "failed"});
+		response.status(401).send({response: "failed"});
 	}
 });
 

@@ -936,9 +936,11 @@ function rePlot(covidStats){
             highestPercentage = tempHighestPercentage;
         }
     }
-    for (i = 0; i < percentageArray.length; i++) {
-        percentageArray[i] = ((highestPercentage / percentageArray.length) * i).toFixed(2);
-    }
+    // for (i = 0; i < percentageArray.length; i++) {   // DYNAMIC LEGEND RANGE
+    //     percentageArray[i] = ((highestPercentage / percentageArray.length) * i).toFixed(2);
+    // }
+
+    percentageArray = [0, 1.5, 3, 4.5, 6, 7.5, 9, 10.5, 12];
     
     for (i = 0; i < percentageArray.length; i++) {
         let selectString = "#legendValue" + i;
