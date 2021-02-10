@@ -96,7 +96,7 @@ for(var i = 0; i < color_wheel.length + 1; i++) {
     if (i < color_wheel.length) {
         var legendInnerContainers = document.createElement("div");
         legendInnerContainers.setAttribute("id", "legendInnerContainer" + i);
-        document.getElementById("legend").appendChild(legendInnerContainers);
+        document.getElementById("legendValues").appendChild(legendInnerContainers);
     
         var legendColorEl = document.createElement("div");
         legendColorEl.setAttribute("id", "legendColor" + i);
@@ -115,7 +115,7 @@ for(var i = 0; i < color_wheel.length + 1; i++) {
     if (i == color_wheel.length) {
         var legendInnerContainers = document.createElement("div");
         legendInnerContainers.setAttribute("id", "legendInnerContainer" + i);
-        document.getElementById("legend").appendChild(legendInnerContainers);
+        document.getElementById("legendValues").appendChild(legendInnerContainers);
     
         var legendColorEl = document.createElement("div");
         legendColorEl.setAttribute("id", "legendColor" + i);
