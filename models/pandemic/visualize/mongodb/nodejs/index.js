@@ -140,6 +140,8 @@ app.get('/send_plot_data', (request, response) => {
 	const sixth_date2 = '03-01-2021.formatted-JHU-data.json';
 	const seventh_date = '03-15-2021.simulated-data.json';
 	const seventh_date2 = '03-15-2021.formatted-JHU-data.json';
+	const eigth_date = '02-15-2021.simulated-data.json';
+	const eight_date2 = '02-15-2021.formatted-JHU-data.json';
 
 	const vivek_actual_path = '/work/vivek/warped2/warped2-models/models/pandemic/data';
 	const vivek_simulated_path = '/work/vivek/warped2/warped2-models/models/pandemic/scripts/tuningapp/simOutfiles.bkp';
@@ -159,6 +161,8 @@ app.get('/send_plot_data', (request, response) => {
 	const march_simulated = path.join(simulated_data_folder, sixth_date);
 	const march_actual2 = path.join(actual_data_folder, seventh_date2);
 	const march_simulated2 = path.join(simulated_data_folder, seventh_date);
+	const february_actual2 = path.join(actual_data_folder, eight_date2);
+	const february_simulated2 = path.join(simulated_data_folder, eight_date);
 
 
 	let rawdata1 = fs.readFileSync(auguest_simulated);
@@ -205,8 +209,15 @@ app.get('/send_plot_data', (request, response) => {
 	let rawdata14 = fs.readFileSync(march_simulated2);
 	let data14 = JSON.parse(rawdata14);
 
+	let rawdata15 = fs.readFileSync(february_actual2);
+	let data15 = JSON.parse(rawdata15);
 
-	let responseArray = [data1, data2, data3, data4, data5, data6, data7, data8, data9, data10, data11, data12, data13, data14];
+	let rawdata16 = fs.readFileSync(february_simulated2);
+	let data16 = JSON.parse(rawdata16);
+
+
+	// let responseArray = [data1, data2, data3, data4, data5, data6, data7, data8, data9, data10, data11, data12, data13, data14];
+	let responseArray = [data9, data10, data15, data16, data11, data12, data13, data14];
 	response.json(responseArray);
 
 
