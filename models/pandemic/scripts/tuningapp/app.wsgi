@@ -300,7 +300,7 @@ def simulate_func(dict_args):
         print("::::::::listfips", listfips)
 
         for fips in listfips:
-            processFilesForDateRange_county(fips, "formatted", start_date + dt.timedelta(days=1), end_date,
+            processFilesForDateRange_county(fips, "formatted", start_date + dt.timedelta(days=1), actualplot_end_date,
                                             json_formatted_dirpath=csse_formatted_json_dirpath,
                                             simulated_json_dirpath=None)
 
