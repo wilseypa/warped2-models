@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     'value':document.getElementById('runtime_days').value
                 }, 'actualplot_end_date' : {
                     'value':document.getElementById('actualplot_end_date').value
-                }; 'transmissibility':{
+                }, 'transmissibility':{
                     'ifchecked':document.getElementById('transmissibility').checked,
                     'value':document.getElementById('transmissibilityval').value
                 }, 'exposed_confirmed_ratio':{
