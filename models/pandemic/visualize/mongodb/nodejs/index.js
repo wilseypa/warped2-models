@@ -162,7 +162,7 @@ app.get('/send_plot_data', (request, response) => {
 	const march_actual2 = path.join(actual_data_folder, seventh_date2);
 	const march_simulated2 = path.join(simulated_data_folder, seventh_date);
 	const february_actual2 = path.join(actual_data_folder, eight_date2);
-	const february_simulated2 = path.join(simulated_data_folder, eight_date);
+	const february_simulated2 = path.join(simulated_data_folder, eigth_date);
 
 
 	let rawdata1 = fs.readFileSync(auguest_simulated);
