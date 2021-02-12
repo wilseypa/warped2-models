@@ -275,8 +275,13 @@ def simulate_func(dict_args):
 
     end_date = start_date + dt.timedelta(days=days_runtime)
 
+    if dict_args['actualplot_end_date']['value']:
+        actualplot_end_date = int(dict_args['actualplot_end_date']['value'])
+    else:
+        actualplot_end_date = end_date
+
     # create csv for US from original formatted files for the entire date range
-    processFilesForDateRange("formatted", start_date + dt.timedelta(days=1), end_date, csse_formatted_json_dirpath,
+    processFilesForDateRange("formatted", start_date + dt.timedelta(days=1), actualplot_end_date, csse_formatted_json_dirpath,
                              simulated_json_dirpath=None)
 
     # create file containing tweaked metrics
