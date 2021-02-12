@@ -276,7 +276,7 @@ def simulate_func(dict_args):
     end_date = start_date + dt.timedelta(days=days_runtime)
 
     if dict_args['actualplot_end_date']['value']:
-        actualplot_end_date = int(dict_args['actualplot_end_date']['value'])
+        actualplot_end_date = dt.datetime.strptime(dict_args['actualplot_end_date']['value'], "%m-%d-%Y")
     else:
         actualplot_end_date = end_date
 
