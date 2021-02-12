@@ -191,7 +191,22 @@ app.get('/send_plot_data', (request, response) => {
 	let rawdata10 = fs.readFileSync(february_simulated);
 	let data10 = JSON.parse(rawdata10);
 
-	let responseArray = [data1, data2, data3, data4];
+	let rawdata11 = fs.readFileSync(march_actual);
+	let data11 = JSON.parse(rawdata11);
+
+	let rawdata12 = fs.readFileSync(march_simulated);
+	let data12 = JSON.parse(rawdate12);
+
+
+	let rawdata13 = fs.readFileSync(march_actual2);
+	let data13 = JSON.parse(rawdata13);
+
+
+	let rawdata14 = fs.readFileSync(march_simulated2);
+	let data14 = JSON.parse(rawdata14);
+
+
+	let responseArray = [data1, data2, data3, data4, data5, data6, data7, data8, data9, data10, data11, data12, data13, data14];
 	response.json(responseArray);
 
 
