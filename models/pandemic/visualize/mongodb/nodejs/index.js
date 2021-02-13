@@ -157,7 +157,7 @@ app.get('/send_plot_data', (request, response) => {
 	const march_simulated = path.join(simulated_data_folder, sim_mar);
 
 	const february1_simulated = path.join(simulated_data_folder, sim_feb1);
-	const february1_actual = path.join(simulated_data_folder, act_feb1);
+	const february1_actual = path.join(actual_data_folder, act_feb1);
 	const march1_simulated = path.join(simulated_data_folder, sim_mar1);
 
 
