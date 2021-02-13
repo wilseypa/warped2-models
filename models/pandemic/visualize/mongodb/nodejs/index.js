@@ -230,6 +230,9 @@ app.get('/send_plot_data', (request, response) => {
 	const sim_feb = '02-28-2021.simulated-data.json';
 
 	const sim_mar = '03-31-2021.simulated-data.json';
+
+	const sim_feb1 = '02-01-2021.simulated-data.json';
+	const sim_mar1 = '03-01-2021.simulated-data.json';
 	
 	
 	const vivek_actual_path = '/work/vivek/warped2/warped2-models/models/pandemic/data';
@@ -247,6 +250,9 @@ app.get('/send_plot_data', (request, response) => {
 
 	const march_simulated = path.join(simulated_data_folder, sim_mar);
 
+	const february1_simulated = path.join(simulated_data_folder, sim_feb1);
+	const march1_simulated = path.join(simulated_data_folder, sim_mar1);
+
 
 	let raw_dec_sim = fs.readFileSync(december_simulated);
 	let raw_dec_act = fs.readFileSync(december_actual);
@@ -257,6 +263,10 @@ app.get('/send_plot_data', (request, response) => {
 	let raw_feb_sim = fs.readFileSync(february_simulated);
 	
 	let raw_mar_sim = fs.readFileSync(march_simulated);
+
+	let raw_feb1_sim = fs.readFileSync(february1_simulated);
+	let raw_mar1_sim = fs.readFileSync(march1_simulated);
+
 
 
 	let data_dec_sim = JSON.parse(raw_dec_sim);
@@ -269,7 +279,10 @@ app.get('/send_plot_data', (request, response) => {
 
 	let data_mar_sim = JSON.parse(raw_mar_sim);
 
-	let responseArray = [data_dec_sim, data_dec_act, data_jan_sim, data_jan_act, data_feb_sim, data_mar_sim];
+	let data_feb1_sim = JSON.parse(raw_feb1_sim);
+	let data_mar1_sim = JSON.parse(raw_mar1_sim);
+
+	let responseArray = [data_dec_sim, data_dec_act, data_jan_sim, data_jan_act, data_feb_sim, data_mar_sim, data_feb1_sim, data_mar1_sim];
 	response.json(responseArray);
 
 
