@@ -961,20 +961,31 @@ function rePlot(covidStats){
             highestPercentage = tempHighestPercentage;
         }
     }
-    for (i = 0; i < percentageArray.length; i++) {   // DYNAMIC LEGEND RANGE
-        percentageArray[i] = ((highestPercentage / percentageArray.length) * i).toFixed(2);
-    }
-    // if (padsNum == 0) { // August1 Simulated
-    //     percentageArray = [0, 0.7, 1.4, 2.1, 2.8, 3.5, 4.2, 4.9, 5.6];
-    // } else if (padsNum == 1) { // August1 Actual
-    //     percentageArray = [0, 1.5, 3, 4.5, 6, 7.5, 9, 10.5, 12];
-    // } else if (padsNum == 1) { // September15 Simulated
-    //     percentageArray = [0, 0.7, 1.4, 2.1, 2.8, 3.5, 4.2, 4.9, 5.6];
-    // } else if (padsNum == 1) { // September15 Actual
-    //     percentageArray = [0, 1.5, 3, 4.5, 6, 7.5, 9, 10.5, 12];
-    // } else {
-    //     console.log("PADS Plots completed");
+    // for (i = 0; i < percentageArray.length; i++) {   // DYNAMIC LEGEND RANGE
+    //     percentageArray[i] = ((highestPercentage / percentageArray.length) * i).toFixed(2);
     // }
+    percentageArray = [0.00, 3.33, 6.67, 10, 13.33, 16.67, 20.00, 23.33, 26.67];
+    if (padsNum == 0) {
+        document.getElementById('mapDate').value = '12-31-2020'
+    } else if (padsNum == 1) {
+        document.getElementById('mapDate').value = '12-31-2020'
+    } else if (padsNum == 2) {
+        document.getElementById('mapDate').value = '01-31-2021'
+    } else if (padsNum == 3) {
+        document.getElementById('mapDate').value = '01-31-2021'
+    }else if (padsNum == 4) {
+        document.getElementById('mapDate').value = '02-28-2021'
+    }else if (padsNum == 5) {
+        document.getElementById('mapDate').value = '03-31-2021'
+    }else if (padsNum == 6) {
+        document.getElementById('mapDate').value = '02-01-2021'
+    }else if (padsNum == 7) {
+        document.getElementById('mapDate').value = '02-01-2021'
+    }else if (padsNum == 8) {
+        document.getElementById('mapDate').value = '03-01-2021'
+    } else {
+        console.log("PADS Plots completed");
+    }
     
     for (i = 0; i < percentageArray.length; i++) {
         let selectString = "#legendValue" + i;
@@ -1022,20 +1033,31 @@ function padsRePlot(covidStats, pressNum){
             highestPercentage = tempHighestPercentage;
         }
     }
-    for (i = 0; i < percentageArray.length; i++) {   // DYNAMIC LEGEND RANGE
-        percentageArray[i] = ((highestPercentage / percentageArray.length) * i).toFixed(2);
-    }
-    // if (pressNum == 0) { // August1 Simulated
-    //     percentageArray = [0, 0.7, 1.4, 2.1, 2.8, 3.5, 4.2, 4.9, 5.6];
-    // } else if (pressNum == 1) { // August1 Actual
-    //     percentageArray = [0, 1.5, 3, 4.5, 6, 7.5, 9, 10.5, 12];
-    // } else if (pressNum == 2) { // September15 Simulated
-    //     percentageArray = [0, 0.7, 1.4, 2.1, 2.8, 3.5, 4.2, 4.9, 5.6];
-    // } else if (pressNum == 3) { // September15 Actual
-    //     percentageArray = [0, 1.5, 3, 4.5, 6, 7.5, 9, 10.5, 12];
-    // } else {
-    //     console.log("PADS Plots completed");
+    // for (i = 0; i < percentageArray.length; i++) {   // DYNAMIC LEGEND RANGE
+    //     percentageArray[i] = ((highestPercentage / percentageArray.length) * i).toFixed(2);
     // }
+    percentageArray = [0.00, 3.33, 6.67, 10, 13.33, 16.67, 20.00, 23.33, 26.67];
+    if (padsNum == 0) {
+        document.getElementById('mapDate').value = '12-31-2020'
+    } else if (padsNum == 1) {
+        document.getElementById('mapDate').value = '12-31-2020'
+    } else if (padsNum == 2) {
+        document.getElementById('mapDate').value = '01-31-2021'
+    } else if (padsNum == 3) {
+        document.getElementById('mapDate').value = '01-31-2021'
+    }else if (padsNum == 4) {
+        document.getElementById('mapDate').value = '02-28-2021'
+    }else if (padsNum == 5) {
+        document.getElementById('mapDate').value = '03-31-2021'
+    }else if (padsNum == 6) {
+        document.getElementById('mapDate').value = '02-01-2021'
+    }else if (padsNum == 7) {
+        document.getElementById('mapDate').value = '02-01-2021'
+    }else if (padsNum == 8) {
+        document.getElementById('mapDate').value = '03-01-2021'
+    } else {
+        console.log("PADS Plots completed");
+    }
     
     for (i = 0; i < percentageArray.length; i++) {
         let selectString = "#legendValue" + i;
