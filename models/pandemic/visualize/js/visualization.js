@@ -965,23 +965,23 @@ function rePlot(covidStats){
     //     percentageArray[i] = ((highestPercentage / percentageArray.length) * i).toFixed(2);
     // }
     percentageArray = [0.00, 3.33, 6.67, 10, 13.33, 16.67, 20.00, 23.33, 26.67];
-    if (padsNum == 0) {
-        document.getElementById('mapDate').innerHTML = '12-31-2020';
-    } else if (padsNum == 1) {
+    if (padsNum == 1) {
         document.getElementById('mapDate').innerHTML = '12-31-2020';
     } else if (padsNum == 2) {
-        document.getElementById('mapDate').innerHTML = '01-31-2021';
+        document.getElementById('mapDate').innerHTML = '12-31-2020';
     } else if (padsNum == 3) {
         document.getElementById('mapDate').innerHTML = '01-31-2021';
-    }else if (padsNum == 4) {
-        document.getElementById('mapDate').innerHTML = '02-28-2021';
+    } else if (padsNum == 4) {
+        document.getElementById('mapDate').innerHTML = '01-31-2021';
     }else if (padsNum == 5) {
-        document.getElementById('mapDate').innerHTML = '03-31-2021';
+        document.getElementById('mapDate').innerHTML = '02-28-2021';
     }else if (padsNum == 6) {
-        document.getElementById('mapDate').innerHTML = '02-01-2021';
+        document.getElementById('mapDate').innerHTML = '03-31-2021';
     }else if (padsNum == 7) {
         document.getElementById('mapDate').innerHTML = '02-01-2021';
     }else if (padsNum == 8) {
+        document.getElementById('mapDate').innerHTML = '02-01-2021';
+    }else if (padsNum == 9) {
         document.getElementById('mapDate').innerHTML = '03-01-2021';
     } else {
         console.log("PADS Plots completed");
@@ -1037,23 +1037,23 @@ function padsRePlot(covidStats, pressNum){
     //     percentageArray[i] = ((highestPercentage / percentageArray.length) * i).toFixed(2);
     // }
     percentageArray = [0.00, 3.33, 6.67, 10, 13.33, 16.67, 20.00, 23.33, 26.67];
-    if (padsNum == 0) {
-        document.getElementById('mapDate').innerHTML = '12-31-2020';
-    } else if (padsNum == 1) {
+    if (padsNum == 1) {
         document.getElementById('mapDate').innerHTML = '12-31-2020';
     } else if (padsNum == 2) {
-        document.getElementById('mapDate').innerHTML = '01-31-2021';
+        document.getElementById('mapDate').innerHTML = '12-31-2020';
     } else if (padsNum == 3) {
         document.getElementById('mapDate').innerHTML = '01-31-2021';
-    }else if (padsNum == 4) {
-        document.getElementById('mapDate').innerHTML = '02-28-2021';
+    } else if (padsNum == 4) {
+        document.getElementById('mapDate').innerHTML = '01-31-2021';
     }else if (padsNum == 5) {
-        document.getElementById('mapDate').innerHTML = '03-31-2021';
+        document.getElementById('mapDate').innerHTML = '02-28-2021';
     }else if (padsNum == 6) {
-        document.getElementById('mapDate').innerHTML = '02-01-2021';
+        document.getElementById('mapDate').innerHTML = '03-31-2021';
     }else if (padsNum == 7) {
         document.getElementById('mapDate').innerHTML = '02-01-2021';
     }else if (padsNum == 8) {
+        document.getElementById('mapDate').innerHTML = '02-01-2021';
+    }else if (padsNum == 9) {
         document.getElementById('mapDate').innerHTML = '03-01-2021';
     } else {
         console.log("PADS Plots completed");
