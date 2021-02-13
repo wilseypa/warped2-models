@@ -126,98 +126,150 @@ app.get('/send_simulated_data', (request, response) => {
 
 app.get('/send_plot_data', (request, response) => {
 
-	const first_date = '08-01-2020.simulated-data.json';
-	const second_date = '09-15-2020.simulated-data.json';
-	const first_date2 = '08-01-2020.formatted-JHU-data.json';
-	const second_date2 = '09-15-2020.formatted-JHU-data.json';
-	const third_date = '12-01-2020.simulated-data.json';
-	const third_date2 = '12-01-2020.formatted-JHU-data.json';
-	const fourth_date = '01-01-2021.simulated-data.json';
-	const fourth_date2 = '01-01-2021.formatted-JHU-data.json';
-	const fifth_date = '02-01-2021.simulated-data.json';
-	const fifth_date2 = '02-01-2021.formatted-JHU-data.json';
-	const sixth_date = '03-01-2021.simulated-data.json';
-	const sixth_date2 = '03-01-2021.formatted-JHU-data.json';
-	const seventh_date = '03-15-2021.simulated-data.json';
-	const seventh_date2 = '03-15-2021.formatted-JHU-data.json';
-	const eigth_date = '02-15-2021.simulated-data.json';
-	const eight_date2 = '02-15-2021.formatted-JHU-data.json';
+	// const first_date = '08-01-2020.simulated-data.json';
+	// const second_date = '09-15-2020.simulated-data.json';
+	// const first_date2 = '08-01-2020.formatted-JHU-data.json';
+	// const second_date2 = '09-15-2020.formatted-JHU-data.json';
+	// const third_date = '12-01-2020.simulated-data.json';
+	// const third_date2 = '12-01-2020.formatted-JHU-data.json';
+	// const fourth_date = '01-01-2021.simulated-data.json';
+	// const fourth_date2 = '01-01-2021.formatted-JHU-data.json';
+	// const fifth_date = '02-01-2021.simulated-data.json';
+	// const fifth_date2 = '02-01-2021.formatted-JHU-data.json';
+	// const sixth_date = '03-01-2021.simulated-data.json';
+	// const sixth_date2 = '03-01-2021.formatted-JHU-data.json';
+	// const seventh_date = '03-15-2021.simulated-data.json';
+	// const seventh_date2 = '03-15-2021.formatted-JHU-data.json';
+	// const eigth_date = '02-15-2021.simulated-data.json';
+	// const eight_date2 = '02-15-2021.formatted-JHU-data.json';
 
+	// const vivek_actual_path = '/work/vivek/warped2/warped2-models/models/pandemic/data';
+	// const vivek_simulated_path = '/work/vivek/warped2/warped2-models/models/pandemic/scripts/tuningapp/simOutfiles.bkp';
+	// const actual_data_folder = path.join(__dirname, '../../../../../../../../../', vivek_actual_path);
+	// const simulated_data_folder = path.join(__dirname, '../../../../../../../../../', vivek_simulated_path);
+	// const auguest_simulated = path.join(simulated_data_folder, first_date);
+	// const auguest_actual = path.join(actual_data_folder, first_date2);
+	// const september_simulted = path.join(simulated_data_folder, second_date);
+	// const september_actual = path.join(actual_data_folder, second_date2);
+	// const december_actual = path.join(actual_data_folder, third_date2);
+	// const december_simulated = path.join(simulated_data_folder, third_date);
+	// const january_actual = path.join(actual_data_folder, fourth_date2);
+	// const january_simulated = path.join(simulated_data_folder, fourth_date);
+	// const february_actual = path.join(actual_data_folder, fifth_date2);
+	// const february_simulated = path.join(simulated_data_folder, fifth_date);
+	// const march_actual = path.join(actual_data_folder, sixth_date2);
+	// const march_simulated = path.join(simulated_data_folder, sixth_date);
+	// const march_actual2 = path.join(actual_data_folder, seventh_date2);
+	// const march_simulated2 = path.join(simulated_data_folder, seventh_date);
+	// const february_actual2 = path.join(actual_data_folder, eight_date2);
+	// const february_simulated2 = path.join(simulated_data_folder, eigth_date);
+
+
+	// let rawdata1 = fs.readFileSync(auguest_simulated);
+	// let data1 = JSON.parse(rawdata1);
+
+	// let rawdata2 = fs.readFileSync(auguest_actual);
+	// let data2 = JSON.parse(rawdata2);
+
+	// let rawdata3 = fs.readFileSync(september_simulted);
+	// let data3 = JSON.parse(rawdata3);
+
+	// let rawdata4 = fs.readFileSync(september_actual);
+	// let data4 = JSON.parse(rawdata4);
+
+	// let rawdata5 = fs.readFileSync(december_actual);
+	// let data5 = JSON.parse(rawdata5);
+
+	// let rawdata6 = fs.readFileSync(december_simulated);
+	// let data6 = JSON.parse(rawdata6);
+
+	// let rawdata7 = fs.readFileSync(january_actual);
+	// let data7 = JSON.parse(rawdata7);
+
+	// let rawdata8 = fs.readFileSync(january_simulated);
+	// let data8 = JSON.parse(rawdata8);
+
+	// let rawdata9 = fs.readFileSync(february_actual);
+	// let data9 = JSON.parse(rawdata9);
+
+	// let rawdata10 = fs.readFileSync(february_simulated);
+	// let data10 = JSON.parse(rawdata10);
+
+	// let rawdata11 = fs.readFileSync(march_actual);
+	// let data11 = JSON.parse(rawdata11);
+
+	// let rawdata12 = fs.readFileSync(march_simulated);
+	// let data12 = JSON.parse(rawdate12);
+
+
+	// let rawdata13 = fs.readFileSync(march_actual2);
+	// let data13 = JSON.parse(rawdata13);
+
+
+	// let rawdata14 = fs.readFileSync(march_simulated2);
+	// let data14 = JSON.parse(rawdata14);
+
+	// let rawdata15 = fs.readFileSync(february_actual2);
+	// let data15 = JSON.parse(rawdata15);
+
+	// let rawdata16 = fs.readFileSync(february_simulated2);
+	// let data16 = JSON.parse(rawdata16);
+
+
+	// // let responseArray = [data1, data2, data3, data4, data5, data6, data7, data8, data9, data10, data11, data12, data13, data14];
+	// let responseArray = [data9, data10, data15, data16, data11, data12, data13, data14];
+	// response.json(responseArray);
+
+
+	const sim_dec = '12-31-2020.simulated-data.json';
+	const act_dec = '12-31-2020.formatted-JHU-data.json';
+
+	const sim_jan = '01-31-2021.simulated-data.json';
+	const act_jan = '01-31-2021.formatted-JHU-data.json';
+
+	const sim_feb = '02-28-2021.simulated-data.json';
+
+	const sim_mar = '03-31-2021.simulated-data.json';
+	
+	
 	const vivek_actual_path = '/work/vivek/warped2/warped2-models/models/pandemic/data';
-	const vivek_simulated_path = '/work/vivek/warped2/warped2-models/models/pandemic/scripts/tuningapp/simOutfiles.bkp';
+	const vivek_simulated_path = '/work/vivek/warped2/warped2-models/models/pandemic/scripts/tuningapp/simOutfiles.dec1_mar31_exponentfactor48';
 	const actual_data_folder = path.join(__dirname, '../../../../../../../../../', vivek_actual_path);
 	const simulated_data_folder = path.join(__dirname, '../../../../../../../../../', vivek_simulated_path);
-	const auguest_simulated = path.join(simulated_data_folder, first_date);
-	const auguest_actual = path.join(actual_data_folder, first_date2);
-	const september_simulted = path.join(simulated_data_folder, second_date);
-	const september_actual = path.join(actual_data_folder, second_date2);
-	const december_actual = path.join(actual_data_folder, third_date2);
-	const december_simulated = path.join(simulated_data_folder, third_date);
-	const january_actual = path.join(actual_data_folder, fourth_date2);
-	const january_simulated = path.join(simulated_data_folder, fourth_date);
-	const february_actual = path.join(actual_data_folder, fifth_date2);
-	const february_simulated = path.join(simulated_data_folder, fifth_date);
-	const march_actual = path.join(actual_data_folder, sixth_date2);
-	const march_simulated = path.join(simulated_data_folder, sixth_date);
-	const march_actual2 = path.join(actual_data_folder, seventh_date2);
-	const march_simulated2 = path.join(simulated_data_folder, seventh_date);
-	const february_actual2 = path.join(actual_data_folder, eight_date2);
-	const february_simulated2 = path.join(simulated_data_folder, eigth_date);
+
+	const december_simulated = path.join(simulated_data_folder, sim_dec);
+	const december_actual = path.join(actual_data_folder, act_dec);
+
+	const january_simulated = path.join(simulated_data_folder, sim_jan);
+	const january_actual = path.join(actual_data_folder, act_jan);
+
+	const february_simulated = path.join(simulated_data_folder, sim_feb);
+
+	const march_simulated = path.join(simulated_data_folder, sim_mar);
 
 
-	let rawdata1 = fs.readFileSync(auguest_simulated);
-	let data1 = JSON.parse(rawdata1);
+	let raw_dec_sim = fs.readFileSync(december_simulated);
+	let raw_dec_act = fs.readFileSync(december_actual);
 
-	let rawdata2 = fs.readFileSync(auguest_actual);
-	let data2 = JSON.parse(rawdata2);
+	let raw_jan_sim = fs.readFileSync(january_simulated);
+	let raw_jan_act = fs.readFileSync(january_actual);
 
-	let rawdata3 = fs.readFileSync(september_simulted);
-	let data3 = JSON.parse(rawdata3);
-
-	let rawdata4 = fs.readFileSync(september_actual);
-	let data4 = JSON.parse(rawdata4);
-
-	let rawdata5 = fs.readFileSync(december_actual);
-	let data5 = JSON.parse(rawdata5);
-
-	let rawdata6 = fs.readFileSync(december_simulated);
-	let data6 = JSON.parse(rawdata6);
-
-	let rawdata7 = fs.readFileSync(january_actual);
-	let data7 = JSON.parse(rawdata7);
-
-	let rawdata8 = fs.readFileSync(january_simulated);
-	let data8 = JSON.parse(rawdata8);
-
-	let rawdata9 = fs.readFileSync(february_actual);
-	let data9 = JSON.parse(rawdata9);
-
-	let rawdata10 = fs.readFileSync(february_simulated);
-	let data10 = JSON.parse(rawdata10);
-
-	let rawdata11 = fs.readFileSync(march_actual);
-	let data11 = JSON.parse(rawdata11);
-
-	let rawdata12 = fs.readFileSync(march_simulated);
-	let data12 = JSON.parse(rawdate12);
+	let raw_feb_sim = fs.readFileSync(february_simulated);
+	
+	let raw_mar_sim = fs.readFileSync(march_simulated);
 
 
-	let rawdata13 = fs.readFileSync(march_actual2);
-	let data13 = JSON.parse(rawdata13);
+	let data_dec_sim = JSON.parse(raw_dec_sim);
+	let data_dec_act = JSON.parse(raw_dec_act);
 
+	let data_jan_sim = JSON.parse(raw_jan_sim);
+	let data_jan_act = JSON.parse(raw_jan_act);
 
-	let rawdata14 = fs.readFileSync(march_simulated2);
-	let data14 = JSON.parse(rawdata14);
+	let data_feb_sim = JSON.parse(raw_feb_sim);
 
-	let rawdata15 = fs.readFileSync(february_actual2);
-	let data15 = JSON.parse(rawdata15);
+	let data_mar_sim = JSON.parse(raw_mar_sim);
 
-	let rawdata16 = fs.readFileSync(february_simulated2);
-	let data16 = JSON.parse(rawdata16);
-
-
-	// let responseArray = [data1, data2, data3, data4, data5, data6, data7, data8, data9, data10, data11, data12, data13, data14];
-	let responseArray = [data9, data10, data15, data16, data11, data12, data13, data14];
+	let responseArray = [data_dec_sim, data_dec_act, data_jan_sim, data_jan_act, data_feb_sim, data_mar_sim];
 	response.json(responseArray);
 
 
