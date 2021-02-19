@@ -1,0 +1,62 @@
+<div id="postSimulationContent" style="display: none;">
+    <div style="text-align: center;">
+        <div class="basicBorder center" style="width: 425px !important;">
+            <div style="margin: 10px; width: 100%">
+                <span id="minMaxMapControls">&minus;</span>
+                <div id="editConfigBtnContainer" style="display: inline;">
+                    <input type="button" id="editConfig" value="Edit Config">
+                </div>
+                <div id="minMaxControlsContent">
+                    <br>
+                    <br>
+            
+                    <div id="dateInputDiv">
+                        <input id="startDate" class="dateInput" type="date">
+                        <input id="endDate" class="dateInput" type="date" disabled>
+                        <input type="checkbox" class="checkbox" name="isDateRange" id="isDateRange">
+                        <label for="isDateRange">Range?</label>
+                    </div>
+                    <div>
+                        <p id="decrementButton" class="arrow" style="padding-right: 2px;">&#x25C0;</p>
+                        <p id="timelapseButton" class="timelapse" style="color: black; width: 28px;">&#x23F1;</p>
+                        <p id="incrementButton" class="arrow" style="padding-left: 2px;">&#x25B6;</p>
+                    </div>
+                    <!-- <div>
+                        <p id="timelapseButton" class="timelapse" style="color: black;">&#x23F1;</p>
+                    </div> -->
+                    <br>
+                    <button id="plotButton" style="width: 55px; height: 33px;">Plot</button>
+                    <button id="padsPlotButton" style="width: 55px; height: 33px;">PadsPlotButton</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div>
+        <br>
+        <div id="mapStatCheckboxes" class="basicBorder center" style="width: fit-content;">
+            <input type="checkbox" class="checkbox" name="Confirmed" id="Confirmed">
+            <label for="Confirmed">Confirmed</label>
+            <input type="checkbox" class="checkbox" name="Dead" id="Dead">
+            <label for="Dead">Dead</label>
+            <input type="checkbox" class="checkbox" name="Recovered" id="Recovered">
+            <label for="Recovered">Recovered</label>
+            <input type="checkbox" class="checkbox" name="Active" id="Active">
+            <label for="Active">Active</label>
+        </div>
+        <br>
+        <!-- <br> -->
+        <div id="map" style="text-align: center; display: none;">
+            <div id="legend" class="legend-box" style="display: none;">
+                <div id="legendTitle" style="font-weight: bold;">Active COVID-19 Cases</div>
+                <div id="legendValues" style="text-align: left; margin-left: 20%;">
+                    <!-- Dynamically generated legend ranges -->
+                </div>
+            </div>
+
+            <div id="mapDate"></div>
+            
+        </div>
+    </div>
+    <div id="tt" class="tooltiptext"></div>
+</div>

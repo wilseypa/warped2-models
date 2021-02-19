@@ -12,6 +12,16 @@ async function isDevEnvFunc() {
     //console.log(isDevEnv);
     return data;
 }
+async function loadHtml(fileName, parentElement) {
+    const response = await fetch('/loadHtml/' + fileName);
+    const data = await response.json();
+    // console.log(data.response);
+    document.getElementById(parentElement).innerHTML = data.response;
+    return data;
+}
+loadHtml('login.html', 'main-content').then(function (){
+    document.getElementById('username').focus();
+})
 async function sendData() {
     const response = await fetch('/send_data/');
     const data = await response.json();
@@ -81,7 +91,6 @@ isDevEnvFunc().then(function() {
 
 // Frontend Globals and Setup
 var pageState = "login"; // login, config, viewingMap, editingConfig
-document.getElementById('username').focus();
 
 var startDate = document.getElementById('startDate');
 var endDate = document.getElementById('endDate');
@@ -321,6 +330,7 @@ var getStatus = function () {
 
 // Submitting Login Form
 d3.select("#submitLogin").on("click", function() {
+    console.log("here")
     if(isDevEnv) {
         removeRequiredWarning("requiredWarning");
 

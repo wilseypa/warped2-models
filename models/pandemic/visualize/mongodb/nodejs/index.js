@@ -1,4 +1,5 @@
 const path = require('path');
+const http = require('http');
 const fs = require('fs');
 //const request = require('request');
 const axiosTest = require('axios');
@@ -59,6 +60,14 @@ app.get('/isDevEnv', (request, response) => {
 
 	//console.log(envPath)
 	response.status(200).send({path: envPath});
+});
+
+app.get('/loadHtml/:fileName', (request, response) => {
+	// var filePath = path.join(__dirname + '../../../test.html');
+	// response.sendFile(filePath);
+
+	const fileContents = fs.readFileSync('../../html/' + request.params.fileName).toString();
+	response.status(200).send({response: fileContents});
 });
 
 app.post('/callSimulate', (req, res) => {

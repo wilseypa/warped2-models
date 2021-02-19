@@ -1,0 +1,108 @@
+<div id="configApi" class="configApi">
+    <form class="configApiForm basicBorder">
+    <h2 style="text-align: center;">Simulation Config</h2>
+
+        <div id="startdate_runtime" style="text-align: center; height: 40px; white-space: nowrap;">
+            <div style="display: inline-block; width: 45%;">
+                <div style="display: inline-block;">
+                    <span id="startdate_info" class="info infoTooltip" data-tooltipText="Beginning date of simulation">&#9432;</span>
+                </div>
+                <div style="display: inline-block;">
+                    <label for="startdate" style="display: block;">Start Date</label>
+                    <input id="startdate" type="date" value="2020-07-22" style="display: inline-block;" required>
+                </div>
+            </div>
+            <div style="display: inline-block; width: 45%;">
+                <div style="display: inline-block;">
+                    <span id="runtime_days_info" class="info infoTooltip" data-tooltipText="Number of simulated days.">&#9432;</span>
+                </div>
+                <div style="display: inline-block;">
+                    <label for="runtime_days" style="display: block;">Runtime in Days</label>
+                    <input id="runtime_days" placeholder="1" style="display: inline-block;" required>
+                </div>
+            </div>
+        </div>
+        <br>
+        <br>
+        <div style="margin: 20px;">
+            <div>
+                <span id="transmissibility_info" class="info infoTooltip" data-tooltipText="Placeholder for info.">&#9432;</span>
+                <input type="checkbox" id="transmissibility">
+                <p style="display: inline;"> Transmissibility </p>
+                <input id="transmissibilityval" placeholder="2.2">
+            </div>
+            <div>
+                <span id="exposed_confirmed_ratio_info" class="info infoTooltip" data-tooltipText="Placeholder for info.">&#9432;</span>
+                <input type="checkbox" id="exposed_confirmed_ratio">
+                <p style="display: inline;"> Exposed-Confirmed Factor </p>
+                <input id="exposed_confirmed_ratioval" placeholder="0.00">
+            </div>
+            <div>
+                <span id="mean_incubation_duration_in_days_info" class="info infoTooltip" data-tooltipText="Placeholder for info.">&#9432;</span>
+                <input type="checkbox" id="mean_incubation_duration_in_days">
+                <p style="display: inline;"> mean_incubation_duration_in_days </p>
+                <input id="mean_incubation_duration_in_daysval" placeholder="2.2">
+            </div>
+            <div>
+                <span id="mean_infection_duration_in_days_info" class="info infoTooltip" data-tooltipText="Placeholder for info.">&#9432;</span>
+                <input type="checkbox" id="mean_infection_duration_in_days">
+                <p style="display: inline;"> mean_infection_duration_in_days </p>
+                <input id="mean_infection_duration_in_daysval" placeholder="2.3">
+            </div>
+            <div>
+                <span id="mortality_ratio_info" class="info infoTooltip" data-tooltipText="Placeholder for info.">&#9432;</span>
+                <input type="checkbox" id="mortality_ratio">
+                <p style="display: inline;"> mortality_ratio </p>
+                <input id="mortality_ratioval" placeholder="0.05">
+            </div>
+            <div>
+                <span id="update_trig_interval_in_hrs_info" class="info infoTooltip" data-tooltipText="Placeholder for info.">&#9432;</span>
+                <input type="checkbox" id="update_trig_interval_in_hrs">
+                <p style="display: inline;"> update_trig_interval_hrs </p>
+                <input id="update_trig_interval_in_hrsval" placeholder="24">
+            </div>
+            <div>
+                <span id="graph_type_info" class="info infoTooltip" data-tooltipText="Placeholder for info.">&#9432;</span>
+                <input type="checkbox" id="graph_type">
+                <p style="display: inline;"> Graph Type </p>
+                <select id="graph_typeoption">
+                    <option>Watts-Strogatz</option>
+                    <option>Barabasi-Albert</option>
+                </select>
+            </div>
+            <div>
+                <span id="graph_params_info" class="info infoTooltip" data-tooltipText="Placeholder for info.">&#9432;</span>
+                <input type="checkbox" id="graph_params">
+                <p style="display: inline;"> graph params (k) (beta) </p>
+                <input id="graph_param_Kval" placeholder="8">
+                <input id="graph_param_betaval" placeholder="0.1">
+            </div>
+            <div>
+                <span id="diffusion_trig_interval_in_hrs_info" class="info infoTooltip" data-tooltipText="Placeholder for info.">&#9432;</span>
+                <input type="checkbox" id="diffusion_trig_interval_in_hrs">
+                <p style="display: inline;"> diffusion_trig_interval_in_hrs </p>
+                <input id="diffusion_trig_interval_in_hrsval" placeholder="48">
+            </div>
+            <div>
+                <span id="avg_transport_speed_info" class="info infoTooltip" data-tooltipText="Placeholder for info.">&#9432;</span>
+                <input type="checkbox" id="avg_transport_speed">
+                <p style="display: inline;"> avg_transport_speed </p>
+                <input id="avg_transport_speedval" placeholder="100">
+            </div>
+            <div>
+                <span id="max_diffusion_cnt_info" class="info infoTooltip" data-tooltipText="Placeholder for info.">&#9432;</span>
+                <input type="checkbox" id="max_diffusion_cnt">
+                <p style="display: inline;"> max_diffusion_cnt </p>
+                <input id="max_diffusion_cntval" placeholder="10">
+            </div>
+            <br>
+            <div style="text-align: center;">
+                <input type="button" id="submitConfigApi" value="Submit">
+                <!-- needs an action tag for api ^^^ -->
+            </div>
+        </div>
+    </form>
+    <br>
+    <br>
+    <br>
+</div>
