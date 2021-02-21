@@ -77,7 +77,7 @@ async function send_plot_data() {
     return data;
 }
 
-async function loadJavascriptSource(filePath) {
+function loadJavascriptSource(filePath) {
     try {
         var d3BodyScript = document.createElement('script');
         d3BodyScript.src = filePath;  // Directory root path with respect to "index.html"
@@ -90,15 +90,7 @@ async function loadJavascriptSource(filePath) {
     }
 }
 
-var padsData;
-isDevEnvFunc().then(function() {
-    if (!isDevEnv) {
-        send_plot_data().then(function(data) {
-            padsData = data;
-            console.log(padsData);
-        });
-    }
-});
+isDevEnvFunc();//.then(function() {});
 
 document.getElementById('username').focus();
 loadHtml('config.html', 'configHandle')

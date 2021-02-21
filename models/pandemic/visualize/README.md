@@ -7,6 +7,9 @@ LOTS OF DATA IS MISSING IN CERTAIN DAYS (5/26/2020)(8/23/2020 only with range) W
 
 ## **TODO**
 ### ***Front End***
+Move everything besides startdate and runtime days to be hidden under an advanced options button for config  
+Change runtime days to be start and stop dat of simulation  
+Refactor map screen to look like wilseys screenshot from map screenshots email thread  
 Replace placeholder placeholders (waiting for actual placeholders) with correct placeholder values  
 Remove checkboxes if placeholder values (placeholder values as background unless typed then forget placeholder values)  
 Add black to top of legend to denote that no data is available  

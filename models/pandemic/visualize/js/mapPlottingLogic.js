@@ -169,20 +169,6 @@ d3.select("#plotButton").on("click", function() {
         // document.body.style.backgroundColor = "lightskyblue";
     }, 50);
 });
-//PADS Plot Button Press
-var padsNum = 0;
-d3.select("#padsPlotButton").on("click", function() {
-    padsloadNewData(padsNum);
-    padsNum = padsNum + 1;
-
-    setTimeout(function(){ 
-        document.getElementById('mapStatCheckboxes').style.display = "block";
-        document.getElementById('map').style.display = "block";
-        document.getElementById('legend').style.display = "block";
-        d3.select("#plotButton").attr("disabled", true);
-        // document.body.style.backgroundColor = "lightskyblue";
-    }, 50);
-});
 
 //Minimize_Maximize Button Press
 d3.select("#minMaxMapControls").on("click", function() {
@@ -406,78 +392,6 @@ function loadNewData() {
         })
     }
 };
-// Grabs Dates from Input and Plots to D3 Map
-function padsloadNewData(pressNum) {
-    if (isDateRange.checked) {    //load all data from files across range
-        let startDateValue = new Date(startDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
-        let endDateValue = new Date(endDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
-        let timeDiffInDays = (endDateValue.getTime() - startDateValue.getTime())/(1000*60*60*24);
-
-        var startDateParam = formatDate(startDateValue, "MM-DD-YYYY", "javascript");
-        var endDateParam = formatDate(endDateValue, "MM-DD-YYYY", "javascript");
-        
-        updateMapDateValue(startDateParam, endDateParam);
-
-        //console.log(startDateParam + "   " + endDateParam);
-        var covidStatsAPIArray;
-        getData(startDateParam, endDateParam).then((data) => {
-            //covidStatsAPIArray = data;
-            covidStatsAPIArray = padsData[pressNum];
-            //console.log(covidStatsAPIArray);
-
-            // var locationsLength = covidStats.locations.length;
-            // var locationsDataLength = covidStats.locations[0].length;
-
-            for (var i = 0; i < padsData[pressNum].locations.length; i++) {
-                for(var n = 0; n < padsData[pressNum].locations[0].length; n++) {
-                    if(n == 6 || n == 7 || n == 8 || n == 9) {
-                        covidStats.locations[i][n] = 0;
-                    }
-                }
-            }
-
-            covidStatsAPIArray.forEach(function (value, index) { // (item, index)
-                locationsLength = covidStatsAPIArray[index][0].locations.length;
-                locationsDataLength = covidStatsAPIArray[index][0].locations[0].length;
-
-                for (var i = 0; i < locationsLength; i++) {
-                    //console.log(covidStats.locations[i])
-                    for (var n = 0; n < locationsDataLength; n++) {
-                        if (n == 6 || n == 7 || n == 8 || n == 9) {
-                            covidStats.locations[i][n] += covidStatsAPIArray[index][0].locations[i][n];
-                        } /*else {    //ELSE NOT NEEDED BC OF NEXT IF STATEMENT
-                                covidStats.locations[i][n] = covidStatsAPIArray[index][0].locations[i][n];
-                            }*/
-                    }
-                }
-
-                if ((index) == timeDiffInDays) {   //final file iteration
-                    for (var i = 0; i < locationsLength; i++) {
-                        for (var n = 0; n < locationsDataLength; n++) {
-                            if (n != 6 && n != 7 && n != 8 && n != 9) {
-                                covidStats.locations[i][n] = covidStatsAPIArray[index][0].locations[i][n];  //get stats (population) of latest date in range
-                            }
-                        }
-                    }
-                    padsRePlot(covidStats, pressNum);
-                }
-            })
-        })
-
-    } else {
-        let startDateValue = new Date(startDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
-        var startDateParam = formatDate(startDateValue, "MM-DD-YYYY", "javascript");
-
-        updateMapDateValue(startDateParam, endDateParam);
-
-        //console.log(startDateParam);
-        getData(startDateParam, startDateParam).then((data) => {
-            // covidStats = data[0][0];
-            covidStats = padsData[pressNum];
-            padsRePlot(covidStats, pressNum);
-        })
-    }
-};
 
 // The Plotting of Colors to Each County    -----------DYNAMIC MAX PERCENTAGE BUT DOESNT WORK WELL BECAUSE OF OUTLIERS....---------
 function rePlot(covidStats){
@@ -488,102 +402,8 @@ function rePlot(covidStats){
             highestPercentage = tempHighestPercentage;
         }
     }
-    // for (i = 0; i < percentageArray.length; i++) {   // DYNAMIC LEGEND RANGE
-    //     percentageArray[i] = ((highestPercentage / percentageArray.length) * i).toFixed(2);
-    // }
-    percentageArray = [0.00, 3.33, 6.67, 10, 13.33, 16.67, 20.00, 23.33, 26.67];
-    if (padsNum == 1) {
-        document.getElementById('mapDate').innerHTML = '12-31-2020';
-    } else if (padsNum == 2) {
-        document.getElementById('mapDate').innerHTML = '12-31-2020';
-    } else if (padsNum == 3) {
-        document.getElementById('mapDate').innerHTML = '01-31-2021';
-    } else if (padsNum == 4) {
-        document.getElementById('mapDate').innerHTML = '01-31-2021';
-    }else if (padsNum == 5) {
-        document.getElementById('mapDate').innerHTML = '02-28-2021';
-    }else if (padsNum == 6) {
-        document.getElementById('mapDate').innerHTML = '03-31-2021';
-    }else if (padsNum == 7) {
-        document.getElementById('mapDate').innerHTML = '02-01-2021';
-    }else if (padsNum == 8) {
-        document.getElementById('mapDate').innerHTML = '02-01-2021';
-    }else if (padsNum == 9) {
-        document.getElementById('mapDate').innerHTML = '03-01-2021';
-    } else {
-        console.log("PADS Plots completed");
-    }
-    
-    for (i = 0; i < percentageArray.length; i++) {
-        let selectString = "#legendValue" + i;
-        let htmlString = percentageArray[i] + "%" + " - " + percentageArray[i + 1] + "%"
-        if(i == percentageArray.length-1) {
-            htmlString = percentageArray[i] + "%" + "+";
-        }
-        d3.select(selectString).html(htmlString);
-    }
-
-    svg.selectAll(".county")
-        .style("fill", function() {
-            var currentCountyId = d3.select(this)._groups[0][0].__data__.id;
-            var currentLocationData;
-            for (i = 0; i < covidStats.locations.length; i++){
-                if(parseInt(covidStats.locations[i][0]) == currentCountyId){
-                    currentLocationData = covidStats.locations[i];
-                    break;
-                }
-            }
-            if(typeof currentLocationData == 'undefined'){
-                return "black";
-            }
-            var percentage = ((currentLocationData[9] / currentLocationData[10]) * 100);
-
-            for (i = 0; i < percentageArray.length; i++) {
-                if(i == percentageArray.length-1) {
-                    if (percentage >= percentageArray[i]){
-                        return color_wheel[i];
-                    }
-                }
-                if (percentage >= percentageArray[i] && percentage < percentageArray[i + 1]){
-                    return color_wheel[i];
-                }
-            }
-        });
-}
-
-// The Plotting of Colors to Each County    -----------DYNAMIC MAX PERCENTAGE BUT DOESNT WORK WELL BECAUSE OF OUTLIERS....---------
-function padsRePlot(covidStats, pressNum){
-    var highestPercentage = 0;
-    for (i = 0; i < covidStats.locations.length; i++) {
-        tempHighestPercentage =  ((covidStats.locations[i][9] / covidStats.locations[i][10]) * 100);
-        if(tempHighestPercentage > highestPercentage) {
-            highestPercentage = tempHighestPercentage;
-        }
-    }
-    // for (i = 0; i < percentageArray.length; i++) {   // DYNAMIC LEGEND RANGE
-    //     percentageArray[i] = ((highestPercentage / percentageArray.length) * i).toFixed(2);
-    // }
-    percentageArray = [0.00, 3.33, 6.67, 10, 13.33, 16.67, 20.00, 23.33, 26.67];
-    if (padsNum == 1) {
-        document.getElementById('mapDate').innerHTML = '12-31-2020';
-    } else if (padsNum == 2) {
-        document.getElementById('mapDate').innerHTML = '12-31-2020';
-    } else if (padsNum == 3) {
-        document.getElementById('mapDate').innerHTML = '01-31-2021';
-    } else if (padsNum == 4) {
-        document.getElementById('mapDate').innerHTML = '01-31-2021';
-    }else if (padsNum == 5) {
-        document.getElementById('mapDate').innerHTML = '02-28-2021';
-    }else if (padsNum == 6) {
-        document.getElementById('mapDate').innerHTML = '03-31-2021';
-    }else if (padsNum == 7) {
-        document.getElementById('mapDate').innerHTML = '02-01-2021';
-    }else if (padsNum == 8) {
-        document.getElementById('mapDate').innerHTML = '02-01-2021';
-    }else if (padsNum == 9) {
-        document.getElementById('mapDate').innerHTML = '03-01-2021';
-    } else {
-        console.log("PADS Plots completed");
+    for (i = 0; i < percentageArray.length; i++) {   // DYNAMIC LEGEND RANGE
+        percentageArray[i] = ((highestPercentage / percentageArray.length) * i).toFixed(2);
     }
     
     for (i = 0; i < percentageArray.length; i++) {
