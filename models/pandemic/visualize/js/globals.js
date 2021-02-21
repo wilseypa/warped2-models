@@ -1,6 +1,4 @@
 // Frontend Globals and Setup
-var pageState = "login"; // login, config, viewingMap, editingConfig
-
 var startDate = document.getElementById('startDate');
 var endDate = document.getElementById('endDate');
 var isDateRange = document.getElementById('isDateRange');

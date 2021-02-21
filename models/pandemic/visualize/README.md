@@ -10,6 +10,7 @@ LOTS OF DATA IS MISSING IN CERTAIN DAYS (5/26/2020)(8/23/2020 only with range) W
 Move everything besides startdate and runtime days to be hidden under an advanced options button for config  
 Change runtime days to be start and stop dat of simulation  
 Refactor map screen to look like wilseys screenshot from map screenshots email thread  
+Add front-end button to download map as svg or pdf  
 Replace placeholder placeholders (waiting for actual placeholders) with correct placeholder values  
 Remove checkboxes if placeholder values (placeholder values as background unless typed then forget placeholder values)  
 Add black to top of legend to denote that no data is available  
@@ -51,6 +52,7 @@ Position legend properly for windows resizing
 Use placeholder values on configApi form submit  
 Make timelapse clearly enabled/disabled  
 Create information icon hover for each parameter  
+Refactor front-end to be more modular for readability and authorization purposes  
 
 ## **Resources**
 https://www.youtube.com/watch?v=aNbgrqRuoiE  --Help for US state map  

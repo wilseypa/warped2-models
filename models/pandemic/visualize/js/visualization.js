@@ -77,12 +77,21 @@ async function send_plot_data() {
     return data;
 }
 
-function loadJavascriptSource(filePath) {
+function loadJavascriptSource(filePathArray) {
     try {
         var d3BodyScript = document.createElement('script');
-        d3BodyScript.src = filePath;  // Directory root path with respect to "index.html"
+        d3BodyScript.onload = function(eventData) {
+            //console.log("onload");
+            filePathArray.shift();
+            if (filePathArray.length > 0) {
+                loadJavascriptSource(filePathArray);
+            }
+        }
+        //console.log("offload")
+        d3BodyScript.type = "text/javascript";
+        d3BodyScript.src = filePathArray[0];  // Directory root path with respect to "index.html"
         document.body.appendChild(d3BodyScript);
-        return true;
+        // return true;
     }
     catch(err) {
         console.log(err);
@@ -92,11 +101,20 @@ function loadJavascriptSource(filePath) {
 
 isDevEnvFunc();//.then(function() {});
 
+var pageState = "login"; // login, config, viewingMap, editingConfig
+
 document.getElementById('username').focus();
-loadHtml('config.html', 'configHandle')
-    .then(function (){
-        return loadHtml('map.html', 'mapHandle');
-    })
-    .then(function (){
-        loadJavascriptSource("js/main.js");
-});
+
+// loadJavascriptSource("js/topLevelFuncs.js");
+// loadJavascriptSource("js/loginHandler.js");
+
+var scriptsArrayVisualization = ["js/topLevelFuncs.js", "js/loginHandler.js"];
+loadJavascriptSource(scriptsArrayVisualization);
+
+// loadHtml('config.html', 'configHandle')
+//     .then(function (){
+//         return loadHtml('map.html', 'mapHandle');
+//     })
+//     .then(function (){
+//         loadJavascriptSource("js/main.js");
+// });

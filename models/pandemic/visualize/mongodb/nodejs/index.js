@@ -9,6 +9,7 @@ const directoryPath = path.join(__dirname, 'visualize', 'mongodb',  'Pandemic_Da
 const Datastore = require('nedb');
 
 const express = require('express');
+const { config } = require('process');
 const app = express();
 app.listen(3000, () => console.log('listening at port 3000'));
 app.use(express.static('../../../visualize'));
@@ -39,6 +40,18 @@ function formatDate(dateValue, dateFormat) {
         }
 }
 
+function getHtmlTemplate(filePath) {
+	return fs.readFileSync(filePath).toString();
+}
+
+app.get('/loadHtml/:fileName', (request, response) => {
+	// var filePath = path.join(__dirname + '../../../test.html');
+	// response.sendFile(filePath);
+
+	const fileContents = getHtmlTemplate('../../html/' + request.params.fileName);
+	response.status(200).send({response: fileContents});
+});
+
 app.get('/login/:username/:password', (request, response) => {
 	let password = request.params.password;
 	let username = request.params.username;
@@ -46,12 +59,13 @@ app.get('/login/:username/:password', (request, response) => {
 	// console.log(password);
 	if (username == 'admin' && password == 'warped2') {
 		// console.log('Good');
-		response.status(200).send({response: "success"});
+		const fileContents = getHtmlTemplate('../../html/' + "config.html");
+		response.status(200).send({response: "success", html: "config.html"});
 
 	}
 	else {
 		// console.log('Bad');
-		response.status(401).send({response: "failed"});
+		response.status(401).send({response: "failed", html: ""});
 	}
 });
 
@@ -60,14 +74,6 @@ app.get('/isDevEnv', (request, response) => {
 
 	//console.log(envPath)
 	response.status(200).send({path: envPath});
-});
-
-app.get('/loadHtml/:fileName', (request, response) => {
-	// var filePath = path.join(__dirname + '../../../test.html');
-	// response.sendFile(filePath);
-
-	const fileContents = fs.readFileSync('../../html/' + request.params.fileName).toString();
-	response.status(200).send({response: fileContents});
 });
 
 app.post('/callSimulate', (req, res) => {
