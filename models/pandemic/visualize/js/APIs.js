@@ -1,3 +1,5 @@
+// CURRENTLY NOT USED -- NOT WORKING WHEN TESTED AS SEPARATE FILE
+
 //Backend Functions
 var isDevEnv = false;
 async function isDevEnvFunc() {
@@ -12,6 +14,7 @@ async function isDevEnvFunc() {
     //console.log(isDevEnv);
     return data;
 }
+
 async function loadHtml(fileName, parentElement) {
     const response = await fetch('/loadHtml/' + fileName);
     const data = await response.json();
@@ -19,6 +22,7 @@ async function loadHtml(fileName, parentElement) {
     document.getElementById(parentElement).innerHTML = data.response;
     return data;
 }
+
 async function sendData() {
     const response = await fetch('/send_data/');
     const data = await response.json();
@@ -26,18 +30,21 @@ async function sendData() {
     return data;
 }
 //sendData();
+
 async function getData(startDate, endDate) {
     const response = await fetch('/pandemic_data/' + startDate + '/' + endDate);
     const data = await response.json();
     //console.log(data);
     return data;
 }
+
 async function requestLogin(username, password) {
     const response = await fetch('/login/' + username + '/' + password);
     const data = await response.json();
     //console.log(data);
     return data;
 }
+
 async function callSimulate(simulateJson) {
     //console.log(simulateJson)
     const params = {
@@ -52,59 +59,31 @@ async function callSimulate(simulateJson) {
     //console.log(data);
     return data;
 }
+
 async function callGetstatus() {
     const response = await fetch('/callGetstatus');
     const data = await response.json();
     //console.log(data);
     return data;
 }
+
 async function send_simulated_data() {
     const response = await fetch('/send_simulated_data');
     const data = await response.json();
     //console.log(data);
     return data;
 }
+
 async function send_actual_data() {
     const response = await fetch('/send_actual_data');
     const data = await response.json();
     //console.log(data);
     return data;
 }
+
 async function send_plot_data() {
     const response = await fetch('/send_plot_data');
     const data = await response.json();
     console.log(data);
     return data;
 }
-
-async function loadJavascriptSource(filePath) {
-    try {
-        var d3BodyScript = document.createElement('script');
-        d3BodyScript.src = filePath;  // Directory root path with respect to "index.html"
-        document.body.appendChild(d3BodyScript);
-        return true;
-    }
-    catch(err) {
-        console.log(err);
-        return false;
-    }
-}
-
-var padsData;
-isDevEnvFunc().then(function() {
-    if (!isDevEnv) {
-        send_plot_data().then(function(data) {
-            padsData = data;
-            console.log(padsData);
-        });
-    }
-});
-
-document.getElementById('username').focus();
-loadHtml('config.html', 'configHandle')
-    .then(function (){
-        return loadHtml('map.html', 'mapHandle');
-    })
-    .then(function (){
-        loadJavascriptSource("js/main.js");
-});
