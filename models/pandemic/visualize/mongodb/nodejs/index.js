@@ -45,11 +45,12 @@ function getHtmlTemplate(filePath) {
 	return fs.readFileSync(filePath).toString();
 }
 
-function getIpInfo(){
+async function getIpInfo() {
 	request('https://ipinfo.io', { json: true }, (error, response, body) => {
 		if (error) { return console.log(error); }
-		// console.log(body.ip);
-		return body.ip.toString();
+		console.log(body.ip);
+		let ip = await body.ip;
+		return ip;
 	});
 }
 
@@ -85,8 +86,10 @@ app.get('/login/:username/:password', (request, response) => {
 
 app.get('/getHash/:string', (request, response) => {
 	let name = getIpInfo();
+	console.log(name);
     // let name = request.params.string;
-    let hash = crypto.createHash('md5').update(name).digest('hex');
+	let hash = "sts";
+    // let hash = crypto.createHash('md5').update(name).digest('hex');
     response.status(200).send({string: hash});
 });
 
