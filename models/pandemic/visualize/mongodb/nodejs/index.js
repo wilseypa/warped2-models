@@ -2,8 +2,8 @@ const path = require('path');
 const http = require('http');
 const fs = require('fs');
 const crypto = require('crypto');
-const request = require('request');
-const axiosTest = require('axios');
+// const request = require('request');
+const axios = require('axios');
 const querystring = require('querystring');
 
 const directoryPath = path.join(__dirname, 'visualize', 'mongodb',  'Pandemic_Data');
@@ -45,13 +45,12 @@ function getHtmlTemplate(filePath) {
 	return fs.readFileSync(filePath).toString();
 }
 
-async function getIpInfo() {
-	request('https://ipinfo.io', { json: true }, (error, response, body) => {
-		if (error) { return console.log(error); }
-		console.log(body.ip);
-		let ip = await body.ip;
-		return ip;
-	});
+function getIpInfo() {
+  axios.get('https://ipinfo.io')
+  .then((response) => {
+    // console.log(response.data.ip);
+	return response.data.ip;
+  });
 }
 
 function getHash(string) {
@@ -72,6 +71,7 @@ app.get('/login/:username/:password', (request, response) => {
 	let username = request.params.username;
 	// console.log(username);
 	// console.log(password);
+
 	if (username == 'admin' && password == 'warped2') {
 		// console.log('Good');
 		const fileContents = getHtmlTemplate('../../html/' + "config.html");
@@ -85,11 +85,9 @@ app.get('/login/:username/:password', (request, response) => {
 });
 
 app.get('/getHash/:string', (request, response) => {
-	let name = getIpInfo();
-	console.log(name);
-    // let name = request.params.string;
-	let hash = "sts";
-    // let hash = crypto.createHash('md5').update(name).digest('hex');
+	// let name = getIpInfo();
+    let name = request.params.string;
+    let hash = crypto.createHash('md5').update(name).digest('hex');
     response.status(200).send({string: hash});
 });
 
