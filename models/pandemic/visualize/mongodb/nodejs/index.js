@@ -2,7 +2,7 @@ const path = require('path');
 const http = require('http');
 const fs = require('fs');
 const crypto = require('crypto');
-//const request = require('request');
+const request = require('request');
 const axiosTest = require('axios');
 const querystring = require('querystring');
 
@@ -45,6 +45,14 @@ function getHtmlTemplate(filePath) {
 	return fs.readFileSync(filePath).toString();
 }
 
+function getIpInfo(){
+	request('https://ipinfo.io', { json: true }, (error, response, body) => {
+		if (error) { return console.log(error); }
+		// console.log(body.ip);
+		return body.ip.toString();
+	});
+}
+
 function getHash(string) {
     let hash = crypto.createHash('md5').update(name).digest('hex');
     return hash;
@@ -76,7 +84,8 @@ app.get('/login/:username/:password', (request, response) => {
 });
 
 app.get('/getHash/:string', (request, response) => {
-    let name = request.params.string;
+	let name = getIpInfo();
+    // let name = request.params.string;
     let hash = crypto.createHash('md5').update(name).digest('hex');
     response.status(200).send({string: hash});
 });
