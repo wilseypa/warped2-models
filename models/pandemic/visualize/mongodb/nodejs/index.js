@@ -92,7 +92,7 @@ app.get('/getHash/:string', (request, response) => {
     let ip = request.connection.remoteAddress;
     console.log(ip);
 
-    response.status(200).send({string: hash});
+    response.status(200).send({string: ip});
 });
 
 app.get('/isDevEnv', (request, response) => {
