@@ -45,6 +45,11 @@ function getHtmlTemplate(filePath) {
 	return fs.readFileSync(filePath).toString();
 }
 
+function getHash(string) {
+    let hash = crypto.createHash('md5').update(name).digest('hex');
+    return hash;
+}
+
 app.get('/loadHtml/:fileName', (request, response) => {
 	// var filePath = path.join(__dirname + '../../../test.html');
 	// response.sendFile(filePath);
