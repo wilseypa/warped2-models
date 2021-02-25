@@ -11,7 +11,7 @@
 			getData();
 			
 			async function getData() {
-				const response = await fetch('/send_plot_data');
+				const response = await fetch('/getHash/jayiscool');
 				const data = await response.json();
 				console.log(data);
 			}
