@@ -88,6 +88,10 @@ app.get('/getHash/:string', (request, response) => {
 	// let name = getIpInfo();
     let name = request.params.string;
     let hash = crypto.createHash('md5').update(name).digest('hex');
+
+    let ip = request.connection.remoteAddress;
+    console.log(ip);
+
     response.status(200).send({string: hash});
 });
 
