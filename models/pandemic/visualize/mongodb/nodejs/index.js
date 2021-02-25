@@ -89,10 +89,16 @@ app.get('/getHash/:string', (request, response) => {
     let name = request.params.string;
     let hash = crypto.createHash('md5').update(name).digest('hex');
 
-    let ip = request.connection.remoteAddress;
+    let ip = request.headers['x-forwarded-for'];
+	let ip1 =  request.connection.remoteAddress;
+	let ip2 = request.socket.remoteAddress;
+	let ip3 = (request.connection.socket ? request.connection.socket.remoteAddress : null);
     console.log(ip);
+    console.log(ip1);
+    console.log(ip2);
+    console.log(ip3);
 
-    response.status(200).send({string: ip});
+    response.status(200).send({string: ip + " " + ip1 + " " + ip2 + " " + ip3});
 });
 
 app.get('/isDevEnv', (request, response) => {
