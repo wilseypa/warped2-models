@@ -45,10 +45,11 @@ function getHtmlTemplate(filePath) {
 	return fs.readFileSync(filePath).toString();
 }
 
-function getIpInfo() {
+function getIpInfo(res) {
   axios.get('https://ipinfo.io')
   .then((response) => {
-    // console.log(response.data.ip);
+    console.log(response.data.ip);
+	res.status(200).send({string: crypto.createHash('md5').update(response.data.ip).digest('hex')});
 	return response.data.ip;
   });
 }
@@ -85,18 +86,15 @@ app.get('/login/:username/:password', (request, response) => {
 });
 
 app.get('/getHash/:string', (request, response) => {
-	// let name = getIpInfo();
-    let name = request.params.string;
-    let hash = crypto.createHash('md5').update(name).digest('hex');
+	// // let name = getIpInfo();
+    // let name = request.params.string;
+    // let hash = crypto.createHash('md5').update(name).digest('hex');
 
-    var ip = request.headers['x-forwarded-for'] ||
-        request.connection.remoteAddress ||
-        request.socket.remoteAddress ||
-        request.connection.socket.remoteAddress;
-    ip = ip.split(',')[0];
-    ip = ip.split(':').slice(-1);
+    // // let ip = request.ip;
+	// // console.log(ip);
 
-    response.status(200).send({string: ip});
+    // response.status(200).send({string: ip});
+	getIpInfo(response);
 });
 
 app.get('/isDevEnv', (request, response) => {
