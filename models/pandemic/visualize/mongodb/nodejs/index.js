@@ -20,6 +20,8 @@ app.use(express.json({}));	//NEEDED FOR req.body TO PRINT
 const database = new Datastore('database.db');
 database.loadDatabase();
 
+var session;
+
 function formatDate(dateValue, dateFormat) {
         let year = dateValue.getFullYear();
         let month = dateValue.getMonth() + 1;
@@ -45,17 +47,10 @@ function getHtmlTemplate(filePath) {
 	return fs.readFileSync(filePath).toString();
 }
 
-function getIpInfo(res) {
-  axios.get('https://ipinfo.io')
-  .then((response) => {
-    console.log(response.data.ip);
-	res.status(200).send({string: crypto.createHash('md5').update(response.data.ip).digest('hex')});
-	return response.data.ip;
-  });
-}
-
-function getHash(string) {
-    let hash = crypto.createHash('md5').update(string).digest('hex');
+function getHash(ip) {
+	dateTimeString = new Date().toLocaleString()
+    let hashInput = ip + " " + dateTimeString;
+    let hash = crypto.createHash('md5').update(hashInput).digest('hex');
     return hash;
 }
 
@@ -67,11 +62,14 @@ app.get('/loadHtml/:fileName', (request, response) => {
 	response.status(200).send({response: fileContents});
 });
 
-app.get('/login/:username/:password', (request, response) => {
+app.get('/login/:username/:password/:ip', (request, response) => {
 	let password = request.params.password;
 	let username = request.params.username;
 	// console.log(username);
 	// console.log(password);
+	session = getHash(request.params.ip);
+	console.log(request.params.ip);
+	console.log(session);
 
 	if (username == 'admin' && password == 'warped2') {
 		// console.log('Good');
@@ -85,10 +83,10 @@ app.get('/login/:username/:password', (request, response) => {
 	}
 });
 
-app.get('/getHash/:string', (request, response) => {
-    let name = request.params.string;
-    let hash = crypto.createHash('md5').update(name).digest('hex');
-	// getIpInfo(response);
+app.get('/getHash/:ip', (request, response) => {
+	dateTimeString = new Date().toLocaleString()
+    let hashInput = request.params.ip + " " + dateTimeString;
+    let hash = crypto.createHash('md5').update(hashInput).digest('hex');
 	response.status(200).send({string: hash});
 });
 

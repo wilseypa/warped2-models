@@ -1,5 +1,8 @@
-//Backend Functions
+//Highest Level Globals
 var isDevEnv = false;
+var ip = "0.0.0.0";
+
+//Backend API Functions
 async function isDevEnvFunc() {
     const response = await fetch('/isDevEnv');
     const data = await response.json();
@@ -11,6 +14,12 @@ async function isDevEnvFunc() {
     }
     //console.log(isDevEnv);
     return data;
+}
+async function getClientIP() {
+    const ipRes = await fetch('http://api.ipify.org/?format=json', {mode: 'cors'});
+    const ipObj = await ipRes.json();
+    console.log(ipObj.ip);
+    ip = ipObj.ip;
 }
 async function loadHtml(fileName, parentElement) {
     const response = await fetch('/loadHtml/' + fileName);
@@ -32,8 +41,8 @@ async function getData(startDate, endDate) {
     //console.log(data);
     return data;
 }
-async function requestLogin(username, password) {
-    const response = await fetch('/login/' + username + '/' + password);
+async function requestLogin(username, password, ip) {
+    const response = await fetch('/login/' + username + '/' + password + "/" + ip);
     const data = await response.json();
     //console.log(data);
     return data;
@@ -100,6 +109,7 @@ function loadJavascriptSource(filePathArray) {
 }
 
 isDevEnvFunc();//.then(function() {});
+getClientIP();
 
 var pageState = "login"; // login, config, viewingMap, editingConfig
 

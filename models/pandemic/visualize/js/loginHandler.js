@@ -18,7 +18,8 @@ d3.select("#submitLogin").on("click", function() {
         createRequiredWarning("login-warning-handle", "requiredWarning", "Incorrect username and/or password", "inline-block");
 
     } else {
-        requestLogin(username, password).then(function(response) {
+
+        requestLogin(username, password, ip).then(function(response) {
             if(response.response == "success") {
                 removeRequiredWarning("requiredWarning");
 
