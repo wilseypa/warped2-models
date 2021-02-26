@@ -9,9 +9,12 @@
         <h1 style="text-align:center">API Testing Page</h1>
 		<script>
 			getData();
-			
+            
 			async function getData() {
-				const response = await fetch('/getHash/jayiscool');
+				const ipRes = await fetch('http://api.ipify.org/?format=json');
+				const ipObj = await ipRes.json();
+                console.log(ipObj.ip);
+				const response = await fetch("/getHash/" + ipObj.ip);
 				const data = await response.json();
 				console.log(data);
 			}

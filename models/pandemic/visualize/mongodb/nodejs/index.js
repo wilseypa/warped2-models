@@ -86,22 +86,10 @@ app.get('/login/:username/:password', (request, response) => {
 });
 
 app.get('/getHash/:string', (request, response) => {
-	// // let name = getIpInfo();
-    // let name = request.params.string;
-    // let hash = crypto.createHash('md5').update(name).digest('hex');
-
-    // // let ip = request.ip;
-	// // console.log(ip);
-
-    // response.status(200).send({string: ip});
-	console.log(request.header('x-forwarded-for'));
-	console.log(request.ip);
-	console.log((typeof req.headers['x-forwarded-for'] === 'string'
-	&& req.headers['x-forwarded-for'].split(',').shift())
-|| req.connection?.remoteAddress
-|| req.socket?.remoteAddress
-|| req.connection?.socket?.remoteAddress);
-	getIpInfo(response);
+    let name = request.params.string;
+    let hash = crypto.createHash('md5').update(name).digest('hex');
+	// getIpInfo(response);
+	response.status(200).send({string: hash});
 });
 
 app.get('/isDevEnv', (request, response) => {
