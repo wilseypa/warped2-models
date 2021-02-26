@@ -16,7 +16,7 @@ async function isDevEnvFunc() {
     return data;
 }
 async function getClientIP() {
-    const ipRes = await fetch('http://api.ipify.org/?format=json', {mode: 'cors'});
+    const ipRes = await fetch('https://ipapi.co/json/', {mode: 'cors'});
     const ipObj = await ipRes.json();
     console.log(ipObj.ip);
     ip = ipObj.ip;
