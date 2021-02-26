@@ -48,7 +48,7 @@ function getHtmlTemplate(filePath) {
 }
 
 function getHash(ip) {
-	dateTimeString = new Date().now()
+	dateTimeString = Date.now()
 	console.log(dateTimeString);
     let hashInput = ip + " " + dateTimeString;
     let hash = crypto.createHash('md5').update(hashInput).digest('hex');
