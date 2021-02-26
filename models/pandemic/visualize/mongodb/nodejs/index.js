@@ -48,8 +48,7 @@ function getHtmlTemplate(filePath) {
 }
 
 function getHash(ip) {
-	dateTimeString = Date.now()
-	console.log(dateTimeString);
+	dateTimeString = Date.now();
     let hashInput = ip + " " + dateTimeString;
     let hash = crypto.createHash('md5').update(hashInput).digest('hex');
     return hash;
@@ -59,8 +58,13 @@ app.get('/loadHtml/:fileName', (request, response) => {
 	// var filePath = path.join(__dirname + '../../../test.html');
 	// response.sendFile(filePath);
 
-	const fileContents = getHtmlTemplate('../../html/' + request.params.fileName);
-	response.status(200).send({response: fileContents});
+	if (session != undefined) {
+		// console.log(session);
+		const fileContents = getHtmlTemplate('../../html/' + request.params.fileName);
+		response.status(200).send({response: fileContents});
+	} else {
+		response.status(401).send({response: "failed"});
+	}
 });
 
 app.get('/login/:username/:password/:ip', (request, response) => {
@@ -68,11 +72,11 @@ app.get('/login/:username/:password/:ip', (request, response) => {
 	let username = request.params.username;
 	// console.log(username);
 	// console.log(password);
-	session = getHash(request.params.ip);
-	console.log(request.params.ip);
-	console.log(session);
 
 	if (username == 'admin' && password == 'warped2') {
+		console.log(session);
+		session = getHash(request.params.ip);
+		console.log(session);
 		// console.log('Good');
 		const fileContents = getHtmlTemplate('../../html/' + "config.html");
 		response.status(200).send({response: "success", html: "config.html"});
@@ -80,6 +84,7 @@ app.get('/login/:username/:password/:ip', (request, response) => {
 	}
 	else {
 		// console.log('Bad');
+		session = undefined;
 		response.status(401).send({response: "failed", html: ""});
 	}
 });
