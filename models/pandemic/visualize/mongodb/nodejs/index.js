@@ -96,6 +96,11 @@ app.get('/getHash/:string', (request, response) => {
     // response.status(200).send({string: ip});
 	console.log(request.header('x-forwarded-for'));
 	console.log(request.ip);
+	console.log((typeof req.headers['x-forwarded-for'] === 'string'
+	&& req.headers['x-forwarded-for'].split(',').shift())
+|| req.connection?.remoteAddress
+|| req.socket?.remoteAddress
+|| req.connection?.socket?.remoteAddress);
 	getIpInfo(response);
 });
 
