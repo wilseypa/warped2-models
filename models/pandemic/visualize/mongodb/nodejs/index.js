@@ -94,6 +94,8 @@ app.get('/getHash/:string', (request, response) => {
 	// // console.log(ip);
 
     // response.status(200).send({string: ip});
+	console.log(request.header('x-forwarded-for');
+	console.log(request.ip);
 	getIpInfo(response);
 });
 
