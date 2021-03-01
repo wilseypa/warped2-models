@@ -60,7 +60,14 @@ def calc_frechet():
     print(actual_list, type(actual_list))
     print(simulated_list, type(simulated_list))    
 
-    frdist(list(actual_us_df['Confirmed']), list(simulated_us_df['Confirmed']))
+    actual_list_2d = []
+    simulated_list_2d = []
+    
+    for i in range(len(actual_list)):
+        actual_list_2d.append([i, actual_list])
+        simulated_list_2d.append([i, simulated_list])
+
+    frdist(actual_list_2d, simulated_list_2d)
     
 
 # MAIN
