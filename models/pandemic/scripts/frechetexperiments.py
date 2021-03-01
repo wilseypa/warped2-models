@@ -67,7 +67,7 @@ def calc_frechet():
 
     print(actual_list_2d, type(actual_list_2d))
     print()
-    print(simulated_list_2d, type(simulated_list_2d))    
+    # print(simulated_list_2d, type(simulated_list_2d))    
         
     frdist(actual_list_2d, simulated_list_2d)
     
