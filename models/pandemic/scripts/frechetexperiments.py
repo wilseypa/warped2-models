@@ -57,13 +57,12 @@ def calc_frechet():
     actual_list = list(actual_us_df['Confirmed'])
     simulated_list = list(simulated_us_df['Confirmed'])
 
-
     actual_list_2d = []
     simulated_list_2d = []
-    
+
     for i in range(len(actual_list)):
-        actual_list_2d.append([i, actual_list])
-        simulated_list_2d.append([i, simulated_list])
+        actual_list_2d.append([i, actual_list[i]])
+        simulated_list_2d.append([i, simulated_list[i]])
 
     print(actual_list_2d, type(actual_list_2d))
     print()
