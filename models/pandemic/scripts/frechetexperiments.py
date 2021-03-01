@@ -53,7 +53,8 @@ def calc_frechet():
 
     
     print(simulated_us_df['Confirmed'], type(list(simulated_us_df['Confirmed'])))
-    
+
+    frdist(list(actual_us_df['Confirmed']), list(simulated_us_df['Confirmed']))
     
 
 # MAIN
