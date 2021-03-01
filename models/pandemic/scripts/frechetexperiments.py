@@ -54,6 +54,11 @@ def calc_frechet():
     
     print(simulated_us_df['Confirmed'], type(list(simulated_us_df['Confirmed'])))
     print("len", len(actual_us_df), len(simulated_us_df))
+    actual_list = list(actual_us_df['Confirmed'])
+    simulated_list = list(simulated_us_df['Confirmed'])
+
+    print(actual_list, type(actual_list))
+
     frdist(list(actual_us_df['Confirmed']), list(simulated_us_df['Confirmed']))
     
 
