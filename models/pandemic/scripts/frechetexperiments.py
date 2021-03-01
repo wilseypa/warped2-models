@@ -52,7 +52,7 @@ def calc_frechet():
                                          'Population': int})
 
     
-    print(simulated_us_df.dtypes)
+    print(simulated_us_df['Confirmed'], type(simulated_us_df['Confirmed']))
     
     
 
