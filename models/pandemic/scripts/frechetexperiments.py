@@ -1,0 +1,60 @@
+#!/usr/bin/env python3
+
+try:
+    import sys
+    import os
+    import time
+    import re
+    import argparse
+    import json
+    import pandas as pd
+    import logging
+    import logging.config
+    import pathlib
+    from concurrent_log_handler import ConcurrentRotatingFileHandler
+    from math import radians, cos, sin, asin, sqrt
+    from datetime import datetime, timedelta
+    import subprocess
+    from frechetdist import frdist
+except Exception as e:
+    print(str(type(e).__name__) + ": " + str(e), file=sys.stderr)
+    sys.exit(1)
+
+DIRPATH_PLOTSRC_DATA_US = "./tuningapp/plotSourceData/US"
+
+
+def calc_frechet():
+    """
+    """
+
+    actual_filepath = DIRPATH_PLOTSRC_DATA_US + "/US/actual.csv"
+    simulated_filepath = DIRPATH_PLOTSRC_DATA_US + "/US/simulated.csv"
+
+    actual_us_df = pd.read_csv(actual_filepath, skipinitialspace=True,
+                               usecols=['Date', 'Confirmed', 'Deaths',
+                                        'Recovered',
+                                        'Active',
+                                        'Population'],
+                               dtype={'Confirmed': int, 'Deaths': int,
+                                      'Recovered': int,
+                                      'Active': int,
+                                      'Population': int})
+
+    simulated_us_df = pd.read_csv(simulated_filepath, skipinitialspace=True,
+                                  usecols=['Date', 'Confirmed', 'Deaths',
+                                           'Recovered',
+                                           'Active',
+                                           'Population'],
+                                  dtype={'Confirmed': int, 'Deaths': int,
+                                         'Recovered': int,
+                                         'Active': int,
+                                         'Population': int})
+
+    
+    print(simulated_us_df.dtypes)
+    
+    
+
+# MAIN
+if __name__ == '__main__':
+    calc_frechet()
