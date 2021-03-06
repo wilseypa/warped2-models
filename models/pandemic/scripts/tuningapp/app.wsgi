@@ -30,19 +30,67 @@ simulated_file_prefix = ".simulated-data.json"
 csse_formatted_json_dirpath = "../../data/"
 simulated_json_dirpath = "simOutfiles/"
 
+workerPool = None
+initCalled = False
+jobstatus = {}
+taskCount = None
 
-@route('/getstatus')
+simJobs = {}
+
+
+def init():
+    """
+
+    :return:
+    """
+    global initCalled
+    global workerPool
+    global taskCount
+
+    taskCount = max(1, os.cpu_count() - 1)
+
+    if not initCalled:
+        workerPool = mp.Pool(processes=taskCount)
+
+    initCalled = True
+
+
+@post('/getstatus')
 def getstatus():
     """
     """
     # TODO potential race condition ??
 
-    if simulateFuncjob is None:
-        return json.dumps({"statusmsg":"no job added"})
-    elif simulateFuncjob.is_alive() is True:
-        return json.dumps({"statusmsg": "job running"})
-    elif simulateFuncjob.is_alive() is False:
-        return json.dumps({"statusmsg": "job finished"})
+
+    jobid = json.loads(request.forms.get('data'))
+    jobstatusToReturn = {'jobid':jobid, 'status':None}
+
+    result = simJobs[jobid]
+
+    try:
+        result.successful()
+
+    except ValueError:
+        # task is running
+        jobstatusToReturn['status'] = "RUNNING"
+
+
+    if result.get()[0] == 0:
+        jobstatusToReturn['status'] = "SUCCESS"
+    else:
+        jobstatusToReturn['status'] = 'FAILURE'
+
+
+    response.content_type = 'application/json'
+
+    return json.dumps(jobstatusToReturn)
+
+    # if simulateFuncjob is None:
+    #     return json.dumps({"statusmsg":"no job added"})
+    # elif simulateFuncjob.is_alive() is True:
+    #     return json.dumps({"statusmsg": "job running"})
+    # elif simulateFuncjob.is_alive() is False:
+    #     return json.dumps({"statusmsg": "job finished"})
 
 
 def getCountyStatsFromFile(fips, filepath):
@@ -237,9 +285,10 @@ def tweak_infile(injsonfilepath, reqdata, tweakedjsonfilepath):
                            "diffusion_model": basejsondata["diffusion_model"]}}
 
 
-def simulate_func(dict_args):
+def run_range_simulations(dict_args):
     """
-    :param dictreq:
+
+    :param dict_req:
     :return:
     """
     shutil.rmtree('tweakedjsoninfiles')
@@ -311,6 +360,22 @@ def simulate_func(dict_args):
     subprocess.run(["Rscript", "rangeSimulationDataAnalyse.R"], stdout=subprocess.DEVNULL)
 
 
+
+def simulate_func(dict_args):
+    """
+    :param dictreq:
+    :return:
+    """
+    global simJobs
+    global jobstatus
+    global workerPool
+
+    jobid = dict_args['jobid']
+    simJobs[jobid] = workerPool.apply_async(run_range_simulations, (dict_args,))
+
+    jobstatus[jobid] = {"status": "jobadded"}
+
+
 @post('/simulate')
 def simulate():
     """
@@ -364,5 +429,5 @@ def home():
 
     return template(html_string)  # , select_opts=get_select_opts_genre())
 
-
+init()
 run(host='localhost', port=8081, reloader=True, debug=True)

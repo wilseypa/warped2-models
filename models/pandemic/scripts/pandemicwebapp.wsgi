@@ -326,7 +326,7 @@ def create_paramtweaks_file(reqdata):
 
     tweakFileIndex = 0
     while True:
-        # create as many tweakfiles as 'taskCount' value
+        # create as many tweakfiles as 'taskCount' value (roughly, as many cpu cores)
         if tweakFileIndex > len(tweakfiles) - 1:
             tweakfiles.append(TWEAKFILES_DIR_PATH + "diseaseparamtweakfile_" + str(uuid.uuid4()))
             tweakfilesobj.append(open(tweakfiles[-1], "w"))
@@ -438,7 +438,7 @@ def getstatus():
 
     :return:
     """
-    # check if tweakfiles got created and
+    # check if tweakfiles got created and new jobs got added
     if simulateFuncjob is not None and simulateFuncjob.is_alive():
         return json.dumps({})
 

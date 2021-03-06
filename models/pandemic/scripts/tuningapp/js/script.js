@@ -1,5 +1,6 @@
 document.addEventListener("DOMContentLoaded", function() {
     var getstatusTimeout = undefined;
+    var currJobId = undefined;
 
     console.log("js loaded");
 
@@ -7,6 +8,8 @@ document.addEventListener("DOMContentLoaded", function() {
         function (event) {
             console.log("submit clicked!");
             event.preventDefault();
+
+            var jobId = Array(24).join().replace(/(.|$)/g, function(){return ((Math.random()*36)|0).toString(36);});
 
             var graph_typeobj = document.getElementById('graph_typeoption');
             var graph_type = graph_typeobj.options[graph_typeobj.selectedIndex].value;
@@ -66,6 +69,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 .on('200', function (response) {
                     console.log("simulate response:", response);
 
+                    currJobId = jobId;
                     // document.getElementById("statusmsg").innerText = response["statusmsg"]
 
                     if (getstatusTimeout) {
@@ -86,9 +90,10 @@ document.addEventListener("DOMContentLoaded", function() {
 
         // main logic
         aja()
-            .method('GET')
+            .method('POST')
             // .header('Content-Type', 'application/json')
             // .data({'data':JSON.stringify(postdata)})
+            .data({'jobid':currJobId})
             .url('/getstatus')
             .timeout(2500)
             .on('200', function (response) {
