@@ -11,10 +11,12 @@ document.addEventListener("DOMContentLoaded", function() {
 
             var jobId = Array(24).join().replace(/(.|$)/g, function(){return ((Math.random()*36)|0).toString(36);});
 
+            console.log("jobid", jobId)
             var graph_typeobj = document.getElementById('graph_typeoption');
             var graph_type = graph_typeobj.options[graph_typeobj.selectedIndex].value;
 
             var postdata = {
+                'jobid' : jobId,
                 'start_date' : {
                     'value':document.getElementById('startdate').value
                 }, 'runtime_days' : {
