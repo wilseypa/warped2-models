@@ -306,7 +306,7 @@ def run_range_simulations(dict_args):
     start_date = dt.datetime.strptime(dict_args['start_date']['value'], "%m-%d-%Y")
     days_runtime = int(dict_args['runtime_days']['value'])
 
-    injsonfilepath = csse_formatted_json_dir "/" + "+ dict_args['start_date']['value'] + formatted_csse_infile_prefix
+    injsonfilepath = csse_formatted_json_dir + "/" + dict_args['start_date']['value'] + formatted_csse_infile_prefix
 
     tweakedjsoninfilepath = "tweakedjsoninfiles/" + dict_args['start_date']['value'] + ".tweaked.json"
 
