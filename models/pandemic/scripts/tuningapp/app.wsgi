@@ -292,7 +292,7 @@ def run_range_simulations(dict_args):
     # shutil.rmtree('simOutfiles')
 
     os.chdir(baseWorkingDir + "/simJobs")
-    jobDirName = simJob + "_" + dict_args['jobid']
+    jobDirName = "simJob_" + dict_args['jobid']
 
     os.mkdir(jobDirName)
     os.chdir(jobDirName)
