@@ -80,7 +80,7 @@ def getstatus():
         # task is running
         jobstatusToReturn['status'] = "RUNNING"
 
-    print("!!!!result.get", result.get())
+    # print("!!!!result.get", result.get())
 
     if jobstatusToReturn['status'] != "RUNNING":
         if result.get() == 0:
