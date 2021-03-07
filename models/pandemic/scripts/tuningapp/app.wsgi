@@ -383,6 +383,7 @@ def simulate():
 
     :return:
     """
+    print("req data", request.json, type(request.json))
     dictreq = json.loads(request.forms.get('data'))
     print("post data", dictreq)
 
