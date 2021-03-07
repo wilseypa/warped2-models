@@ -369,7 +369,7 @@ def run_range_simulations(dict_args):
                                             simulated_json_dir=simulated_json_dir)
 
     # copy R plot script to the job directory, and execute
-    shutil.copyfile(baseWorkingDir + "/" + "rangeSimulationDataAnalyse.R", "./")
+    shutil.copyfile(baseWorkingDir + "/" + "rangeSimulationDataAnalyse.R", "rangeSimulationDataAnalyse.R")
     subprocess.run(["Rscript", "rangeSimulationDataAnalyse.R"], stdout=subprocess.DEVNULL)
 
     os.chdir(baseWorkingDir)
