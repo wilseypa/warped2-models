@@ -62,14 +62,8 @@ document.addEventListener("DOMContentLoaded", function() {
                 }
             };
 
-            aja()
-                .method('POST')
-                // .header('Content-Type', 'application/json')
-                .data({'data':JSON.stringify(postdata)})
-                .type('json')
-                .url('/simulate')
-                .timeout(3000)
-                .on('200', function (response) {
+            axios.post('/simulate', postdata)
+                .then(function (response){
                     console.log("simulate response:", response);
 
                     currJobId = jobId;
@@ -81,10 +75,35 @@ document.addEventListener("DOMContentLoaded", function() {
                     } else {
                         getstatusTimeout = setTimeout(getStatus, 200, false);
                     }
-
                     // console.log("/simulate: set timeout");
                 })
-                .go();
+                .catch(function (error) {
+                    console.log("!!!!error", error);
+                });
+
+            // aja()
+            //     .method('POST')
+            //     // .header('Content-Type', 'application/json')
+            //     .data({'data':JSON.stringify(postdata)})
+            //     .type('json')
+            //     .url('/simulate')
+            //     .timeout(3000)
+            //     .on('200', function (response) {
+            //         console.log("simulate response:", response);
+            //
+            //         currJobId = jobId;
+            //         // document.getElementById("statusmsg").innerText = response["statusmsg"]
+            //
+            //         if (getstatusTimeout) {
+            //             clearInterval(getstatusTimeout);
+            //             getstatusTimeout = setTimeout(getStatus, 200, false);
+            //         } else {
+            //             getstatusTimeout = setTimeout(getStatus, 200, false);
+            //         }
+            //
+            //         // console.log("/simulate: set timeout");
+            //     })
+            //     .go();
         });
 
     var getStatus = function () {
@@ -96,19 +115,19 @@ document.addEventListener("DOMContentLoaded", function() {
         }
 
         // main logic
-        aja()
-            .method('POST')
-            // .header('Content-Type', 'application/json')
-            // .data({'data':JSON.stringify(postdata)})
-            .data({'jobid':currJobId})
-            .url('/getstatus')
-            .timeout(2500)
-            .on('200', function (response) {
-                if ("statusmsg" in response) {
-                    document.getElementById("statusmsg").innerText = response["statusmsg"]
-                }
-            })
-            .go();
+        // aja()
+        //     .method('POST')
+        //     // .header('Content-Type', 'application/json')
+        //     // .data({'data':JSON.stringify(postdata)})
+        //     .data({'jobid':currJobId})
+        //     .url('/getstatus')
+        //     .timeout(2500)
+        //     .on('200', function (response) {
+        //         if ("statusmsg" in response) {
+        //             document.getElementById("statusmsg").innerText = response["statusmsg"]
+        //         }
+        //     })
+        //     .go();
     }
 
     getStatus();
