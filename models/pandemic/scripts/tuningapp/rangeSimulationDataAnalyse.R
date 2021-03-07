@@ -84,7 +84,7 @@ if (base_square_side == sqrt(no_of_plots)) {
 
 # png_dim <- ceiling(sqrt(no_of_plots)) * 800
 
-png(paste("./plotImages/plot_", UUIDgenerate(), ".png", sep=''), width=png_dim_x, height=png_dim_y)
+png(paste("../../plotImages/plot_", UUIDgenerate(), ".png", sep=''), width=png_dim_x, height=png_dim_y)
 # plot(1)
 # title(sub="hallo", adj=1, line=3, font=2)
 do.call("grid.arrange", c(plots, ncol=ceiling(sqrt(no_of_plots))))
