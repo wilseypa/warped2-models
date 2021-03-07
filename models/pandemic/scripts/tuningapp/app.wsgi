@@ -69,6 +69,7 @@ def getstatus():
     jobstatusToReturn = {'jobid':jobid, 'status':None}
 
     result = simJobs[jobid]
+    print("!!!result", result, type(result))
 
     try:
         result.successful()
@@ -76,7 +77,6 @@ def getstatus():
     except ValueError:
         # task is running
         jobstatusToReturn['status'] = "RUNNING"
-
 
     if result.get()[0] == 0:
         jobstatusToReturn['status'] = "SUCCESS"
@@ -377,6 +377,8 @@ def simulate_func(dict_args):
 
     jobid = dict_args['jobid']
     simJobs[jobid] = workerPool.apply_async(run_range_simulations, (dict_args,))
+
+    print("!!!! simjobs added")
 
     jobstatus[jobid] = {"status": "jobadded"}
 
