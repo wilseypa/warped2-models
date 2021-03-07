@@ -64,7 +64,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
             axios.post('/simulate', postdata)
                 .then(function (response){
-                    console.log("simulate response:", response);
+                    console.log("simulate response:", response['data']);
 
                     currJobId = jobId;
                     // document.getElementById("statusmsg").innerText = response["statusmsg"]
@@ -116,9 +116,9 @@ document.addEventListener("DOMContentLoaded", function() {
 
         axios.post('/getstatus', {'jobid' : currJobId})
             .then(function (response){
-                console.log("getstatus response:", response);
+                console.log("getstatus response:", response['data']);
 
-                jobstatus = response['status']
+                jobstatus = response['data']['status']
                 document.getElementById("statusmsg").innerText = jobstatus;
 
                 if (jobstatus == 'SUCCESS' || jobstatus == 'FAILURE') {
