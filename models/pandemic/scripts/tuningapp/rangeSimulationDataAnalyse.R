@@ -8,7 +8,7 @@ library(uuid)
 getwd()
 
 # load list of counties/fips
-US_fips_county_name_df <- read.csv("US_counties_population_latLong.csv", header=TRUE)
+US_fips_county_name_df <- read.csv("../../US_counties_population_latLong.csv", header=TRUE)
 US_fips_county_name_df$FIPS <- as.character(US_fips_county_name_df$FIPS)
 
 dirs_to_plot <- grep('.+', list.dirs("./plotSourceData/", full.names = FALSE), value=TRUE)
