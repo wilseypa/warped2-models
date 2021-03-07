@@ -120,7 +120,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
                 jobstatus = response['status']
 
-                if (jobstatus == 'SUCCESS' or jobstatus == 'FAILURE') {
+                if (jobstatus == 'SUCCESS' || jobstatus == 'FAILURE') {
                     currJobId = undefined;
                 }
             })
