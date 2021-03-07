@@ -82,10 +82,11 @@ def getstatus():
 
     print("!!!!result.get", result.get())
 
-    if result.get() == 0:
-        jobstatusToReturn['status'] = "SUCCESS"
-    else:
-        jobstatusToReturn['status'] = 'FAILURE'
+    if jobstatusToReturn['status'] != "RUNNING":
+        if result.get() == 0:
+            jobstatusToReturn['status'] = "SUCCESS"
+        else:
+            jobstatusToReturn['status'] = 'FAILURE'
 
     response.content_type = 'application/json'
 
