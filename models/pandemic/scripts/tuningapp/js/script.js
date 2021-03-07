@@ -78,7 +78,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     // console.log("/simulate: set timeout");
                 })
                 .catch(function (error) {
-                    console.log("!!!!error", error);
+                    // console.log("!!!!error", error);
                 });
 
             // aja()
