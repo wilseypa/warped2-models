@@ -62,8 +62,10 @@ def getstatus():
     # TODO potential race condition ??
 
 
-    print("!!!!!!postData", request.forms.get())
-    jobid = json.loads(request.forms.get('data'))
+    # print("!!!!!!postData", request.forms.get())
+    # jobid = json.loads(request.forms.get('data'))
+
+    jobid = request.json['jobid']
     jobstatusToReturn = {'jobid':jobid, 'status':None}
 
     result = simJobs[jobid]
@@ -299,6 +301,8 @@ def run_range_simulations(dict_args):
     os.mkdir('tweakedjsoninfiles')
     os.mkdir('plotSourceData')
     os.mkdir('simOutfiles')
+
+    jobid = dict_args['jobid']
 
     start_date = dt.datetime.strptime(dict_args['start_date']['value'], "%m-%d-%Y")
     days_runtime = int(dict_args['runtime_days']['value'])

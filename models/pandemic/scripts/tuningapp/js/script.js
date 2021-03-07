@@ -114,6 +114,20 @@ document.addEventListener("DOMContentLoaded", function() {
             return;
         }
 
+        axios.post('/getstatus', {'jobid' : currJobId})
+            .then(function (response){
+                console.log("simulate response:", response);
+
+                jobstatus = response['status']
+
+                if (jobstatus == 'SUCCESS' or jobstatus == 'FAILURE') {
+                    currJobId = undefined;
+                }
+            })
+            .catch(function (error) {
+                console.log("!!!!error", error);
+            });
+
         // main logic
         // aja()
         //     .method('POST')
