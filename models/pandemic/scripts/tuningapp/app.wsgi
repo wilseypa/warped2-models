@@ -62,6 +62,7 @@ def getstatus():
     # TODO potential race condition ??
 
 
+    print("!!!!!!postData", request.forms.get())
     jobid = json.loads(request.forms.get('data'))
     jobstatusToReturn = {'jobid':jobid, 'status':None}
 

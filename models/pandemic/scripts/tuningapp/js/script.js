@@ -65,6 +65,7 @@ document.addEventListener("DOMContentLoaded", function() {
             aja()
                 .method('POST')
                 // .header('Content-Type', 'application/json')
+                .type('json')
                 .data({'data':JSON.stringify(postdata)})
                 .url('/simulate')
                 .timeout(3000)
