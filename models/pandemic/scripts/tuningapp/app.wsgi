@@ -323,10 +323,15 @@ def run_range_simulations(dict_args):
         curr_outfile = (start_date + dt.timedelta(days=curr_days_runtime)).strftime("%m-%d-%Y") \
                        + simulated_file_prefix
 
+        # subprocess.run(["../../pandemic_sim", "-m", tweakedjsoninfilepath, "--max-sim-time",
+        #                 str(24 * int(curr_days_runtime)),
+        #                 "-o",
+        #                 simulated_json_dirpath + curr_outfile])
+
         subprocess.run(["../../pandemic_sim", "-m", tweakedjsoninfilepath, "--max-sim-time",
                         str(24 * int(curr_days_runtime)),
                         "-o",
-                        simulated_json_dirpath + curr_outfile])
+                        simulated_json_dirpath + curr_outfile], stdout=subprocess.DEVNULL)
 
         curr_days_runtime += 1
 
