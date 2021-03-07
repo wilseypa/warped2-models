@@ -306,7 +306,8 @@ def run_range_simulations(dict_args):
     start_date = dt.datetime.strptime(dict_args['start_date']['value'], "%m-%d-%Y")
     days_runtime = int(dict_args['runtime_days']['value'])
 
-    injsonfilepath = csse_formatted_json_dir + "/" + dict_args['start_date']['value'] + formatted_csse_infile_prefix
+    injsonfilepath = baseWorkingDir + "/" + csse_formatted_json_dir + "/" + dict_args['start_date']['value'] + \
+                     formatted_csse_infile_prefix
 
     tweakedjsoninfilepath = "tweakedjsoninfiles/" + dict_args['start_date']['value'] + ".tweaked.json"
 
@@ -324,7 +325,7 @@ def run_range_simulations(dict_args):
         #                 "-o",
         #                 simulated_json_dirpath + curr_outfile])
 
-        subprocess.run(["../../pandemic_sim", "-m", tweakedjsoninfilepath, "--max-sim-time",
+        subprocess.run([baseWorkingDir + "/" + "../../pandemic_sim", "-m", tweakedjsoninfilepath, "--max-sim-time",
                         str(24 * int(curr_days_runtime)),
                         "-o",
                         simulated_json_dir + "/" + curr_outfile], stdout=subprocess.DEVNULL)
@@ -340,7 +341,7 @@ def run_range_simulations(dict_args):
 
     # create csv for US from original formatted files for the entire date range
     processFilesForDateRange("formatted", start_date + dt.timedelta(days=1), actualplot_end_date,
-                             json_formatted_dirpath=csse_formatted_json_dir,
+                             json_formatted_dirpath=(baseWorkingDir + csse_formatted_json_dir),
                              simulated_json_dir=None)
 
     # create file containing tweaked metrics
@@ -367,6 +368,8 @@ def run_range_simulations(dict_args):
                                             json_formatted_dir=None,
                                             simulated_json_dir=simulated_json_dir)
 
+    # copy R plot script to the job directory, and execute
+    shutil.copyfile(baseWorkingDir + "/" + "rangeSimulationDataAnalyse.R", "./")
     subprocess.run(["Rscript", "rangeSimulationDataAnalyse.R"], stdout=subprocess.DEVNULL)
 
     os.chdir(baseWorkingDir)
