@@ -88,6 +88,10 @@ document.addEventListener("DOMContentLoaded", function() {
         clearTimeout(getstatusTimeout);
         getstatusTimeout = setTimeout(getStatus, 6000, false);
 
+        if (currJobId == undefined) {
+            return;
+        }
+
         // main logic
         aja()
             .method('POST')
