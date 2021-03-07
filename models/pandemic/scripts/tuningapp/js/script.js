@@ -116,7 +116,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
         axios.post('/getstatus', {'jobid' : currJobId})
             .then(function (response){
-                console.log("simulate response:", response);
+                console.log("getstatus response:", response);
 
                 jobstatus = response['status']
                 document.getElementById("statusmsg").innerText = jobstatus;
