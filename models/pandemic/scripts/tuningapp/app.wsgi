@@ -80,7 +80,7 @@ def getstatus():
 
     print("!!!!result.get", result.get())
 
-    if result.get()[0] == 0:
+    if result.get() == 0:
         jobstatusToReturn['status'] = "SUCCESS"
     else:
         jobstatusToReturn['status'] = 'FAILURE'
