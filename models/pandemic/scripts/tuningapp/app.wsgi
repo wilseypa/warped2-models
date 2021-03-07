@@ -65,6 +65,7 @@ def getstatus():
     # print("!!!!!!postData", request.forms.get())
     # jobid = json.loads(request.forms.get('data'))
 
+    print("!!!!!getstatus called")
     jobid = request.json['jobid']
     jobstatusToReturn = {'jobid':jobid, 'status':None}
 
@@ -72,6 +73,7 @@ def getstatus():
     print("!!!result", result, type(result))
 
     try:
+        print("!!!!trying result.successful")
         result.successful()
 
     except ValueError:
