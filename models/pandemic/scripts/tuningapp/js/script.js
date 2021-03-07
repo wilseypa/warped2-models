@@ -119,8 +119,10 @@ document.addEventListener("DOMContentLoaded", function() {
                 console.log("simulate response:", response);
 
                 jobstatus = response['status']
+                document.getElementById("statusmsg").innerText = jobstatus;
 
                 if (jobstatus == 'SUCCESS' || jobstatus == 'FAILURE') {
+                    console.log("!!!!setting currjobid to undefined");
                     currJobId = undefined;
                 }
             })
