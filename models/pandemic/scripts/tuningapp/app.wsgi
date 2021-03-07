@@ -193,7 +193,7 @@ def processFilesForDateRange(formatted_or_simulated, from_date, end_date, json_f
         curr_datestr = curr_date.strftime("%m-%d-%Y")
 
         if formatted_or_simulated == "formatted":
-            jsonfilepath = json_formatted_dirpath + curr_datestr + formatted_csse_infile_prefix
+            jsonfilepath = json_formatted_dirpath + "/" + curr_datestr + formatted_csse_infile_prefix
         else:
             jsonfilepath = simulated_json_dir + "/" + curr_datestr + simulated_file_prefix
 
@@ -341,7 +341,7 @@ def run_range_simulations(dict_args):
 
     # create csv for US from original formatted files for the entire date range
     processFilesForDateRange("formatted", start_date + dt.timedelta(days=1), actualplot_end_date,
-                             json_formatted_dirpath=(baseWorkingDir + csse_formatted_json_dir),
+                             json_formatted_dirpath=(baseWorkingDir + "/" + csse_formatted_json_dir),
                              simulated_json_dir=None)
 
     # create file containing tweaked metrics
