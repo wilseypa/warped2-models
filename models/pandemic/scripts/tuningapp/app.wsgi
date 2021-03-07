@@ -27,8 +27,8 @@ except Exception as e:
 simulateFuncjob = None
 formatted_csse_infile_prefix = ".formatted-JHU-data.json"
 simulated_file_prefix = ".simulated-data.json"
-csse_formatted_json_dirpath = "../../data/"
-simulated_json_dirpath = "simOutfiles/"
+csse_formatted_json_dir = "../../data"
+simulated_json_dir = "simOutfiles"
 
 workerPool = None
 initCalled = False
@@ -61,10 +61,6 @@ def getstatus():
     """
     # TODO potential race condition ??
 
-
-    # print("!!!!!!postData", request.forms.get())
-    # jobid = json.loads(request.forms.get('data'))
-
     print("!!!!!getstatus called")
     jobid = request.json['jobid']
     jobstatusToReturn = {'jobid':jobid, 'status':None}
@@ -80,8 +76,6 @@ def getstatus():
         # task is running
         jobstatusToReturn['status'] = "RUNNING"
 
-    # print("!!!!result.get", result.get())
-
     if jobstatusToReturn['status'] != "RUNNING":
         if result.get() == 0:
             jobstatusToReturn['status'] = "SUCCESS"
@@ -92,13 +86,6 @@ def getstatus():
 
     return json.dumps(jobstatusToReturn)
 
-    # if simulateFuncjob is None:
-    #     return json.dumps({"statusmsg":"no job added"})
-    # elif simulateFuncjob.is_alive() is True:
-    #     return json.dumps({"statusmsg": "job running"})
-    # elif simulateFuncjob.is_alive() is False:
-    #     return json.dumps({"statusmsg": "job finished"})
-
 
 def getCountyStatsFromFile(fips, filepath):
     """
@@ -106,7 +93,6 @@ def getCountyStatsFromFile(fips, filepath):
     with open(filepath) as f:
         filedata = f.read()
 
-    # matches = re.findall('fips(.*,){6}((.*,){4}).*,', filedata)
     matches = re.search(r'^\s*\["' + fips + r'",([^,]*,){5}(([^,]*,){3}[^,]*),[^,]*\],\s*$', filedata,
                         re.MULTILINE)
 
@@ -152,8 +138,8 @@ def getStatsFromFile(filename):
     # print(jsonData["locations"][0])
 
 
-def processFilesForDateRange_county(fips, formatted_or_simulated, from_date, end_date, json_formatted_dirpath=None,
-                                    simulated_json_dirpath=None, dir_to_write="plotSourceData"):
+def processFilesForDateRange_county(fips, formatted_or_simulated, from_date, end_date, json_formatted_dir=None,
+                                    simulated_json_dir=None, dir_to_write="plotSourceData"):
     """
     """
     to_write_to_file = "Date,Confirmed,Deaths,Recovered,Active\n"  # set header
@@ -165,9 +151,9 @@ def processFilesForDateRange_county(fips, formatted_or_simulated, from_date, end
         curr_datestr = curr_date.strftime("%m-%d-%Y")
 
         if formatted_or_simulated == "formatted":
-            jsonfilepath = json_formatted_dirpath + curr_datestr + formatted_csse_infile_prefix
+            jsonfilepath = json_formatted_dir + "/" + curr_datestr + formatted_csse_infile_prefix
         else:
-            jsonfilepath = simulated_json_dirpath + curr_datestr + simulated_file_prefix
+            jsonfilepath = simulated_json_dir + "/" + curr_datestr + simulated_file_prefix
 
         print(":::::::fips", fips)
         totalConfirmed, totalDeaths, totalRecovered, totalActive = getCountyStatsFromFile(fips, jsonfilepath)
@@ -195,7 +181,7 @@ def processFilesForDateRange_county(fips, formatted_or_simulated, from_date, end
 
 
 def processFilesForDateRange(formatted_or_simulated, from_date, end_date, json_formatted_dirpath=None,
-                             simulated_json_dirpath=None, dir_to_write="plotSourceData"):
+                             simulated_json_dir=None, dir_to_write="plotSourceData"):
     """
     """
     to_write_to_file = "Date,Confirmed,Deaths,Recovered,Active,Population\n"  # set header
@@ -209,7 +195,7 @@ def processFilesForDateRange(formatted_or_simulated, from_date, end_date, json_f
         if formatted_or_simulated == "formatted":
             jsonfilepath = json_formatted_dirpath + curr_datestr + formatted_csse_infile_prefix
         else:
-            jsonfilepath = simulated_json_dirpath + curr_datestr + simulated_file_prefix
+            jsonfilepath = simulated_json_dir + "/" + curr_datestr + simulated_file_prefix
 
         totalConfirmed, totalDeaths, totalRecovered, totalActive, totalPopulation = \
             getStatsFromFile(jsonfilepath)
@@ -298,20 +284,29 @@ def run_range_simulations(dict_args):
     :param dict_req:
     :return:
     """
-    shutil.rmtree('tweakedjsoninfiles')
-    shutil.rmtree('plotSourceData')
-    shutil.rmtree('simOutfiles')
+
+    baseWorkingDir = os.getcwd()
+
+    # shutil.rmtree('tweakedjsoninfiles')
+    # shutil.rmtree('plotSourceData')
+    # shutil.rmtree('simOutfiles')
+
+    os.chdir(baseWorkingDir + "/simJobs")
+    jobDirName = simJob + "_" + dict_args['jobid']
+
+    os.mkdir(jobDirName)
+    os.chdir(jobDirName)
+
+    # now, we are in the unique job directory
 
     os.mkdir('tweakedjsoninfiles')
     os.mkdir('plotSourceData')
-    os.mkdir('simOutfiles')
-
-    jobid = dict_args['jobid']
+    os.mkdir(simulated_json_dir)
 
     start_date = dt.datetime.strptime(dict_args['start_date']['value'], "%m-%d-%Y")
     days_runtime = int(dict_args['runtime_days']['value'])
 
-    injsonfilepath = csse_formatted_json_dirpath + dict_args['start_date']['value'] + formatted_csse_infile_prefix
+    injsonfilepath = csse_formatted_json_dir "/" + "+ dict_args['start_date']['value'] + formatted_csse_infile_prefix
 
     tweakedjsoninfilepath = "tweakedjsoninfiles/" + dict_args['start_date']['value'] + ".tweaked.json"
 
@@ -332,7 +327,7 @@ def run_range_simulations(dict_args):
         subprocess.run(["../../pandemic_sim", "-m", tweakedjsoninfilepath, "--max-sim-time",
                         str(24 * int(curr_days_runtime)),
                         "-o",
-                        simulated_json_dirpath + curr_outfile], stdout=subprocess.DEVNULL)
+                        simulated_json_dir + "/" + curr_outfile], stdout=subprocess.DEVNULL)
 
         curr_days_runtime += 1
 
@@ -344,8 +339,9 @@ def run_range_simulations(dict_args):
         actualplot_end_date = end_date
 
     # create csv for US from original formatted files for the entire date range
-    processFilesForDateRange("formatted", start_date + dt.timedelta(days=1), actualplot_end_date, csse_formatted_json_dirpath,
-                             simulated_json_dirpath=None)
+    processFilesForDateRange("formatted", start_date + dt.timedelta(days=1), actualplot_end_date,
+                             json_formatted_dirpath=csse_formatted_json_dir,
+                             simulated_json_dir=None)
 
     # create file containing tweaked metrics
     with open("plotSourceData/metrics", "w") as f:
@@ -353,7 +349,7 @@ def run_range_simulations(dict_args):
 
     # create csv for US from simulation output files
     processFilesForDateRange("simulated", start_date + dt.timedelta(days=1), end_date, json_formatted_dirpath=None,
-                             simulated_json_dirpath=simulated_json_dirpath)
+                             simulated_json_dir=simulated_json_dir)
 
     # now, for INDIVIDUAL COUNTIES
     if dict_args['fipslist']['value']:
@@ -364,14 +360,16 @@ def run_range_simulations(dict_args):
 
         for fips in listfips:
             processFilesForDateRange_county(fips, "formatted", start_date + dt.timedelta(days=1), actualplot_end_date,
-                                            json_formatted_dirpath=csse_formatted_json_dirpath,
-                                            simulated_json_dirpath=None)
+                                            json_formatted_dir=csse_formatted_json_dir,
+                                            simulated_json_dir=None)
 
             processFilesForDateRange_county(fips, "simulated", start_date + dt.timedelta(days=1), end_date,
-                                            json_formatted_dirpath=None,
-                                            simulated_json_dirpath=simulated_json_dirpath)
+                                            json_formatted_dir=None,
+                                            simulated_json_dir=simulated_json_dir)
 
     subprocess.run(["Rscript", "rangeSimulationDataAnalyse.R"], stdout=subprocess.DEVNULL)
+
+    os.chdir(baseWorkingDir)
 
     return 0
 
