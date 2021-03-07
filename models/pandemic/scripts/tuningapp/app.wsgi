@@ -78,11 +78,12 @@ def getstatus():
         # task is running
         jobstatusToReturn['status'] = "RUNNING"
 
+    print("!!!!result.get", result.get())
+
     if result.get()[0] == 0:
         jobstatusToReturn['status'] = "SUCCESS"
     else:
         jobstatusToReturn['status'] = 'FAILURE'
-
 
     response.content_type = 'application/json'
 
@@ -363,6 +364,8 @@ def run_range_simulations(dict_args):
                                             simulated_json_dirpath=simulated_json_dirpath)
 
     subprocess.run(["Rscript", "rangeSimulationDataAnalyse.R"], stdout=subprocess.DEVNULL)
+
+    return 0
 
 
 
