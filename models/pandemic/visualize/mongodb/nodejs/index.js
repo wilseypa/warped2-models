@@ -187,7 +187,7 @@ app.post('/callSimulate', (req, res) => {
 			"avg_transport_speed":{"ifchecked":false,"value":""},
 			"max_diffusion_cnt":{"ifchecked":false,"value":""},
 			"fipslist":{"value":""}
-		},
+		}//,
 		// transformRequest: [(data, headers) => {
 		//   // transform the data
 	  
@@ -213,7 +213,7 @@ app.get('/callGetstatus', (req, res) => {
 		headers: {'Content-Type': 'application/json;charset=UTF-8'},
 		data: {
 			"jobid":"xshe7i9ieg2iy90yrb9ow934"
-		},
+		}//,
 		// transformRequest: [(data, headers) => {
 		//   // transform the data
 	  
