@@ -69,9 +69,9 @@ d3.select("#submitConfigApi").on("click", function() {
     // console.log(postdata);
     // console.log(JSON.stringify(postdata));
     
-    callSimulate(JSON.stringify(postdata)).then(function(data) { //UNCOMMENT WHEN WORKING
-        console.log(data);
-    });
+    // callSimulate(JSON.stringify(postdata)).then(function(data) { //UNCOMMENT WHEN WORKING
+    //     console.log(data);
+    // });
 
     pageState = "viewingMap";
     document.getElementById('map').style.display = "none";
