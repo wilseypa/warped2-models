@@ -20,7 +20,20 @@ app.use(express.json({}));	//NEEDED FOR req.body TO PRINT
 const database = new Datastore('database.db');
 database.loadDatabase();
 
-var session;
+var sessions = new Map();
+setInterval(function(){
+	const iter = sessions[Symbol.iterator]();
+
+	for (var [key, value] of iter) {
+		let currentCount = value.count;
+		if (currentCount == 0) {
+			sessions.delete(key);
+		} else {
+			sessions.set(key, {count: currentCount-1});
+			// console.log(sessions);
+		}
+	}
+}, 3000);	//Time needs to be the same as time on loginHandler.js setInterval() func
 
 function formatDate(dateValue, dateFormat) {
         let year = dateValue.getFullYear();
@@ -54,14 +67,17 @@ function getHash(ip) {
     return hash;
 }
 
-app.get('/loadHtml/:fileName', (request, response) => {
+app.get('/loadHtml/:fileName/:session', (request, response) => {
 	// var filePath = path.join(__dirname + '../../../test.html');
 	// response.sendFile(filePath);
-
-	if (session != undefined) {
-		// console.log(session);
-		const fileContents = getHtmlTemplate('../../html/' + request.params.fileName);
-		response.status(200).send({response: fileContents});
+	if (request.params.session != undefined) {
+		if (sessions.has(request.params.session)) {
+			// console.log(session);
+			const fileContents = getHtmlTemplate('../../html/' + request.params.fileName);
+			response.status(200).send({response: fileContents});
+		} else {
+			response.status(401).send({response: "failed"});
+		}
 	} else {
 		response.status(401).send({response: "failed"});
 	}
@@ -74,18 +90,31 @@ app.get('/login/:username/:password/:ip', (request, response) => {
 	// console.log(password);
 
 	if (username == 'admin' && password == 'warped2') {
-		console.log(session);
-		session = getHash(request.params.ip);
-		console.log(session);
+		// console.log(sessions);
+		let userSession = getHash(request.params.ip);
+		sessions.set(userSession, {count: 5});
+		// console.log(sessions);
 		// console.log('Good');
 		const fileContents = getHtmlTemplate('../../html/' + "config.html");
-		response.status(200).send({response: "success", html: "config.html"});
+		response.status(200).send({response: "success", html: "config.html", session: userSession});
 
 	}
 	else {
 		// console.log('Bad');
-		session = undefined;
+		// session = undefined;
 		response.status(401).send({response: "failed", html: ""});
+	}
+});
+
+app.get('/sessionManager/:session', (request, response) => {
+	if (sessions.has(request.params.session)) {
+		let currentCount = sessions.get(request.params.session).count;
+		// console.log(currentCount);
+		sessions.set(request.params.session, {count: currentCount+1});
+		// console.log(sessions);
+		response.status(200).send({response: "success"});
+	} else {
+		response.status(401).send({response: "failed"});
 	}
 });
 
@@ -107,40 +136,95 @@ app.post('/callSimulate', (req, res) => {
   console.log(typeof(JSON.stringify(req.body)));
   console.log(JSON.stringify(req.body));
 
-	const options = {
-		url: 'http://localhost:8082/simulate',
-		form: { start_date:{value:"07-22-2020"},
-				runtime_days:{value:"1"},
-				transmissibility:{ifchecked:true,value:"2.2"},
-				exposed_confirmed_ratio:{ifchecked:false,value:"0.00"},
-				mean_incubation_duration_in_days:{ifchecked:false,value:"2.2"},
-				mean_infection_duration_in_days:{ifchecked:false,value:"2.3"},
-				mortality_ratio:{ifchecked:false,value:"0.05"},
-				update_trig_interval_in_hrs:{ifchecked:false,value:"24"},
-				graph_type:{ifchecked:false,value:"Watts-Strogatz"},
-				graph_params:{ifchecked:false,K_val:"8",beta_val:"0.1"},
-				diffusion_trig_interval_in_hrs:{ifchecked:false,value:"48"},
-				avg_transport_speed:{ifchecked:false,value:"100"},
-				max_diffusion_cnt:{ifchecked:false,value:"10"} 
-			}
-	};
+	// const options = {
+	// 	url: 'http://localhost:8082/simulate',
+	// 	form: {
+	// 		"jobid":"xshe7i9ieg2iy90yrb9ow934",
+	// 		"start_date":{"value":"07-01-2020"},
+	// 		"runtime_days":{"value":"4"},
+	// 		"actualplot_end_date":{"value":""},
+	// 		"transmissibility":{"ifchecked":false,"value":"2.0"},
+	// 		"exposed_confirmed_ratio":{"ifchecked":false,"value":""},
+	// 		"mean_incubation_duration_in_days":{"ifchecked":false,"value":""},
+	// 		"mean_infection_duration_in_days":{"ifchecked":false,"value":""},
+	// 		"mortality_ratio":{"ifchecked":false,"value":""},
+	// 		"update_trig_interval_in_hrs":{"ifchecked":false,"value":""},
+	// 		"graph_type":{"ifchecked":false,"value":"Watts-Strogatz"},
+	// 		"graph_params":{"ifchecked":false,"K_val":"","beta_val":""},
+	// 		"diffusion_trig_interval_in_hrs":{"ifchecked":false,"value":""},
+	// 		"avg_transport_speed":{"ifchecked":false,"value":""},
+	// 		"max_diffusion_cnt":{"ifchecked":false,"value":""},
+	// 		"fipslist":{"value":""}
+	// 	}  
+	// };
+	// request.post(options, (err, reqRes, body) => {
+	// 	if (err) {
+	// 		res.status(400).send({Error: err});
+	// 		return console.log(err);
+	// 	}
+	// 	console.log(body);
+	// 	res.status(200).send({response: body});
+	// });
 
-	request.post(options, (err, reqRes, body) => {
-		if (err) {
-			res.status(400).send({Error: err});
-			return console.log(err);
-		}
-		console.log(body);
-		res.status(200).send({response: body});
-	});
+	const options = {
+		method: 'post',
+		url: 'http://localhost:8082/simulate',
+		headers: {'Content-Type': 'application/json;charset=UTF-8'},
+		data: {
+			"jobid":"xshe7i9ieg2iy90yrb9ow934",
+			"start_date":{"value":"07-01-2020"},
+			"runtime_days":{"value":"4"},
+			"actualplot_end_date":{"value":""},
+			"transmissibility":{"ifchecked":false,"value":"2.0"},
+			"exposed_confirmed_ratio":{"ifchecked":false,"value":""},
+			"mean_incubation_duration_in_days":{"ifchecked":false,"value":""},
+			"mean_infection_duration_in_days":{"ifchecked":false,"value":""},
+			"mortality_ratio":{"ifchecked":false,"value":""},
+			"update_trig_interval_in_hrs":{"ifchecked":false,"value":""},
+			"graph_type":{"ifchecked":false,"value":"Watts-Strogatz"},
+			"graph_params":{"ifchecked":false,"K_val":"","beta_val":""},
+			"diffusion_trig_interval_in_hrs":{"ifchecked":false,"value":""},
+			"avg_transport_speed":{"ifchecked":false,"value":""},
+			"max_diffusion_cnt":{"ifchecked":false,"value":""},
+			"fipslist":{"value":""}
+		},
+		// transformRequest: [(data, headers) => {
+		//   // transform the data
+	  
+		//   return data;
+		// }]
+	  };
+	  
+	  // send the request
+	  axios(options).then(function (response) {
+		res.status(200).send({response: response});
+	});;
 })
 
 app.get('/callGetstatus', (req, res) => {
-	request('http://localhost:8082/getstatus', { json: true }, (error, response, body) => {
-		if (error) { return console.log(error); }
-		//console.log(body);
-		res.status(200).send({statusmsg: body});
-	});
+	// request('http://localhost:8082/getstatus', { json: true }, (error, response, body) => {
+	// 	if (error) { return console.log(error); }
+	// 	//console.log(body);
+	// 	res.status(200).send({statusmsg: body});
+	// });
+	const options = {
+		method: 'get',
+		url: 'http://localhost:8082/getstatus',
+		headers: {'Content-Type': 'application/json;charset=UTF-8'},
+		data: {
+			"jobid":"xshe7i9ieg2iy90yrb9ow934"
+		},
+		// transformRequest: [(data, headers) => {
+		//   // transform the data
+	  
+		//   return data;
+		// }]
+	  };
+	  
+	  // send the request
+	  axios(options).then(function (response) {
+		  res.status(200).send({statusmsg: response});
+	  });
 });
 
 app.get('/send_simulated_data', (request, response) => {

@@ -22,7 +22,16 @@ async function getClientIP() {
     ip = ipObj.ip;
 }
 async function loadHtml(fileName, parentElement) {
-    const response = await fetch('/loadHtml/' + fileName);
+    var session = sessionStorage.getItem("session");
+    const response = await fetch('/loadHtml/' + fileName + "/" + session);
+    const data = await response.json();
+    // console.log(data.response);
+    document.getElementById(parentElement).innerHTML = data.response;
+    return data;
+}
+async function sessionManager() {
+    var session = sessionStorage.getItem("session");
+    const response = await fetch('/sessionManager/' + session);
     const data = await response.json();
     // console.log(data.response);
     document.getElementById(parentElement).innerHTML = data.response;

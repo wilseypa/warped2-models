@@ -164,14 +164,14 @@ var getStatus = function () {
     //         }
     //     })
     //     .go();
-    // callGetstatus().then(function(data) {    //UNCOMMENT WHEN WORKING
-    //     //console.log(data);
-    //     if (data.statusmsg == "no job added" || data.statusmsg == "job finished") {
-    //         removeLoadingBar();
-    //     } else {
-    //         setTimeout(function(){ getStatus }, 6000);
-    //     }
-    // });
+    callGetstatus().then(function(data) {    //UNCOMMENT WHEN WORKING
+        console.log(data);
+        if (data.statusmsg == "no job added" || data.statusmsg == "job finished") {
+            removeLoadingBar();
+        } else {
+            setTimeout(function(){ getStatus }, 6000);
+        }
+    });
 }
 
 function waitForSimulationData() {
