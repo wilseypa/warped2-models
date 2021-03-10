@@ -34,7 +34,6 @@ async function sessionManager() {
     const response = await fetch('/sessionManager/' + session);
     const data = await response.json();
     // console.log(data.response);
-    document.getElementById(parentElement).innerHTML = data.response;
     return data;
 }
 async function sendData() {
