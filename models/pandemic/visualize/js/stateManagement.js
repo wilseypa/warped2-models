@@ -1,3 +1,11 @@
+d3.select("#advancedConfigButton").on("click", function() {
+    if (document.getElementById('advancedConfigOptions').style.display == "none") {
+        showAnimation('advancedConfigOptions', "0.15", "0.00");
+    } else {
+        hideAnimation('advancedConfigOptions', "0.15");
+    }
+});
+
 // Submitting ConfigAPI Form
 d3.select("#submitConfigApi").on("click", function() {
     if (document.getElementById('postSimulationContent').style.display != "none") {
