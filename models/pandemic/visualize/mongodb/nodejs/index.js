@@ -170,6 +170,7 @@ app.post('/callSimulate', (req, res) => {
 		method: 'post',
 		url: 'http://ec2-3-22-85-65.us-east-2.compute.amazonaws.com:7096/simulate',
 		headers: {'Content-Type': 'application/json;charset=UTF-8'},
+		auth: {username: "scooby", password: "doobyd00"},
 		data: {
 			"jobid":"xshe7i9ieg2iy90yrb9ow934",
 			"start_date":{"value":"07-01-2020"},
@@ -211,6 +212,7 @@ app.get('/callGetstatus', (req, res) => {
 		method: 'get',
 		url: 'http://ec2-3-22-85-65.us-east-2.compute.amazonaws.com:7096/getstatus',
 		headers: {'Content-Type': 'application/json;charset=UTF-8'},
+		auth: {username: "scooby", password: "doobyd00"},
 		data: {
 			"jobid":"xshe7i9ieg2iy90yrb9ow934"
 		}//,
