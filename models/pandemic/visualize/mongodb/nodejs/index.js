@@ -168,7 +168,7 @@ app.post('/callSimulate', (req, res) => {
 
 	const options = {
 		method: 'post',
-		url: 'http://localhost:8082/simulate',
+		url: 'http://ec2-3-22-85-65.us-east-2.compute.amazonaws.com:7096/simulate',
 		headers: {'Content-Type': 'application/json;charset=UTF-8'},
 		data: {
 			"jobid":"xshe7i9ieg2iy90yrb9ow934",
@@ -209,7 +209,7 @@ app.get('/callGetstatus', (req, res) => {
 	// });
 	const options = {
 		method: 'get',
-		url: 'http://localhost:8082/getstatus',
+		url: 'http://ec2-3-22-85-65.us-east-2.compute.amazonaws.com:7096/getstatus',
 		headers: {'Content-Type': 'application/json;charset=UTF-8'},
 		data: {
 			"jobid":"xshe7i9ieg2iy90yrb9ow934"

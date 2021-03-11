@@ -17,6 +17,9 @@ input, select {
 }
 input:focus, select:focus {
   outline: none;
+  /* box-shadow: 3px 3px 3px grey; */
+}
+input:active {
   box-shadow: 3px 3px 3px grey;
 }
 /* .basicBorder {
