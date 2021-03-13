@@ -383,7 +383,7 @@ def simulate_func(dict_args):
 
     jobid = dict_args['jobid']
 
-    global newJObStartStatus
+    global newJobStartStatus
 
     if jobid in simJobs:
         newJobStartStatus = "job with the same ID already exists"
