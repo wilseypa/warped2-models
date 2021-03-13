@@ -226,7 +226,8 @@ app.get('/callGetstatus', (req, res) => {
 	  
 	  // send the request
 	  axios(options).then(function (response) {
-		  res.status(200).send({statusmsg: response.data});
+		  console.log(response);
+		  res.status(200).send({statusmsg: "response.data"});
 	  });
 });
 
