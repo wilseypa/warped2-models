@@ -172,7 +172,7 @@ app.post('/callSimulate', (req, res) => {
 		headers: {'Content-Type': 'application/json;charset=UTF-8'},
 		// auth: {username: "scooby", password: "doobyd00"},
 		data: {
-			"jobid":"xshe7i9ieg2iy90yrb9ow934",
+			"jobid":"xshe7i9ieg2iy90yrb9ow935",
 			"start_date":{"value":"07-01-2020"},
 			"runtime_days":{"value":"4"},
 			"actualplot_end_date":{"value":""},
@@ -199,7 +199,7 @@ app.post('/callSimulate', (req, res) => {
 	  // send the request
 	  axios(options).then(function (response) {
 		  console.log(response);
-		res.status(200).send({response: "response"});
+		res.status(200).send({response: "simulate Returned"});
 	});;
 })
 
@@ -215,7 +215,7 @@ app.get('/callGetstatus', (req, res) => {
 		headers: {'Content-Type': 'application/json;charset=UTF-8'},
 		// auth: {username: "scooby", password: "doobyd00"},
 		data: {
-			"jobid":"xshe7i9ieg2iy90yrb9ow934"
+			"jobid":"xshe7i9ieg2iy90yrb9ow935"
 		}//,
 		// transformRequest: [(data, headers) => {
 		//   // transform the data
@@ -227,7 +227,7 @@ app.get('/callGetstatus', (req, res) => {
 	  // send the request
 	  axios(options).then(function (response) {
 		  console.log(response);
-		  res.status(200).send({statusmsg: "response"});
+		  res.status(200).send({statusmsg: "getstatus returned"});
 	  });
 });
 
