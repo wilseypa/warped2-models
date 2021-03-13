@@ -29,6 +29,8 @@ formatted_csse_infile_prefix = ".formatted-JHU-data.json"
 simulated_file_prefix = ".simulated-data.json"
 csse_formatted_json_dir = "../../data"
 simulated_json_dir = "simOutfiles"
+newJobStartStatus = ""
+
 
 workerPool = None
 initCalled = False
@@ -380,12 +382,20 @@ def simulate_func(dict_args):
     global workerPool
 
     jobid = dict_args['jobid']
+
+    global newJObStartStatus
+
+    if jobid in simJobs:
+        newJobStartStatus = "job with the same ID already exists"
+        return
+
     simJobs[jobid] = workerPool.apply_async(run_range_simulations, (dict_args,))
 
     print("!!!! simjobs added")
 
     jobstatus[jobid] = {"status": "jobadded"}
 
+    newJobStartStatus = "job added"
 
 @post('/simulate')
 def simulate():
@@ -406,7 +416,7 @@ def simulate():
     if simulateFuncjob is None or simulateFuncjob.is_alive() is False:
         simulateFuncjob = threading.Thread(target=simulate_func, args=(dictreq,))
         simulateFuncjob.start()
-        return json.dumps({"statusmsg": "running..."})
+        return json.dumps({"statusmsg": newJobStartStatus})
     else:
         return json.dumps({"statusmsg": "Wait until this message disappears and TRY again, previous simulate jobs "
                                         "aren't scheduled yet"})
