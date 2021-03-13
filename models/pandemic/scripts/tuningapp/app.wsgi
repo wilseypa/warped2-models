@@ -63,26 +63,27 @@ def getstatus():
 
     print("!!!!!getstatus called")
     jobid = request.json['jobid']
-    jobstatusToReturn = {'jobid':jobid, 'status':None}
+    jobstatusToReturn = {'jobid':jobid, 'status':"NOT_FOUND"}
 
-    result = simJobs[jobid]
-    print("!!!result", result, type(result))
+    if jobid in simJobs:
+        result = simJobs[jobid]
+        print("!!!result", result, type(result))
 
-    try:
-        print("!!!!trying result.successful")
-        result.successful()
+        try:
+            print("!!!!trying result.successful")
+            result.successful()
 
-    except ValueError:
-        # task is running
-        jobstatusToReturn['status'] = "RUNNING"
+        except ValueError:
+            # task is running
+            jobstatusToReturn['status'] = "RUNNING"
 
-    if jobstatusToReturn['status'] != "RUNNING":
-        if result.get() == 0:
-            jobstatusToReturn['status'] = "SUCCESS"
-        else:
-            jobstatusToReturn['status'] = 'FAILURE'
+        if jobstatusToReturn['status'] != "RUNNING":
+            if result.get() == 0:
+                jobstatusToReturn['status'] = "SUCCESS"
+            else:
+                jobstatusToReturn['status'] = 'FAILURE'
 
-    response.content_type = 'application/json'
+        response.content_type = 'application/json'
 
     return json.dumps(jobstatusToReturn)
 
@@ -287,10 +288,6 @@ def run_range_simulations(dict_args):
 
     baseWorkingDir = os.getcwd()
 
-    # shutil.rmtree('tweakedjsoninfiles')
-    # shutil.rmtree('plotSourceData')
-    # shutil.rmtree('simOutfiles')
-
     os.chdir(baseWorkingDir + "/simJobs")
     jobDirName = "simJob_" + dict_args['jobid']
 
@@ -319,11 +316,6 @@ def run_range_simulations(dict_args):
     while curr_days_runtime <= days_runtime:
         curr_outfile = (start_date + dt.timedelta(days=curr_days_runtime)).strftime("%m-%d-%Y") \
                        + simulated_file_prefix
-
-        # subprocess.run(["../../pandemic_sim", "-m", tweakedjsoninfilepath, "--max-sim-time",
-        #                 str(24 * int(curr_days_runtime)),
-        #                 "-o",
-        #                 simulated_json_dirpath + curr_outfile])
 
         subprocess.run([baseWorkingDir + "/" + "../../pandemic_sim", "-m", tweakedjsoninfilepath, "--max-sim-time",
                         str(24 * int(curr_days_runtime)),
