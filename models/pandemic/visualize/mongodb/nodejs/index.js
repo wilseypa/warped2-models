@@ -210,7 +210,7 @@ app.get('/callGetstatus', (req, res) => {
 	// 	res.status(200).send({statusmsg: body});
 	// });
 	const options = {
-		method: 'get',
+		method: 'post',
 		url: 'http://localhost:8081/getstatus',
 		headers: {'Content-Type': 'application/json;charset=UTF-8'},
 		// auth: {username: "scooby", password: "doobyd00"},
