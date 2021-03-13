@@ -416,6 +416,7 @@ def simulate():
     if simulateFuncjob is None or simulateFuncjob.is_alive() is False:
         simulateFuncjob = threading.Thread(target=simulate_func, args=(dictreq,))
         simulateFuncjob.start()
+        print("!!!!newJobStartStatus:", newJobStartStatus)
         return json.dumps({"statusmsg": newJobStartStatus})
     else:
         return json.dumps({"statusmsg": "Wait until this message disappears and TRY again, previous simulate jobs "
