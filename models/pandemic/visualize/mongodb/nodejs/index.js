@@ -199,7 +199,7 @@ app.post('/callSimulate', (req, res) => {
 	  // send the request
 	  axios(options).then(function (response) {
 		//   console.log(response);
-		res.status(200).send({response: response.data});
+		res.status(200).send({response: response.data.statusmsg});
 	});;
 })
 
