@@ -172,7 +172,7 @@ app.post('/callSimulate', (req, res) => {
 		headers: {'Content-Type': 'application/json;charset=UTF-8'},
 		// auth: {username: "scooby", password: "doobyd00"},
 		data: {
-			"jobid":"xshe7i9ieg2iy90yrb9ow935",
+			"jobid":"xshe7i9ieg2iy90yrb9ow936",
 			"start_date":{"value":"07-01-2020"},
 			"runtime_days":{"value":"4"},
 			"actualplot_end_date":{"value":""},
@@ -215,7 +215,7 @@ app.get('/callGetstatus', (req, res) => {
 		headers: {'Content-Type': 'application/json;charset=UTF-8'},
 		// auth: {username: "scooby", password: "doobyd00"},
 		data: {
-			"jobid":"xshe7i9ieg2iy90yrb9ow935"
+			"jobid":"xshe7i9ieg2iy90yrb9ow936"
 		}//,
 		// transformRequest: [(data, headers) => {
 		//   // transform the data
