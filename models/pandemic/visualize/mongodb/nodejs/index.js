@@ -198,7 +198,8 @@ app.post('/callSimulate', (req, res) => {
 	  
 	  // send the request
 	  axios(options).then(function (response) {
-		res.status(200).send({response: response});
+		  console.log(response);
+		res.status(200).send({response: "response"});
 	});;
 })
 
@@ -225,7 +226,8 @@ app.get('/callGetstatus', (req, res) => {
 	  
 	  // send the request
 	  axios(options).then(function (response) {
-		  res.status(200).send({statusmsg: response});
+		  console.log(response);
+		  res.status(200).send({statusmsg: "response"});
 	  });
 });
 
