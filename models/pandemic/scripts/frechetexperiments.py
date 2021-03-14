@@ -20,16 +20,23 @@ except Exception as e:
     print(str(type(e).__name__) + ": " + str(e), file=sys.stderr)
     sys.exit(1)
 
-DIRPATH_PLOTSRC_DATA = "./tuningapp/plotSourceData"
-DIRPATH_PLOTSRC_DATA_US = DIRPATH_PLOTSRC_DATA + "/US"
+# DIRPATH_PLOTSRC_DATA = "./tuningapp/plotSourceData"
+# DIRPATH_PLOTSRC_DATA_US = DIRPATH_PLOTSRC_DATA + "/US"
 
+DIRPATH_SIMJOBS = "./tuningapp/simJobs"
 
 def calc_frechet():
     """
     """
 
-    actual_filepath = DIRPATH_PLOTSRC_DATA_US + "/actual.csv"
-    simulated_filepath = DIRPATH_PLOTSRC_DATA_US + "/simulated.csv"
+    all_subdirs = [d for d in os.listdir('./tuningapp/simJobs/') if os.path.isdir(d)]
+    latest_subdir = max(all_subdirs, key=os.path.getmtime)
+
+    actual_filepath = DIRPATH_SIMJOBS + "/" + latest_subdir + "/plotSourceData/US" + "/" + "actual.csv"
+    # actual_filepath = DIRPATH_PLOTSRC_DATA_US + "/actual.csv"
+    simulated_filepath = DIRPATH_SIMJOBS + "/" + latest_subdir + "/plotSourceData/US" + "/" \
+                         + "simulated.csv"
+    # DIRPATH_PLOTSRC_DATA_US + "/simulated.csv"
 
     actual_us_df = pd.read_csv(actual_filepath, skipinitialspace=True,
                                usecols=['Date', 'Confirmed', 'Deaths',

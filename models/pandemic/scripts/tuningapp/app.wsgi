@@ -411,6 +411,7 @@ def simulate():
     response.content_type = 'application/json'
 
     global simulateFuncjob
+    global newJobStartStatus
 
     # in case any job is already running, return error message
     if simulateFuncjob is None or simulateFuncjob.is_alive() is False:
