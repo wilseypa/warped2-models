@@ -29,7 +29,7 @@ def calc_frechet():
     """
     """
 
-    all_subdirs = [d for d in os.listdir('./tuningapp/simJobs/') if os.path.isdir("./tuningapp/simJobs/" + d)]
+    all_subdirs = [(DIRPATH_SIMJOBS + "/" + d) for d in os.listdir(DIRPATH_SIMJOBS) if os.path.isdir(DIRPATH_SIMJOBS + "/" + d)]
     print("all_subdirs", all_subdirs)
     latest_subdir = max((os.path.getmtime(f), f) for f in all_subdirs)[1]
     print("latest_subdir", latest_subdir)
