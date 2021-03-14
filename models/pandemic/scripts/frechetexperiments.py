@@ -30,7 +30,9 @@ def calc_frechet():
     """
 
     all_subdirs = [d for d in os.listdir('./tuningapp/simJobs/') if os.path.isdir(d)]
-    latest_subdir = max((os.path.getmtime(f),f) for f in all_subdirs)[1]
+    print("all_subdirs", all_subdirs)
+    latest_subdir = max((os.path.getmtime(f), f) for f in all_subdirs)[1]
+    print("latest_subdir", latest_subdir)
 
     actual_filepath = DIRPATH_SIMJOBS + "/" + latest_subdir + "/plotSourceData/US" + "/" + "actual.csv"
     # actual_filepath = DIRPATH_PLOTSRC_DATA_US + "/actual.csv"
