@@ -59,10 +59,9 @@ def calc_frechet():
                                          'Recovered': int,
                                          'Active': int,
                                          'Population': int})
-
     
     print(simulated_us_df['Confirmed'], type(list(simulated_us_df['Confirmed'])))
-    print("len", len(actual_us_df), len(simulated_us_df))
+    print("len", len(actual_us_df), len(simulated_us_df)) # both len's should match
     actual_list = list(actual_us_df['Confirmed'])
     simulated_list = list(simulated_us_df['Confirmed'])
 
@@ -73,8 +72,8 @@ def calc_frechet():
         actual_list_2d.append([i, actual_list[i]])
         simulated_list_2d.append([i, simulated_list[i]])
 
-    print(actual_list_2d, type(actual_list_2d))
-    print()
+    # print(actual_list_2d, type(actual_list_2d))
+    # print()
     # print(simulated_list_2d, type(simulated_list_2d))    
         
     print("frechet dist", frdist(actual_list_2d, simulated_list_2d))
