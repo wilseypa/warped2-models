@@ -83,7 +83,7 @@ d3.select("#submitConfigApi").on("click", function() {
         // console.log(JSON.stringify(postdata));
         
         callSimulate(JSON.stringify(postdata)).then(function(data) { //UNCOMMENT WHEN WORKING
-            console.log(data);
+            // console.log(data);
         });
     
         pageState = "viewingMap";

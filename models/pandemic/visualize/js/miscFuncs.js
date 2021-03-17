@@ -167,7 +167,7 @@ var getStatus = function () {
 
 
     callGetstatus().then(function(data) {    //UNCOMMENT WHEN WORKING
-        console.log(data);
+        // console.log(data);
         if (data.statusmsg.status == "SUCCESS") {
             removeLoadingBar();
         } else {
