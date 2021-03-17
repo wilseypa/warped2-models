@@ -77,7 +77,8 @@ async function callSimulate(simulateJson) {
     return data;
 }
 async function callGetstatus() {
-    const response = await fetch('/callGetstatus');
+    var jobID = sessionStorage.getItem("jobID");
+    const response = await fetch('/callGetstatus/' + jobID);
     const data = await response.json();
     //console.log(data);
     return data;
@@ -122,6 +123,8 @@ function loadJavascriptSource(filePathArray) {
         return false;
     }
 }
+
+sessionStorage.clear();
 
 isDevEnvFunc();//.then(function() {});
 getClientIP();

@@ -141,12 +141,15 @@ app.get('/isDevEnv', (request, response) => {
 
 app.post('/callSimulate', (req, res) => {
 //   console.log(typeof(JSON.stringify(req.body)));
-  console.log(JSON.stringify(req.body));
+	// console.log(JSON.stringify(req.body));
 
 	// const options = {
-	// 	url: 'http://localhost:8082/simulate',
-	// 	form: {
-	// 		"jobid":"xshe7i9ieg2iy90yrb9ow934",
+	// 	method: 'post',
+	// 	url: 'http://localhost:8081/simulate',
+	// 	headers: {'Content-Type': 'application/json;charset=UTF-8'},
+	// 	// auth: {username: "scooby", password: "doobyd00"},
+	// 	data: {
+	// 		"jobid":"xshe7i9ieg2iy90yrb9ow9343",
 	// 		"start_date":{"value":"07-01-2020"},
 	// 		"runtime_days":{"value":"4"},
 	// 		"actualplot_end_date":{"value":""},
@@ -162,45 +165,21 @@ app.post('/callSimulate', (req, res) => {
 	// 		"avg_transport_speed":{"ifchecked":false,"value":""},
 	// 		"max_diffusion_cnt":{"ifchecked":false,"value":""},
 	// 		"fipslist":{"value":""}
-	// 	}  
-	// };
-	// request.post(options, (err, reqRes, body) => {
-	// 	if (err) {
-	// 		res.status(400).send({Error: err});
-	// 		return console.log(err);
-	// 	}
-	// 	console.log(body);
-	// 	res.status(200).send({response: body});
-	// });
+	// 	}//,
+	// 	// transformRequest: [(data, headers) => {
+	// 	//   // transform the data
+	  
+	// 	//   return data;
+	// 	// }]
+	//   };
 
+	var postParams = req.body;
 	const options = {
 		method: 'post',
 		url: 'http://localhost:8081/simulate',
 		headers: {'Content-Type': 'application/json;charset=UTF-8'},
 		// auth: {username: "scooby", password: "doobyd00"},
-		data: {
-			"jobid":"xshe7i9ieg2iy90yrb9ow9343",
-			"start_date":{"value":"07-01-2020"},
-			"runtime_days":{"value":"4"},
-			"actualplot_end_date":{"value":""},
-			"transmissibility":{"ifchecked":false,"value":"2.0"},
-			"exposed_confirmed_ratio":{"ifchecked":false,"value":""},
-			"mean_incubation_duration_in_days":{"ifchecked":false,"value":""},
-			"mean_infection_duration_in_days":{"ifchecked":false,"value":""},
-			"mortality_ratio":{"ifchecked":false,"value":""},
-			"update_trig_interval_in_hrs":{"ifchecked":false,"value":""},
-			"graph_type":{"ifchecked":false,"value":"Watts-Strogatz"},
-			"graph_params":{"ifchecked":false,"K_val":"","beta_val":""},
-			"diffusion_trig_interval_in_hrs":{"ifchecked":false,"value":""},
-			"avg_transport_speed":{"ifchecked":false,"value":""},
-			"max_diffusion_cnt":{"ifchecked":false,"value":""},
-			"fipslist":{"value":""}
-		}//,
-		// transformRequest: [(data, headers) => {
-		//   // transform the data
-	  
-		//   return data;
-		// }]
+		data: req.body
 	  };
 	  
 	  // send the request
@@ -210,25 +189,30 @@ app.post('/callSimulate', (req, res) => {
 	});;
 })
 
-app.get('/callGetstatus', (req, res) => {
-	// request('http://localhost:8082/getstatus', { json: true }, (error, response, body) => {
-	// 	if (error) { return console.log(error); }
-	// 	//console.log(body);
-	// 	res.status(200).send({statusmsg: body});
-	// });
+app.get('/callGetstatus/:jobID', (req, res) => {
+	// const options = {
+	// 	method: 'post',
+	// 	url: 'http://localhost:8081/getstatus',
+	// 	headers: {'Content-Type': 'application/json;charset=UTF-8'},
+	// 	// auth: {username: "scooby", password: "doobyd00"},
+	// 	data: {
+	// 		"jobid":"xshe7i9ieg2iy90yrb9ow9343"
+	// 	}//,
+	// 	// transformRequest: [(data, headers) => {
+	// 	//   // transform the data
+	  
+	// 	//   return data;
+	// 	// }]
+	//   };
+
 	const options = {
 		method: 'post',
 		url: 'http://localhost:8081/getstatus',
 		headers: {'Content-Type': 'application/json;charset=UTF-8'},
 		// auth: {username: "scooby", password: "doobyd00"},
 		data: {
-			"jobid":"xshe7i9ieg2iy90yrb9ow9343"
-		}//,
-		// transformRequest: [(data, headers) => {
-		//   // transform the data
-	  
-		//   return data;
-		// }]
+			"jobid":req.params.jobID
+		}
 	  };
 	  
 	  // send the request
