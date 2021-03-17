@@ -149,6 +149,7 @@ var getStatus = function () {
         // console.log(data.statusmsg.status);
         if (data.statusmsg.status == "SUCCESS") {
             removeLoadingBar();
+            getSimulationData();
         } else {
             setTimeout(function(){ getStatus(); }, 6000);
         }

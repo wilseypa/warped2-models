@@ -101,6 +101,13 @@ async function send_plot_data() {
     console.log(data);
     return data;
 }
+async function getSimulationData() {
+    var jobID = sessionStorage.getItem("jobID");
+    const response = await fetch('/getSimulationData/' + jobID);
+    const data = await response.json();
+    console.log(data);
+    return data;
+}
 
 function loadJavascriptSource(filePathArray) {
     try {
