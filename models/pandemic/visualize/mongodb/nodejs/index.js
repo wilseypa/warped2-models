@@ -248,12 +248,20 @@ app.get('/send_simulated_data', (request, response) => {
 app.get('/getSimulationData/:jobID', (request, response) => {
 
 	// const sim_dec = '12-31-2020.simulated-data.json';
-	const sim_dec = 'simJob_' + request.params.jobID + '/' + 'simOutfiles/' + '07-23-2020.simulated-data.json';
+	const simJob_path = 'simJob_' + request.params.jobID + '/' + 'simOutfiles/' + '07-23-2020.simulated-data.json';
 	
-	const vivek_simulated_path = '/work/vivek/warped2/warped2-models/models/pandemic/scripts/tuningapp/simJobs';
-	const simulated_data_folder = path.join(__dirname, '../../../../../../../../../', vivek_simulated_path);
+	const vivek_path = '/work/vivek/warped2/warped2-models/models/pandemic/scripts/tuningapp/simJobs';
+	const data_folder = path.join(__dirname, '../../../../../../../../../', vivek_path);
 
-	const december_simulated = path.join(simulated_data_folder, sim_dec);
+	const december_simulated = path.join(data_folder, simJob_path);
+
+	const simJob_pathTEST = 'simJob_' + request.params.jobID + '/' + 'simOutfiles';
+	const TESTCONSOLE = path.join(data_folder, simJob_pathTEST);
+	fs.readdir(TESTCONSOLE, (err, files) => {
+		files.forEach(file => {
+		  console.log(file);
+		});
+	  });
 
 	let raw_dec_sim = fs.readFileSync(december_simulated);
 
