@@ -258,8 +258,8 @@ app.get('/getSimulationData/:jobID', (request, response) => {
 		
 	var responseArray = [];
 	fs.readdir(simJob_folder, (err, files) => {
-		files.forEach(file => {
-			console.log(simJob_folder + '/' + file);
+		files.forEach(function(file, index) {
+			//console.log(simJob_folder + '/' + file);
 			let raw_data = fs.readFileSync(simJob_folder + '/' + file);
 			//console.log(raw_data);
 		
@@ -267,16 +267,13 @@ app.get('/getSimulationData/:jobID', (request, response) => {
 			//console.log(parsed_data);
 
 			responseArray.push(parsed_data);
-			console.log(responseArray);
+			//console.log(responseArray.length);
+			if (index == files.length-1) {
+				response.json(responseArray);
+			}
 		});
 	  });
-
-	// let raw_dec_sim = fs.readFileSync(simJob_folder);
-
-	// let data_dec_sim = JSON.parse(raw_dec_sim);
-
-	// let responseArray = [data_dec_sim];
-	response.json(responseArray);
+	//response.json(responseArray);
 
 });
 
