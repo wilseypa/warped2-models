@@ -250,9 +250,8 @@ app.get('/getSimulationData/:jobID', (request, response) => {
 	// const sim_dec = '12-31-2020.simulated-data.json';
 	const sim_dec = 'simJob_' + request.params.jobID + '/' + 'simOutfiles/' + '07-23-2020.simulated-data.json';
 	
-	
-	const vivek_actual_path = '/work/vivek/warped2/warped2-models/models/pandemic/scripts/tuningapp/simJobs';
-	const actual_data_folder = path.join(__dirname, '../../../../../../../../../', vivek_actual_path);
+	const vivek_simulated_path = '/work/vivek/warped2/warped2-models/models/pandemic/scripts/tuningapp/simJobs';
+	const simulated_data_folder = path.join(__dirname, '../../../../../../../../../', vivek_simulated_path);
 
 	const december_simulated = path.join(simulated_data_folder, sim_dec);
 
