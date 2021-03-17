@@ -261,10 +261,10 @@ app.get('/getSimulationData/:jobID', (request, response) => {
 		files.forEach(file => {
 			console.log(simJob_folder + '/' + file);
 			let raw_data = fs.readFileSync(simJob_folder + '/' + file);
-			console.log(raw_data);
+			//console.log(raw_data);
 		
 			let parsed_data = JSON.parse(raw_data);
-			console.log(parsed_data);
+			//console.log(parsed_data);
 
 			responseArray.push(parsed_data);
 			console.log(responseArray);
