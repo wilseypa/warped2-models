@@ -259,11 +259,11 @@ app.get('/getSimulationData/:jobID', (request, response) => {
 	var responseArray = [];
 	fs.readdir(simJob_folder, (err, files) => {
 		files.forEach(file => {
-			let raw_dec_sim = fs.readFileSync(simJob_folder + '/' + file);
+			let raw_data = fs.readFileSync(simJob_folder + '/' + file);
 		
-			let data_dec_sim = JSON.parse(raw_dec_sim);
-			
-			responseArray.push(data_dec_sim);
+			let parsed_data = JSON.parse(raw_data);
+
+			responseArray.push(parsed_data);
 		});
 	  });
 
