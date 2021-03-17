@@ -168,7 +168,7 @@ var getStatus = function () {
 
     callGetstatus().then(function(data) {    //UNCOMMENT WHEN WORKING
         console.log(data);
-        if (data.statusmsg == "no job added" || data.statusmsg == "job finished") {
+        if (data.statusmsg.status == "SUCCESS") {
             removeLoadingBar();
         } else {
             setTimeout(function(){ getStatus }, 6000);
@@ -182,5 +182,5 @@ function waitForSimulationData() {
 
     getStatus();
 
-    setTimeout(function(){ removeLoadingBar(); }, 1000);
+    // setTimeout(function(){ removeLoadingBar(); }, 1000);
 }
