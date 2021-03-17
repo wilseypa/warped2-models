@@ -264,6 +264,7 @@ app.get('/getSimulationData/:jobID', (request, response) => {
 			//console.log(raw_data);
 		
 			let parsed_data = JSON.parse(raw_data);
+			parsed_data["date"] = file.split('.')[0];
 			//console.log(parsed_data);
 
 			responseArray.push(parsed_data);
