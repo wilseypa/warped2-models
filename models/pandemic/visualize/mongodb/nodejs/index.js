@@ -259,6 +259,7 @@ app.get('/getSimulationData/:jobID', (request, response) => {
 	var responseArray = [];
 	fs.readdir(simJob_folder, (err, files) => {
 		files.forEach(file => {
+			console.log(simJob_folder + '/' + file);
 			let raw_data = fs.readFileSync(simJob_folder + '/' + file);
 		
 			let parsed_data = JSON.parse(raw_data);
