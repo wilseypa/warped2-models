@@ -125,6 +125,13 @@ app.get('/getHash/:ip', (request, response) => {
 	response.status(200).send({string: hash});
 });
 
+app.get('/getHashFromSession/:session', (request, response) => {
+	dateTimeString = new Date().toLocaleString()
+    let hashInput = request.params.session + " " + dateTimeString;
+    let hash = crypto.createHash('md5').update(hashInput).digest('hex');
+	response.status(200).send({jobID: hash});
+});
+
 app.get('/isDevEnv', (request, response) => {
 	const envPath = path.join(__dirname, '../../../../../../../');
 
@@ -134,7 +141,7 @@ app.get('/isDevEnv', (request, response) => {
 
 app.post('/callSimulate', (req, res) => {
 //   console.log(typeof(JSON.stringify(req.body)));
-//   console.log(JSON.stringify(req.body));
+  console.log(JSON.stringify(req.body));
 
 	// const options = {
 	// 	url: 'http://localhost:8082/simulate',
@@ -252,6 +259,79 @@ app.get('/send_simulated_data', (request, response) => {
 		});
 		response.json(responseArray);
 	});
+});
+
+app.get('/getSimulationData/:jobID', (request, response) => {
+
+	const sim_dec = '12-31-2020.simulated-data.json';
+	const act_dec = '12-31-2020.formatted-JHU-data.json';
+
+	const sim_jan = '01-31-2021.simulated-data.json';
+	const act_jan = '01-31-2021.formatted-JHU-data.json';
+
+	const sim_feb = '02-28-2021.simulated-data.json';
+
+	const sim_mar = '03-31-2021.simulated-data.json';
+
+	const sim_feb1 = '02-01-2021.simulated-data.json';
+	const act_feb1 = '02-01-2021.formatted-JHU-data.json';
+	const sim_mar1 = '03-01-2021.simulated-data.json';
+	
+	
+	const vivek_actual_path = '/work/vivek/warped2/warped2-models/models/pandemic/data';
+	const vivek_simulated_path = '/work/vivek/warped2/warped2-models/models/pandemic/scripts/tuningapp/simOutfiles.dec1_mar31_exponentfactor48';
+	const actual_data_folder = path.join(__dirname, '../../../../../../../../../', vivek_actual_path);
+	const simulated_data_folder = path.join(__dirname, '../../../../../../../../../', vivek_simulated_path);
+
+	const december_simulated = path.join(simulated_data_folder, sim_dec);
+	const december_actual = path.join(actual_data_folder, act_dec);
+
+	const january_simulated = path.join(simulated_data_folder, sim_jan);
+	const january_actual = path.join(actual_data_folder, act_jan);
+
+	const february_simulated = path.join(simulated_data_folder, sim_feb);
+
+	const march_simulated = path.join(simulated_data_folder, sim_mar);
+
+	const february1_simulated = path.join(simulated_data_folder, sim_feb1);
+	const february1_actual = path.join(actual_data_folder, act_feb1);
+	const march1_simulated = path.join(simulated_data_folder, sim_mar1);
+
+
+	let raw_dec_sim = fs.readFileSync(december_simulated);
+	let raw_dec_act = fs.readFileSync(december_actual);
+
+	let raw_jan_sim = fs.readFileSync(january_simulated);
+	let raw_jan_act = fs.readFileSync(january_actual);
+
+	let raw_feb_sim = fs.readFileSync(february_simulated);
+	
+	let raw_mar_sim = fs.readFileSync(march_simulated);
+
+	let raw_feb1_sim = fs.readFileSync(february1_simulated);
+	let raw_feb1_act = fs.readFileSync(february1_actual);
+	let raw_mar1_sim = fs.readFileSync(march1_simulated);
+
+
+
+	let data_dec_sim = JSON.parse(raw_dec_sim);
+	let data_dec_act = JSON.parse(raw_dec_act);
+
+	let data_jan_sim = JSON.parse(raw_jan_sim);
+	let data_jan_act = JSON.parse(raw_jan_act);
+
+	let data_feb_sim = JSON.parse(raw_feb_sim);
+
+	let data_mar_sim = JSON.parse(raw_mar_sim);
+
+	let data_feb1_sim = JSON.parse(raw_feb1_sim);
+	let data_feb1_act = JSON.parse(raw_feb1_act);
+	let data_mar1_sim = JSON.parse(raw_mar1_sim);
+
+	let responseArray = [data_dec_sim, data_dec_act, data_jan_sim, data_jan_act, data_feb_sim, data_mar_sim, data_feb1_sim, data_feb1_act, data_mar1_sim];
+	response.json(responseArray);
+
+
 });
 
 app.get('/send_plot_data', (request, response) => {

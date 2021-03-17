@@ -36,6 +36,13 @@ async function sessionManager() {
     // console.log(data.response);
     return data;
 }
+async function getHashFromSession() {
+    var session = sessionStorage.getItem("session");
+    const response = await fetch('/getHashFromSession/' + session);
+    const data = await response.json();
+    // console.log(data.response);
+    return data;
+}
 async function sendData() {
     const response = await fetch('/send_data/');
     const data = await response.json();
