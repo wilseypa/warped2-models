@@ -145,33 +145,12 @@ function handleDefaultConfigValue(inputId) {
 }
 
 var getStatus = function () {
-    // clearTimeout(getstatusTimeout);
-    // getstatusTimeout = setTimeout(getStatus, 6000, false);
-
-    // // main logic
-    // aja()
-    //     .method('GET')
-    //     // .header('Content-Type', 'application/json')
-    //     // .data({'data':JSON.stringify(postdata)})
-    //     .url('localhost:8082/getstatus')
-    //     .timeout(2500)
-    //     .on('200', function (response) {
-    //         if ("statusmsg" in response) {
-    //             document.getElementById("statusmsg").innerText = response["statusmsg"]
-    //             if (response.statusmsg == "job finished") {
-    //                 removeLoadingBar();
-    //             }
-    //         }
-    //     })
-    //     .go();
-
-
     callGetstatus().then(function(data) {    //UNCOMMENT WHEN WORKING
-        // console.log(data);
+        // console.log(data.statusmsg.status);
         if (data.statusmsg.status == "SUCCESS") {
             removeLoadingBar();
         } else {
-            setTimeout(function(){ getStatus }, 6000);
+            setTimeout(function(){ getStatus(); }, 6000);
         }
     });
 }
