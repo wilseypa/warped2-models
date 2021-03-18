@@ -2,8 +2,8 @@ generateLegend();
 
 // getStatus();
 
-document.getElementById('map').style.display = "none";
-document.getElementById('legend').style.display = "none";
+// document.getElementById('map').style.display = "none";
+// document.getElementById('legend').style.display = "none";
 
 var margin = { top: 0, left: 0, right: 0, bottom: 0},
     height = 500 - margin.top - margin.bottom,
@@ -168,9 +168,9 @@ d3.select("#plotButton").on("click", function() {
     loadNewData();
 
     setTimeout(function(){ 
-        document.getElementById('mapStatCheckboxes').style.display = "block";
-        document.getElementById('map').style.display = "block";
-        document.getElementById('legend').style.display = "block";
+        // document.getElementById('mapStatCheckboxes').style.display = "block";
+        // document.getElementById('map').style.display = "block";
+        // document.getElementById('legend').style.display = "block";
         d3.select("#plotButton").attr("disabled", true);
         // document.body.style.backgroundColor = "lightskyblue";
     }, 50);
@@ -247,10 +247,10 @@ d3.selectAll(".arrow").on("click", function(){
 var timelapseToggle = 1;
 var intervalId;
 d3.select("#timelapseButton").on("click", function() {
-    if(document.getElementById('map').style.display == "none") {
-        document.getElementById('mapStatCheckboxes').style.display = "block";
-        document.getElementById('map').style.display = "block";
-        document.getElementById('legend').style.display = "block";
+    // if(document.getElementById('map').style.display == "none") {
+    //     document.getElementById('mapStatCheckboxes').style.display = "block";
+    //     document.getElementById('map').style.display = "block";
+    //     document.getElementById('legend').style.display = "block";
     }
 
     if(timelapseToggle){
