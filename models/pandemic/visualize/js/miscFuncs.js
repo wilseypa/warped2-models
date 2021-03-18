@@ -83,18 +83,18 @@ function formatDate(dateValue, dateFormat, dateType) {
 
 }
 
-function minimizeMapControlsContent(elId, durationOfAnimation) { //INPUTS MUST BE STRINGS
-    document.getElementById(elId).style.animation = "minimizeMapControlsContent " + durationOfAnimation + "s";
-    document.getElementById(elId).style.animationFillMode = "forwards";
-    setTimeout(function(){ document.getElementById(elId).style.display = "none"; }, durationOfAnimation*1000);
-}
-function maximizeMapControlContent(elId, durationOfAnimation, delayOfAnimation) { //INPUTS MUST BE STRINGS
-    document.getElementById(elId).style.visibility = "hidden";
-    document.getElementById(elId).style.display = "block";
-    document.getElementById(elId).style.animation = "maximizeMapControlsContent " + durationOfAnimation + "s";
-    document.getElementById(elId).style.animationFillMode = "forwards";
-    document.getElementById(elId).style.animationDelay = delayOfAnimation + "s";
-}
+// function minimizeMapControlsContent(elId, durationOfAnimation) { //INPUTS MUST BE STRINGS
+//     document.getElementById(elId).style.animation = "minimizeMapControlsContent " + durationOfAnimation + "s";
+//     document.getElementById(elId).style.animationFillMode = "forwards";
+//     setTimeout(function(){ document.getElementById(elId).style.display = "none"; }, durationOfAnimation*1000);
+// }
+// function maximizeMapControlContent(elId, durationOfAnimation, delayOfAnimation) { //INPUTS MUST BE STRINGS
+//     document.getElementById(elId).style.visibility = "hidden";
+//     document.getElementById(elId).style.display = "block";
+//     document.getElementById(elId).style.animation = "maximizeMapControlsContent " + durationOfAnimation + "s";
+//     document.getElementById(elId).style.animationFillMode = "forwards";
+//     document.getElementById(elId).style.animationDelay = delayOfAnimation + "s";
+// }
 
 // function fadeOutDisplay(elId, durationOfAnimation) { //INPUTS MUST BE STRINGS
 //     document.getElementById(elId).style.animation = "fadeOutDisplay " + durationOfAnimation + "s";

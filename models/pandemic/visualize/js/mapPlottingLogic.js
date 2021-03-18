@@ -177,25 +177,25 @@ var path = d3.geoPath()
 // });
 
 //Minimize_Maximize Button Press
-d3.select("#minMaxMapControls").on("click", function() {
-    var editConfigHtml = `<input type="button" id="editConfig" value="Edit Config">`;
-    var labelHtml = `<h3 id="tempLabel" style="margin: 0px;">Map Controls</h3>`;
-    if(document.getElementById('minMaxControlsContent').style.display == "none") {
-        maximizeMapControlContent("minMaxControlsContent", "0.15");
-        document.getElementById('minMaxMapControls').innerHTML = "&minus;";
-        // fadeOutDisplay("tempLabel", "0.175");
-        // document.getElementById('editConfigBtnContainer').innerHTML = editConfigHtml;
-        // fadeInDisplay("editConfig", "0.175");
+// d3.select("#minMaxMapControls").on("click", function() {
+//     var editConfigHtml = `<input type="button" id="editConfig" value="Edit Config">`;
+//     var labelHtml = `<h3 id="tempLabel" style="margin: 0px;">Map Controls</h3>`;
+//     if(document.getElementById('minMaxControlsContent').style.display == "none") {
+//         maximizeMapControlContent("minMaxControlsContent", "0.15");
+//         document.getElementById('minMaxMapControls').innerHTML = "&minus;";
+//         // fadeOutDisplay("tempLabel", "0.175");
+//         // document.getElementById('editConfigBtnContainer').innerHTML = editConfigHtml;
+//         // fadeInDisplay("editConfig", "0.175");
         
 
-    } else {
-        minimizeMapControlsContent("minMaxControlsContent", "0.15");
-        document.getElementById('minMaxMapControls').innerHTML = "&plus;";
-        // fadeOutDisplay("editConfig", "0.175");
-        // document.getElementById('editConfigBtnContainer').innerHTML = labelHtml;
-        // fadeInDisplay("tempLabel", "0.175");
-    }
-});
+//     } else {
+//         minimizeMapControlsContent("minMaxControlsContent", "0.15");
+//         document.getElementById('minMaxMapControls').innerHTML = "&plus;";
+//         // fadeOutDisplay("editConfig", "0.175");
+//         // document.getElementById('editConfigBtnContainer').innerHTML = labelHtml;
+//         // fadeInDisplay("tempLabel", "0.175");
+//     }
+// });
 
 // Increment/Decrement Button Press
 d3.selectAll(".arrow").on("click", function(){
