@@ -140,7 +140,7 @@ getSimulationData().then((data) => {
                 }
             })
         
-        // loadNewData();
+        loadNewData();
     });
     })
     
@@ -164,17 +164,17 @@ var path = d3.geoPath()
 
 /* EVENT FUNCTIONS */
 //Plot Button Press
-d3.select("#plotButton").on("click", function() {
-    loadNewData();
+// d3.select("#plotButton").on("click", function() {
+//     loadNewData();
 
-    setTimeout(function(){ 
-        // document.getElementById('mapStatCheckboxes').style.display = "block";
-        // document.getElementById('map').style.display = "block";
-        // document.getElementById('legend').style.display = "block";
-        d3.select("#plotButton").attr("disabled", true);
-        // document.body.style.backgroundColor = "lightskyblue";
-    }, 50);
-});
+//     setTimeout(function(){ 
+//         // document.getElementById('mapStatCheckboxes').style.display = "block";
+//         // document.getElementById('map').style.display = "block";
+//         // document.getElementById('legend').style.display = "block";
+//         d3.select("#plotButton").attr("disabled", true);
+//         // document.body.style.backgroundColor = "lightskyblue";
+//     }, 50);
+// });
 
 //Minimize_Maximize Button Press
 d3.select("#minMaxMapControls").on("click", function() {
