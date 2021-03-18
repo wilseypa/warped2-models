@@ -384,15 +384,17 @@ function loadNewData() {
 
     } else {
         let startDateValue = new Date(startDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
-        var startDateParam = formatDate(startDateValue, "MM-DD-YYYY", "javascript");
+        startDateValue.setDate(startDateValue.getDate() + 1);
+	var startDateParam = formatDate(startDateValue, "MM-DD-YYYY", "javascript");
 
         updateMapDateValue(startDateParam, endDateParam);
 
-        //console.log(startDateParam);
-        getData(startDateParam, startDateParam).then((data) => {
+        console.log(startDateParam);
+        console.log(simulationData);
+	//getData(startDateParam, startDateParam).then((data) => {
             covidStats = data[0][0];
             rePlot(covidStats);
-        })
+        //})
     }
 };
 
