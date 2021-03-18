@@ -22,6 +22,7 @@ var promises = [];
 // getData("07-22-2020", "07-22-2020").then((data) => {
 //     covidStats = data[0][0];
 getSimulationData().then((data) => {
+    simulationData = data;
     covidStats = data[0];
     files.forEach(function(url) {
         promises.push(d3.json(url))

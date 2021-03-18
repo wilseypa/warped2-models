@@ -10,3 +10,5 @@ var percentageArray = new Array(9);
 var colorWheelIndex = 0;
 
 var getstatusTimeout = undefined;
+
+var simulationData = undefined;
