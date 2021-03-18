@@ -150,6 +150,9 @@ var getStatus = function () {
         if (data.statusmsg.status == "SUCCESS") {
             removeLoadingBar();
             // getSimulationData();
+
+            let scriptsArrayMain = ["js/mapPlottingLogic.js"];
+            loadJavascriptSource(scriptsArrayMain);
         } else {
             setTimeout(function(){ getStatus(); }, 6000);
         }
