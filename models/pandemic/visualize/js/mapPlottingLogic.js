@@ -19,8 +19,10 @@ var svg = d3.select("#map")
 var files = ["../us.json"];
 var promises = [];
 //NEED ARRAY OF STRINGS WITH EACH DATE TO BE READ IN THROUGH JSON FUNCTION
-getData("07-22-2020", "07-22-2020").then((data) => {
-    covidStats = data[0][0];
+// getData("07-22-2020", "07-22-2020").then((data) => {
+//     covidStats = data[0][0];
+getSimulationData().then((data) => {
+    covidStats = data[0];
     files.forEach(function(url) {
         promises.push(d3.json(url))
     });
