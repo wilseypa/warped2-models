@@ -251,7 +251,7 @@ d3.select("#timelapseButton").on("click", function() {
     //     document.getElementById('mapStatCheckboxes').style.display = "block";
     //     document.getElementById('map').style.display = "block";
     //     document.getElementById('legend').style.display = "block";
-    }
+    // }
 
     if(timelapseToggle){
         intervalId = setInterval(function() {
