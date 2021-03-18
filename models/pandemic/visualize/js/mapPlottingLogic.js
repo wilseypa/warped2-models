@@ -140,7 +140,7 @@ getSimulationData().then((data) => {
                 }
             })
         
-        loadNewData();
+        // loadNewData();
     });
     })
     
