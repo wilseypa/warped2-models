@@ -23,6 +23,9 @@ var promises = [];
 //     covidStats = data[0][0];
 getSimulationData().then((data) => {
     simulationData = data;
+    simulationDataMeta.count = 0;
+    simulationDataMeta.length = data.length;
+
     covidStats = data[0];
     files.forEach(function(url) {
         promises.push(d3.json(url))
@@ -385,16 +388,19 @@ function loadNewData() {
     } else {
         let startDateValue = new Date(startDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
         startDateValue.setDate(startDateValue.getDate() + 1);
-	var startDateParam = formatDate(startDateValue, "MM-DD-YYYY", "javascript");
+	    var startDateParam = formatDate(startDateValue, "MM-DD-YYYY", "javascript");
 
         updateMapDateValue(startDateParam, endDateParam);
 
         console.log(startDateParam);
         console.log(simulationData);
-	//getData(startDateParam, startDateParam).then((data) => {
-            covidStats = data[0][0];
-            rePlot(covidStats);
-        //})
+        simulationDataMeta.count++;
+        covidStats = simulationData[simulationDataMeta.count];
+        rePlot(covidStats);
+	    // getData(startDateParam, startDateParam).then((data) => {
+        //     covidStats = data[0][0];
+        //     rePlot(covidStats);
+        // })
     }
 };
 

@@ -12,3 +12,7 @@ var colorWheelIndex = 0;
 var getstatusTimeout = undefined;
 
 var simulationData = undefined;
+var simulationDataMeta = {
+    "count":undefined,
+    "length":undefined
+};
