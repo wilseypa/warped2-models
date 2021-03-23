@@ -318,67 +318,17 @@ d3.select("#timelapseButton").on("click", function() {
     // }
 
     if(timelapseToggle){
+        let speed = document.getElementById('autoIncrementSpeed').value;
         intervalId = setInterval(function() {
             document.getElementById("incrementButton").click();
-        }, 1500);
+        }, speed*1000);
         timelapseToggle = 0;
 
-        var timelapseEl = document.createElement("div");
-        timelapseEl.setAttribute("id", "timelapseAnimation");
-        document.getElementById("timelapseButton").appendChild(timelapseEl);
-        let timelapseHtml = 
-        `<div class="timelapseIndicator"></div>`;
-        document.getElementById("timelapseAnimation").innerHTML = timelapseHtml;
-        document.getElementById("timelapseAnimation").style.position = "absolute";
-        document.getElementById("timelapseAnimation").style.display = "inline-block";
-        let top = document.getElementById("timelapseButton").offsetTop + document.getElementById("timelapseButton").offsetHeight/2 - 2.5;
-        let left = document.getElementById("timelapseButton").offsetLeft + document.getElementById("timelapseButton").offsetWidth/2 - document.getElementById("timelapseAnimation").offsetWidth/2 + 0.45;
-        document.getElementById("timelapseAnimation").style.top = top + "px";
-        document.getElementById("timelapseAnimation").style.left = left + "px";
     } else {
         clearInterval(intervalId);
-        document.getElementById('timelapseAnimation').remove();
         timelapseToggle = 1;
     }
     //needs a stopping function when at end of data
-});
-
-// Date Range New Input
-d3.selectAll(".dateInput").on("input", function() {
-    //get which button pressed
-    var startOrEnd = 0
-    if(d3.select(this)._groups[0][0].id == "startDate"){
-        startOrEnd = 0
-    } else if(d3.select(this)._groups[0][0].id == "endDate"){
-        startOrEnd = 1
-    } else {
-        throw "unknown button pressed"
-    }
-
-    // if(startOrEnd) {    //end date change
-
-    // } else {    //start date change
-
-    // }
-    
-    document.getElementById('plotButton').disabled = false;
-});
-
-// Range? Checkbox Toggle
-d3.select("#isDateRange").on("click", function() {
-    if(isDateRange.checked){
-        document.getElementById('endDate').disabled = false;
-        var endDateValue = new Date(startDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
-        endDateValue = endDateValue.setDate(endDateValue.getDate() + 1);
-        endDateValue = new Date(endDateValue);
-        endDate.value = formatDate(endDateValue, "YYYY-MM-DD", "javascript");
-
-    } else {
-        document.getElementById('endDate').disabled = true;
-        //endDate.value = undefined;
-    }
-
-    document.getElementById('plotButton').disabled = false;
 });
 
 
