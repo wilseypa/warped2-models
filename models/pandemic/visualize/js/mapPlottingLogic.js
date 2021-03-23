@@ -303,21 +303,28 @@ d3.selectAll(".arrow").on("click", function(){
 var timelapseToggle = 1;
 var intervalId;
 d3.select("#timelapseButton").on("click", function() {
-    // if(document.getElementById('map').style.display == "none") {
-    //     document.getElementById('mapStatCheckboxes').style.display = "block";
-    //     document.getElementById('map').style.display = "block";
-    //     document.getElementById('legend').style.display = "block";
-    // }
+    let timeLapse = document.getElementById('timelapseButton');
 
     if(timelapseToggle){
         let speed = document.getElementById('autoIncrementSpeed').value;
+        if (speed === undefined) {
+            speed = 1;
+        }
+
         intervalId = setInterval(function() {
             document.getElementById("incrementButton").click();
         }, speed*1000);
         timelapseToggle = 0;
 
+        timeLapse.innerHTML = "<b>&#8545;</b>";
+        timeLapse.style.fontFamily = "sans-serif";
+        timeLapse.style.fontSize = "larger";
+
     } else {
         clearInterval(intervalId);
+
+        timeLapse.innerHTML = "&#x23F1;";
+
         timelapseToggle = 1;
     }
     //needs a stopping function when at end of data
@@ -336,15 +343,13 @@ function updateMapDateValue(startDateParam, endDateParam) {
 
 // Grabs Dates from Input and Plots to D3 Map
 function loadNewData() {
-    // let startDateValue = simulationdata[document.getElementById('dateSlider').value].date;
-    // var startDateParam = formatDate(startDateValue, "MM-DD-YYYY", "javascript");
-
     updateMapDateValue(simulationData[document.getElementById('dateSlider').value].date);
 
-    // simulationDataMeta.count++;
-    if (document.getElementById('dateSlider').value == simulationData.length) {
-        console.error("Data ended");
+    if (document.getElementById('dateSlider').value == simulationData.length-1) {
+        clearInterval(intervalId);
+        document.getElementById('timelapseButton').innerHTML = "&#x23F1;";
     }
+    
     covidStats = simulationData[document.getElementById('dateSlider').value];
     rePlot(covidStats);
 };
