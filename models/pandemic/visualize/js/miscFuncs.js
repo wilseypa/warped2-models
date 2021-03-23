@@ -40,6 +40,8 @@ var getStatus = function () {
             removeLoadingBar();
             // getSimulationData();
 
+            loadHtml('map.html', 'mapHandle');
+            
             let scriptsArrayMain = ["js/mapPlottingLogic.js"];
             loadJavascriptSource(scriptsArrayMain);
         } else {

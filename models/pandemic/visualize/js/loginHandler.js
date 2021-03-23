@@ -31,7 +31,7 @@ d3.select("#submitLogin").on("click", function() {
                 pageState = "config";
                 loadHtml(response.html, 'configHandle')
                     .then(function (){
-                        return loadHtml('map.html', 'mapHandle');
+                        // return loadHtml('map.html', 'mapHandle');
                     })
                     .then(function (){
                         var scriptsArrayLogin = ["js/miscFuncs.js", "js/stateManagement.js"];
