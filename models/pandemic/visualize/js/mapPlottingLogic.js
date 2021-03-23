@@ -125,10 +125,8 @@ var promises = [];
 
 getSimulationData().then((data) => {
     simulationData = data;
-    simulationData.meta.count = 0;
-    simulationData.meta.length = data.length;
 
-    document.getElementById('dateSlider').max = simulationData.meta.length - 1;
+    document.getElementById('dateSlider').max = simulationData.length - 1;
 
     covidStats = data[0];
     files.forEach(function(url) {
@@ -402,10 +400,10 @@ function loadNewData() {
     updateMapDateValue(simulationData[document.getElementById('dateSlider').value].date);
 
     // simulationDataMeta.count++;
-    if (simulationData.meta.count == simulationData.meta.length) {
+    if (document.getElementById('dateSlider').value == simulationData.length) {
         console.error("Data ended");
     }
-    covidStats = simulationData[simulationData.meta.count];
+    covidStats = simulationData[document.getElementById('dateSlider').value];
     rePlot(covidStats);
 };
 
