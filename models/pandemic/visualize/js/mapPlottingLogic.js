@@ -71,37 +71,6 @@ window.onmousemove = function (e) { //function gets location of mouse for toolti
     tooltip.style.left = (x + 5) + 'px';
 };
 
-// Function for handling javascript and html dates
-function formatDate(dateValue, dateFormat, dateType) {
-    var year, month, day;
-    if (dateType == "javascript") {
-        year = dateValue.getFullYear();
-        month = dateValue.getMonth() + 1;
-        day = dateValue.getDate()
-
-        if(month < 10) {
-            month = "0" + month;
-        }
-        if(day < 10) {
-            day = "0" + day;
-        }
-    } else if (dateType == "html") {
-        let dateArray = dateValue.split("-");
-        year = dateArray[0];
-        month = dateArray[1];
-        day = dateArray[2];
-    }
-
-    if(dateFormat == "YYYY-MM-DD") {
-        return year + "-" + month + "-" + day;
-    } else if(dateFormat == "MM-DD-YYYY") {
-        return month + "-" + day + "-" + year;
-    } else {
-        throw "Invalid date format"
-    }
-
-}
-
 generateLegend();
 
 // getStatus();
