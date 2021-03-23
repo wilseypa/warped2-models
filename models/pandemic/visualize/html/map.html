@@ -3,25 +3,43 @@
         <br>
         <br>
 
-        <div>
-            <p id="decrementButton" class="arrow" style="padding-right: 2px;">&#x25C0;</p>
-            <p id="timelapseButton" class="timelapse" style="color: black; width: 28px;">&#x23F1;</p>
-            <p id="incrementButton" class="arrow" style="padding-left: 2px;">&#x25B6;</p>
-        </div>
-        <br>
-        <br>
-        <div id="mapStatCheckboxes" class="basicBorder center" style="width: fit-content; box-shadow: none;">
-            <input type="checkbox" class="checkbox" name="Confirmed" id="Confirmed">
-            <label for="Confirmed">Confirmed</label>
-            <input type="checkbox" class="checkbox" name="Dead" id="Dead">
-            <label for="Dead">Dead</label>
-            <input type="checkbox" class="checkbox" name="Recovered" id="Recovered">
-            <label for="Recovered">Recovered</label>
-            <input type="checkbox" class="checkbox" name="Active" id="Active">
-            <label for="Active">Active</label>
-        </div>
-        <div id="dateInputDiv">
-            <input id="dateSlider" type="range" min="0" max="0" value="0">
+        <div id="fullWidth" style="text-align: center;">
+            <div id="mapWidth" style="width: 900px;">
+                <div id="stepHalf" style="width: 50%;">
+                    <div style="display: inline-block;">
+                        <div>
+                            <p>single step days</p>
+                        </div>
+                        <div>
+                            <p>auto advance days</p>
+                        </div>
+                        <div>
+                            <p>speed</p>
+                        </div>
+                    </div>
+                    
+                    <div style="display: inline-block;">
+                        <p id="decrementButton" class="arrow" style="padding-right: 2px;">&#x25C0;</p>
+                        <p id="timelapseButton" class="timelapse" style="color: black; width: 28px;">&#x23F1;</p>
+                        <p id="incrementButton" class="arrow" style="padding-left: 2px;">&#x25B6;</p>
+                    </div>
+                </div>
+                <div id="statDateHalf" style="width: 50%;">
+                    <div id="mapStatCheckboxes" class="basicBorder center" style="width: fit-content; box-shadow: none;">
+                        <input type="checkbox" class="checkbox" name="Confirmed" id="Confirmed">
+                        <label for="Confirmed">Confirmed</label>
+                        <input type="checkbox" class="checkbox" name="Dead" id="Dead">
+                        <label for="Dead">Dead</label>
+                        <input type="checkbox" class="checkbox" name="Recovered" id="Recovered">
+                        <label for="Recovered">Recovered</label>
+                        <input type="checkbox" class="checkbox" name="Active" id="Active">
+                        <label for="Active">Active</label>
+                    </div>
+                    <div id="dateInputDiv">
+                        <input id="dateSlider" type="range" min="0" max="0" value="0">
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     
