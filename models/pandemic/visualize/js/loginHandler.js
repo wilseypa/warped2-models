@@ -34,7 +34,7 @@ d3.select("#submitLogin").on("click", function() {
                         return loadHtml('map.html', 'mapHandle');
                     })
                     .then(function (){
-                        var scriptsArrayLogin = ["js/main.js"];
+                        var scriptsArrayLogin = ["js/miscFuncs.js", "js/stateManagement.js"];
                         loadJavascriptSource(scriptsArrayLogin);
                         showAnimation('passwordProtected', "0.15", "0.15");
                         setTimeout(function(){ document.getElementById('startdate').focus(); }, 500);   // need to wait until animation is complete for keyfocus
