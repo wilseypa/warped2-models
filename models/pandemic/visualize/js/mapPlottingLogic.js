@@ -307,7 +307,7 @@ d3.select("#timelapseButton").on("click", function() {
 
     if(timelapseToggle){
         let speed = document.getElementById('autoIncrementSpeed').value;
-        if (speed === undefined) {
+        if (speed === "") {
             speed = 1;
         }
 
@@ -324,6 +324,8 @@ d3.select("#timelapseButton").on("click", function() {
         clearInterval(intervalId);
 
         timeLapse.innerHTML = "&#x23F1;";
+        timeLapse.style.fontFamily = null;
+        timeLapse.style.fontSize = null;
 
         timelapseToggle = 1;
     }
@@ -348,6 +350,8 @@ function loadNewData() {
     if (document.getElementById('dateSlider').value == simulationData.length-1) {
         clearInterval(intervalId);
         document.getElementById('timelapseButton').innerHTML = "&#x23F1;";
+        timeLapse.style.fontFamily = null;
+        timeLapse.style.fontSize = null;
     }
     
     covidStats = simulationData[document.getElementById('dateSlider').value];
