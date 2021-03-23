@@ -24,7 +24,7 @@ function createLoadingBar() {
 }
 function removeLoadingBar() {
     document.getElementById("loadingBarHandle").remove();
-    showAnimation('postSimulationContent', "0.15", "0.15");
+    // showAnimation('postSimulationContent', "0.15", "0.15");
 }
 
 function handleDefaultConfigValue(inputId) {
@@ -40,10 +40,12 @@ var getStatus = function () {
             removeLoadingBar();
             // getSimulationData();
 
-            loadHtml('map.html', 'mapHandle');
-            
-            let scriptsArrayMain = ["js/mapPlottingLogic.js"];
-            loadJavascriptSource(scriptsArrayMain);
+            loadHtml('map.html', 'mapHandle').then(function (){
+                showAnimation('postSimulationContent', "0.15", "0.15");
+
+                let scriptsArrayMain = ["js/mapPlottingLogic.js"];
+                loadJavascriptSource(scriptsArrayMain);
+            });
         } else {
             setTimeout(function(){ getStatus(); }, 6000);
         }
