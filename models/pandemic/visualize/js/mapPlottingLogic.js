@@ -1,3 +1,107 @@
+// Frontend Globals and Setup
+var startDate = document.getElementById('startDate');
+var endDate = document.getElementById('endDate');
+var isDateRange = document.getElementById('isDateRange');
+
+var tooltip = document.getElementById('tt');
+var color_wheel = ["#ffffcc", "#ffeda0", "#fed976", "#feb24c", "#fd8d3c", "#fc4e2a", "#e31a1c", "#bd0026", "#800026"];
+//var color_wheel = ["#00FF00", "#33FF33", "#66FF66", "#99FF99", "#800026", "#bd0026", "#e31a1c", "#fc4e2a", "#fd8d3c"];
+var percentageArray = new Array(9);
+var colorWheelIndex = 0;
+
+var getstatusTimeout = undefined;
+
+var simulationData = undefined;
+var simulationDataMeta = {
+    "count":undefined,
+    "length":undefined
+};
+
+// Frontend Basic Functions
+function generateLegend(){
+    for(var i = 0; i < color_wheel.length + 1; i++) {
+        if (i < color_wheel.length) {
+            var legendInnerContainers = document.createElement("div");
+            legendInnerContainers.setAttribute("id", "legendInnerContainer" + i);
+            document.getElementById("legendValues").appendChild(legendInnerContainers);
+        
+            var legendColorEl = document.createElement("div");
+            legendColorEl.setAttribute("id", "legendColor" + i);
+            legendColorEl.setAttribute("class", "legend-fill");
+            document.getElementById("legendInnerContainer" + i).appendChild(legendColorEl);
+        
+            var legendValueEl = document.createElement("div");
+            legendValueEl.setAttribute("id", "legendValue" + i);
+            legendValueEl.setAttribute("class", "legend-value");
+            document.getElementById("legendInnerContainer" + i).appendChild(legendValueEl);
+            
+            document.getElementById('legendColor' + i).style.backgroundColor = color_wheel[i];
+            document.getElementById('legendValue' + i).innerHTML = 0 + "%";
+        }
+    
+        if (i == color_wheel.length) {
+            var legendInnerContainers = document.createElement("div");
+            legendInnerContainers.setAttribute("id", "legendInnerContainer" + i);
+            document.getElementById("legendValues").appendChild(legendInnerContainers);
+        
+            var legendColorEl = document.createElement("div");
+            legendColorEl.setAttribute("id", "legendColor" + i);
+            legendColorEl.setAttribute("class", "legend-fill");
+            document.getElementById("legendInnerContainer" + i).appendChild(legendColorEl);
+        
+            var legendValueEl = document.createElement("div");
+            legendValueEl.setAttribute("id", "legendValue" + i);
+            legendValueEl.setAttribute("class", "legend-value");
+            document.getElementById("legendInnerContainer" + i).appendChild(legendValueEl);
+            
+            document.getElementById('legendColor' + i).style.backgroundColor = "black";
+            document.getElementById('legendValue' + i).innerHTML = 0 + "%";
+    
+            let selectString = "#legendValue" + i;
+            let htmlString = "No Data"
+            d3.select(selectString).html(htmlString);
+        }
+    }
+}
+
+window.onmousemove = function (e) { //function gets location of mouse for tooltip
+    var x = e.clientX,
+        y = e.clientY - document.getElementById('postSimulationContent').getBoundingClientRect().top;
+    tooltip.style.top = (y + 5) + 'px';
+    tooltip.style.left = (x + 5) + 'px';
+};
+
+// Function for handling javascript and html dates
+function formatDate(dateValue, dateFormat, dateType) {
+    var year, month, day;
+    if (dateType == "javascript") {
+        year = dateValue.getFullYear();
+        month = dateValue.getMonth() + 1;
+        day = dateValue.getDate()
+
+        if(month < 10) {
+            month = "0" + month;
+        }
+        if(day < 10) {
+            day = "0" + day;
+        }
+    } else if (dateType == "html") {
+        let dateArray = dateValue.split("-");
+        year = dateArray[0];
+        month = dateArray[1];
+        day = dateArray[2];
+    }
+
+    if(dateFormat == "YYYY-MM-DD") {
+        return year + "-" + month + "-" + day;
+    } else if(dateFormat == "MM-DD-YYYY") {
+        return month + "-" + day + "-" + year;
+    } else {
+        throw "Invalid date format"
+    }
+
+}
+
 generateLegend();
 
 // getStatus();

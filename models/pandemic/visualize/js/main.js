@@ -10,5 +10,5 @@ Any global values needed should be defined in globals file.
 // loadJavascriptSource("js/stateManagement.js");
 
 // let scriptsArrayMain = ["js/globals.js", "js/miscFuncs.js", "js/mapPlottingLogic.js", "js/stateManagement.js"];
-let scriptsArrayMain = ["js/globals.js", "js/miscFuncs.js", "js/stateManagement.js"];
+let scriptsArrayMain = ["js/miscFuncs.js", "js/stateManagement.js"];
 loadJavascriptSource(scriptsArrayMain);
