@@ -13,6 +13,9 @@ d3.select("#submitConfigApi").on("click", function() {
             hideAnimation("postSimulationContent", "0.15");
         }
     }
+    if (document.getElementById('editConfigBtnContainer').style.display != "none") {
+        hideAnimation("editConfigBtnContainer", "0.15");
+    }
     hideAnimation("configApi", "0.15");
 
     // Function for handling javascript and html dates
