@@ -1,5 +1,5 @@
 // Function for handling javascript and html dates
-function formatDate(dateValue, dateFormat, dateType) {
+function formatDate(dateValue, dateFormat, dateType) {  //this is needed both for statemanager scope and map independently...
     var year, month, day;
     if (dateType == "javascript") {
         year = dateValue.getFullYear();
