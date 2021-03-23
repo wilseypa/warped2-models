@@ -8,8 +8,10 @@ d3.select("#advancedConfigButton").on("click", function() {
 
 // Submitting ConfigAPI Form
 d3.select("#submitConfigApi").on("click", function() {
-    if (document.getElementById('postSimulationContent').style.display != "none") {
-        hideAnimation("postSimulationContent", "0.15");
+    if (document.getElementById('postSimulationContent') != undefined) {
+        if (document.getElementById('postSimulationContent').style.display != "none") {
+            hideAnimation("postSimulationContent", "0.15");
+        }
     }
     hideAnimation("configApi", "0.15");
 
