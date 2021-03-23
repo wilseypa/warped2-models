@@ -6,20 +6,22 @@
         <div id="fullWidth" style="text-align: center;">
             <div id="mapWidth" style="display: inline-block; height: 120px; width: 900px;">
                 <div id="stepHalf" style="height: 100%; width: 45%; text-align: left; float: left; position: relative;">
-                    <div style="position: absolute; bottom: 0px;">
-                        <div style="display: inline-block;">
+                    <div>
+                        <div style="display: inline-block; position: absolute; bottom: 0px;">
                             <div>
-                                <p>single step days</p>
+                                <input type="radio" class="checkbox" name="Step" id="singleStep">
+                                <label for="singleStep">Single Step Days</label>
                             </div>
                             <div>
-                                <p>auto advance days</p>
+                                <input type="radio" class="checkbox" name="Step" id="autoStep">
+                                <label for="autoStep">Auto Advance Days</label>
                             </div>
                             <div>
-                                <p>speed</p>
+                                <input id="autoIncrementSpeed" style="margin: 3px;" placeholder="Speed">
                             </div>
                         </div>
                         
-                        <div style="display: inline-block;">
+                        <div style="display: inline-block; position: absolute; bottom: 40%; left: 40%;">
                             <p id="decrementButton" class="arrow" style="padding-right: 2px;">&#x25C0;</p>
                             <p id="timelapseButton" class="timelapse" style="color: black; width: 28px;">&#x23F1;</p>
                             <p id="incrementButton" class="arrow" style="padding-left: 2px;">&#x25B6;</p>
