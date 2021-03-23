@@ -14,6 +14,7 @@ d3.select("#submitConfigApi").on("click", function() {
         }
     }
     hideAnimation("configApi", "0.15");
+    showAnimation("editConfig", "0.15", "0.15");
 
     // Function for handling javascript and html dates
     function formatDate(dateValue, dateFormat, dateType) {  //this is needed both for statemanager scope and map independently...
