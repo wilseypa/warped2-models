@@ -12,10 +12,10 @@ var colorWheelIndex = 0;
 var getstatusTimeout = undefined;
 
 var simulationData = undefined;
-var simulationDataMeta = {
-    "count":undefined,
-    "length":undefined
-};
+// var simulationDataMeta = {
+//     "count":undefined,
+//     "length":undefined
+// };
 
 // Frontend Basic Functions
 function generateLegend(){
@@ -125,10 +125,10 @@ var promises = [];
 
 getSimulationData().then((data) => {
     simulationData = data;
-    simulationDataMeta.count = -1;
-    simulationDataMeta.length = data.length;
+    simulationData.meta.count = 0;
+    simulationData.meta.length = data.length;
 
-    document.getElementById('dateSlider').max = simulationDataMeta.length - 1;
+    document.getElementById('dateSlider').max = simulationData.meta.length - 1;
 
     covidStats = data[0];
     files.forEach(function(url) {
@@ -402,10 +402,10 @@ function loadNewData() {
     updateMapDateValue(simulationData[document.getElementById('dateSlider').value].date);
 
     // simulationDataMeta.count++;
-    if (simulationDataMeta.count == simulationDataMeta.length) {
+    if (simulationData.meta.count == simulationData.meta.length) {
         console.error("Data ended");
     }
-    covidStats = simulationData[simulationDataMeta.count];
+    covidStats = simulationData[simulationData.meta.count];
     rePlot(covidStats);
 };
 
