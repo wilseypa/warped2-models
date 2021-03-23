@@ -268,23 +268,15 @@ var path = d3.geoPath()
 //Slider Value Change
 d3.select("#dateSlider").on("change", function() {
     loadNewData();
-
-    setTimeout(function(){ 
-        // document.getElementById('mapStatCheckboxes').style.display = "block";
-        // document.getElementById('map').style.display = "block";
-        // document.getElementById('legend').style.display = "block";
-        d3.select("#plotButton").attr("disabled", true);
-        // document.body.style.backgroundColor = "lightskyblue";
-    }, 50);
 });
 
 function decrementSlider() {
     let prevVal = document.getElementById('dateSlider').value;
-    document.getElementById('dateSlider').value = prevVal - 1;
+    document.getElementById('dateSlider').value = parseInt(prevVal) - 1;
 }
 function incrementSlider() {
     let prevVal = document.getElementById('dateSlider').value;
-    document.getElementById('dateSlider').value = prevVal + 1;
+    document.getElementById('dateSlider').value = parseInt(prevVal) + 1;
 }
 
 // Increment/Decrement Button Press

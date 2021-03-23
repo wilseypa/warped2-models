@@ -121,8 +121,7 @@ d3.select("#submitConfigApi").on("click", function() {
         });
     
         pageState = "viewingMap";
-        // document.getElementById('map').style.display = "none";
-        // document.getElementById('plotButton').disabled = false;
+        
         waitForSimulationData();
     });
 
