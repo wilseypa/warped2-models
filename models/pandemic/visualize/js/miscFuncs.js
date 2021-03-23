@@ -41,6 +41,7 @@ var getStatus = function () {
             // getSimulationData();
 
             loadHtml('map.html', 'mapHandle').then(function (){
+                showAnimation("editConfigBtnContainer", "0.15", "0.15");
                 showAnimation('postSimulationContent', "0.15", "0.15");
 
                 let scriptsArrayMain = ["js/mapPlottingLogic.js"];
