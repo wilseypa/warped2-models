@@ -399,7 +399,7 @@ function loadNewData() {
     // let startDateValue = simulationdata[document.getElementById('dateSlider').value].date;
     // var startDateParam = formatDate(startDateValue, "MM-DD-YYYY", "javascript");
 
-    updateMapDateValue(simulationdata[document.getElementById('dateSlider').value].date);
+    updateMapDateValue(simulationData[document.getElementById('dateSlider').value].date);
 
     // simulationDataMeta.count++;
     if (simulationDataMeta.count == simulationDataMeta.length) {
