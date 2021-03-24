@@ -17,6 +17,23 @@ var simulationData = undefined;
 //     "length":undefined
 // };
 
+function setSliderStartEndIndicators() {
+    var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+    let startIndicator = document.getElementById('startDateIndicator');
+    let endIndicator = document.getElementById('endDateIndicator');
+
+    let startIndicatorMonth = simulationData[0].date.substring(0, 2);
+    let endIndicatorMonth = simulationData[simulationData.length-1].date.substring(0, 2);
+
+    startIndicatorMonth = months[parseInt(startIndicatorMonth)];
+    endIndicatorMonth = months[parseInt(endIndicatorMonth)];
+
+    startIndicator.innerHTML = startIndicatorMonth + simulationData[0].date.substring(3, 5) + simulationData[0].date.substring(6, 10);
+    endIndicator.innerHTML = endIndicatorMonth + simulationData[simulationData.length-1].date.substring(3, 5) + simulationData[simulationData.length-1].date.substring(6, 10);
+}
+setSliderStartEndIndicators();
+
 // Frontend Basic Functions
 function generateLegend(){
     for(var i = 0; i < color_wheel.length + 1; i++) {
