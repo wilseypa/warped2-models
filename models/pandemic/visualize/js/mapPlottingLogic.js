@@ -18,7 +18,7 @@ var simulationData = undefined;
 // };
 
 function setSliderStartEndIndicators() {
-    var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    var months = ["Jan", "Feb", "March", "April", "May", "June", "July", "Aug", "Sept", "Oct", "Nov", "Dec"];
 
     let startIndicator = document.getElementById('startDateIndicator');
     let endIndicator = document.getElementById('endDateIndicator');
@@ -26,11 +26,11 @@ function setSliderStartEndIndicators() {
     let startIndicatorMonth = simulationData[0].date.substring(0, 2);
     let endIndicatorMonth = simulationData[simulationData.length-1].date.substring(0, 2);
 
-    startIndicatorMonth = months[parseInt(startIndicatorMonth)];
-    endIndicatorMonth = months[parseInt(endIndicatorMonth)];
+    startIndicatorMonth = months[parseInt(startIndicatorMonth)-1];
+    endIndicatorMonth = months[parseInt(endIndicatorMonth)-1];
 
-    startIndicator.innerHTML = startIndicatorMonth + simulationData[0].date.substring(3, 5) + simulationData[0].date.substring(6, 10);
-    endIndicator.innerHTML = endIndicatorMonth + simulationData[simulationData.length-1].date.substring(3, 5) + simulationData[simulationData.length-1].date.substring(6, 10);
+    startIndicator.innerHTML = startIndicatorMonth + " " + simulationData[0].date.substring(3, 5) + ", " + simulationData[0].date.substring(6, 10);
+    endIndicator.innerHTML = endIndicatorMonth + " " + simulationData[simulationData.length-1].date.substring(3, 5) + ", " + simulationData[simulationData.length-1].date.substring(6, 10);
 }
 
 // Frontend Basic Functions
