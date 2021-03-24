@@ -144,6 +144,7 @@ getSimulationData().then((data) => {
     simulationData = data;
 
     document.getElementById('dateSlider').max = simulationData.length - 1;
+    setSliderStartEndIndicators();
 
     covidStats = data[0];
     files.forEach(function(url) {
