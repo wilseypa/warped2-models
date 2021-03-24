@@ -32,7 +32,6 @@ function setSliderStartEndIndicators() {
     startIndicator.innerHTML = startIndicatorMonth + simulationData[0].date.substring(3, 5) + simulationData[0].date.substring(6, 10);
     endIndicator.innerHTML = endIndicatorMonth + simulationData[simulationData.length-1].date.substring(3, 5) + simulationData[simulationData.length-1].date.substring(6, 10);
 }
-setSliderStartEndIndicators();
 
 // Frontend Basic Functions
 function generateLegend(){
