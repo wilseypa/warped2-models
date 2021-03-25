@@ -289,10 +289,11 @@ d3.select("#dateSlider").on("change", function() {
 //Slider Focus
 d3.select("#dateSlider").on("mouseover", function() {
     d3.select("#tt").style("display", "inline-block");
-    document.getElementById('tt').innerHTML;
+    document.getElementById('tt').innerHTML = simulationData[document.getElementById('dateSlider').value].date;
 });
 d3.select("#dateSlider").on("mouseout", function() {
     d3.select("#tt").style("display", "none");
+    document.getElementById('tt').innerHTML = "";
 });
 
 function decrementSlider() {
