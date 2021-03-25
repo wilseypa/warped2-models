@@ -54,7 +54,7 @@ function formatSliderDate(MMDDYYYYString) {
     let targetMonth = MMDDYYYYString.substring(0, 2);
     targetMonth = months[parseInt(targetMonth)-1];
     
-    let fullSliderDateString = targetMonth + " " + targetMonth.substring(3, 5) + ", " + targetMonth.substring(6, 10);
+    let fullSliderDateString = targetMonth + " " + MMDDYYYYString.substring(3, 5) + ", " + MMDDYYYYString.substring(6, 10);
 
     return fullSliderDateString;
 }
