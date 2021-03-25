@@ -287,10 +287,11 @@ d3.select("#dateSlider").on("change", function() {
     loadNewData();
 });
 //Slider Focus
-d3.select("#dateSlider").on("focus", function() {
+d3.select("#dateSlider").on("mouseover", function() {
     d3.select("#tt").style("display", "inline-block");
+    document.getElementById('tt').innerHTML;
 });
-d3.select("#dateSlider").on("focusout", function() {
+d3.select("#dateSlider").on("mouseout", function() {
     d3.select("#tt").style("display", "none");
 });
 
