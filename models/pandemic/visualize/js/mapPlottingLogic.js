@@ -286,6 +286,13 @@ var path = d3.geoPath()
 d3.select("#dateSlider").on("change", function() {
     loadNewData();
 });
+//Slider Focus
+d3.select("#dateSlider").on("focus", function() {
+    d3.select("#tt").style("display", "inline-block");
+});
+d3.select("#dateSlider").on("focusout", function() {
+    d3.select("#tt").style("display", "none");
+});
 
 function decrementSlider() {
     let prevVal = document.getElementById('dateSlider').value;
