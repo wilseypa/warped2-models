@@ -286,6 +286,9 @@ var path = d3.geoPath()
 d3.select("#dateSlider").on("change", function() {
     loadNewData();
 });
+d3.select("#dateSlider").on("input", function() {
+    document.getElementById('tt').innerHTML = simulationData[document.getElementById('dateSlider').value].date;
+});
 //Slider Focus
 d3.select("#dateSlider").on("mouseover", function() {
     d3.select("#tt").style("display", "inline-block");
