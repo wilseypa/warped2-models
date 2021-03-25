@@ -17,21 +17,73 @@ var simulationData = undefined;
 //     "length":undefined
 // };
 
-function setSliderStartEndIndicators() {
+// Function for handling javascript and html dates
+function formatDate(dateValue, dateFormat, dateType) {  //this is in both statemanager and map currently
+    var year, month, day;
+    if (dateType == "javascript") {
+        year = dateValue.getFullYear();
+        month = dateValue.getMonth() + 1;
+        day = dateValue.getDate()
+
+        if(month < 10) {
+            month = "0" + month;
+        }
+        if(day < 10) {
+            day = "0" + day;
+        }
+    } else if (dateType == "html") {
+        let dateArray = dateValue.split("-");
+        year = dateArray[0];
+        month = dateArray[1];
+        day = dateArray[2];
+    }
+
+    if(dateFormat == "YYYY-MM-DD") {
+        return year + "-" + month + "-" + day;
+    } else if(dateFormat == "MM-DD-YYYY") {
+        return month + "-" + day + "-" + year;
+    } else {
+        throw "Invalid date format"
+    }
+
+}
+
+function formatSliderDate(MMDDYYYYString) {
     var months = ["Jan", "Feb", "March", "April", "May", "June", "July", "Aug", "Sept", "Oct", "Nov", "Dec"];
+
+    let targetMonth = MMDDYYYYString.substring(0, 2);
+    targetMonth = months[parseInt(targetMonth)-1];
+    
+    let fullSliderDateString = targetMonth + " " + targetMonth.substring(3, 5) + ", " + targetMonth.substring(6, 10);
+
+    return fullSliderDateString;
+}
+
+function setSliderStartEndIndicators() {
+    // var months = ["Jan", "Feb", "March", "April", "May", "June", "July", "Aug", "Sept", "Oct", "Nov", "Dec"];
 
     let startIndicator = document.getElementById('startDateIndicator');
     let endIndicator = document.getElementById('endDateIndicator');
 
-    let startIndicatorMonth = simulationData[0].date.substring(0, 2);
-    let endIndicatorMonth = simulationData[simulationData.length-1].date.substring(0, 2);
+    // let startIndicatorMonth = simulationData[0].date.substring(0, 2);
+    // let endIndicatorMonth = simulationData[simulationData.length-1].date.substring(0, 2);
 
-    startIndicatorMonth = months[parseInt(startIndicatorMonth)-1];
-    endIndicatorMonth = months[parseInt(endIndicatorMonth)-1];
+    // startIndicatorMonth = months[parseInt(startIndicatorMonth)-1];
+    // endIndicatorMonth = months[parseInt(endIndicatorMonth)-1];
 
-    startIndicator.innerHTML = startIndicatorMonth + " " + simulationData[0].date.substring(3, 5) + ", " + simulationData[0].date.substring(6, 10);
-    endIndicator.innerHTML = endIndicatorMonth + " " + simulationData[simulationData.length-1].date.substring(3, 5) + ", " + simulationData[simulationData.length-1].date.substring(6, 10);
+    // startIndicator.innerHTML = startIndicatorMonth + " " + simulationData[0].date.substring(3, 5) + ", " + simulationData[0].date.substring(6, 10);
+    // endIndicator.innerHTML = endIndicatorMonth + " " + simulationData[simulationData.length-1].date.substring(3, 5) + ", " + simulationData[simulationData.length-1].date.substring(6, 10);
+
+    startIndicator.innerHTML = formatSliderDate(simulationData[0].date);
+    endIndicator.innerHTML = formatSliderDate(simulationData[simulationData.length-1].date);
 }
+
+window.onmousemove = function (e) { //function gets location of mouse for tooltip
+    var x = e.clientX,
+        y = e.clientY - document.getElementById('postSimulationContent').getBoundingClientRect().top;
+    tooltip.style.top = (y + 5) + 'px';
+    tooltip.style.left = (x + 5) + 'px';
+};
 
 // Frontend Basic Functions
 function generateLegend(){
@@ -78,44 +130,6 @@ function generateLegend(){
             d3.select(selectString).html(htmlString);
         }
     }
-}
-
-window.onmousemove = function (e) { //function gets location of mouse for tooltip
-    var x = e.clientX,
-        y = e.clientY - document.getElementById('postSimulationContent').getBoundingClientRect().top;
-    tooltip.style.top = (y + 5) + 'px';
-    tooltip.style.left = (x + 5) + 'px';
-};
-
-// Function for handling javascript and html dates
-function formatDate(dateValue, dateFormat, dateType) {  //this is in both statemanager and map currently
-    var year, month, day;
-    if (dateType == "javascript") {
-        year = dateValue.getFullYear();
-        month = dateValue.getMonth() + 1;
-        day = dateValue.getDate()
-
-        if(month < 10) {
-            month = "0" + month;
-        }
-        if(day < 10) {
-            day = "0" + day;
-        }
-    } else if (dateType == "html") {
-        let dateArray = dateValue.split("-");
-        year = dateArray[0];
-        month = dateArray[1];
-        day = dateArray[2];
-    }
-
-    if(dateFormat == "YYYY-MM-DD") {
-        return year + "-" + month + "-" + day;
-    } else if(dateFormat == "MM-DD-YYYY") {
-        return month + "-" + day + "-" + year;
-    } else {
-        throw "Invalid date format"
-    }
-
 }
 
 generateLegend();
@@ -287,12 +301,12 @@ d3.select("#dateSlider").on("change", function() {
     loadNewData();
 });
 d3.select("#dateSlider").on("input", function() {
-    document.getElementById('tt').innerHTML = simulationData[document.getElementById('dateSlider').value].date;
+    document.getElementById('tt').innerHTML = formatSliderDate(simulationData[document.getElementById('dateSlider').value].date);
 });
 //Slider Focus
 d3.select("#dateSlider").on("mouseover", function() {
     d3.select("#tt").style("display", "inline-block");
-    document.getElementById('tt').innerHTML = simulationData[document.getElementById('dateSlider').value].date;
+    document.getElementById('tt').innerHTML = formatSliderDate(simulationData[document.getElementById('dateSlider').value].date);
 });
 d3.select("#dateSlider").on("mouseout", function() {
     d3.select("#tt").style("display", "none");
