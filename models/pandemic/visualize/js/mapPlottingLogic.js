@@ -375,11 +375,27 @@ d3.select("#incrementButton").on("click", function(){
 
 // Pause Button Pressed
 d3.select("#pauseButton").on("click", function() {
-    clearInterval(reverseIntervalId);
-    clearInterval(forwardIntervalId);
+    if (reverseIntervalId != undefined) {
+        clearInterval(reverseIntervalId);
+        reverseIntervalId = undefined;
+    }
+    if (forwardIntervalId != undefined) {
+        clearInterval(forwardIntervalId);
+        forwardIntervalId = undefined;
+    }
 });
+
 var reverseIntervalId;
 d3.select("#reverseButton").on("click", function() {
+    if (reverseIntervalId != undefined) {
+        clearInterval(reverseIntervalId);
+        reverseIntervalId = undefined;
+    }
+    if (forwardIntervalId != undefined) {
+        clearInterval(forwardIntervalId);
+        forwardIntervalId = undefined;
+    }
+
     let speed = document.getElementById('autoIncrementSpeed').value;
     if (speed === "") {
         speed = 1;
@@ -389,8 +405,18 @@ d3.select("#reverseButton").on("click", function() {
         document.getElementById("decrementButton").click();
     }, speed*1000);
 });
+
 var forwardIntervalId;
 d3.select("#forwardButton").on("click", function() {
+    if (reverseIntervalId != undefined) {
+        clearInterval(reverseIntervalId);
+        reverseIntervalId = undefined;
+    }
+    if (forwardIntervalId != undefined) {
+        clearInterval(forwardIntervalId);
+        forwardIntervalId = undefined;
+    }
+    
     let speed = document.getElementById('autoIncrementSpeed').value;
     if (speed === "") {
         speed = 1;
