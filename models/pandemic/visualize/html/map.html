@@ -4,26 +4,16 @@
         <div id="fullWidth" style="text-align: center;">
             <div id="mapWidth" style="display: inline-block; height: 80px; width: 900px;">
                 <div id="stepHalf" style="height: 100%; width: 45%; text-align: left; float: left; position: relative;">
-                    <div>
-                        <div style="display: inline-block; position: absolute; bottom: 0px;">
-                            <div>
-                                <input type="radio" class="checkbox" name="Step" id="singleStep" checked>
-                                <label for="singleStep">Single Step Days</label>
-                            </div>
-                            <div>
-                                <input type="radio" class="checkbox" name="Step" id="autoStep">
-                                <label for="autoStep">Auto Advance Days</label>
-                            </div>
-                            <div>
-                                <input id="autoIncrementSpeed" style="margin: 3px; margin-left: 25px; width: 8.4em;" placeholder="Speed (default 1s)">
-                            </div>
-                        </div>
-                        
-                        <div style="display: inline-block; position: absolute; bottom: 15%; left: 45%;">
-                            <p id="decrementButton" class="arrow" style="padding-right: 2px;">&#x25C0;</p>
-                            <p id="timelapseButton" class="timelapse" style="color: black; width: 28px;">&#x23F1;</p>
-                            <p id="incrementButton" class="arrow" style="padding-left: 2px;">&#x25B6;</p>
-                        </div>                    </div>
+                    <div style="display: inline-block; position: absolute; bottom: 15%; left: 45%;">
+                        <p id="reverseButton" class="arrow" style="padding-right: 2px;">&#x25C0;</p>
+                        <p id="decrementButton" class="arrow" style="padding-right: 2px;">&#x25C0;</p>
+                        <p id="timelapseButton" class="timelapse" style="color: black; width: 28px;">&#x23F1;</p>
+                        <p id="incrementButton" class="arrow" style="padding-left: 2px;">&#x25B6;</p>
+                        <p id="playButton" class="arrow" style="padding-left: 2px;">&#x25B6;</p>
+                    </div>
+                    <div style="display: inline-block; position: absolute; bottom: 0px;">
+                            <input id="autoIncrementSpeed" style="margin: 3px; margin-left: 25px; width: 8.4em;" placeholder="Speed (default 1s)">
+                    </div>
                 </div>
                 <div id="statDateHalf" style="height: 100%; width: 45%; text-align: right; float: right; position: relative;">
                     <div style="position: absolute; bottom: 0px;">
