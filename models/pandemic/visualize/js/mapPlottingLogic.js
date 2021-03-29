@@ -323,54 +323,82 @@ function incrementSlider() {
 }
 
 // Increment/Decrement Button Press
-d3.selectAll(".arrow").on("click", function(){
-    //get which button pressed
-    var direction = 0;
-    if(d3.select(this)._groups[0][0].id == "decrementButton"){
-        direction = 0;
-        decrementSlider();
+// d3.selectAll(".arrow").on("click", function(){
+//     //get which button pressed
+//     var direction = 0;
+//     if(d3.select(this)._groups[0][0].id == "decrementButton"){
+//         direction = 0;
+//         decrementSlider();
 
-    } else if(d3.select(this)._groups[0][0].id == "incrementButton"){
-        direction = 1;
-        incrementSlider();
+//     } else if(d3.select(this)._groups[0][0].id == "incrementButton"){
+//         direction = 1;
+//         incrementSlider();
 
-    } else {
-        throw "unknown button pressed"
+//     } else {
+//         throw "unknown button pressed"
 
-    }
+//     }
 
+//     loadNewData();
+// });
+d3.select("#decrementButton").on("click", function(){
+    decrementSlider();
+    loadNewData();
+});
+d3.select("#incrementButton").on("click", function(){
+    incrementSlider();
     loadNewData();
 });
 
-// Date Range New Input
-var timelapseToggle = 1;
-var intervalId;
-d3.select("#timelapseButton").on("click", function() {
-    let timeLapse = document.getElementById('timelapseButton');
+// // Pause Button Pressed
+// var timelapseToggle = 1;
+// var intervalId;
+// d3.select("#pauseButton").on("click", function() {
+//     if(timelapseToggle){
+//         let speed = document.getElementById('autoIncrementSpeed').value;
+//         if (speed === "") {
+//             speed = 1;
+//         }
 
-    if(timelapseToggle){
-        let speed = document.getElementById('autoIncrementSpeed').value;
-        if (speed === "") {
-            speed = 1;
-        }
+//         intervalId = setInterval(function() {
+//             document.getElementById("incrementButton").click();
+//         }, speed*1000);
+//         timelapseToggle = 0;
 
-        intervalId = setInterval(function() {
-            document.getElementById("incrementButton").click();
-        }, speed*1000);
-        timelapseToggle = 0;
+//     } else {
+//         clearInterval(intervalId);
 
-        timeLapse.innerHTML = "<b id='timelapseBold'>&#8545;</b>";
-        document.getElementById('timelapseBold').style.fontFamily = "sans-serif";
-        document.getElementById('timelapseBold').style.fontSize = "larger";
+//         timelapseToggle = 1;
+//     }
+//     //needs a stopping function when at end of data
+// });
 
-    } else {
-        clearInterval(intervalId);
-
-        timeLapse.innerHTML = "&#x23F1;";
-
-        timelapseToggle = 1;
+// Pause Button Pressed
+d3.select("#pauseButton").on("click", function() {
+    clearInterval(reverseIntervalId);
+    clearInterval(forwardIntervalId);
+});
+var reverseIntervalId;
+d3.select("#reverseButton").on("click", function() {
+    let speed = document.getElementById('autoIncrementSpeed').value;
+    if (speed === "") {
+        speed = 1;
     }
-    //needs a stopping function when at end of data
+
+    reverseIntervalId = setInterval(function() {
+        document.getElementById("decrementButton").click();
+    }, speed*1000);
+});
+var forwardIntervalId;
+d3.select("#forwardButton").on("click", function() {
+    let speed = document.getElementById('autoIncrementSpeed').value;
+    if (speed === "") {
+        speed = 1;
+    }
+
+    forwardIntervalId = setInterval(function() {
+        document.getElementById("incrementButton").click();
+    }, speed*1000);
 });
 
 
