@@ -337,12 +337,10 @@ function clearAutoAdvanceIntervals() {
 
 // Increment/Decrement Button Press
 d3.select("#decrementButton").on("click", function(){
-    clearAutoAdvanceIntervals();
     decrementSlider();
     loadNewData();
 });
 d3.select("#incrementButton").on("click", function(){
-    clearAutoAdvanceIntervals();
     incrementSlider();
     loadNewData();
 });
