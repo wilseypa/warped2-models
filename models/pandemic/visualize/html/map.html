@@ -15,7 +15,17 @@
                     </div>
                     <div style="height: 45%; width: 100%;">
                         <div style="display: inline-block; position: absolute; bottom: 0px;">
-                            <input id="autoIncrementSpeed" style="margin: 3px; margin-left: 25px; width: 8.4em;" placeholder="Speed (default 1s)">
+                            <label for="autoIncrementSpeed">Speed: </label>
+                            <select name="autoIncrementSpeed" id="autoIncrementSpeed" style="margin: 3px; margin-left: 25px; width: 8.4em;" placeholder="Speed (default 1s)">
+                                <optgroup label="Speed in seconds">
+                                    <option value="0.25">0.25</option>
+                                    <option value="0.50">0.50</option>
+                                    <option value="1.00">1.00</option>
+                                    <option value="2.00">2.00</option>
+                                    <option value="5.00">5.00</option>
+                                    <option value="10.00">10.00</option>
+                                </optgroup>
+                            </select>
                         </div>
                     </div>
                 </div>

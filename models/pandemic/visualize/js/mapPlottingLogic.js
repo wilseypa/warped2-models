@@ -335,6 +335,12 @@ function clearAutoAdvanceIntervals() {
     }
 }
 
+function getAutoAdvanceSpeed() {
+    let speed = document.getElementById('autoIncrementSpeed').value;
+    speed = parseInt(speed);
+    return speed;
+}
+
 // Increment/Decrement Button Press
 d3.select("#decrementButton").on("click", function(){
     decrementSlider();
@@ -355,27 +361,17 @@ var reverseIntervalId;
 d3.select("#reverseButton").on("click", function() {
     clearAutoAdvanceIntervals();
 
-    let speed = document.getElementById('autoIncrementSpeed').value;
-    if (speed === "") {
-        speed = 1;
-    }
-
     reverseIntervalId = setInterval(function() {
         document.getElementById("decrementButton").click();
-    }, speed*1000);
+    }, getAutoAdvanceSpeed()*1000);
 });
 var forwardIntervalId;
 d3.select("#forwardButton").on("click", function() {
     clearAutoAdvanceIntervals();
 
-    let speed = document.getElementById('autoIncrementSpeed').value;
-    if (speed === "") {
-        speed = 1;
-    }
-
     forwardIntervalId = setInterval(function() {
         document.getElementById("incrementButton").click();
-    }, speed*1000);
+    }, getAutoAdvanceSpeed()*1000);
 });
 
 
