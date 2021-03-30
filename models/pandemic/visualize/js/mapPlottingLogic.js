@@ -395,10 +395,8 @@ function updateMapDateValue(startDateParam, endDateParam) {
 function loadNewData() {
     updateMapDateValue(simulationData[document.getElementById('dateSlider').value].date);
 
-    if (document.getElementById('dateSlider').value == simulationData.length-1) {
-        clearInterval(intervalId);
-
-        document.getElementById('timelapseButton').innerHTML = "&#x23F1;";
+    if ( (document.getElementById('dateSlider').value == 0) || (document.getElementById('dateSlider').value == simulationData.length-1) ) {
+        clearAutoAdvanceIntervals();
     }
     
     covidStats = simulationData[document.getElementById('dateSlider').value];
