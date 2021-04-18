@@ -30,7 +30,7 @@ simulated_file_prefix = ".simulated-data.json"
 csse_formatted_json_dir = "../../data"
 simulated_json_dir = "simOutfiles"
 newJobStartStatus = ""
-
+baseWorkingDir = None
 
 workerPool = None
 initCalled = False
@@ -93,8 +93,13 @@ def getstatus():
 def getCountyStatsFromFile(fips, filepath):
     """
     """
+    print("!!!!!filepath:", filepath)
+    print("!!!!cwd: ", os.getcwd())
+
     with open(filepath) as f:
         filedata = f.read()
+
+    print("!! after with")
 
     matches = re.search(r'^\s*\["' + fips + r'",([^,]*,){5}(([^,]*,){3}[^,]*),[^,]*\],\s*$', filedata,
                         re.MULTILINE)
@@ -288,6 +293,7 @@ def run_range_simulations(dict_args):
     :return:
     """
 
+    global baseWorkingDir 
     baseWorkingDir = os.getcwd()
 
     os.chdir(baseWorkingDir + "/simJobs")
@@ -355,7 +361,7 @@ def run_range_simulations(dict_args):
 
         for fips in listfips:
             processFilesForDateRange_county(fips, "formatted", start_date + dt.timedelta(days=1), actualplot_end_date,
-                                            json_formatted_dir=csse_formatted_json_dir,
+                                            json_formatted_dir=(baseWorkingDir + "/" + csse_formatted_json_dir),
                                             simulated_json_dir=None)
 
             processFilesForDateRange_county(fips, "simulated", start_date + dt.timedelta(days=1), end_date,
