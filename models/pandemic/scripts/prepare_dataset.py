@@ -303,6 +303,8 @@ def fix_metrics_values(jhu_csse_path, main_df, curr_date_str):
 
     # print("prev_date_filepath", prev_date_filepath)
     # print("main dtypes", main_df.dtypes)
+    
+    # print("!!!prev date", prev_date_filepath)
 
     prev_date_csse_df = pd.read_csv(prev_date_filepath, skipinitialspace=True, dtype={'FIPS': 'object'})  # ',
     # 'Active':'object'})
@@ -343,7 +345,13 @@ def fix_metrics_values(jhu_csse_path, main_df, curr_date_str):
             dict_fips_newActive[fips] = (main_active_val, row['State'])
             continue
 
-        prev_active_val = int((prev_date_csse_df[prev_date_csse_df['FIPS'] == fips]['Active']).values.tolist()[0])
+        # print("!!!fips", fips)
+        # print("!!!type_fips", type(fips))
+        
+        prev_active_val = 0
+        
+        if prev_date_csse_df[prev_date_csse_df['FIPS'] == fips]['Active'].isnull().values.tolist()[0] is False:
+            prev_active_val = int((prev_date_csse_df[prev_date_csse_df['FIPS'] == fips]['Active']).values.tolist()[0])
 
         new_active_val = main_active_val - prev_active_val
 
