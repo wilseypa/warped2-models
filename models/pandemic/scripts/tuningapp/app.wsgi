@@ -65,7 +65,7 @@ def getstatus():
 
     print("!!!!!getstatus called")
     jobid = request.json['jobid']
-    jobstatusToReturn = {'jobid':jobid, 'status':"NOT_FOUND"}
+    jobstatusToReturn = {'jobid': jobid, 'status': "NOT_FOUND"}
 
     if jobid in simJobs:
         result = simJobs[jobid]
@@ -192,6 +192,29 @@ def processFilesForDateRange(formatted_or_simulated, from_date, end_date, json_f
                              simulated_json_dir=None, dir_to_write="plotSourceData"):
     """
     """
+
+    def getUSstats(datestr):
+        """
+
+        :return:
+        """
+        usstatsfilepath = csse_formatted_json_dir + "/COVID-19.jhu/csse_covid_19_data/csse_covid_19_daily_reports_us" \
+                          + "/" + datestr + ".csv"
+
+        usstatsdf = pd.read_csv(usstatsfilepath,
+                                usecols=['Confirmed', 'Deaths', 'Recovered', 'Active'],
+                                skipinitialspace=True)
+
+        usstatsdf['Confirmed'].fillna(value=0, inplace=True, downcast='infer')
+        usstatsdf['Deaths'].fillna(value=0, inplace=True, downcast='infer')
+        usstatsdf['Recovered'].fillna(value=0, inplace=True, downcast='infer')
+        usstatsdf['Active'].fillna(value=0, inplace=True, downcast='infer')
+
+        totalValues = usstatsdf.sum(axis=0)
+
+        return totalValues.Confirmed, totalValues.Deaths, totalValues.Recovered, totalValues.Active
+
+
     to_write_to_file = "Date,Confirmed,Deaths,Recovered,Active,Population\n"  # set header
 
     curr_date = from_date
@@ -207,6 +230,23 @@ def processFilesForDateRange(formatted_or_simulated, from_date, end_date, json_f
 
         totalConfirmed, totalDeaths, totalRecovered, totalActive, totalPopulation = \
             getStatsFromFile(jsonfilepath)
+
+        # for "actual"(formatted) stats, use the US-level data in the jhu source
+        if formatted_or_simulated == "formatted":
+            totalConfirmed2, totalDeaths2, totalRecovered2, totalActive2 = getUSstats(curr_datestr)
+
+            # special handling because of csv file issue
+            if totalConfirmed2 != 0:
+                totalConfirmed = totalConfirmed2
+
+            if totalDeaths2 != 0:
+                totalDeaths = totalDeaths2
+
+            if totalRecovered2 != 0:
+                totalRecovered = totalRecovered2
+
+            if totalActive2 != 0:
+                totalActive = totalActive2
 
         curr_date += dt.timedelta(days=1)
 
@@ -293,7 +333,7 @@ def run_range_simulations(dict_args):
     :return:
     """
 
-    global baseWorkingDir 
+    global baseWorkingDir
     baseWorkingDir = os.getcwd()
 
     os.chdir(baseWorkingDir + "/simJobs")
@@ -377,7 +417,6 @@ def run_range_simulations(dict_args):
     return 0
 
 
-
 def simulate_func(dict_args):
     """
     :param dictreq:
@@ -402,6 +441,7 @@ def simulate_func(dict_args):
     jobstatus[jobid] = {"status": "jobadded"}
 
     newJobStartStatus = "job added"
+
 
 @post('/simulate')
 def simulate():
@@ -459,6 +499,7 @@ def home():
         html_string = myfile.read()
 
     return template(html_string)  # , select_opts=get_select_opts_genre())
+
 
 init()
 run(host='localhost', port=8081, reloader=True, debug=True)
