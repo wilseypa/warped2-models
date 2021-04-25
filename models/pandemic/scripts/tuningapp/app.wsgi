@@ -388,9 +388,13 @@ def run_range_simulations(dict_args):
                              json_formatted_dirpath=(baseWorkingDir + "/" + csse_formatted_json_dir),
                              simulated_json_dir=None)
 
-    # create file containing tweaked metrics
+    # create file containing tweaked metrics and other stats
+    final_stats = final_params
+    final_stats["start_date"] = str(start_date)
+    final_stats["end_date"] = str(end_date)
+
     with open("plotSourceData/metrics", "w") as f:
-        f.write(json.dumps(final_params, indent=2))
+        f.write(json.dumps(final_stats, indent=2))
 
     # create csv for US from simulation output files
     processFilesForDateRange("simulated", start_date + dt.timedelta(days=1), end_date, json_formatted_dirpath=None,
