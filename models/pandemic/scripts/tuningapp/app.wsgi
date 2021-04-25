@@ -16,6 +16,7 @@ try:
     import datetime as dt
     import multiprocessing as mp
     import pathlib
+    import pandas as pd
     from bottle import auth_basic, run, route, default_app, template, get, post, request, static_file, response, debug
     import pandas
 
@@ -198,8 +199,11 @@ def processFilesForDateRange(formatted_or_simulated, from_date, end_date, json_f
 
         :return:
         """
-        usstatsfilepath = csse_formatted_json_dir + "/COVID-19.jhu/csse_covid_19_data/csse_covid_19_daily_reports_us" \
+        usstatsfilepath = baseWorkingDir + "/" +  csse_formatted_json_dir + "/COVID-19.jhu/csse_covid_19_data/csse_covid_19_daily_reports_us" \
                           + "/" + datestr + ".csv"
+
+        # with open(usstatsfilepath, 'r') as statfile:
+        #     print("!!!!!!", statfile.read(10))
 
         usstatsdf = pd.read_csv(usstatsfilepath,
                                 usecols=['Confirmed', 'Deaths', 'Recovered', 'Active'],
