@@ -13,7 +13,7 @@ getwd()
 currSimDir <- basename(getwd())
 
 # create new dir under plotImages
-dir.create(file.path("../../plotImages", currDir), showWarnings = FALSE)
+dir.create(file.path("../../plotImages", currSimDir), showWarnings = FALSE)
 
 # load list of counties/fips
 US_fips_county_name_df <- read.csv("../../US_counties_population_latLong.csv", header=TRUE)
