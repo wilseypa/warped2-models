@@ -9,6 +9,25 @@ library(scales)
 # print working directory
 getwd()
 
+xf <- c("Confirmed(simulated)", "Active(simulated)", "Deaths(simulated)", 
+        "Recovered(simulated)", "Confirmed(actual)", "Active(actual)", 
+        "Deaths(actual)", 
+        "Recovered(actual)")
+
+plotcolors <- c("Confirmed(simulated)"="palevioletred", 
+                "Active(simulated)"="palegreen3", "Deaths(simulated)"="orangered3", 
+                "Recovered(simulated)"="royalblue", "Confirmed(actual)"="palevioletred", 
+                "Active(actual)"="palegreen3", 
+                "Deaths(actual)"="orangered3", 
+                "Recovered(actual)"="royalblue")
+
+plotlines <- c("Confirmed(simulated)"="solid", "Active(simulated)"="solid", 
+               "Deaths(simulated)"="solid", 
+               "Recovered(simulated)"="solid", "Confirmed(actual)"="dashed", 
+               "Active(actual)"="dashed", 
+               "Deaths(actual)"="dashed", 
+               "Recovered(actual)"="dashed")
+
 # get curr dir name
 currSimDir <- basename(getwd())
 
