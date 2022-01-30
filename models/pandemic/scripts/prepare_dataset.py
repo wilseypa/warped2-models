@@ -155,6 +155,7 @@ def addDFrow_to_cluster(clusterDFs, cluster_centers, row):
     if minInd == -1:
         return
 
+    # or, just clusterDFs[minInd].append(row, ignore_index=True) ????
     clusterDFs[minInd] = clusterDFs[minInd].append(row, ignore_index=True)
 
 
@@ -163,6 +164,7 @@ def sort_df_rows_into_clusters(mainDF):
     """
     # these DataFrames will store rows corresponding to each geographical partition; essentially
     # storing partitions of original DataFrame
+    # why?? TODO add comment
     clusterDFs = [pd.DataFrame(columns=mainDF.columns)] * len(cluster_centers)
 
     for index, row in mainDF.iterrows():
@@ -293,6 +295,26 @@ def get_true_us_active_count(date_str):
 
 def fix_metrics_values(jhu_csse_path, main_df, curr_date_str):
     """
+    - read csv from 30 days ago into prev_date_df, if FIPS col not present, RETURN
+    - get actual Active count for all states from 'csse_covid_19_daily_reports_us' dir data
+    - iterate over main_df, then for each county:
+      - store new_active val as difference of Active from today and 30 days prior, handle edge cases:
+        - if county (FIPS) not present in prev_date_df
+        - if Active column has null value in prev_date_df
+        - make sure new_active_val is not negative
+      - store (new_active_val, state) tuple in dict against fips key
+    - in dict_states_new_total_active, store total new_active_val against each state
+    - calc ratios: in dict_ratio_state_active store ratio (for each state) of total Active and total
+      new_active_val, handle edge cases
+    - for each row in main_df:
+      - calc new_scaled_active by multiplying new_active_val of that FIPS with ratio for that state, 
+        handle edge cases
+      - get main_confirmed_val & main_deaths_val,
+        make sure new_scaled_active in not gt than main_confirmed_val - main_deaths_val
+        (recovered is always 0), and
+        set new_recovered_val = main_confirmed_val - new_scaled_active - main_deaths_val
+      - set main_df Active/Recovered to new_scaled/new_recovered
+      - finally, confirmed = active + deaths + recovered
     """
     # print("h1\n", main_df.dtypes)
 
@@ -379,6 +401,7 @@ def fix_metrics_values(jhu_csse_path, main_df, curr_date_str):
         # sys.exit(1)
 
         if state_name not in dict_states_new_total_active.keys():
+            # if state_name is new, then initialize 
             dict_states_new_total_active[state_name] = 0
         else:
             dict_states_new_total_active[state_name] += fips_new_active
@@ -404,6 +427,7 @@ def fix_metrics_values(jhu_csse_path, main_df, curr_date_str):
         # new_scaled_active = int(dict_fips_newActive[fips] * ratio_actual_calculated_active)
         new_scaled_active = int(dict_fips_newActive[fips][0] * dict_ratio_state_active[state])
 
+        # redundant ??
         if new_scaled_active < 0:
             new_scaled_active = 0
 
@@ -421,6 +445,7 @@ def fix_metrics_values(jhu_csse_path, main_df, curr_date_str):
         #     new_scaled_active = fips_population
 
         # csv recovered is always zero, so no need to factor that
+        # TODO use != ??????
         if new_scaled_active >= main_confirmed_val - main_deaths_val:
             new_scaled_active = main_confirmed_val - main_deaths_val
 

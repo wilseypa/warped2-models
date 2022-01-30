@@ -3,6 +3,8 @@ library(gridExtra)
 library(readr)
 library(stringr)
 library(uuid)
+library(svglite) # adding this
+library(scales)
 
 # print working directory
 getwd()
@@ -29,6 +31,9 @@ plot_annotate_metrics <- ggplot() + xlim(1,3) + annotate("text",x=1,y=1, label =
 
 plots <- list(plot_annotate_metrics)
 
+# plots is now a list, contains one plot
+
+# add other plots from index 2 (since list uses 1-indexing)
 i <- 2
 for (dir in dirs_to_plot) {
   print(dir)

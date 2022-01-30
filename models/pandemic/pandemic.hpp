@@ -446,6 +446,7 @@ public:
             unsigned long recovered  = lp.getLocationState()->population_[infection_state_t::RECOVERED];
             unsigned long deaths     = lp.getLocationState()->population_[infection_state_t::DECEASED];
 
+            // check comment
             /* NOTE : Active count for JHU data is confirmed count in this model */
             auto confirmed = active + deaths + recovered;
             assert(confirmed <= population);
@@ -481,7 +482,7 @@ private:
         COUNTRY,
         LATITUDE,
         LONGITUDE,
-        NUM_CONFIRMED,
+        NUM_CONFIRMED, // not getting used ???
         NUM_DEATHS,
         NUM_RECOVERED,
         NUM_ACTIVE,
