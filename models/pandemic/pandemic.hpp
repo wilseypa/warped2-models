@@ -107,7 +107,9 @@ public:
         return instance_;
     }
 
-    double transmissibility_                = 2.2;          /* equals beta     */
+    std::vector<double> transmissibility_; /* equals beta     */
+    // double transmissibility_                = 2.2;          /* equals beta     */
+
     double exposed_confirmed_ratio_         = 2.5;
     double mean_incubation_duration_        = 5.2 * TIME_UNITS_IN_DAY;    /* equals 1/sigma  */
     double mean_infection_duration_         = 2.3 * TIME_UNITS_IN_DAY;    /* equals 1/gamma  */
@@ -257,9 +259,26 @@ public:
          *  D' = mortality_ratio * R
          */
         // double exponent = (double) -1 * (48 * timestamp);
-        double exponent = (double) -1 * (timestamp / 24);
 
-        double dynamic_transmissibility_ = CONFIG->transmissibility_ * pow(2.71828, exponent);
+        double dynamic_transmissibility_;
+        // ind_transmissibility_arr > CONFIG->transmissibility_.size()
+
+        if (CONFIG->transmissibility_.size() == 1) {
+            double exponent = (double) -1 * (timestamp / 24);
+            dynamic_transmissibility_ = CONFIG->transmissibility_[0] * pow(2.71828, exponent);
+        } else {
+            
+            int tempInd = static_cast<int>(timestamp / 24);
+            assert(tempInd >= 1);
+            size_t ind_transmissibility_arr = tempInd - 1;
+
+            
+            if (ind_transmissibility_arr < CONFIG->transmissibility_.size()) {
+                dynamic_transmissibility_ = CONFIG->transmissibility_[ind_transmissibility_arr];
+            } else {
+                dynamic_transmissibility_ = CONFIG->transmissibility_.back();
+            }
+        }
 
         // unsigned int delta_S = (int)( dynamic_transmissibility_ *
         unsigned int delta_S = ( dynamic_transmissibility_ *
@@ -332,7 +351,12 @@ public:
         std::ifstream is(fname);
         jsoncons::ojson data = jsoncons::ojson::parse(is);
 
-        CONFIG->transmissibility_ = data["disease_model"]["transmissibility"].as<double>();
+        // read tranmsibillity as array from json
+        for (const auto& json_arr_val : data["disease_model"]["transmissibility"].array_range()) {
+            CONFIG->transmissibility_.push_back(json_arr_val.as<double>());
+        }
+
+        // CONFIG->transmissibility_ = data["disease_model"]["transmissibility"].as<double>();
 
         // TODO rename this
         CONFIG->exposed_confirmed_ratio_ = data["disease_model"]["exposed_confirmed_ratio"].as<double>();
@@ -414,7 +438,8 @@ public:
 
         jsoncons::ojson jsontowrite;
         jsoncons::ojson disease_model(jsoncons::json_object_arg, {
-                {"transmissibility", CONFIG->transmissibility_}, // TODO
+                // write out transmissibility array
+                {"transmissibility", CONFIG->transmissibility_},
                 {"mean_incubation_duration_in_days", CONFIG->mean_incubation_duration_ / TIME_UNITS_IN_DAY},
                 {"mean_infection_duration_in_days", CONFIG->mean_infection_duration_ / TIME_UNITS_IN_DAY},
                 {"mortality_ratio", CONFIG->mortality_ratio_},

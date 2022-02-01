@@ -1,0 +1,1 @@
+alias latestJobCD='cd `ls -1tr | tail -n 1`'

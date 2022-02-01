@@ -284,9 +284,16 @@ def tweak_infile(injsonfilepath, reqdata, tweakedjsonfilepath):
     tweakdict = {}
     paramRollingCounter = []
 
-    if reqdata['transmissibility']['ifchecked']:
-        basejsondata['disease_model']['transmissibility'] = float(reqdata['transmissibility']['value'])
+    # HACK: prepare_data.py script is not updated to write transmissibility as 
+    # array into *formatted* json file. So update value to array manually
+    basejsondata['disease_model']['transmissibility'] = json.loads("[2.2]")
 
+    print("request data transmissibility:", reqdata['transmissibility']['value'])
+
+    if reqdata['transmissibility']['ifchecked']:
+        # basejsondata['disease_model']['transmissibility'] = float(reqdata['transmissibility']['value'])
+        basejsondata['disease_model']['transmissibility'] = json.loads(reqdata['transmissibility']['value'])
+        
     if reqdata['exposed_confirmed_ratio']['ifchecked']:
         basejsondata['disease_model']['exposed_confirmed_ratio'] = float(reqdata['exposed_confirmed_ratio']['value'])
 
@@ -348,7 +355,7 @@ def run_range_simulations(dict_args):
 
     # now, we are in the unique job directory
 
-    os.mkdir('tweakedjsoninfiles')
+    os.mkdir('tweakedjson_infile')
     os.mkdir('plotSourceData')
     os.mkdir(simulated_json_dir)
 
@@ -358,7 +365,7 @@ def run_range_simulations(dict_args):
     injsonfilepath = baseWorkingDir + "/" + csse_formatted_json_dir + "/" + dict_args['start_date']['value'] + \
                      formatted_csse_infile_prefix
 
-    tweakedjsoninfilepath = "tweakedjsoninfiles/" + dict_args['start_date']['value'] + ".tweaked.json"
+    tweakedjsoninfilepath = "tweakedjson_infile/" + dict_args['start_date']['value'] + ".tweaked.json"
 
     # tweak infile
     final_params = tweak_infile(injsonfilepath, dict_args, tweakedjsoninfilepath)

@@ -55,10 +55,10 @@ for (dir in dirs_to_plot) {
   simulated_data_filename <- paste("./plotSourceData/", dir, "/simulated.csv", sep='')
 
   # delete if existing
-  rm(newdata)
-  rm(newrow)
-  rm(actual)
-  rm(simulated)
+  suppressWarnings(rm(newdata))
+  suppressWarnings(rm(newrow))
+  suppressWarnings(rm(actual))
+  suppressWarnings(rm(simulated))
   
   # create empty DFs
   newdata <- data.frame(Date=as.Date(character()),
@@ -133,7 +133,7 @@ for (dir in dirs_to_plot) {
   legend.title <- ""
   
   # calc minor breaks for x date axis
-  rm(list_date_breaks)
+  suppressWarnings(rm(list_date_breaks))
   list_date_breaks <- structure(integer(), class = "Date")
   currdate <- min(newdata$Date)
   
