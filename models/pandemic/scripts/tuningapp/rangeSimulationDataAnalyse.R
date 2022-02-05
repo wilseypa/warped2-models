@@ -5,6 +5,7 @@ library(stringr)
 library(uuid)
 library(svglite) # adding this
 library(scales)
+library(jsonlite)
 
 # print working directory
 getwd()
@@ -14,6 +15,8 @@ xf <- c("Confirmed(simulated)", "Active(simulated)", "Deaths(simulated)",
         "Recovered(simulated)", "Confirmed(actual)", "Active(actual)", 
         "Deaths(actual)", 
         "Recovered(actual)")
+
+xf2 <- c("transmissibility")
 
 plotcolors <- c("Confirmed(simulated)"="palevioletred", 
                 "Active(simulated)"="palegreen3", "Deaths(simulated)"="orangered3", 
@@ -35,7 +38,7 @@ currSimDir <- basename(getwd())
 # create new dir under plotImages
 dir.create(file.path("../../plotImages", currSimDir), showWarnings = FALSE)
 
-# first copy the metrics file to remote
+# first copy the metrics file to plots dir (that gets synced to remote)
 file.copy(from="./plotSourceData/metrics", to=paste("../../plotImages/", currSimDir, "/", "configParams.txt", sep=''), 
           overwrite = TRUE,
           recursive = FALSE,
@@ -145,6 +148,51 @@ for (dir in dirs_to_plot) {
     currdate <- currdate + 30
   }
   
+  
+  # now, create transmissiblity chart
+  
+  suppressWarnings(rm(tblity_arr))
+  suppressWarnings(rm(tblitydata))
+  suppressWarnings(rm(row))
+  suppressWarnings(rm(newrow))
+  
+  jsondata <- fromJSON(paste("./plotSourceData/", "metrics", sep=''))
+  tblity_arr <- jsondata$paramsUsed$disease_model$transmissibility
+  
+  
+  xf2 <- c("transmissibility")
+  
+  newrow <- data.frame(Date=as.Date(character()),
+                       variable=factor(levels=xf2),
+                       value=double())
+  
+  tblitydata <- data.frame(Date=as.Date(character()),
+                           variable=factor(levels=xf2),
+                           value=double())
+  
+  for(i in 1:nrow(actual)) {
+    row <- actual[i,]
+    newrow[1,]$Date <- row$Date
+    
+    if (length(tblity_arr) == 1) {
+      t_expval <- tblity_arr[1] * exp(-1 * i)
+      newtval <- t_expval
+    } else if (i > length(tblity_arr)) {
+      newtval <- tblity_arr[length(tblity_arr)]
+    } else {
+      newtval <- tblity_arr[i]
+    }
+    
+    newrow[1,]$value <- newtval
+    newrow[1,]$variable <- "transmissibility"
+    
+    tblitydata <- rbind(tblitydata, newrow)
+  }
+  
+  
+
+  
+  
   pt1 <- ggplot(newdata, aes(x=Date, y=value, colour=Disease_metric, 
                 linetype=Disease_metric)) +
          geom_line(size=0.6) +
@@ -158,8 +206,22 @@ for (dir in dirs_to_plot) {
                       minor_breaks = list_date_breaks,
                       date_labels = "%d %b %Y")
 
+  pt2 <- ggplot(tblitydata, aes(x=Date,y=value,color=variable)) +
+         geom_line(size=0.8) + 
+         scale_color_manual(values = c("transmissibility" = "568c7e")) +
+         scale_y_log10() +
+         labs(y="transmissibility (log scale)") +
+         theme_light() +
+         theme(aspect.ratio = 1, legend.position="none", text = element_text(size=9)) +
+         scale_x_date(breaks=c(min(newdata$Date), max(newdata$Date)), 
+                      minor_breaks = list_date_breaks,
+                      date_labels = "%d %b %Y")
+  
+  
   ggsave(paste("../../plotImages/", currSimDir, "/", plotname, ".pdf", sep=''), width = 6, height = 6, units = "in", plot=pt1)
-
+  ggsave(paste("../../plotImages/", currSimDir, "/", plotname, ".svg", sep=''), width = 6, height = 6, units = "in", plot=pt1)
+  ggsave(paste("../../plotImages/", currSimDir, "/", "transmissibility_curve.pdf", sep=''), width = 6, height = 6, units = "in", plot=pt2)
+  ggsave(paste("../../plotImages/", currSimDir, "/", "transmissibility_curve.svg", sep=''), width = 6, height = 6, units = "in", plot=pt2)
 }
 
 
