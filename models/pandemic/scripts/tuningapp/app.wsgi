@@ -425,7 +425,8 @@ def run_range_simulations(dict_args):
 
     # copy R plot script to the job directory, and execute
     shutil.copyfile(baseWorkingDir + "/" + "rangeSimulationDataAnalyse.R", "rangeSimulationDataAnalyse.R")
-    subprocess.run(["Rscript", "rangeSimulationDataAnalyse.R"], stdout=subprocess.DEVNULL)
+    subprocess.run(["Rscript", "rangeSimulationDataAnalyse.R"])
+    # subprocess.run(["Rscript", "rangeSimulationDataAnalyse.R"], stdout=subprocess.DEVNULL)
 
     os.chdir(baseWorkingDir)
 

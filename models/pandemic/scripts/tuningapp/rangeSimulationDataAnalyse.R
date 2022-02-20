@@ -23,7 +23,8 @@ plotcolors <- c("Confirmed(simulated)"="palevioletred",
                 "Recovered(simulated)"="royalblue", "Confirmed(actual)"="palevioletred", 
                 "Active(actual)"="palegreen3", 
                 "Deaths(actual)"="orangered3", 
-                "Recovered(actual)"="royalblue")
+                "Recovered(actual)"="royalblue",
+                "transmissibility"="darkolivegreen4")
 
 plotlines <- c("Confirmed(simulated)"="solid", "Active(simulated)"="solid", 
                "Deaths(simulated)"="solid", 
@@ -63,6 +64,9 @@ jsondata <- fromJSON("./plotSourceData/metrics")
 tblity_arr <- jsondata$paramsUsed$disease_model$transmissibility
 
 actualUSdata <- read.csv("./plotSourceData/US/actual.csv", header = TRUE)
+actualUSdata$Date <- as.Date(actualUSdata$Date, format="%m-%d-%Y")
+
+
 xf2 <- c("transmissibility")
 
 newrow <- data.frame(Date=as.Date(character()),
@@ -92,20 +96,31 @@ for(i in 1:nrow(actualUSdata)) {
   tblitydata <- rbind(tblitydata, newrow)
 }
 
+suppressWarnings(rm(list_date_breaks))
+list_date_breaks <- structure(integer(), class = "Date")
+currdate <- min(actualUSdata$Date)
+
+i <- 1
+while (currdate < max(actualUSdata$Date)) {
+    # print(currdate)
+  list_date_breaks[i] <- currdate
+  i <- i + 1
+  currdate <- currdate + 30
+}
+
 pt2 <- ggplot(tblitydata, aes(x=Date,y=value,color=variable)) +
-  geom_line(size=0.8) + 
-  scale_color_manual(values = c("transmissibility" = "#568c7e")) +
-  scale_y_log10() +
-  labs(y="transmissibility (log scale)") +
-  theme_light() +
-  theme(aspect.ratio = 1, legend.position="none", text = element_text(size=9)) +
-  scale_x_date(breaks=c(min(newdata$Date), max(newdata$Date)), 
-               minor_breaks = list_date_breaks,
-               date_labels = "%d %b %Y")
+       geom_line(size=0.8) + 
+       scale_color_manual(values=plotcolors) +
+       scale_y_log10() +
+       labs(y="transmissibility (log scale)") +
+       theme_light() +
+       theme(aspect.ratio = 1, legend.position="none", text = element_text(size=9)) +
+       scale_x_date(breaks=c(min(actualUSdata$Date), max(actualUSdata$Date)), 
+                    minor_breaks = list_date_breaks,
+                    date_labels = "%d %b %Y")
 
-
-ggsave(paste("../../plotImages/", currSimDir, "/", plotname, ".svg", sep=''), width = 6, height = 6, units = "in", plot=pt1)
 ggsave(paste("../../plotImages/", currSimDir, "/", "transmissibility_curve.svg", sep=''), width = 6, height = 6, units = "in", plot=pt2)
+ggsave(paste("../../plotImages/", currSimDir, "/", "transmissibility_curve.pdf", sep=''), width = 6, height = 6, units = "in", plot=pt2)
 
 
 # plot disease values in each data directory
@@ -205,7 +220,11 @@ for (dir in dirs_to_plot) {
     i <- i + 1
     currdate <- currdate + 30
   }
-  
+
+
+  print("helllllloooooooooooo!!!!") 
+  print(paste("@@@@@@ newData_dateMin", min(newdata$Date), " newData_dateMax", max(newdata$Date)))
+ 
   pt1 <- ggplot(newdata, aes(x=Date, y=value, colour=Disease_metric, 
                 linetype=Disease_metric)) +
          geom_line(size=0.6) +
@@ -218,9 +237,9 @@ for (dir in dirs_to_plot) {
          scale_x_date(breaks=c(min(newdata$Date), max(newdata$Date)), 
                       minor_breaks = list_date_breaks,
                       date_labels = "%d %b %Y")
-  
+
+  ggsave(paste("../../plotImages/", currSimDir, "/", plotname, ".svg", sep=''), width = 6, height = 6, units = "in", plot=pt1)
   ggsave(paste("../../plotImages/", currSimDir, "/", plotname, ".pdf", sep=''), width = 6, height = 6, units = "in", plot=pt1)
-  ggsave(paste("../../plotImages/", currSimDir, "/", "transmissibility_curve.pdf", sep=''), width = 6, height = 6, units = "in", plot=pt2)
 }
 
 

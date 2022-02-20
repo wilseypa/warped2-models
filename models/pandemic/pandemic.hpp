@@ -437,9 +437,15 @@ public:
     void writeConfig(const std::string& out_fname, const std::vector<Location>& lps) {
 
         jsoncons::ojson jsontowrite;
+        jsoncons::ojson tweakable_params(jsoncons::json_array_arg,
+                                         {"disease_model", "diffusion_model"});
+        
+        jsontowrite["tweakable_params"] = std::move(tweakable_params);
+
         jsoncons::ojson disease_model(jsoncons::json_object_arg, {
                 // write out transmissibility array
                 {"transmissibility", CONFIG->transmissibility_},
+                {"exposed_confirmed_ratio", CONFIG->exposed_confirmed_ratio_},
                 {"mean_incubation_duration_in_days", CONFIG->mean_incubation_duration_ / TIME_UNITS_IN_DAY},
                 {"mean_infection_duration_in_days", CONFIG->mean_infection_duration_ / TIME_UNITS_IN_DAY},
                 {"mortality_ratio", CONFIG->mortality_ratio_},
@@ -450,7 +456,9 @@ public:
         jsoncons::ojson diffusion_model(jsoncons::json_object_arg, {
                 {"graph_type", graph_type_},
                 {"graph_params", graph_params_},
-                {"diffusion_trig_interval_in_hrs", CONFIG->diffusion_trig_interval_in_hrs_}
+                {"diffusion_trig_interval_in_hrs", CONFIG->diffusion_trig_interval_in_hrs_},
+                {"avg_transport_speed", CONFIG->avg_transport_speed_},
+                {"max_diffusion_cnt", CONFIG->max_diffusion_cnt_}
             });
         jsontowrite["diffusion_model"] = std::move(diffusion_model);
 
