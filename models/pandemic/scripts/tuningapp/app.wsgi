@@ -362,6 +362,9 @@ def run_range_simulations(dict_args):
     start_date = dt.datetime.strptime(dict_args['start_date']['value'], "%m-%d-%Y")
     days_runtime = int(dict_args['runtime_days']['value'])
 
+    sim_mode = dict_args['simulation_mode']['value']
+    print("!!!simulation mode:", sim_mode)
+
     injsonfilepath = baseWorkingDir + "/" + csse_formatted_json_dir + "/" + dict_args['start_date']['value'] + \
                      formatted_csse_infile_prefix
 
@@ -370,21 +373,46 @@ def run_range_simulations(dict_args):
     # tweak infile
     final_params = tweak_infile(injsonfilepath, dict_args, tweakedjsoninfilepath)
 
+    infilepath = tweakedjsoninfilepath
+
+    sim_start_time = dt.datetime.now()
+    
     # iterate for all days
     curr_days_runtime = 1
     while curr_days_runtime <= days_runtime:
+
         curr_outfile = (start_date + dt.timedelta(days=curr_days_runtime)).strftime("%m-%d-%Y") \
                        + simulated_file_prefix
 
-        subprocess.run([baseWorkingDir + "/" + "../../pandemic_sim", "-m", tweakedjsoninfilepath, "--max-sim-time",
-                        str(24 * int(curr_days_runtime)),
-                        "-o",
-                        simulated_json_dir + "/" + curr_outfile], stdout=subprocess.DEVNULL)
+        if sim_mode == "chained":
+            
+            subprocess.run([baseWorkingDir + "/" + "../../pandemic_sim", "-m",
+                            infilepath,
+                            "--max-sim-time",
+                            str(24),
+                            "-o",
+                            simulated_json_dir + "/" + curr_outfile],
+                           stdout=subprocess.DEVNULL)
+
+            infilepath = simulated_json_dir + "/" + curr_outfile
+
+        else: # range_series
+
+            subprocess.run([baseWorkingDir + "/" + "../../pandemic_sim", "-m",
+                            tweakedjsoninfilepath,
+                            "--max-sim-time",
+                            str(24 * int(curr_days_runtime)),
+                            "-o",
+                            simulated_json_dir + "/" + curr_outfile],
+                           stdout=subprocess.DEVNULL)
 
         curr_days_runtime += 1
 
     end_date = start_date + dt.timedelta(days=days_runtime)
 
+    sim_end_time = dt.datetime.now()
+
+    actualplot_end_date = None
     if dict_args['actualplot_end_date']['value']:
         actualplot_end_date = dt.datetime.strptime(dict_args['actualplot_end_date']['value'], "%m-%d-%Y")
     else:
@@ -395,11 +423,17 @@ def run_range_simulations(dict_args):
                              json_formatted_dirpath=(baseWorkingDir + "/" + csse_formatted_json_dir),
                              simulated_json_dir=None)
 
-    # create file containing tweaked metrics and other stats
+    # now create file containing tweaked metrics and other stats
+
     final_stats = final_params
+
+    # add other input options
     final_stats["start_date"] = str(start_date)
     final_stats["end_date"] = str(end_date)
-
+    final_stats["actual_plot_end_date"] = str(actualplot_end_date)
+    final_stats["simulation_mode"] = sim_mode
+    final_stats["time_elapsed"] = str(sim_end_time - sim_start_time)
+    
     with open("plotSourceData/metrics", "w") as f:
         f.write(json.dumps(final_stats, indent=2))
 

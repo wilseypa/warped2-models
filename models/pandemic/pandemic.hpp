@@ -352,6 +352,7 @@ public:
         jsoncons::ojson data = jsoncons::ojson::parse(is);
 
         // read tranmsibillity as array from json
+        // NOTE: input json file must have transmissibility value as an array
         for (const auto& json_arr_val : data["disease_model"]["transmissibility"].array_range()) {
             CONFIG->transmissibility_.push_back(json_arr_val.as<double>());
         }

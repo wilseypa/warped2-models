@@ -23,6 +23,8 @@ document.addEventListener("DOMContentLoaded", function() {
                     'value':document.getElementById('runtime_days').value
                 }, 'actualplot_end_date' : {
                     'value':document.getElementById('actualplot_end_date').value
+                }, 'simulation_mode' : {
+                    'value':document.querySelector('input[name="simulation_mode"]:checked').value
                 }, 'transmissibility':{
                     'ifchecked':document.getElementById('transmissibility').checked,
                     'value':document.getElementById('transmissibilityval').value
