@@ -6,9 +6,9 @@ bgTask=0
 
 for i in {287..351}
 do
-  NEW_DATE=$(date +%m-%d-%Y -d "$DATE + $i day")
-  echo "NEW_DATE: $NEW_DATE"
-  ./prepare_dataset.py --date $NEW_DATE --graph_type ws &
+  CURR_DATE=$(date +%m-%d-%Y -d "$DATE + $i day")
+  echo "CURR_DATE: $CURR_DATE"
+  ./prepare_dataset.py --date $CURR_DATE --graph_type ws &
 
   bgTask=$((bgTask+1))
   
