@@ -401,10 +401,9 @@ def fix_metrics_values(jhu_csse_path, main_df, curr_date_str):
         # sys.exit(1)
 
         if state_name not in dict_states_new_total_active.keys():
-            # if state_name is new, then initialize 
             dict_states_new_total_active[state_name] = 0
-        else:
-            dict_states_new_total_active[state_name] += fips_new_active
+        
+        dict_states_new_total_active[state_name] += fips_new_active
 
     # calculate ratios
     dict_ratio_state_active = {}

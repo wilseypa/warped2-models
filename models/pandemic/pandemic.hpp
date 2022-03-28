@@ -264,10 +264,16 @@ public:
         // ind_transmissibility_arr > CONFIG->transmissibility_.size()
 
         if (CONFIG->transmissibility_.size() == 1) {
+
+            // dynamic_transmissibility_ = static_cast<double>(CONFIG->transmissibility_[0] - 1) / (timestamp / 24);
+ 
             double exponent = (double) -1 * (timestamp / 24);
             dynamic_transmissibility_ = CONFIG->transmissibility_[0] * pow(2.71828, exponent);
         } else {
-            
+            // use value from the transmissibility_[] array as is; if array length is less than
+            // the sim runtime in days, then the last index value will be used for all further days
+            // NOTE: also, if simulating for just 1 day and a specific transmissibility value is desired,
+            // use an array of length 2 with the desired value in index [0] 
             int tempInd = static_cast<int>(timestamp / 24);
             assert(tempInd >= 1);
             size_t ind_transmissibility_arr = tempInd - 1;

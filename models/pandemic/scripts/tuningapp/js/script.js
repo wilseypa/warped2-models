@@ -28,6 +28,8 @@ document.addEventListener("DOMContentLoaded", function() {
                 }, 'transmissibility':{
                     'ifchecked':document.getElementById('transmissibility').checked,
                     'value':document.getElementById('transmissibilityval').value
+                }, 'tune_transmissibility_flag' :{
+                    'ifchecked':document.getElementById('tune_transmissibility_flag').checked                    
                 }, 'exposed_confirmed_ratio':{
                     'ifchecked':document.getElementById('exposed_confirmed_ratio').checked,
                     'value':document.getElementById('exposed_confirmed_ratioval').value

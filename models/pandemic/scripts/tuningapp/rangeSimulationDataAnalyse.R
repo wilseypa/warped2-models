@@ -6,9 +6,13 @@ library(uuid)
 library(svglite) # adding this
 library(scales)
 library(jsonlite)
+library(Metrics)
 
 # print working directory
 getwd()
+
+plot_src_data_dirpath <- "./plotSourceData"
+metrics_src_filepath <- paste(plot_src_data_dirpath, "/", "metrics", sep='')
 
 # needed for ggplot
 xf <- c("Confirmed(simulated)", "Active(simulated)", "Deaths(simulated)", 
@@ -40,7 +44,7 @@ currSimDir <- basename(getwd())
 dir.create(file.path("../../plotImages", currSimDir), showWarnings = FALSE)
 
 # first copy the metrics file to plots dir (that gets synced to remote)
-file.copy(from="./plotSourceData/metrics", to=paste("../../plotImages/", currSimDir, "/", "configParams.txt", sep=''), 
+file.copy(from=metrics_src_filepath, to=paste("../../plotImages/", currSimDir, "/", "configParams.json", sep=''), 
           overwrite = TRUE,
           recursive = FALSE,
           copy.mode = TRUE)
@@ -49,7 +53,7 @@ file.copy(from="./plotSourceData/metrics", to=paste("../../plotImages/", currSim
 US_fips_county_name_df <- read.csv("../../US_counties_population_latLong.csv", header=TRUE)
 US_fips_county_name_df$FIPS <- as.character(US_fips_county_name_df$FIPS)
 
-dirs_to_plot <- grep('.+', list.dirs("./plotSourceData/", full.names = FALSE), value=TRUE)
+dirs_to_plot <- grep('.+', list.dirs(plot_src_data_dirpath, full.names = FALSE), value=TRUE)
 
 
 
@@ -60,10 +64,10 @@ suppressWarnings(rm(tblitydata))
 suppressWarnings(rm(row))
 suppressWarnings(rm(newrow))
 
-jsondata <- fromJSON("./plotSourceData/metrics")
+jsondata <- fromJSON(metrics_src_filepath)
 tblity_arr <- jsondata$paramsUsed$disease_model$transmissibility
 
-actualUSdata <- read.csv("./plotSourceData/US/actual.csv", header = TRUE)
+actualUSdata <- read.csv(paste(plot_src_data_dirpath, "/", "US/actual.csv", sep=''), header = TRUE)
 actualUSdata$Date <- as.Date(actualUSdata$Date, format="%m-%d-%Y")
 
 
@@ -119,24 +123,25 @@ pt2 <- ggplot(tblitydata, aes(x=Date,y=value,color=variable)) +
                     minor_breaks = list_date_breaks,
                     date_labels = "%d %b %Y")
 
-ggsave(paste("../../plotImages/", currSimDir, "/", "transmissibility_curve.svg", sep=''), width = 6, height = 6, units = "in", plot=pt2)
-ggsave(paste("../../plotImages/", currSimDir, "/", "transmissibility_curve.pdf", sep=''), width = 6, height = 6, units = "in", plot=pt2)
+ggsave(paste("../../plotImages/", currSimDir, "/", "transmissibility_curve.svg", sep=''), width = 6, height = 6,
+       units = "in", plot=pt2)
+ggsave(paste("../../plotImages/", currSimDir, "/", "transmissibility_curve.pdf", sep=''), width = 6, height = 6,
+       units = "in", plot=pt2)
 
-
-# plot disease values in each data directory
+# now, plot disease values in each data directory inside plotSourceData/
 for (dir in dirs_to_plot) {
   print(paste("plotting", dir, "..."))
   
-  actual_data_filename <- paste("./plotSourceData/", dir, "/actual.csv", sep='')
-  simulated_data_filename <- paste("./plotSourceData/", dir, "/simulated.csv", sep='')
-
+  actual_data_filename <- paste(plot_src_data_dirpath, "/", dir, "/", "actual.csv", sep='')
+  simulated_data_filename <- paste(plot_src_data_dirpath, "/", dir, "/", "simulated.csv", sep='')
+  
   # delete if existing
   suppressWarnings(rm(newdata))
   suppressWarnings(rm(newrow))
   suppressWarnings(rm(actual))
   suppressWarnings(rm(simulated))
   
-  # create empty DFs
+  # create empty DFs, to do what???
   newdata <- data.frame(Date=as.Date(character()),
                         Disease_metric=factor(levels=xf),
                         value=integer())        
@@ -240,6 +245,29 @@ for (dir in dirs_to_plot) {
 
   ggsave(paste("../../plotImages/", currSimDir, "/", plotname, ".svg", sep=''), width = 6, height = 6, units = "in", plot=pt1)
   ggsave(paste("../../plotImages/", currSimDir, "/", plotname, ".pdf", sep=''), width = 6, height = 6, units = "in", plot=pt1)
+  
+  # calc MAE, MAPE b/w equal length values
+  length_values = min(length(actual$Date), length(simulated$Date))
+
+  mae_Confirmed = mae(head(actual$Confirmed, length_values), head(simulated$Confirmed, length_values))
+  mape_Confirmed = mape(head(actual$Confirmed, length_values), head(simulated$Confirmed, length_values))
+
+  mae_Deaths = mae(head(actual$Deaths, length_values), head(simulated$Deaths, length_values))
+  mape_Deaths = mape(head(actual$Deaths, length_values), head(simulated$Deaths, length_values))
+
+  mae_Recovered = mae(head(actual$Recovered, length_values), head(simulated$Recovered, length_values))
+  mape_Recovered = mape(head(actual$Recovered, length_values), head(simulated$Recovered, length_values))
+
+  mae_Active = mae(head(actual$Active, length_values), head(simulated$Active, length_values))
+  mape_Active = mape(head(actual$Active, length_values), head(simulated$Active, length_values))
+
+  json_df <- data.frame(length_values, mae_Confirmed, mape_Confirmed, mae_Deaths, mape_Deaths, mae_Recovered,
+                        mape_Recovered,
+                        mae_Active,
+                        mape_Active)
+
+  write(toJSON(json_df), paste("../../plotImages/", currSimDir, "/", "stats.json", sep=''))
+  # print(paste("mae:", mae()))
 }
 
 
