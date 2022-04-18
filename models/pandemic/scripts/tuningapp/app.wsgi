@@ -463,6 +463,11 @@ def processFilesForDateRange(formatted_or_simulated, from_date, end_date,
 
 def tweak_infile(injsonfilepath, reqdata, tweakedjsoninfilepath):
     """
+    create final formatted input json file containing user supplied config values
+    from the UI
+
+    TODO: is the functionality similar to pandemic_sim_driver.py :: tweak_params_sim_inputfile()
+    can that be reused here ??
     """
     baseinfileobj = open(injsonfilepath, 'r')
     basejsondata = json.load(baseinfileobj)
@@ -478,7 +483,7 @@ def tweak_infile(injsonfilepath, reqdata, tweakedjsoninfilepath):
     print("request data transmissibility:", reqdata['transmissibility']['value'])
 
     if reqdata['transmissibility']['ifchecked']:
-        # basejsondata['disease_model']['transmissibility'] = float(reqdata['transmissibility']['value'])
+        # the text input should be an array
         basejsondata['disease_model']['transmissibility'] = json.loads(reqdata['transmissibility']['value'])
         
     if reqdata['exposed_confirmed_ratio']['ifchecked']:

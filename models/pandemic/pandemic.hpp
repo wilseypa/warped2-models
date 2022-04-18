@@ -266,9 +266,13 @@ public:
         if (CONFIG->transmissibility_.size() == 1) {
 
             // dynamic_transmissibility_ = static_cast<double>(CONFIG->transmissibility_[0] - 1) / (timestamp / 24);
+            // exponential decay fn
+            //double exponent = (double) -1 * (timestamp / 24);
+            // dynamic_transmissibility_ = CONFIG->transmissibility_[0] * pow(2.71828, exponent);
  
-            double exponent = (double) -1 * (timestamp / 24);
-            dynamic_transmissibility_ = CONFIG->transmissibility_[0] * pow(2.71828, exponent);
+            // polynomial fn
+            dynamic_transmissibility_ = static_cast<double>(CONFIG->transmissibility_[0] - 1) / (timestamp / 24);
+
         } else {
             // use value from the transmissibility_[] array as is; if array length is less than
             // the sim runtime in days, then the last index value will be used for all further days

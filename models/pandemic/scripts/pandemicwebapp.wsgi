@@ -28,6 +28,7 @@ TWEAKFILES_DIR_PATH = "./tweakfiles/"
 workerPool = None
 initCalled = False
 jobstatus = {}
+# create directory explicitly ??
 sim_result_files_dir = 'simresults/'  # TODO remove slash /
 taskCount = None
 
@@ -57,16 +58,27 @@ def init():
 def create_paramtweaks_file(reqdata):
     """
     :param reqdata:
-    :return:
+    :return: list of tweaked json infile paths
     """
 
     # helper function
     def get_tweak_dict():
         """
+        TODO: what is happening here ???
         :return:
         """
         # print("paramRollingCounter", paramRollingCounter)
         dictTweak = {}
+
+        # not sure how this works:
+        # >>> d1 = {}
+        # >>> d2 = d1
+        # >>> d2["a"] = 1
+        # >>> d2
+        # {'a': 1}
+        # >>> d1
+        # {'a': 1}
+
         for item in paramRollingCounter:
             # copy reference
             dictTemp = dictTweak
@@ -325,6 +337,8 @@ def create_paramtweaks_file(reqdata):
     tweakfilesobj = []
 
     tweakFileIndex = 0
+
+    # TODO explain!!
     while True:
         # create as many tweakfiles as 'taskCount' value (roughly, as many cpu cores)
         if tweakFileIndex > len(tweakfiles) - 1:
@@ -348,7 +362,7 @@ def create_paramtweaks_file(reqdata):
 
     return tweakfiles
 
-
+# to facilitate downloading of files (which files??) from UI
 @route('/' + sim_result_files_dir + '<filename:re:.*>')
 def downloadsimresultfile(filename):
     return static_file(filename, root=sim_result_files_dir, download=True)
@@ -395,7 +409,7 @@ def simulate_func(dictreq):
     """
     tweakfiles = create_paramtweaks_file(dictreq)  # expensive function
 
-    print("tweakfiles", tweakfiles)
+    # print("tweakfiles", tweakfiles)
     # sys.exit(1)
 
     listDistmetrics = []

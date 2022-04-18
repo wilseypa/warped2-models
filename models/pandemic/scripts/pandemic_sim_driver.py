@@ -305,9 +305,12 @@ def getDictTweakableDiseaseParams(dictJson):
 
 def tweak_params_sim_inputfile(dictParamTweaks, baseSimInputJsonFile, tweakedSimInputJsonFile):
     """
+    :return: 
     """
+    # output value is list!
     dictFlattened = flatten_dict(dictParamTweaks)
-
+    # print("\n\ndictFlattened:", dictFlattened)
+    
     baseSimInputJsonFileobj = open(baseSimInputJsonFile, 'r')
     jsonData = json.load(baseSimInputJsonFileobj)
     baseSimInputJsonFileobj.close()
@@ -317,20 +320,34 @@ def tweak_params_sim_inputfile(dictParamTweaks, baseSimInputJsonFile, tweakedSim
         newVal = element[1]
 
         jsondata2 = jsonData
+        # iterate till second last index
         for key in listKeys[:-1]:
+            # print("key:", key)
             jsondata2 = jsondata2[key]
 
         lastKey = listKeys[-1]
-        jsondata2[lastKey] = newVal
+
+        # HACK: "transmissibility" is needed in array format by pandemic_sim
+        if lastKey == "transmissibility":
+            jsontemp = jsondata2[lastKey]
+            jsondata2[lastKey] = [newVal, newVal]
+        else:
+            jsondata2[lastKey] = newVal
 
     with open(tweakedSimInputJsonFile, "w") as jsonFile:
         json.dump(jsonData, jsonFile)
 
+    # HACK: revert
+    jsonData["disease_model"]["transmissibility"] = jsonData["disease_model"]["transmissibility"][0]
+
+    
     return getDictTweakableDiseaseParams(jsonData)
 
 
 def abbreviate_dict_terms(dict_var):
     """
+    TODO: what does this do ???
+    not being used ??
     """
     abbr_dict = {
         "diseaseParam": "dp",
@@ -580,7 +597,7 @@ def trigger():
                 simResultStr = ""
 
             try:
-                os.remove(simStartDateInputJsonTweakedFile)
+                # os.remove(simStartDateInputJsonTweakedFile)
                 os.remove(simOutJsonFile)
             except OSError:
                 pass
