@@ -20,7 +20,20 @@ app.use(express.json({}));	//NEEDED FOR req.body TO PRINT
 const database = new Datastore('database.db');
 database.loadDatabase();
 
-var session;
+var sessions = new Map();
+setInterval(function(){
+	const iter = sessions[Symbol.iterator]();
+
+	for (var [key, value] of iter) {
+		let currentCount = value.count;
+		if (currentCount == 0) {
+			sessions.delete(key);
+		} else {
+			sessions.set(key, {count: currentCount-1});
+			// console.log(sessions);
+		}
+	}
+}, 3000);	//Time needs to be the same as time on loginHandler.js setInterval() func
 
 function formatDate(dateValue, dateFormat) {
         let year = dateValue.getFullYear();
@@ -54,14 +67,17 @@ function getHash(ip) {
     return hash;
 }
 
-app.get('/loadHtml/:fileName', (request, response) => {
+app.get('/loadHtml/:fileName/:session', (request, response) => {
 	// var filePath = path.join(__dirname + '../../../test.html');
 	// response.sendFile(filePath);
-
-	if (session != undefined) {
-		// console.log(session);
-		const fileContents = getHtmlTemplate('../../html/' + request.params.fileName);
-		response.status(200).send({response: fileContents});
+	if (request.params.session != undefined) {
+		if (sessions.has(request.params.session)) {
+			// console.log(session);
+			const fileContents = getHtmlTemplate('../../html/' + request.params.fileName);
+			response.status(200).send({response: fileContents});
+		} else {
+			response.status(401).send({response: "failed"});
+		}
 	} else {
 		response.status(401).send({response: "failed"});
 	}
@@ -74,18 +90,31 @@ app.get('/login/:username/:password/:ip', (request, response) => {
 	// console.log(password);
 
 	if (username == 'admin' && password == 'warped2') {
-		console.log(session);
-		session = getHash(request.params.ip);
-		console.log(session);
+		// console.log(sessions);
+		let userSession = getHash(request.params.ip);
+		sessions.set(userSession, {count: 5});
+		// console.log(sessions);
 		// console.log('Good');
 		const fileContents = getHtmlTemplate('../../html/' + "config.html");
-		response.status(200).send({response: "success", html: "config.html"});
+		response.status(200).send({response: "success", html: "config.html", session: userSession});
 
 	}
 	else {
 		// console.log('Bad');
-		session = undefined;
+		// session = undefined;
 		response.status(401).send({response: "failed", html: ""});
+	}
+});
+
+app.get('/sessionManager/:session', (request, response) => {
+	if (sessions.has(request.params.session)) {
+		let currentCount = sessions.get(request.params.session).count;
+		// console.log(currentCount);
+		sessions.set(request.params.session, {count: currentCount+1});
+		// console.log(sessions);
+		response.status(200).send({response: "success"});
+	} else {
+		response.status(401).send({response: "failed"});
 	}
 });
 
@@ -96,6 +125,13 @@ app.get('/getHash/:ip', (request, response) => {
 	response.status(200).send({string: hash});
 });
 
+app.get('/getHashFromSession/:session', (request, response) => {
+	dateTimeString = new Date().toLocaleString()
+    let hashInput = request.params.session + " " + dateTimeString;
+    let hash = crypto.createHash('md5').update(hashInput).digest('hex');
+	response.status(200).send({jobID: hash});
+});
+
 app.get('/isDevEnv', (request, response) => {
 	const envPath = path.join(__dirname, '../../../../../../../');
 
@@ -104,43 +140,86 @@ app.get('/isDevEnv', (request, response) => {
 });
 
 app.post('/callSimulate', (req, res) => {
-  console.log(typeof(JSON.stringify(req.body)));
-  console.log(JSON.stringify(req.body));
+//   console.log(typeof(JSON.stringify(req.body)));
+	// console.log(JSON.stringify(req.body));
 
+	// const options = {
+	// 	method: 'post',
+	// 	url: 'http://localhost:8081/simulate',
+	// 	headers: {'Content-Type': 'application/json;charset=UTF-8'},
+	// 	// auth: {username: "scooby", password: "doobyd00"},
+	// 	data: {
+	// 		"jobid":"xshe7i9ieg2iy90yrb9ow9343",
+	// 		"start_date":{"value":"07-01-2020"},
+	// 		"runtime_days":{"value":"4"},
+	// 		"actualplot_end_date":{"value":""},
+	// 		"transmissibility":{"ifchecked":false,"value":"2.0"},
+	// 		"exposed_confirmed_ratio":{"ifchecked":false,"value":""},
+	// 		"mean_incubation_duration_in_days":{"ifchecked":false,"value":""},
+	// 		"mean_infection_duration_in_days":{"ifchecked":false,"value":""},
+	// 		"mortality_ratio":{"ifchecked":false,"value":""},
+	// 		"update_trig_interval_in_hrs":{"ifchecked":false,"value":""},
+	// 		"graph_type":{"ifchecked":false,"value":"Watts-Strogatz"},
+	// 		"graph_params":{"ifchecked":false,"K_val":"","beta_val":""},
+	// 		"diffusion_trig_interval_in_hrs":{"ifchecked":false,"value":""},
+	// 		"avg_transport_speed":{"ifchecked":false,"value":""},
+	// 		"max_diffusion_cnt":{"ifchecked":false,"value":""},
+	// 		"fipslist":{"value":""}
+	// 	}//,
+	// 	// transformRequest: [(data, headers) => {
+	// 	//   // transform the data
+	  
+	// 	//   return data;
+	// 	// }]
+	//   };
+
+	var postParams = req.body;
 	const options = {
-		url: 'http://localhost:8082/simulate',
-		form: { start_date:{value:"07-22-2020"},
-				runtime_days:{value:"1"},
-				transmissibility:{ifchecked:true,value:"2.2"},
-				exposed_confirmed_ratio:{ifchecked:false,value:"0.00"},
-				mean_incubation_duration_in_days:{ifchecked:false,value:"2.2"},
-				mean_infection_duration_in_days:{ifchecked:false,value:"2.3"},
-				mortality_ratio:{ifchecked:false,value:"0.05"},
-				update_trig_interval_in_hrs:{ifchecked:false,value:"24"},
-				graph_type:{ifchecked:false,value:"Watts-Strogatz"},
-				graph_params:{ifchecked:false,K_val:"8",beta_val:"0.1"},
-				diffusion_trig_interval_in_hrs:{ifchecked:false,value:"48"},
-				avg_transport_speed:{ifchecked:false,value:"100"},
-				max_diffusion_cnt:{ifchecked:false,value:"10"} 
-			}
-	};
-
-	request.post(options, (err, reqRes, body) => {
-		if (err) {
-			res.status(400).send({Error: err});
-			return console.log(err);
-		}
-		console.log(body);
-		res.status(200).send({response: body});
-	});
+		method: 'post',
+		url: 'http://localhost:8081/simulate',
+		headers: {'Content-Type': 'application/json;charset=UTF-8'},
+		// auth: {username: "scooby", password: "doobyd00"},
+		data: req.body
+	  };
+	  
+	  // send the request
+	  axios(options).then(function (response) {
+		//   console.log(response);
+		res.status(200).send({response: response.data.statusmsg});
+	});;
 })
 
-app.get('/callGetstatus', (req, res) => {
-	request('http://localhost:8082/getstatus', { json: true }, (error, response, body) => {
-		if (error) { return console.log(error); }
-		//console.log(body);
-		res.status(200).send({statusmsg: body});
-	});
+app.get('/callGetstatus/:jobID', (req, res) => {
+	// const options = {
+	// 	method: 'post',
+	// 	url: 'http://localhost:8081/getstatus',
+	// 	headers: {'Content-Type': 'application/json;charset=UTF-8'},
+	// 	// auth: {username: "scooby", password: "doobyd00"},
+	// 	data: {
+	// 		"jobid":"xshe7i9ieg2iy90yrb9ow9343"
+	// 	}//,
+	// 	// transformRequest: [(data, headers) => {
+	// 	//   // transform the data
+	  
+	// 	//   return data;
+	// 	// }]
+	//   };
+
+	const options = {
+		method: 'post',
+		url: 'http://localhost:8081/getstatus',
+		headers: {'Content-Type': 'application/json;charset=UTF-8'},
+		// auth: {username: "scooby", password: "doobyd00"},
+		data: {
+			"jobid":req.params.jobID
+		}
+	  };
+	  
+	  // send the request
+	  axios(options).then(function (response) {
+		//   console.log(response.data.statusmsg);
+		  res.status(200).send({statusmsg: response.data});
+	  });
 });
 
 app.get('/send_simulated_data', (request, response) => {
@@ -164,6 +243,39 @@ app.get('/send_simulated_data', (request, response) => {
 		});
 		response.json(responseArray);
 	});
+});
+
+app.get('/getSimulationData/:jobID', (request, response) => {
+
+	// const sim_dec = '12-31-2020.simulated-data.json';
+	// const simJob_path = 'simJob_' + request.params.jobID + '/' + 'simOutfiles/' + '07-23-2020.simulated-data.json';
+	const simJob_path = 'simJob_' + request.params.jobID + '/' + 'simOutfiles';
+	
+	const vivek_path = '/work/vivek/warped2/warped2-models/models/pandemic/scripts/tuningapp/simJobs';
+	const data_folder = path.join(__dirname, '../../../../../../../../../', vivek_path);
+
+	const simJob_folder = path.join(data_folder, simJob_path);
+		
+	var responseArray = [];
+	fs.readdir(simJob_folder, (err, files) => {
+		files.forEach(function(file, index) {
+			//console.log(simJob_folder + '/' + file);
+			let raw_data = fs.readFileSync(simJob_folder + '/' + file);
+			//console.log(raw_data);
+		
+			let parsed_data = JSON.parse(raw_data);
+			parsed_data["date"] = file.split('.')[0];
+			//console.log(parsed_data);
+
+			responseArray.push(parsed_data);
+			//console.log(responseArray.length);
+			if (index == files.length-1) {
+				response.json(responseArray);
+			}
+		});
+	  });
+	//response.json(responseArray);
+
 });
 
 app.get('/send_plot_data', (request, response) => {

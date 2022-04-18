@@ -1,9 +1,143 @@
+// Frontend Globals and Setup
+var startDate = document.getElementById('startDate');
+var endDate = document.getElementById('endDate');
+var isDateRange = document.getElementById('isDateRange');
+
+var tooltip = document.getElementById('tt');
+var color_wheel = ["#ffffcc", "#ffeda0", "#fed976", "#feb24c", "#fd8d3c", "#fc4e2a", "#e31a1c", "#bd0026", "#800026"];
+//var color_wheel = ["#00FF00", "#33FF33", "#66FF66", "#99FF99", "#800026", "#bd0026", "#e31a1c", "#fc4e2a", "#fd8d3c"];
+var percentageArray = new Array(9);
+var colorWheelIndex = 0;
+
+var getstatusTimeout = undefined;
+
+var simulationData = undefined;
+// var simulationDataMeta = {
+//     "count":undefined,
+//     "length":undefined
+// };
+
+// Function for handling javascript and html dates
+function formatDate(dateValue, dateFormat, dateType) {  //this is in both statemanager and map currently
+    var year, month, day;
+    if (dateType == "javascript") {
+        year = dateValue.getFullYear();
+        month = dateValue.getMonth() + 1;
+        day = dateValue.getDate()
+
+        if(month < 10) {
+            month = "0" + month;
+        }
+        if(day < 10) {
+            day = "0" + day;
+        }
+    } else if (dateType == "html") {
+        let dateArray = dateValue.split("-");
+        year = dateArray[0];
+        month = dateArray[1];
+        day = dateArray[2];
+    }
+
+    if(dateFormat == "YYYY-MM-DD") {
+        return year + "-" + month + "-" + day;
+    } else if(dateFormat == "MM-DD-YYYY") {
+        return month + "-" + day + "-" + year;
+    } else {
+        throw "Invalid date format"
+    }
+
+}
+
+function formatSliderDate(MMDDYYYYString) {
+    var months = ["Jan", "Feb", "March", "April", "May", "June", "July", "Aug", "Sept", "Oct", "Nov", "Dec"];
+
+    let targetMonth = MMDDYYYYString.substring(0, 2);
+    targetMonth = months[parseInt(targetMonth)-1];
+    
+    let fullSliderDateString = targetMonth + " " + MMDDYYYYString.substring(3, 5) + ", " + MMDDYYYYString.substring(6, 10);
+
+    return fullSliderDateString;
+}
+
+function setSliderStartEndIndicators() {
+    // var months = ["Jan", "Feb", "March", "April", "May", "June", "July", "Aug", "Sept", "Oct", "Nov", "Dec"];
+
+    let startIndicator = document.getElementById('startDateIndicator');
+    let endIndicator = document.getElementById('endDateIndicator');
+
+    // let startIndicatorMonth = simulationData[0].date.substring(0, 2);
+    // let endIndicatorMonth = simulationData[simulationData.length-1].date.substring(0, 2);
+
+    // startIndicatorMonth = months[parseInt(startIndicatorMonth)-1];
+    // endIndicatorMonth = months[parseInt(endIndicatorMonth)-1];
+
+    // startIndicator.innerHTML = startIndicatorMonth + " " + simulationData[0].date.substring(3, 5) + ", " + simulationData[0].date.substring(6, 10);
+    // endIndicator.innerHTML = endIndicatorMonth + " " + simulationData[simulationData.length-1].date.substring(3, 5) + ", " + simulationData[simulationData.length-1].date.substring(6, 10);
+
+    startIndicator.innerHTML = formatSliderDate(simulationData[0].date);
+    endIndicator.innerHTML = formatSliderDate(simulationData[simulationData.length-1].date);
+}
+
+window.onmousemove = function (e) { //function gets location of mouse for tooltip
+    var x = e.clientX,
+        y = e.clientY - document.getElementById('postSimulationContent').getBoundingClientRect().top;
+    tooltip.style.top = (y + 5) + 'px';
+    tooltip.style.left = (x + 5) + 'px';
+};
+
+// Frontend Basic Functions
+function generateLegend(){
+    for(var i = 0; i < color_wheel.length + 1; i++) {
+        if (i < color_wheel.length) {
+            var legendInnerContainers = document.createElement("div");
+            legendInnerContainers.setAttribute("id", "legendInnerContainer" + i);
+            document.getElementById("legendValues").appendChild(legendInnerContainers);
+        
+            var legendColorEl = document.createElement("div");
+            legendColorEl.setAttribute("id", "legendColor" + i);
+            legendColorEl.setAttribute("class", "legend-fill");
+            document.getElementById("legendInnerContainer" + i).appendChild(legendColorEl);
+        
+            var legendValueEl = document.createElement("div");
+            legendValueEl.setAttribute("id", "legendValue" + i);
+            legendValueEl.setAttribute("class", "legend-value");
+            document.getElementById("legendInnerContainer" + i).appendChild(legendValueEl);
+            
+            document.getElementById('legendColor' + i).style.backgroundColor = color_wheel[i];
+            document.getElementById('legendValue' + i).innerHTML = 0 + "%";
+        }
+    
+        if (i == color_wheel.length) {
+            var legendInnerContainers = document.createElement("div");
+            legendInnerContainers.setAttribute("id", "legendInnerContainer" + i);
+            document.getElementById("legendValues").appendChild(legendInnerContainers);
+        
+            var legendColorEl = document.createElement("div");
+            legendColorEl.setAttribute("id", "legendColor" + i);
+            legendColorEl.setAttribute("class", "legend-fill");
+            document.getElementById("legendInnerContainer" + i).appendChild(legendColorEl);
+        
+            var legendValueEl = document.createElement("div");
+            legendValueEl.setAttribute("id", "legendValue" + i);
+            legendValueEl.setAttribute("class", "legend-value");
+            document.getElementById("legendInnerContainer" + i).appendChild(legendValueEl);
+            
+            document.getElementById('legendColor' + i).style.backgroundColor = "black";
+            document.getElementById('legendValue' + i).innerHTML = 0 + "%";
+    
+            let selectString = "#legendValue" + i;
+            let htmlString = "No Data"
+            d3.select(selectString).html(htmlString);
+        }
+    }
+}
+
 generateLegend();
 
 // getStatus();
 
-document.getElementById('map').style.display = "none";
-document.getElementById('legend').style.display = "none";
+// document.getElementById('map').style.display = "none";
+// document.getElementById('legend').style.display = "none";
 
 var margin = { top: 0, left: 0, right: 0, bottom: 0},
     height = 500 - margin.top - margin.bottom,
@@ -18,9 +152,14 @@ var svg = d3.select("#map")
 
 var files = ["../us.json"];
 var promises = [];
-//NEED ARRAY OF STRINGS WITH EACH DATE TO BE READ IN THROUGH JSON FUNCTION
-getData("07-22-2020", "07-22-2020").then((data) => {
-    covidStats = data[0][0];
+
+getSimulationData().then((data) => {
+    simulationData = data;
+
+    document.getElementById('dateSlider').max = simulationData.length - 1;
+    setSliderStartEndIndicators();
+
+    covidStats = data[0];
     files.forEach(function(url) {
         promises.push(d3.json(url))
     });
@@ -157,158 +296,82 @@ var path = d3.geoPath()
     .projection(projection);
 
 /* EVENT FUNCTIONS */
-//Plot Button Press
-d3.select("#plotButton").on("click", function() {
+//Slider Value Change
+d3.select("#dateSlider").on("change", function() {
     loadNewData();
-
-    setTimeout(function(){ 
-        document.getElementById('mapStatCheckboxes').style.display = "block";
-        document.getElementById('map').style.display = "block";
-        document.getElementById('legend').style.display = "block";
-        d3.select("#plotButton").attr("disabled", true);
-        // document.body.style.backgroundColor = "lightskyblue";
-    }, 50);
+});
+d3.select("#dateSlider").on("input", function() {
+    document.getElementById('tt').innerHTML = formatSliderDate(simulationData[document.getElementById('dateSlider').value].date);
+});
+//Slider Focus
+d3.select("#dateSlider").on("mouseover", function() {
+    d3.select("#tt").style("display", "inline-block");
+    document.getElementById('tt').innerHTML = formatSliderDate(simulationData[document.getElementById('dateSlider').value].date);
+});
+d3.select("#dateSlider").on("mouseout", function() {
+    d3.select("#tt").style("display", "none");
+    document.getElementById('tt').innerHTML = "";
 });
 
-//Minimize_Maximize Button Press
-d3.select("#minMaxMapControls").on("click", function() {
-    var editConfigHtml = `<input type="button" id="editConfig" value="Edit Config">`;
-    var labelHtml = `<h3 id="tempLabel" style="margin: 0px;">Map Controls</h3>`;
-    if(document.getElementById('minMaxControlsContent').style.display == "none") {
-        maximizeMapControlContent("minMaxControlsContent", "0.15");
-        document.getElementById('minMaxMapControls').innerHTML = "&minus;";
-        // fadeOutDisplay("tempLabel", "0.175");
-        // document.getElementById('editConfigBtnContainer').innerHTML = editConfigHtml;
-        // fadeInDisplay("editConfig", "0.175");
-        
+function decrementSlider() {
+    let prevVal = document.getElementById('dateSlider').value;
+    document.getElementById('dateSlider').value = parseInt(prevVal) - 1;
+}
+function incrementSlider() {
+    let prevVal = document.getElementById('dateSlider').value;
+    document.getElementById('dateSlider').value = parseInt(prevVal) + 1;
+}
 
-    } else {
-        minimizeMapControlsContent("minMaxControlsContent", "0.15");
-        document.getElementById('minMaxMapControls').innerHTML = "&plus;";
-        // fadeOutDisplay("editConfig", "0.175");
-        // document.getElementById('editConfigBtnContainer').innerHTML = labelHtml;
-        // fadeInDisplay("tempLabel", "0.175");
+/* Map Button Controls */
+// Prevents weird behavior
+function clearAutoAdvanceIntervals() {
+    if (reverseIntervalId != undefined) {
+        clearInterval(reverseIntervalId);
+        reverseIntervalId = undefined;
     }
-});
+    if (forwardIntervalId != undefined) {
+        clearInterval(forwardIntervalId);
+        forwardIntervalId = undefined;
+    }
+}
+
+function getAutoAdvanceSpeed() {
+    let speed = document.getElementById('autoIncrementSpeed').value;
+    speed = parseInt(speed);
+    return speed;
+}
 
 // Increment/Decrement Button Press
-d3.selectAll(".arrow").on("click", function(){
-    //get which button pressed
-    var direction = 0
-    if(d3.select(this)._groups[0][0].id == "decrementButton"){
-        direction = 0
-    } else if(d3.select(this)._groups[0][0].id == "incrementButton"){
-        direction = 1
-    } else {
-        throw "unknown button pressed"
-    }
-
-    // Increment dates appropriately
-    var startDateValue = new Date(startDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
-
-    if(document.getElementById('isDateRange').checked){
-        var startDateValue = new Date(startDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
-        var endDateValue = new Date(endDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
-        let timeDiff = endDateValue.getTime() - startDateValue.getTime();
-
-        if(direction) {
-            startDateValue = startDateValue.setTime(startDateValue.getTime() + timeDiff);
-            endDateValue = endDateValue.setTime(endDateValue.getTime() + timeDiff);
-        } else {
-            startDateValue = startDateValue.setTime(startDateValue.getTime() - timeDiff);
-            endDateValue = endDateValue.setTime(endDateValue.getTime() - timeDiff);
-        }
-        startDateValue = new Date(startDateValue)
-        endDateValue = new Date(endDateValue)
-        startDate.value = formatDate(startDateValue, "YYYY-MM-DD", "javascript");
-        endDate.value = formatDate(endDateValue, "YYYY-MM-DD", "javascript");
-
-    } else {
-        if(direction){
-            startDateValue.setDate(startDateValue.getDate() + 1);
-        } else {
-            startDateValue.setDate(startDateValue.getDate() - 1);
-        }
-
-        startDate.value = formatDate(startDateValue, "YYYY-MM-DD", "javascript");
-    }
-
-    //load new data for new dates
+d3.select("#decrementButton").on("click", function(){
+    decrementSlider();
+    loadNewData();
+});
+d3.select("#incrementButton").on("click", function(){
+    incrementSlider();
     loadNewData();
 });
 
-// Date Range New Input
-var timelapseToggle = 1;
-var intervalId;
-d3.select("#timelapseButton").on("click", function() {
-    if(document.getElementById('map').style.display == "none") {
-        document.getElementById('mapStatCheckboxes').style.display = "block";
-        document.getElementById('map').style.display = "block";
-        document.getElementById('legend').style.display = "block";
-    }
-
-    if(timelapseToggle){
-        intervalId = setInterval(function() {
-            document.getElementById("incrementButton").click();
-        }, 1500);
-        timelapseToggle = 0;
-
-        var timelapseEl = document.createElement("div");
-        timelapseEl.setAttribute("id", "timelapseAnimation");
-        document.getElementById("timelapseButton").appendChild(timelapseEl);
-        let timelapseHtml = 
-        `<div class="timelapseIndicator"></div>`;
-        document.getElementById("timelapseAnimation").innerHTML = timelapseHtml;
-        document.getElementById("timelapseAnimation").style.position = "absolute";
-        document.getElementById("timelapseAnimation").style.display = "inline-block";
-        let top = document.getElementById("timelapseButton").offsetTop + document.getElementById("timelapseButton").offsetHeight/2 - 2.5;
-        let left = document.getElementById("timelapseButton").offsetLeft + document.getElementById("timelapseButton").offsetWidth/2 - document.getElementById("timelapseAnimation").offsetWidth/2 + 0.45;
-        document.getElementById("timelapseAnimation").style.top = top + "px";
-        document.getElementById("timelapseAnimation").style.left = left + "px";
-    } else {
-        clearInterval(intervalId);
-        document.getElementById('timelapseAnimation').remove();
-        timelapseToggle = 1;
-    }
-    //needs a stopping function when at end of data
+// Pause Button Press
+d3.select("#pauseButton").on("click", function() {
+    clearAutoAdvanceIntervals();
 });
 
-// Date Range New Input
-d3.selectAll(".dateInput").on("input", function() {
-    //get which button pressed
-    var startOrEnd = 0
-    if(d3.select(this)._groups[0][0].id == "startDate"){
-        startOrEnd = 0
-    } else if(d3.select(this)._groups[0][0].id == "endDate"){
-        startOrEnd = 1
-    } else {
-        throw "unknown button pressed"
-    }
+// Reverse/Forwards Button Press
+var reverseIntervalId;
+d3.select("#reverseButton").on("click", function() {
+    clearAutoAdvanceIntervals();
 
-    // if(startOrEnd) {    //end date change
-
-    // } else {    //start date change
-
-    // }
-    
-    document.getElementById('plotButton').disabled = false;
+    reverseIntervalId = setInterval(function() {
+        document.getElementById("decrementButton").click();
+    }, getAutoAdvanceSpeed()*1000);
 });
+var forwardIntervalId;
+d3.select("#forwardButton").on("click", function() {
+    clearAutoAdvanceIntervals();
 
-// Range? Checkbox Toggle
-d3.select("#isDateRange").on("click", function() {
-    if(isDateRange.checked){
-        document.getElementById('endDate').disabled = false;
-        var endDateValue = new Date(startDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
-        endDateValue = endDateValue.setDate(endDateValue.getDate() + 1);
-        endDateValue = new Date(endDateValue);
-        endDate.value = formatDate(endDateValue, "YYYY-MM-DD", "javascript");
-
-    } else {
-        document.getElementById('endDate').disabled = true;
-        //endDate.value = undefined;
-    }
-
-    document.getElementById('plotButton').disabled = false;
+    forwardIntervalId = setInterval(function() {
+        document.getElementById("incrementButton").click();
+    }, getAutoAdvanceSpeed()*1000);
 });
 
 
@@ -324,73 +387,14 @@ function updateMapDateValue(startDateParam, endDateParam) {
 
 // Grabs Dates from Input and Plots to D3 Map
 function loadNewData() {
-    if (isDateRange.checked) {    //load all data from files across range
-        let startDateValue = new Date(startDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
-        let endDateValue = new Date(endDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
-        let timeDiffInDays = (endDateValue.getTime() - startDateValue.getTime())/(1000*60*60*24);
+    updateMapDateValue(simulationData[document.getElementById('dateSlider').value].date);
 
-        var startDateParam = formatDate(startDateValue, "MM-DD-YYYY", "javascript");
-        var endDateParam = formatDate(endDateValue, "MM-DD-YYYY", "javascript");
-        
-        updateMapDateValue(startDateParam, endDateParam);
-
-        //console.log(startDateParam + "   " + endDateParam);
-        var covidStatsAPIArray;
-        getData(startDateParam, endDateParam).then((data) => {
-            covidStatsAPIArray = data;
-            //console.log(covidStatsAPIArray);
-
-            var locationsLength = covidStats.locations.length;
-            var locationsDataLength = covidStats.locations[0].length;
-
-            for (var i = 0; i < locationsLength; i++) {
-                for(var n = 0; n < locationsDataLength; n++) {
-                    if(n == 6 || n == 7 || n == 8 || n == 9) {
-                        covidStats.locations[i][n] = 0;
-                    }
-                }
-            }
-
-            covidStatsAPIArray.forEach(function (value, index) { // (item, index)
-                locationsLength = covidStatsAPIArray[index][0].locations.length;
-                locationsDataLength = covidStatsAPIArray[index][0].locations[0].length;
-
-                for (var i = 0; i < locationsLength; i++) {
-                    //console.log(covidStats.locations[i])
-                    for (var n = 0; n < locationsDataLength; n++) {
-                        if (n == 6 || n == 7 || n == 8 || n == 9) {
-                            covidStats.locations[i][n] += covidStatsAPIArray[index][0].locations[i][n];
-                        } /*else {    //ELSE NOT NEEDED BC OF NEXT IF STATEMENT
-                                covidStats.locations[i][n] = covidStatsAPIArray[index][0].locations[i][n];
-                            }*/
-                    }
-                }
-
-                if ((index) == timeDiffInDays) {   //final file iteration
-                    for (var i = 0; i < locationsLength; i++) {
-                        for (var n = 0; n < locationsDataLength; n++) {
-                            if (n != 6 && n != 7 && n != 8 && n != 9) {
-                                covidStats.locations[i][n] = covidStatsAPIArray[index][0].locations[i][n];  //get stats (population) of latest date in range
-                            }
-                        }
-                    }
-                    rePlot(covidStats);
-                }
-            })
-        })
-
-    } else {
-        let startDateValue = new Date(startDate.value + "T00:00:00");    //T00:00:00 is required for local timezone
-        var startDateParam = formatDate(startDateValue, "MM-DD-YYYY", "javascript");
-
-        updateMapDateValue(startDateParam, endDateParam);
-
-        //console.log(startDateParam);
-        getData(startDateParam, startDateParam).then((data) => {
-            covidStats = data[0][0];
-            rePlot(covidStats);
-        })
+    if ( (document.getElementById('dateSlider').value == 0) || (document.getElementById('dateSlider').value == simulationData.length-1) ) {
+        clearAutoAdvanceIntervals();
     }
+    
+    covidStats = simulationData[document.getElementById('dateSlider').value];
+    rePlot(covidStats);
 };
 
 // The Plotting of Colors to Each County    -----------DYNAMIC MAX PERCENTAGE BUT DOESNT WORK WELL BECAUSE OF OUTLIERS....---------

@@ -22,10 +22,25 @@ async function getClientIP() {
     ip = ipObj.ip;
 }
 async function loadHtml(fileName, parentElement) {
-    const response = await fetch('/loadHtml/' + fileName);
+    var session = sessionStorage.getItem("session");
+    const response = await fetch('/loadHtml/' + fileName + "/" + session);
     const data = await response.json();
     // console.log(data.response);
     document.getElementById(parentElement).innerHTML = data.response;
+    return data;
+}
+async function sessionManager() {
+    var session = sessionStorage.getItem("session");
+    const response = await fetch('/sessionManager/' + session);
+    const data = await response.json();
+    // console.log(data.response);
+    return data;
+}
+async function getHashFromSession() {
+    var session = sessionStorage.getItem("session");
+    const response = await fetch('/getHashFromSession/' + session);
+    const data = await response.json();
+    // console.log(data.response);
     return data;
 }
 async function sendData() {
@@ -62,7 +77,8 @@ async function callSimulate(simulateJson) {
     return data;
 }
 async function callGetstatus() {
-    const response = await fetch('/callGetstatus');
+    var jobID = sessionStorage.getItem("jobID");
+    const response = await fetch('/callGetstatus/' + jobID);
     const data = await response.json();
     //console.log(data);
     return data;
@@ -81,6 +97,13 @@ async function send_actual_data() {
 }
 async function send_plot_data() {
     const response = await fetch('/send_plot_data');
+    const data = await response.json();
+    console.log(data);
+    return data;
+}
+async function getSimulationData() {
+    var jobID = sessionStorage.getItem("jobID");
+    const response = await fetch('/getSimulationData/' + jobID);
     const data = await response.json();
     console.log(data);
     return data;
@@ -107,6 +130,8 @@ function loadJavascriptSource(filePathArray) {
         return false;
     }
 }
+
+sessionStorage.clear();
 
 isDevEnvFunc();//.then(function() {});
 getClientIP();

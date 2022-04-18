@@ -20,6 +20,9 @@ d3.select("#submitLogin").on("click", function() {
     } else {
 
         requestLogin(username, password, ip).then(function(response) {
+            sessionStorage.setItem("session", response.session);
+            setInterval(function(){ sessionManager(); }, 3000); //Time needs to be the same as time on index.js setInterval() func
+
             if(response.response == "success") {
                 removeRequiredWarning("requiredWarning");
 
@@ -28,10 +31,10 @@ d3.select("#submitLogin").on("click", function() {
                 pageState = "config";
                 loadHtml(response.html, 'configHandle')
                     .then(function (){
-                        return loadHtml('map.html', 'mapHandle');
+                        // return loadHtml('map.html', 'mapHandle');
                     })
                     .then(function (){
-                        var scriptsArrayLogin = ["js/main.js"];
+                        var scriptsArrayLogin = ["js/miscFuncs.js", "js/stateManagement.js"];
                         loadJavascriptSource(scriptsArrayLogin);
                         showAnimation('passwordProtected', "0.15", "0.15");
                         setTimeout(function(){ document.getElementById('startdate').focus(); }, 500);   // need to wait until animation is complete for keyfocus

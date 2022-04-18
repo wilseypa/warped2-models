@@ -1,28 +1,54 @@
 <div id="postSimulationContent" style="display: none;">
     <div style="text-align: center;">
-        <div class="basicBorder center" style="width: 425px !important;">
-            <div style="margin: 10px; width: 100%">
-                <span id="minMaxMapControls">&minus;</span>
-                <div id="editConfigBtnContainer" style="display: inline;">
-                    <input type="button" id="editConfig" value="Edit Config">
+
+        <div id="fullWidth" style="text-align: center;">
+            <div id="mapWidth" style="display: inline-block; height: 80px; width: 900px;">
+                <div id="stepHalf" style="height: 100%; width: 45%; text-align: left; float: left; position: relative;">
+                    <div style="height: 45%; width: 100%;">
+                        <div style="display: inline-block; position: relative; top: 75%; left: 17.6%;">
+                            <img id="reverseButton" src="../imgs/rewind-svgrepo-com.svg" class="arrow" title="Play in reverse" />
+                            <img id="decrementButton" src="../imgs/play-svgrepo-com.svg" class="arrow" title="Previous day" style="transform: rotate(180deg);" />
+                            <img id="pauseButton" src="../imgs/pause-bars-svgrepo-com.svg" class="arrow" title="Pause auto-advancing of days" />
+                            <img id="incrementButton" src="../imgs/play-svgrepo-com.svg" class="arrow" title="Next day" />
+                            <img id="forwardButton" src="../imgs/rewind-svgrepo-com.svg" class="arrow" title="Play forwards" style="transform: rotate(180deg);" />
+                        </div>
+                    </div>
+                    <div style="height: 45%; width: 100%;">
+                        <div style="display: inline-block; position: absolute; bottom: 0px; margin-left: 25px;">
+                            <label for="autoIncrementSpeed">Speed:</label>
+                            <select name="autoIncrementSpeed" id="autoIncrementSpeed" style="margin: 3px; width: 8.4em;" placeholder="Speed (default 1s)">
+                                <optgroup label="Speed in seconds">
+                                    <option value="0.25">0.25</option>
+                                    <option value="0.50">0.50</option>
+                                    <option value="1.00" selected="selected">1.00</option>
+                                    <option value="2.00">2.00</option>
+                                    <option value="5.00">5.00</option>
+                                    <option value="10.00">10.00</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                    </div>
                 </div>
-                <div id="minMaxControlsContent">
-                    <br>
-                    <br>
-            
-                    <div id="dateInputDiv">
-                        <input id="startDate" class="dateInput" type="date">
-                        <input id="endDate" class="dateInput" type="date" disabled>
-                        <input type="checkbox" class="checkbox" name="isDateRange" id="isDateRange">
-                        <label for="isDateRange">Range?</label>
+                <div id="statDateHalf" style="height: 100%; width: 45%; text-align: right; float: right; position: relative;">
+                    <div style="position: absolute; bottom: 0px;">
+                        <div id="mapStatCheckboxes" class="basicBorder" style="width: fit-content; box-shadow: none; float: right;">
+                            <input type="checkbox" class="checkbox" name="Confirmed" id="Confirmed">
+                            <label for="Confirmed">Confirmed</label>
+                            <input type="checkbox" class="checkbox" name="Dead" id="Dead">
+                            <label for="Dead">Dead</label>
+                            <input type="checkbox" class="checkbox" name="Recovered" id="Recovered">
+                            <label for="Recovered">Recovered</label>
+                            <input type="checkbox" class="checkbox" name="Active" id="Active">
+                            <label for="Active">Active</label>
+                        </div>
+                        <div style="display: inline-block;">
+                            <div id="startDateIndicator" style="display: inline-block;">Month D, Year</div>
+                            <div id="dateInputDiv" style="display: inline-block;">
+                                <input id="dateSlider" type="range" min="0" max="0" value="0" style="cursor: pointer; transform: translateY(25%);">
+                            </div>
+                            <div id="endDateIndicator" style="display: inline-block;">Month D, Year</div>
+                        </div>
                     </div>
-                    <div>
-                        <p id="decrementButton" class="arrow" style="padding-right: 2px;">&#x25C0;</p>
-                        <p id="timelapseButton" class="timelapse" style="color: black; width: 28px;">&#x23F1;</p>
-                        <p id="incrementButton" class="arrow" style="padding-left: 2px;">&#x25B6;</p>
-                    </div>
-                    <br>
-                    <button id="plotButton" style="width: 55px; height: 33px;">Plot</button>
                 </div>
             </div>
         </div>
@@ -30,19 +56,8 @@
     
     <div>
         <br>
-        <div id="mapStatCheckboxes" class="basicBorder center" style="width: fit-content;">
-            <input type="checkbox" class="checkbox" name="Confirmed" id="Confirmed">
-            <label for="Confirmed">Confirmed</label>
-            <input type="checkbox" class="checkbox" name="Dead" id="Dead">
-            <label for="Dead">Dead</label>
-            <input type="checkbox" class="checkbox" name="Recovered" id="Recovered">
-            <label for="Recovered">Recovered</label>
-            <input type="checkbox" class="checkbox" name="Active" id="Active">
-            <label for="Active">Active</label>
-        </div>
-        <br>
-        <div id="map" style="text-align: center; display: none;">
-            <div id="legend" class="legend-box" style="display: none;">
+        <div id="map" style="text-align: center;">
+            <div id="legend" class="legend-box">
                 <div id="legendTitle" style="font-weight: bold;">Active COVID-19 Cases</div>
                 <div id="legendValues" style="text-align: left; margin-left: 20%;"></div>
             </div>
