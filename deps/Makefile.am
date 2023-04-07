@@ -1,1 +1,1 @@
-SUBDIRS = re2 ppm
+SUBDIRS = ppm
