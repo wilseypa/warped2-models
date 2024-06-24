@@ -1,6 +1,12 @@
 # WARPED Simulation Models
 Simulation models for the WARPED Parallel & Distributed Discrete Simulation Library
 
+# Prerequisite
+
+Before building this project, you need to have the following dependencies installed: libre2-dev.
+
+	sudo apt install libre2-dev
+
 # Building
 
 The WARPED models are built with a C++11 compiler (see [here](http://lektiondestages.blogspot.de/2013/05/installing-and-switching-gccg-versions.html) for instructions about upgrading and switching GCC versions if you have an old version of GCC that does not support the required features.).  

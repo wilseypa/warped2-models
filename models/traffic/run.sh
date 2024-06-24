@@ -1,0 +1,1 @@
+./traffic_sim -x 50 -y 50 --time-warp-gvt-calculation-period 1000 --max-sim-time 10000 --time-warp-worker-threads 4

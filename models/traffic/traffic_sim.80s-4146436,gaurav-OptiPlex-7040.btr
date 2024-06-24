@@ -1,0 +1,15 @@
+
+traffic_sim:4146436 terminated with signal 6 at PC=75074ce969fc SP=7ffe3174d920.  Backtrace:
+/lib/x86_64-linux-gnu/libc.so.6(pthread_kill+0x12c)[0x75074ce969fc]
+/lib/x86_64-linux-gnu/libc.so.6(raise+0x16)[0x75074ce42476]
+/lib/x86_64-linux-gnu/libc.so.6(abort+0xd3)[0x75074ce287f3]
+/lib/x86_64-linux-gnu/libstdc++.so.6(+0xa2b9e)[0x75074d2a2b9e]
+/lib/x86_64-linux-gnu/libstdc++.so.6(+0xae20c)[0x75074d2ae20c]
+/lib/x86_64-linux-gnu/libstdc++.so.6(+0xae277)[0x75074d2ae277]
+/lib/x86_64-linux-gnu/libstdc++.so.6(+0xae4d8)[0x75074d2ae4d8]
+/home/gaurav/workspace/warped2/build/lib/libwarped.so.0(+0x5b4c0)[0x75074d5a44c0]
+/home/gaurav/workspace/warped2/build/lib/libwarped.so.0(_ZN6warped10Simulation8simulateERKSt6vectorIPNS_14LogicalProcessESaIS3_EE+0x1b8)[0x75074d5dd528]
+./traffic_sim(+0x8923)[0x61ec54889923]
+/lib/x86_64-linux-gnu/libc.so.6(+0x29d90)[0x75074ce29d90]
+/lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0x80)[0x75074ce29e40]
+./traffic_sim(+0x9085)[0x61ec5488a085]

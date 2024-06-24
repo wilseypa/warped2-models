@@ -1,0 +1,123 @@
+off
+Type of build:             Debug
+Simulation type:           time-warp
+Number of processes:       1
+Number of worker threads:  1
+Number of Schedule queues: 1
+Type of Schedule queue:    MultiSet
+Type of Scheduler lock:    Mutex
+LP Migration:              off
+State-saving type:         periodic
+State-saving period:       10 events
+Cancellation type:         aggressive
+GVT Period:                1000 ms
+Max simulation time:       200
+
+rollback 3 +6
+RP: 0
+SE: 6
+rollback 17 +3
+RP: 0
+SE: 3
+rollback 9 +17
+RP: 0
+SE: 17
+rollback 19 +4
+RP: 0
+SE: 4
+rollback 4 +21
+RP: 0
+SE: 21
+rollback 11 +20
+RP: 0
+SE: 20
+rollback 5 +25
+RP: 0
+SE: 25
+rollback 21 +40
+RP: 0
+SE: 40
+rollback 15 +10
+RP: 0
+SE: 10
+rollback 6 +11
+RP: 0
+SE: 11
+rollback 18 +25
+RP: 0
+SE: 25
+rollback 23 +15
+RP: 0
+SE: 15
+rollback 0 +109
+RP: 0
+SE: 109
+rollback 1 +109
+RP: 0
+SE: 109
+rollback 8 +26
+RP: 0
+SE: 26
+rollback 22 +28
+RP: 0
+SE: 28
+rollback 16 +23
+RP: 0
+SE: 23
+rollback 24 +8
+RP: 0
+SE: 8
+rollback 10 +20
+RP: 0
+SE: 20
+rollback 7 +33
+RP: 0
+SE: 33
+rollback 20 +9
+RP: 0
+SE: 9
+rollback 24 +145
+RP: 0
+SE: 145
+145 143 82 rollback 12 +4
+RP: 0
+SE: 4
+
+Simulation completed in 0.00160385 second(s)
+
+Totals
+	Number of objects:         25
+
+	Local events sent:         283
+	Remote events sent:        0
+	Local anti-messages sent:  5
+	Remote anti-messages sent: 0
+	Total events sent:         288
+	Percent remote:            0%
+
+	Primary rollbacks:         23
+	Secondary rollbacks:       0
+	Total Rollbacks:           23
+
+	Total anti-messages sent:  5
+	Cancelled events:          5
+
+	Coast forward events:      3
+
+	Total events processed:    301
+	Total events committed:    278
+	Total events rolled back:  23
+
+	Average rollback length:   1
+	Efficiency:                92.3588%
+
+	Events for starved objs:   27
+	Sched event swaps success: 0
+	Sched event swaps failure: 0
+	Design Efficiency:         99.3355%
+
+	Average maximum memory:    0 MB
+	GVT cycles:                0
+
+Total cars arrived  : 213
+Total cars finished : 0

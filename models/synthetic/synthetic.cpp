@@ -170,7 +170,8 @@ int main(int argc, const char** argv) {
         assert(lp.adjacency_list_.size());
 
         /* Create the node selection distribution */
-        node_selection += "," + std::to_string(lp.adjacency_list_.size());
+        node_selection.append(",");
+        node_selection.append(std::to_string(lp.adjacency_list_.size()));
         lp.node_sel_distribution_ = buildDist(node_selection);
     }
     delete graph;

@@ -1,0 +1,11 @@
+Starting program: /home/gaurav/workspace/warped2-models/models/traffic/traffic_sim -x 100 -y 100 --time-warp-gvt-calculation-period 2000 --max-sim-time 10000 --time-warp-worker-threads 1
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+[New Thread 0x7ffff27ff640 (LWP 3063812)]
+[New Thread 0x7ffff1ffe640 (LWP 3063813)]
+[New Thread 0x7ffff13bc640 (LWP 3063827)]
+
+Thread 4 "traffic_sim" received signal SIGABRT, Aborted.
+[Switching to Thread 0x7ffff13bc640 (LWP 3063827)]
+__pthread_kill_implementation (no_tid=0, signo=6, threadid=140737240614464) at ./nptl/pthread_kill.c:44
+44	./nptl/pthread_kill.c: No such file or directory.

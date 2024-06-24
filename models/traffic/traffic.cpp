@@ -53,6 +53,7 @@ std::vector<std::shared_ptr<warped::Event> >
                 break;
             }
             car_direction_t arrival_from = traffic_event.current_lane_;
+            // std::cerr<< traffic_event.timestamp()<<" "<<traffic_event.receiverName()<<" "<<traffic_event.x_to_go_<<" "<<traffic_event.y_to_go_<<"\n";
             state_.total_cars_arrived_++;
 
             switch (traffic_event.current_lane_) {
@@ -735,6 +736,7 @@ int main(int argc, const char** argv) {
 
     unsigned int total_cars_arrived = 0, total_cars_finished = 0;
     for (auto& lp : lps) {
+        // std::cerr<<"Total cars arrived  : "<<lp.state_.total_cars_arrived_<<"\n";
         total_cars_arrived  += lp.state_.total_cars_arrived_;
         total_cars_finished += lp.state_.total_cars_finished_;
     }
